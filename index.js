@@ -1,23 +1,27 @@
-const console = {
-  log (...msg) {
-    let s = ''
-    for (const m of msg) s += m + ' '
-    process._print(s.trim() + '\n')
+const { Readable, Writable } = require('streamx')
+
+let tick = 0
+let wrote = 0
+
+const rs = new Readable({
+  read (cb) {
+    rs.push('#' + (++tick))
+    if (tick === 20) rs.push(null)
+    cb(null)
   }
-}
+})
 
-function onfsopen (id, fd) {
-  console.log('callback to js', id, fd)
-}
+rs.on('data', function (data) {
+  console.log('ondata:', data)
+})
 
-const fs = loadAddon('./addons/fs.pear', 'bootstrap_fs')
-
-const req = new Uint8Array(fs.size_of_pearfs_req_t)
-const name = './index.js'
-
-fs.init(onfsopen)
-fs.open(req, name)
-
-function loadAddon (name, fn) {
-  return process._loadAddon(name, fn)
-}
+// const ws = new Writable({
+//   write (data, cb) {
+//     wrote++
+//     cb(null)
+//   }
+// })
+//
+// rs.pipe(ws).on('finish', function () {
+//   console.log('done', wrote)
+// })

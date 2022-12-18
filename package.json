@@ -1,0 +1,23 @@
+{
+  "name": "my-demo-app",
+  "version": "1.0.0",
+  "description": "Prob only runs on mac and needs cmakecification",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mafintosh/libjs-experiment.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mafintosh/libjs-experiment/issues"
+  },
+  "homepage": "https://github.com/mafintosh/libjs-experiment#readme",
+  "dependencies": {
+    "events": "^3.3.0",
+    "streamx": "^2.13.0"
+  }
+}
