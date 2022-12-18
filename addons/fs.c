@@ -58,10 +58,9 @@ fs_open (js_env_t *env, const js_callback_info_t *info) {
 
   js_get_typedarray_info(env, argv[0], NULL, &req_len, (void **) &req, NULL, NULL);
 
-  char *name;
-  size_t name_len;
+  char name[4096];
 
-  js_get_typedarray_info(env, argv[1], NULL, &name_len, (void **) &name, NULL, NULL);
+  js_get_value_string_utf8(env, argv[1], name, 4096, NULL);
 
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);

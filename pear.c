@@ -12,12 +12,12 @@ log (js_env_t *env, const js_callback_info_t *info) {
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
-  char *data;
+  char data[65536];
   size_t data_len;
 
-  js_get_typedarray_info(env, argv[0], NULL, &data_len, (void **) &data, NULL, NULL);
+  js_get_value_string_utf8(env, argv[0], data, 65536, &data_len);
 
-  printf("%s\n", data);
+  printf("%s", data);
 
   return NULL;
 }
@@ -37,16 +37,13 @@ load_addon (js_env_t *env, const js_callback_info_t *info) {
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
   void *handle = NULL;
-  addon_main func = NULL;
+  addon_main bootstrap = NULL;
 
-  char *addon_file;
-  size_t addon_file_len;
+  char addon_file[4096];
+  char addon_bootstrap[4096];
 
-  char *addon_bootstrap;
-  size_t addon_bootstrap_len;
-
-  js_get_typedarray_info(env, argv[0], NULL, &addon_file_len, (void **) &addon_file, NULL, NULL);
-  js_get_typedarray_info(env, argv[1], NULL, &addon_bootstrap_len, (void **) &addon_bootstrap, NULL, NULL);
+  js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
+  js_get_value_string_utf8(env, argv[1], addon_bootstrap, 4096, NULL);
 
   handle = dlopen(addon_file, RTLD_NOW | RTLD_GLOBAL);
 
@@ -55,9 +52,9 @@ load_addon (js_env_t *env, const js_callback_info_t *info) {
     return NULL;
   }
 
-  func = dlsym(handle, addon_bootstrap);
+  bootstrap = dlsym(handle, addon_bootstrap);
 
-  if (func == NULL) {
+  if (bootstrap == NULL) {
     fprintf(stderr, "Unable to get symbol\n");
     return NULL;
   }
@@ -68,7 +65,7 @@ load_addon (js_env_t *env, const js_callback_info_t *info) {
   js_value_t *addon;
   js_create_object(env, &addon);
 
-  func(env, addon);
+  bootstrap(env, addon);
 
   js_close_handle_scope(env, scope);
 
