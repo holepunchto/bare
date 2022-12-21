@@ -54,15 +54,10 @@ load_addon (js_env_t *env, const js_callback_info_t *info) {
     return NULL;
   }
 
-  js_handle_scope_t *scope;
-  js_open_handle_scope(env, &scope);
-
   js_value_t *addon;
   js_create_object(env, &addon);
 
   bootstrap(env, addon);
-
-  js_close_handle_scope(env, scope);
 
   return addon;
 }
@@ -204,9 +199,6 @@ main (int argc, char **argv) {
   js_env_t *env;
   js_create_env(loop, platform, &env);
 
-  js_handle_scope_t *scope;
-  js_open_handle_scope(env, &scope);
-
   js_value_t *proc;
   js_create_object(env, &proc);
 
@@ -264,8 +256,6 @@ main (int argc, char **argv) {
 
   js_value_t *result;
   js_run_script(env, script, &result);
-
-  js_close_handle_scope(env, scope);
 
   uv_run(loop, UV_RUN_DEFAULT);
 
