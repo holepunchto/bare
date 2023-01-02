@@ -1,0 +1,6 @@
+[submodule "deps/libnapi"]
+	path = deps/libnapi
+	url = git@github.com:holepunchto/libnapi.git
+[submodule "deps/libjs"]
+	path = deps/libjs
+	url = git@github.com:holepunchto/libjs.git
