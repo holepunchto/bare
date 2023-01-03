@@ -8,14 +8,16 @@
       process._log(s.trim() + '\n')
     },
     time (lbl = 'default') {
-      times.set(lbl, Date.now())
+      times.set(lbl, process.hrtime())
     },
     timeEnd (lbl = 'default') {
       const t = times.get(lbl)
       if (!t) throw new Error('No matching label for ' + lbl)
-      const d = Date.now() - t
+      const d = process.hrtime(t)
+      const ms = d[0] * 1e3 + d[1] / 1e6
       times.delete(lbl)
-      console.log(lbl + ': ' + d + 'ms')
+      if (ms > 1000) console.log(lbl + ': ' + (ms / 1000).toFixed(3) + 's')
+      else console.log(lbl + ': ' + ms.toFixed(3) + 'ms')
     }
   }
 }
@@ -223,6 +225,20 @@ class Module {
     }
 
     throw new Error('Could not resolve ' + req + ' from ' + dirname)
+  }
+}
+
+{
+  const EMPTY = new Uint32Array(2)
+
+  process.hrtime = function hrtime (prev = EMPTY) {
+    const result = new Uint32Array(2)
+    process._hrtime(result, prev)
+    return result
+  }
+
+  process.exit = function exit (code) {
+    process._exit(typeof code === 'number' ? code : 0)
   }
 }
 
