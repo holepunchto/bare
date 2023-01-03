@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:bootstrap.h": "include-static pearjs_bootstrap bootstrap.js bootstrap.h"
+    "build:bootstrap.h": "include-static pearjs_bootstrap bootstrap.js bootstrap.h",
+    "fetch-v8": "node scripts/fetch-v8.mjs"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,11 @@
     "streamx": "^2.13.0"
   },
   "devDependencies": {
+    "corestore": "^6.4.0",
+    "localdrive": "^1.4.0",
+    "hypercore-id-encoding": "^1.0.2",
+    "hyperdrive": "next",
+    "hyperswarm": "^4.3.5",
     "include-static": "^1.0.1",
     "napi-macros": "*",
     "tiny-timers-native": "*"

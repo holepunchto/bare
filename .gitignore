@@ -1,3 +1,4 @@
 *.pear
 build
 node_modules
+prebuilds
