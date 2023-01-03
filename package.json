@@ -4,7 +4,8 @@
   "description": "Prob only runs on mac and needs cmakecification",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:bootstrap.h": "include-static pearjs_bootstrap bootstrap.js bootstrap.h"
   },
   "repository": {
     "type": "git",
@@ -19,5 +20,10 @@
   "dependencies": {
     "events": "^3.3.0",
     "streamx": "^2.13.0"
+  },
+  "devDependencies": {
+    "include-static": "^1.0.1",
+    "napi-macros": "*",
+    "tiny-timers-native": "*"
   }
 }

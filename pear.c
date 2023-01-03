@@ -2,11 +2,53 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <napi.h>
+#include <pearjs.h>
 
-#include <dlfcn.h>
+#include "bootstrap.h"
+
+static pearjs_module_t *pearjs_pending_module = NULL;
+
+void
+pearjs_module_register (pearjs_module_t *mod) {
+  pearjs_module_t *cpy = malloc(sizeof(pearjs_module_t));
+
+  *cpy = *mod;
+
+  cpy->next_addon = pearjs_pending_module;
+  pearjs_pending_module = cpy;
+}
+
+void
+napi_module_register (napi_module *napi_mod) {
+  pearjs_module_t mod = {
+    .name = napi_mod->nm_modname,
+    .register_addon = napi_mod->nm_register_func
+  };
+
+  pearjs_module_register(&mod);
+}
+
+static pearjs_module_t *
+shift_pending_addon () {
+  pearjs_module_t *mod = pearjs_pending_module;
+  pearjs_module_t *prev = NULL;
+
+  if (mod == NULL) return NULL;
+
+  while (mod->next_addon != NULL) {
+    prev = mod;
+    mod = mod->next_addon;
+  }
+
+  if (prev == NULL) pearjs_pending_module = NULL;
+  else prev->next_addon = mod->next_addon;
+
+  return mod;
+}
 
 static js_value_t *
-log (js_env_t *env, const js_callback_info_t *info) {
+log (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -25,7 +67,7 @@ log (js_env_t *env, const js_callback_info_t *info) {
 typedef void (*addon_main)(js_env_t *env, js_value_t *addon);
 
 static js_value_t *
-load_addon (js_env_t *env, const js_callback_info_t *info) {
+load_addon (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[2];
   size_t argc = 2;
 
@@ -40,24 +82,33 @@ load_addon (js_env_t *env, const js_callback_info_t *info) {
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
   js_get_value_string_utf8(env, argv[1], addon_bootstrap, 4096, NULL);
 
-  handle = dlopen(addon_file, RTLD_NOW | RTLD_GLOBAL);
+  uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+  int err = uv_dlopen(addon_file, lib);
 
-  if (handle == NULL) {
-    fprintf(stderr, "Unable to open lib: %s\n", dlerror());
+  if (err < 0) {
+    fprintf(stderr, "Unable to open addon: %s, path=%s\n", uv_dlerror(lib), addon_file);
     return NULL;
   }
 
-  bootstrap = dlsym(handle, addon_bootstrap);
+  pearjs_module_t *mod = shift_pending_addon();
 
-  if (bootstrap == NULL) {
-    fprintf(stderr, "Unable to get symbol\n");
+  if (mod == NULL) {
+    uv_dlclose(lib);
+    free(lib);
+    fprintf(stderr, "No module registered, path=%s\n", addon_file);
     return NULL;
   }
 
   js_value_t *addon;
   js_create_object(env, &addon);
 
-  bootstrap(env, addon);
+  js_value_t *exports = mod->register_addon(env, addon);
+
+  free(mod);
+
+  if (exports != NULL) {
+    addon = exports;
+  }
 
   return addon;
 }
@@ -117,7 +168,7 @@ read_file_sync (uv_loop_t *loop, char *name, size_t *size, char **data) {
 }
 
 static js_value_t *
-exists_sync (js_env_t *env, const js_callback_info_t *info) {
+exists_sync (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -154,7 +205,7 @@ exists_sync (js_env_t *env, const js_callback_info_t *info) {
 }
 
 static js_value_t *
-read_source_sync (js_env_t *env, const js_callback_info_t *info) {
+read_source_sync (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -183,6 +234,66 @@ read_source_sync (js_env_t *env, const js_callback_info_t *info) {
   return result;
 }
 
+struct FastApiArrayBuffer_ {
+  void* data;
+  size_t byte_length;
+};
+
+// void
+// process_hrtime_fast (struct FastApiArrayBuffer_ arr, struct FastApiArrayBuffer_ prev) {
+//   printf("yo\n");
+//   uint32_t *d0 = prev.data;
+//   uint32_t *d1 = arr.data;
+
+//   uint64_t p = d0[0] * 1e9 + d0[1];
+//   uint64_t now = uv_hrtime() - p;
+
+//   *(d1++) = now / ((uint32_t) 1e9);
+//   *d1 = now % ((uint32_t) 1e9);
+// }
+
+static js_value_t *
+process_hrtime (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  size_t arr_len;
+  uint32_t *arr;
+
+  size_t prev_len;
+  uint32_t *prev;
+
+  js_get_typedarray_info(env, argv[0], NULL, &arr_len, (void **) &arr, NULL, NULL);
+  js_get_typedarray_info(env, argv[1], NULL, &prev_len, (void **) &prev, NULL, NULL);
+
+  if (arr_len < 2 || prev_len < 2) return NULL;
+
+  uint64_t p = prev[0] * 1e9 + prev[1];
+  uint64_t now = uv_hrtime() - p;
+
+  arr[0] = now / ((uint32_t) 1e9);
+  arr[1] = now % ((uint32_t) 1e9);
+
+  return NULL;
+}
+
+static js_value_t *
+process_exit (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  int32_t code;
+  js_get_value_int32(env, argv[0], &code);
+
+  exit(code);
+
+  return NULL;
+}
+
 int
 main (int argc, char **argv) {
   if (argc < 2) {
@@ -193,8 +304,10 @@ main (int argc, char **argv) {
   int err;
   uv_loop_t *loop = uv_default_loop();
 
+  js_platform_options_t opts = { 0 };
+
   js_platform_t *platform;
-  js_create_platform(loop, &platform);
+  js_create_platform(loop, &opts, &platform);
 
   js_env_t *env;
   js_create_env(loop, platform, &env);
@@ -206,6 +319,32 @@ main (int argc, char **argv) {
     js_value_t *val;
     js_create_function(env, "log", -1, log, NULL, &val);
     js_set_named_property(env, proc, "_log", val);
+  }
+
+  // {
+  //   js_ffi_type_info_t *return_info;
+  //   js_ffi_create_type_info(js_ffi_void, js_ffi_scalar, &return_info);
+
+  //   js_ffi_type_info_t *arg_info[2];
+  //   js_ffi_create_type_info(js_ffi_uint32, js_ffi_typedarray, &arg_info[0]);
+  //   js_ffi_create_type_info(js_ffi_uint32, js_ffi_typedarray, &arg_info[1]);
+
+  //   js_ffi_function_info_t *function_info;
+  //   js_ffi_create_function_info(return_info, (const js_ffi_type_info_t **) arg_info, 2, &function_info);
+
+  //   js_ffi_function_t *ffi;
+  //   js_ffi_create_function(process_hrtime_fast, function_info, &ffi);
+
+  //   js_value_t *val;
+
+  //   js_create_function_with_ffi(env, "hrtime", -1, process_hrtime, NULL, ffi, &val);
+  //   js_set_named_property(env, proc, "_hrtime", val);
+  // }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "exit", -1, process_exit, NULL, &val);
+    js_set_named_property(env, proc, "_exit", val);
   }
 
   {
@@ -241,18 +380,8 @@ main (int argc, char **argv) {
   js_set_named_property(env, global, "process", proc);
   js_set_named_property(env, global, "global", global);
 
-  size_t size;
-  char *data;
-
-  err = read_file_sync(loop, "./bootstrap.js", &size, &data);
-  if (err < 0) {
-    printf("Could not load bootstrap.js\n");
-    return err;
-  }
-
   js_value_t *script;
-  js_create_string_utf8(env, data, size, &script);
-  free(data);
+  js_create_string_utf8(env, (const char *) pearjs_bootstrap, pearjs_bootstrap_len, &script);
 
   js_value_t *result;
   js_run_script(env, script, &result);
