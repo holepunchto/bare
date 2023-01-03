@@ -234,10 +234,10 @@ read_source_sync (js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
-struct FastApiArrayBuffer_ {
-  void* data;
-  size_t byte_length;
-};
+// struct FastApiArrayBuffer_ {
+//   void* data;
+//   size_t byte_length;
+// };
 
 // void
 // process_hrtime_fast (struct FastApiArrayBuffer_ arr, struct FastApiArrayBuffer_ prev) {
