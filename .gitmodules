@@ -4,6 +4,3 @@
 [submodule "deps/libjs"]
 	path = deps/libjs
 	url = git@github.com:holepunchto/libjs.git
-[submodule "deps/v8-prebuilds"]
-	path = deps/v8-prebuilds
-	url = git@github.com:holepunchto/v8-prebuilds.git

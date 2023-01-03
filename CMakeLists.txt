@@ -4,6 +4,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(pear C CXX)
 
+execute_process(COMMAND v8-prebuilds-paths --lib OUTPUT_VARIABLE V8_PREBUILD_LIB)
+execute_process(COMMAND v8-prebuilds-paths --include OUTPUT_VARIABLE V8_PREBUILD_INCLUDE)
+
+set(V8 "${V8_PREBUILD_LIB}")
+set(V8_INCLUDE_DIR "${V8_PREBUILD_INCLUDE}")
+
 add_subdirectory(deps/libjs EXCLUDE_FROM_ALL)
 add_subdirectory(deps/libnapi EXCLUDE_FROM_ALL)
 
@@ -28,3 +34,4 @@ target_link_libraries(
   PRIVATE
     js_static
 )
+
