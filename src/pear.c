@@ -1,51 +1,11 @@
 #include <assert.h>
 #include <js.h>
-#include <napi.h>
 #include <pearjs.h>
 #include <stdlib.h>
 #include <uv.h>
 
+#include "addons.h"
 #include "bootstrap.h"
-
-static pearjs_module_t *pearjs_pending_module = NULL;
-
-void
-pearjs_module_register (pearjs_module_t *mod) {
-  pearjs_module_t *cpy = malloc(sizeof(pearjs_module_t));
-
-  *cpy = *mod;
-
-  cpy->next_addon = pearjs_pending_module;
-  pearjs_pending_module = cpy;
-}
-
-void
-napi_module_register (napi_module *napi_mod) {
-  pearjs_module_t mod = {
-    .name = napi_mod->nm_modname,
-    .register_addon = napi_mod->nm_register_func,
-  };
-
-  pearjs_module_register(&mod);
-}
-
-static pearjs_module_t *
-shift_pending_addon () {
-  pearjs_module_t *mod = pearjs_pending_module;
-  pearjs_module_t *prev = NULL;
-
-  if (mod == NULL) return NULL;
-
-  while (mod->next_addon != NULL) {
-    prev = mod;
-    mod = mod->next_addon;
-  }
-
-  if (prev == NULL) pearjs_pending_module = NULL;
-  else prev->next_addon = mod->next_addon;
-
-  return mod;
-}
 
 static js_value_t *
 process_log (js_env_t *env, js_callback_info_t *info) {
@@ -67,50 +27,17 @@ process_log (js_env_t *env, js_callback_info_t *info) {
 typedef void (*addon_main)(js_env_t *env, js_value_t *addon);
 
 static js_value_t *
-load_addon (js_env_t *env, js_callback_info_t *info) {
-  js_value_t *argv[2];
-  size_t argc = 2;
+process_load_addon (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
-  void *handle = NULL;
-  addon_main bootstrap = NULL;
-
   char addon_file[4096];
-  char addon_bootstrap[4096];
 
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
-  js_get_value_string_utf8(env, argv[1], addon_bootstrap, 4096, NULL);
 
-  uv_lib_t *lib = malloc(sizeof(uv_lib_t));
-  int err = uv_dlopen(addon_file, lib);
-
-  if (err < 0) {
-    fprintf(stderr, "Unable to open addon: %s, path=%s\n", uv_dlerror(lib), addon_file);
-    return NULL;
-  }
-
-  pearjs_module_t *mod = shift_pending_addon();
-
-  if (mod == NULL) {
-    uv_dlclose(lib);
-    free(lib);
-    fprintf(stderr, "No module registered, path=%s\n", addon_file);
-    return NULL;
-  }
-
-  js_value_t *addon;
-  js_create_object(env, &addon);
-
-  js_value_t *exports = mod->register_addon(env, addon);
-
-  free(mod);
-
-  if (exports != NULL) {
-    addon = exports;
-  }
-
-  return addon;
+  return pearjs_addons_load(env, addon_file);
 }
 
 static int
@@ -304,6 +231,12 @@ main (int argc, char **argv) {
   int err;
   uv_loop_t *loop = uv_default_loop();
 
+char out[4096];
+int found = pearjs_addons_find(loop, "/Users/maf/dev/holepunch/pearjs/node_modules/udx-native", out);
+if (found == 0) {
+  printf("found addon %s\n", out);
+}
+
   js_platform_options_t opts = {0};
 
   js_platform_t *platform;
@@ -314,6 +247,18 @@ main (int argc, char **argv) {
 
   js_value_t *proc;
   js_create_object(env, &proc);
+
+  {
+    js_value_t *val;
+    js_create_string_utf8(env, PEARJS_PLATFORM, -1, &val);
+    js_set_named_property(env, proc, "platform", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_string_utf8(env, PEARJS_ARCH, -1, &val);
+    js_set_named_property(env, proc, "arch", val);
+  }
 
   {
     js_value_t *val;
@@ -349,7 +294,7 @@ main (int argc, char **argv) {
 
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, load_addon, NULL, &val);
+    js_create_function(env, "loadAddon", -1, process_load_addon, NULL, &val);
     js_set_named_property(env, proc, "_loadAddon", val);
   }
 

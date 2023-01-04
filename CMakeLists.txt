@@ -10,7 +10,11 @@ set(V8_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/prebuilds/v8/host/include)
 add_subdirectory(deps/libjs EXCLUDE_FROM_ALL)
 add_subdirectory(deps/libnapi EXCLUDE_FROM_ALL)
 
-add_executable(pear src/pear.c)
+add_executable(pear
+  src/pear.c
+  src/addons.c
+  src/sync_fs.c
+)
 
 set_target_properties(
   pear
