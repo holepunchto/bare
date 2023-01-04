@@ -1,9 +1,9 @@
-#include <js.h>
-#include <uv.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <js.h>
 #include <napi.h>
 #include <pearjs.h>
+#include <stdlib.h>
+#include <uv.h>
 
 #include "bootstrap.h"
 
@@ -23,7 +23,7 @@ void
 napi_module_register (napi_module *napi_mod) {
   pearjs_module_t mod = {
     .name = napi_mod->nm_modname,
-    .register_addon = napi_mod->nm_register_func
+    .register_addon = napi_mod->nm_register_func,
   };
 
   pearjs_module_register(&mod);
@@ -131,7 +131,7 @@ read_file_sync (uv_loop_t *loop, char *name, size_t *size, char **data) {
 
   uv_buf_t buf = {
     .base = base,
-    .len = len
+    .len = len,
   };
 
   uv_fs_req_cleanup(&req);
@@ -304,7 +304,7 @@ main (int argc, char **argv) {
   int err;
   uv_loop_t *loop = uv_default_loop();
 
-  js_platform_options_t opts = { 0 };
+  js_platform_options_t opts = {0};
 
   js_platform_t *platform;
   js_create_platform(loop, &opts, &platform);

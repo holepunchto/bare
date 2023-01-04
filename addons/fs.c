@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <js.h>
+#include <stdio.h>
 #include <uv.h>
 
 static js_ref_t *on_open;
@@ -72,7 +72,8 @@ fs_open (js_env_t *env, const js_callback_info_t *info) {
   return NULL;
 }
 
-void bootstrap_fs (js_env_t *env, js_value_t *addon) {
+void
+bootstrap_fs (js_env_t *env, js_value_t *addon) {
   {
     js_value_t *fn;
     js_create_function(env, "init", -1, fs_init, NULL, &fn);
