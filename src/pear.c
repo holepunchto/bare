@@ -265,8 +265,8 @@ process_hrtime (js_env_t *env, js_callback_info_t *info) {
   size_t prev_len;
   uint32_t *prev;
 
-  js_get_typedarray_info(env, argv[0], NULL, &arr_len, (void **) &arr, NULL, NULL);
-  js_get_typedarray_info(env, argv[1], NULL, &prev_len, (void **) &prev, NULL, NULL);
+  js_get_typedarray_info(env, argv[0], NULL, (void **) &arr, &arr_len, NULL, NULL);
+  js_get_typedarray_info(env, argv[1], NULL, (void **) &prev, &prev_len, NULL, NULL);
 
   if (arr_len < 2 || prev_len < 2) return NULL;
 
