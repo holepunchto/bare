@@ -1,8 +1,11 @@
 # pearjs-experiment
 
 ``` sh
-# expects v8-prebuilds to be in your $PATH
-npm i -g holepunchto/v8-prebuilds
+# install deps
+npm install
+
+# fetch v8 prebuild from the p2p network
+npm run fetch-v8
 
 # fetch the submodules
 git submodules update --init
