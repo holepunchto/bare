@@ -1,23 +1,22 @@
 {
-  "name": "my-demo-app",
-  "version": "1.0.0",
-  "description": "Prob only runs on mac and needs cmakecification",
+  "name": "pearjs-experiment",
+  "version": "0.0.0",
+  "description": "🍐js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:bootstrap.h": "include-static pearjs_bootstrap bootstrap.js bootstrap.h",
+    "build:bootstrap.h": "include-static pearjs_bootstrap src/bootstrap.js src/bootstrap.h",
     "fetch-v8": "node scripts/fetch-v8.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mafintosh/libjs-experiment.git"
+    "url": "git+https://github.com/holepunchto/pearjs-experiment.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Holepunch",
   "bugs": {
-    "url": "https://github.com/mafintosh/libjs-experiment/issues"
+    "url": "https://github.com/holepunchto/pearjs-experiment/issues"
   },
-  "homepage": "https://github.com/mafintosh/libjs-experiment#readme",
+  "homepage": "https://github.com/holepunchto/pearjs-experiment#readme",
   "dependencies": {
     "events": "^3.3.0",
     "streamx": "^2.13.0"
