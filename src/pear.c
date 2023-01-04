@@ -48,7 +48,7 @@ shift_pending_addon () {
 }
 
 static js_value_t *
-log (js_env_t *env, js_callback_info_t *info) {
+process_log (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -317,7 +317,7 @@ main (int argc, char **argv) {
 
   {
     js_value_t *val;
-    js_create_function(env, "log", -1, log, NULL, &val);
+    js_create_function(env, "log", -1, process_log, NULL, &val);
     js_set_named_property(env, proc, "_log", val);
   }
 
