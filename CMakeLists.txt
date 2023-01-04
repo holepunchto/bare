@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(LINUX)
+  set(CMAKE_EXE_LINKER_FLAGS "-Wl,-export-dynamic")
+endif()
+
 project(pear C CXX)
 
 set(V8 ${PROJECT_SOURCE_DIR}/prebuilds/v8/host/lib/libv8.a)
