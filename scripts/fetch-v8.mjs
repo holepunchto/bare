@@ -30,6 +30,6 @@ try {
   await fs.promises.unlink(path.join(prebuilds, 'host'))
 } catch {}
 
-await fs.promises.symlink(path.join(prebuilds, host), path.join(prebuilds, 'host'))
+await fs.promises.symlink(host, path.join(prebuilds, 'host'))
 
 await swarm.destroy()
