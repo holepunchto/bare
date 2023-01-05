@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:bootstrap.h": "include-static pearjs_bootstrap src/bootstrap.js src/bootstrap.h",
+    "build": "node scripts/build.mjs",
     "fetch-v8": "node scripts/fetch-v8.mjs"
   },
   "repository": {
@@ -23,11 +23,12 @@
   },
   "devDependencies": {
     "corestore": "^6.4.0",
-    "localdrive": "^1.4.0",
+    "esbuild": "^0.16.14",
     "hypercore-id-encoding": "^1.0.2",
     "hyperdrive": "next",
     "hyperswarm": "^4.3.5",
-    "include-static": "^1.0.1",
+    "include-static": "^1.1.0",
+    "localdrive": "^1.4.0",
     "napi-macros": "*",
     "tiny-timers-native": "*"
   }
