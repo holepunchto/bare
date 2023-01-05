@@ -13,5 +13,5 @@ const result = await esbuild.build({
 })
 
 for (const file of result.outputFiles) {
-  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', file.contents));
+  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', Buffer.concat([file.contents, Buffer.from('\n//# sourceURL=<pearjs>/bootstrap.js')])))
 }

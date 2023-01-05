@@ -12,7 +12,7 @@ pearjs_sync_fs_path_join (const char *a, const char *b, char *out) {
   out += len_a;
   *out = PEARJS_SYNC_FS_SEP[0];
 
-  memcpy(out + 1, b, len_b);
+  memcpy(out + 1, b, len_b + 1);
 }
 
 int

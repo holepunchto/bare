@@ -42,16 +42,43 @@ process_stderr (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 process_load_addon (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  char addon_file[4096];
+  uint32_t resolve;
+
+  js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
+  js_get_value_uint32(env, argv[1], &resolve);
+
+  return pearjs_addons_load(env, addon_file, (bool) resolve);
+}
+
+static js_value_t *
+process_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
   char addon_file[4096];
+  uv_loop_t *loop;
 
+  js_get_env_loop(env, &loop);
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
 
-  return pearjs_addons_load(env, addon_file);
+  int err = pearjs_addons_resolve(loop, addon_file, addon_file);
+  if (err < 0) {
+    js_throw_error(env, NULL, "Could not resolve addon");
+    return NULL;
+  }
+
+  js_value_t *result;
+  js_create_string_utf8(env, addon_file, -1, &result);
+
+  return result;
 }
 
 static int
@@ -285,6 +312,12 @@ pearjs_runtime_setup (uv_loop_t *loop, js_env_t *env, const char *entry_point) {
     js_value_t *val;
     js_create_function(env, "loadAddon", -1, process_load_addon, NULL, &val);
     js_set_named_property(env, proc, "_loadAddon", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "resolveAddon", -1, process_resolve_addon, NULL, &val);
+    js_set_named_property(env, proc, "_resolveAddon", val);
   }
 
   {

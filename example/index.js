@@ -1,6 +1,6 @@
-// console.log(process._loadAddon)
-
-const addon = process._loadAddon('./node_modules/tiny-timers-native/build/Release/tiny_timers.node')
+const addon = process.addon('./node_modules/tiny-timers-native')
+console.log(addon)
+process.exit()
 
 for (const k of Object.keys(addon)) {
   console.log('key', k)

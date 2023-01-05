@@ -1,0 +1,8 @@
+{
+  "name": "pearjs-example",
+  "version": "0.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "tiny-timers-native": "^1.2.5"
+  }
+}

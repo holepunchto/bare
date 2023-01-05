@@ -244,6 +244,17 @@ class Module {
     process.exit(1)
   }
 
+  process.addon = function addon (dirname, opts) {
+    if (typeof dirname !== 'string') throw new TypeError('dirname must be a string')
+    const resolve = (opts && opts.resolve) !== false
+    return process._loadAddon(dirname, resolve ? 1 : 0)
+  }
+
+  process.addon.resolve = function resolve (dirname) {
+    if (typeof dirname !== 'string') throw new TypeError('dirname must be a string')
+    return process._resolveAddon(dirname)
+  }
+
   process.hrtime = function hrtime (prev = EMPTY) {
     const result = new Uint32Array(2)
     process._hrtime(result, prev)
@@ -256,5 +267,3 @@ class Module {
 }
 
 process.main = Module.load(process._entryPoint, Module.resolvePath(process._entryPoint, '..'))
-
-//# sourceURL=<pearjs>/bootstrap.js

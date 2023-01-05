@@ -5,9 +5,9 @@
 #include <js.h>
 
 int
-pearjs_addons_find (uv_loop_t *loop, const char *path, char *out);
+pearjs_addons_resolve (uv_loop_t *loop, const char *path, char *out);
 
 js_value_t *
-pearjs_addons_load (js_env_t *env, const char *path);
+pearjs_addons_load (js_env_t *env, const char *path, bool resolve);
 
 #endif

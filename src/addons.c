@@ -70,8 +70,13 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
 }
 
 int
-pearjs_addons_find (uv_loop_t *loop, const char *path, char *out) {
+pearjs_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
   char tmp[PEARJS_SYNC_FS_MAX_PATH];
+
+  if (has_extension(path, ".pear") || has_extension(path, ".node")) {
+    if (out != path) strcpy(out, path);
+    return 0;
+  }
 
   // TODO: check where cmake likes to build...
 
@@ -87,12 +92,25 @@ pearjs_addons_find (uv_loop_t *loop, const char *path, char *out) {
 }
 
 js_value_t *
-pearjs_addons_load (js_env_t *env, const char *path) {
+pearjs_addons_load (js_env_t *env, const char *path, bool resolve) {
+  int err;
+
+  if (resolve) {
+    uv_loop_t *loop;
+    js_get_env_loop(env, &loop);
+    err = pearjs_addons_resolve(loop, path, (char *) path);
+    if (err < 0) {
+      js_throw_error(env, NULL, "Could not resolve addon");
+      return NULL;
+    }
+  }
+
   uv_lib_t *lib = malloc(sizeof(uv_lib_t));
-  int err = uv_dlopen(path, lib);
+  err = uv_dlopen(path, lib);
 
   if (err < 0) {
-    fprintf(stderr, "Unable to open addon: %s, path=%s\n", uv_dlerror(lib), path);
+    js_throw_error(env, NULL, uv_dlerror(lib));
+    free(lib);
     return NULL;
   }
 
@@ -101,7 +119,7 @@ pearjs_addons_load (js_env_t *env, const char *path) {
   if (mod == NULL) {
     uv_dlclose(lib);
     free(lib);
-    fprintf(stderr, "No module registered, path=%s\n", path);
+    js_throw_error(env, NULL, "No module registered");
     return NULL;
   }
 
@@ -132,8 +150,10 @@ pearjs_module_register (pearjs_module_t *mod) {
 void
 napi_module_register (napi_module *napi_mod) {
   pearjs_module_t mod = {
-    .name = napi_mod->nm_modname,
-    .register_addon = napi_mod->nm_register_func,
+    .version = PEARJS_MODULE_VERSION,
+    .filename = napi_mod->nm_filename,
+    .modname = napi_mod->nm_modname,
+    .register_addon = napi_mod->nm_register_func
   };
 
   pearjs_module_register(&mod);

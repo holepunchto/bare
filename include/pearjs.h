@@ -21,10 +21,48 @@
 #define PEARJS_ARCH "unknown"
 #endif
 
+// https://stackoverflow.com/a/2390626
+
+#if defined(__cplusplus)
+#define PEARJS_INITIALIZER(f) \
+  static void f(void); \
+  struct f##_ { \
+    f##_(void) { f(); } \
+  } f##_; \
+  static void f(void)
+#elif defined(_MSC_VER)
+#pragma section(".CRT$XCU", read)
+#define PEARJS_INITIALIZER(f) \
+  static void f(void); \
+  __declspec(dllexport, allocate(".CRT$XCU")) void (*f##_)(void) = f;
+#else
+#define PEARJS_INITIALIZER(f) \
+  static void f(void) __attribute__((constructor)); \
+  static void f(void)
+#endif
+
+#define PEARJS_MODULE_VERSION 1
+
+#define PEARJS_MODULE_NAME(name) #name
+
+#define PEARJS_MODULE(name, fn) \
+  PEARJS_INITIALIZER(module_initializer) { \
+    pearjs_module_t module = { \
+      PEARJS_MODULE_VERSION, \
+      __FILE__, \
+      PEARJS_MODULE_NAME(name), \
+      fn, \
+      NULL \
+    }; \
+    pearjs_module_register(&module); \
+  }
+
 typedef js_value_t * (*pearjs_addon_register)(js_env_t *env, js_value_t *exports);
 
 typedef struct {
-  const char *name;
+  int version;
+  const char *filename;
+  const char *modname;
   pearjs_addon_register register_addon;
 
   void *next_addon;
