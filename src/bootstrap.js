@@ -94,6 +94,7 @@ class Module {
 
     function require (req) {
       if (req === 'module') return Module
+      if (req.endsWith('.node')) return process.addon(req, { resolve: false }) // node compat
       const filename = resolve(req)
       return Module.load(filename)
     }
