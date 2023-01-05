@@ -8,7 +8,7 @@
 #include "bootstrap.h"
 
 static js_value_t *
-process_log (js_env_t *env, js_callback_info_t *info) {
+process_stdout (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -19,12 +19,27 @@ process_log (js_env_t *env, js_callback_info_t *info) {
 
   js_get_value_string_utf8(env, argv[0], data, 65536, &data_len);
 
-  printf("%s", data);
+  fprintf(stdout, "%s", data);
 
   return NULL;
 }
 
-typedef void (*addon_main)(js_env_t *env, js_value_t *addon);
+static js_value_t *
+process_stderr (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  char data[65536];
+  size_t data_len;
+
+  js_get_value_string_utf8(env, argv[0], data, 65536, &data_len);
+
+  fprintf(stderr, "%s", data);
+
+  return NULL;
+}
 
 static js_value_t *
 process_load_addon (js_env_t *env, js_callback_info_t *info) {
@@ -221,6 +236,25 @@ process_exit (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+void
+pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
+  js_value_t *proc = data;
+  js_value_t *fn;
+
+  int err = js_get_named_property(env, proc, "_onfatalexception", &fn);
+  if (err < 0) {
+    fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
+    return;
+  }
+
+  err = js_make_callback(env, proc, fn, 1, &error, NULL);
+  if (err < 0) {
+    js_value_t *exception;
+    js_get_and_clear_last_exception(env, &exception);
+    js_fatal_exception(env, exception);
+  }
+}
+
 int
 main (int argc, char **argv) {
   if (argc < 2) {
@@ -230,12 +264,6 @@ main (int argc, char **argv) {
 
   int err;
   uv_loop_t *loop = uv_default_loop();
-
-char out[4096];
-int found = pearjs_addons_find(loop, "/Users/maf/dev/holepunch/pearjs/node_modules/udx-native", out);
-if (found == 0) {
-  printf("found addon %s\n", out);
-}
 
   js_platform_options_t opts = {0};
 
@@ -247,6 +275,8 @@ if (found == 0) {
 
   js_value_t *proc;
   js_create_object(env, &proc);
+
+  js_on_uncaught_exception(env, pearjs_on_uncaught_exception, proc);
 
   {
     js_value_t *val;
@@ -262,8 +292,14 @@ if (found == 0) {
 
   {
     js_value_t *val;
-    js_create_function(env, "log", -1, process_log, NULL, &val);
-    js_set_named_property(env, proc, "_log", val);
+    js_create_function(env, "stdout", -1, process_stdout, NULL, &val);
+    js_set_named_property(env, proc, "_stdout", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "stderr", -1, process_stderr, NULL, &val);
+    js_set_named_property(env, proc, "_stderr", val);
   }
 
   // {
@@ -285,6 +321,12 @@ if (found == 0) {
   //   js_create_function_with_ffi(env, "hrtime", -1, process_hrtime, NULL, ffi, &val);
   //   js_set_named_property(env, proc, "_hrtime", val);
   // }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "hrtime", -1, process_hrtime, NULL, &val);
+    js_set_named_property(env, proc, "_hrtime", val);
+  }
 
   {
     js_value_t *val;
@@ -329,7 +371,13 @@ if (found == 0) {
   js_create_string_utf8(env, (const char *) pearjs_bootstrap, pearjs_bootstrap_len, &script);
 
   js_value_t *result;
-  js_run_script(env, script, &result);
+  err = js_run_script(env, script, &result);
+
+  if (err < 0) {
+    js_value_t *exception;
+    js_get_and_clear_last_exception(env, &exception);
+    js_fatal_exception(env, exception);
+  }
 
   uv_run(loop, UV_RUN_DEFAULT);
 

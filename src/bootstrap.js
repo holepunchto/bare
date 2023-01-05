@@ -3,9 +3,10 @@
 
   global.console = {
     log (...msg) {
-      let s = ''
-      for (const m of msg) s += m + ' '
-      process._log(s.trim() + '\n')
+      log(process._stdout, ...msg)
+    },
+    error (...msg) {
+      log(process._stderr, ...msg)
     },
     time (lbl = 'default') {
       times.set(lbl, process.hrtime())
@@ -19,6 +20,12 @@
       if (ms > 1000) console.log(lbl + ': ' + (ms / 1000).toFixed(3) + 's')
       else console.log(lbl + ': ' + ms.toFixed(3) + 'ms')
     }
+  }
+
+  function log (output, ...msg) {
+    let s = ''
+    for (const m of msg) s += m + ' '
+    output(s.trim() + '\n')
   }
 }
 
@@ -150,7 +157,7 @@ class Module {
   })()
 
   static runScript (module, source, require) {
-    new Function('__dirname', '__filename', 'module', 'exports', 'require', source)( // eslint-disable-line
+    new Function('__dirname', '__filename', 'module', 'exports', 'require', source + '\n//# sourceURL=' + module.filename)( // eslint-disable-line
       module.dirname,
       module.filename,
       module,
@@ -231,6 +238,12 @@ class Module {
 {
   const EMPTY = new Uint32Array(2)
 
+  process._onfatalexception = function onfatalexception (err) {
+    console.error('Unhandled exception!')
+    console.error(err.stack)
+    process.exit(1)
+  }
+
   process.hrtime = function hrtime (prev = EMPTY) {
     const result = new Uint32Array(2)
     process._hrtime(result, prev)
@@ -243,3 +256,5 @@ class Module {
 }
 
 process.main = Module.load(process._filename, Module.resolvePath(process._filename, '..'))
+
+//# sourceURL=<pearjs>/bootstrap.js
