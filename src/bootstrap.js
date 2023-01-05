@@ -255,6 +255,6 @@ class Module {
   }
 }
 
-process.main = Module.load(process._filename, Module.resolvePath(process._filename, '..'))
+process.main = Module.load(process._entryPoint, Module.resolvePath(process._entryPoint, '..'))
 
 //# sourceURL=<pearjs>/bootstrap.js

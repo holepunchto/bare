@@ -14,6 +14,7 @@ add_executable(pear
   src/pear.c
   src/addons.c
   src/sync_fs.c
+  src/runtime.c
 )
 
 set_target_properties(
