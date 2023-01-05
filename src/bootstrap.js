@@ -1,4 +1,34 @@
 {
+  // TODO: can we easily extend Uint8Arrays like in node?
+
+  global.Buffer = {}
+
+  global.Buffer.allocUnsafe = function (n) {
+    return new Uint8Array(n)
+  }
+
+  global.Buffer.alloc = function (n) {
+    return new Uint8Array(n)
+  }
+
+  global.Buffer.concat = function (arr, len) {
+    if (typeof len !== 'number') {
+      len = 0
+      for (let i = 0; i < arr.length; i++) len += arr[i].byteLength
+    }
+    const result = global.Buffer.allocUnsafe(len)
+
+    len = 0
+    for (let i = 0; i < arr.length; i++) {
+      result.set(arr[i], len)
+      len += arr[i].byteLength
+    }
+
+    return result
+  }
+}
+
+{
   const times = new Map()
 
   global.console = {
@@ -70,10 +100,6 @@ class Module {
   }
 
   static cache = Object.create(null)
-
-  static loadAddon (filename, fn) {
-    return process._loadAddon(filename, fn)
-  }
 
   static load (filename) {
     if (Module.cache[filename]) return Module.cache[filename].exports
@@ -238,10 +264,86 @@ class Module {
 {
   const EMPTY = new Uint32Array(2)
 
+  class Event {
+    constructor () {
+      this.list = []
+      this.emitting = false
+      this.removing = null
+    }
+
+    add (fn, once) {
+      this.list.push([fn, once])
+    }
+
+    remove (fn) {
+      if (this.emitting === true) {
+        if (this.removing === null) this.removing = []
+        this.removing.push(fn)
+        return
+      }
+
+      for (let i = 0; i < this.list.length; i++) {
+        const l = this.list[i]
+
+        if (l[0] === fn) {
+          this.list.splice(i, 1)
+          return
+        }
+      }
+    }
+
+    emit (...args) {
+      this.emitting = true
+      const listeners = this.list.length > 0
+
+      try {
+        for (let i = 0; i < this.list.length; i++) {
+          const l = this.list[i]
+
+          l[0].call(this, ...args)
+          if (l[1] === true) this.list.splice(i--, 1)
+        }
+      } finally {
+        this.emitting = false
+
+        if (this.removing !== null) {
+          const fns = this.removing
+          this.removing = null
+          for (const fn of fns) this.remove(fn)
+        }
+      }
+
+      return listeners
+    }
+  }
+
+  const events = {
+    uncaughtException: new Event()
+  }
+
   process._onfatalexception = function onfatalexception (err) {
+    if (events.uncaughtException.emit(err)) return
     console.error('Unhandled exception!')
     console.error(err.stack)
     process.exit(1)
+  }
+
+  process.on = process.addListener = function on (name, fn) {
+    const e = events[name]
+    if (e) e.add(fn, false)
+    return this
+  }
+
+  process.once = function once (name, fn) {
+    const e = events[name]
+    if (e) e.add(fn, true)
+    return this
+  }
+
+  process.off = process.removeListener = function (name, fn) {
+    const e = events[name]
+    if (e) e.remove(fn)
+    return this
   }
 
   process.addon = function addon (dirname, opts) {
