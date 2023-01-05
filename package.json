@@ -19,7 +19,8 @@
   "homepage": "https://github.com/holepunchto/pearjs-experiment#readme",
   "dependencies": {
     "events": "^3.3.0",
-    "streamx": "^2.13.0"
+    "streamx": "^2.13.0",
+    "tiny-paths": "^1.0.0"
   },
   "devDependencies": {
     "corestore": "^6.4.0",
