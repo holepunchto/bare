@@ -1,4 +1,7 @@
 const path = require('tiny-paths')
+const console = require('tiny-console')
+
+global.console = console
 
 {
   // TODO: can we easily extend Uint8Arrays like in node?
@@ -251,7 +254,12 @@ class Module {
   }
 
   const events = {
-    uncaughtException: new Event()
+    uncaughtException: new Event(),
+    exit: new Event()
+  }
+
+  process._onexit = function onexit () {
+    events.exit.emit()
   }
 
   process._onfatalexception = function onfatalexception (err) {

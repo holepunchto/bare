@@ -264,8 +264,11 @@ pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
 }
 
 int
-pearjs_runtime_setup (uv_loop_t *loop, js_env_t *env, const char *entry_point) {
+pearjs_runtime_setup (js_env_t *env, const char *entry_point) {
   int err;
+
+  uv_loop_t *loop;
+  js_get_env_loop(env, &loop);
 
   js_value_t *proc;
   js_create_object(env, &proc);
@@ -345,4 +348,23 @@ pearjs_runtime_setup (uv_loop_t *loop, js_env_t *env, const char *entry_point) {
   js_set_named_property(env, global, "global", global);
 
   return 0;
+}
+
+void
+pearjs_runtime_teardown (js_env_t *env) {
+  js_value_t *proc;
+  js_value_t *global;
+  js_value_t *fn;
+
+  js_get_global(env, &global);
+  js_get_named_property(env, global, "process", &proc);
+
+  js_get_named_property(env, proc, "_onexit", &fn);
+
+  int err = js_make_callback(env, proc, fn, 0, NULL, NULL);
+  if (err < 0) {
+    js_value_t *exception;
+    js_get_and_clear_last_exception(env, &exception);
+    js_fatal_exception(env, exception);
+  }
 }

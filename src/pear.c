@@ -40,7 +40,7 @@ main (int argc, char **argv) {
   js_env_t *env;
   js_create_env(loop, platform, &env);
 
-  err = pearjs_runtime_setup(loop, env, entry_point);
+  err = pearjs_runtime_setup(env, entry_point);
 
   free(entry_point);
   entry_point = NULL;
@@ -63,6 +63,8 @@ main (int argc, char **argv) {
   }
 
   uv_run(loop, UV_RUN_DEFAULT);
+
+  pearjs_runtime_teardown(env);
 
   js_destroy_env(env);
 
