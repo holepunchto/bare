@@ -244,6 +244,27 @@ process_exit (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static js_value_t *
+process_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  size_t str_len;
+  js_get_value_string_utf8(env, argv[0], NULL, -1, &str_len);
+
+  char *buf;
+  js_value_t *result;
+  str_len++; // to fit the NULL
+
+  js_create_arraybuffer(env, str_len, (void **) &buf, &result);
+
+  js_get_value_string_utf8(env, argv[0], buf, str_len, NULL);
+
+  return result;
+}
+
 static void
 pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
   js_value_t *proc = data;
@@ -309,6 +330,12 @@ pearjs_runtime_setup (js_env_t *env, const char *entry_point) {
     js_value_t *val;
     js_create_function(env, "exit", -1, process_exit, NULL, &val);
     js_set_named_property(env, proc, "_exit", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "stringToBuffer", -1, process_string_to_buffer, NULL, &val);
+    js_set_named_property(env, proc, "_stringToBuffer", val);
   }
 
   {

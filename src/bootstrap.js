@@ -8,6 +8,12 @@ global.console = console
 
   global.Buffer = {}
 
+  global.Buffer.from = function (str, enc) {
+    if (enc && enc !== 'utf-8') throw new Error('Only Buffer.from utf-8 supported currently')
+    const arr = process._stringToBuffer(str)
+    return new Uint8Array(arr, 0, arr.byteLength - 1)
+  }
+
   global.Buffer.allocUnsafe = function (n) {
     return new Uint8Array(n)
   }
