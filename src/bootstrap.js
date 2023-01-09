@@ -1,5 +1,5 @@
 const path = require('tiny-paths')
-const console = require('tiny-console')
+const console = require('@pearjs/console')
 
 global.console = console
 
@@ -30,37 +30,6 @@ global.console = console
     }
 
     return result
-  }
-}
-
-{
-  const times = new Map()
-
-  global.console = {
-    log (...msg) {
-      log(process._stdout, ...msg)
-    },
-    error (...msg) {
-      log(process._stderr, ...msg)
-    },
-    time (lbl = 'default') {
-      times.set(lbl, process.hrtime())
-    },
-    timeEnd (lbl = 'default') {
-      const t = times.get(lbl)
-      if (!t) throw new Error('No matching label for ' + lbl)
-      const d = process.hrtime(t)
-      const ms = d[0] * 1e3 + d[1] / 1e6
-      times.delete(lbl)
-      if (ms > 1000) console.log(lbl + ': ' + (ms / 1000).toFixed(3) + 's')
-      else console.log(lbl + ': ' + ms.toFixed(3) + 'ms')
-    }
-  }
-
-  function log (output, ...msg) {
-    let s = ''
-    for (const m of msg) s += m + ' '
-    output(s.trim() + '\n')
   }
 }
 
