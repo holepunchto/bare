@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "main": "index.js",
   "dependencies": {
-    "tiny-timers-native": "^1.2.5"
+    "sodium-native": "^4.0.0",
+    "tiny-timers-native": "^1.2.5",
+    "udx-native": "^1.5.3"
   }
 }
