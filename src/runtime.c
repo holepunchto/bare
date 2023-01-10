@@ -16,13 +16,17 @@ bindings_print (js_env_t *env, js_callback_info_t *info) {
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
   uint32_t fd;
-  char data[65536];
   size_t data_len;
 
   js_get_value_uint32(env, argv[0], &fd);
-  js_get_value_string_utf8(env, argv[1], data, 65536, &data_len);
+  js_get_value_string_utf8(env, argv[1], NULL, 0, &data_len);
+
+  char *data = malloc(++data_len);
+
+  js_get_value_string_utf8(env, argv[1], data, data_len, &data_len);
 
   write(fd, data, data_len);
+  free(data);
 
   return NULL;
 }
