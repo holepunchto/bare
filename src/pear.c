@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "runtime.h"
-#include "../build/bootstrap.h"
 
 int
 main (int argc, char **argv) {
@@ -40,31 +39,23 @@ main (int argc, char **argv) {
   js_env_t *env;
   js_create_env(loop, platform, &env);
 
-  err = pearjs_runtime_setup(env, entry_point);
+  pearjs_runtime_t config = {0};
 
-  free(entry_point);
-  entry_point = NULL;
+  config.argc = 2;
+  config.argv = argv;
+
+  argv[1] = entry_point;
+
+  err = pearjs_runtime_setup(env, &config);
 
   if (err < 0) {
     fprintf(stderr, "pearjs_runtime_setup failed with %i\n", err);
     return 1;
   }
 
-  js_value_t *script;
-  js_create_string_utf8(env, (const char *) pearjs_bootstrap, pearjs_bootstrap_len, &script);
-
-  js_value_t *result;
-  err = js_run_script(env, script, &result);
-
-  if (err < 0) {
-    js_value_t *exception;
-    js_get_and_clear_last_exception(env, &exception);
-    js_fatal_exception(env, exception);
-  }
-
   uv_run(loop, UV_RUN_DEFAULT);
 
-  pearjs_runtime_teardown(env);
+  pearjs_runtime_teardown(env, &config);
 
   js_destroy_env(env);
 

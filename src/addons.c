@@ -49,7 +49,21 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
 
   for (int i = 0; i < entries_len && result == NULL; i++) {
     const char *name = entries[i].name;
+    if (strcmp(name, "node.napi.pear") == 0) {
+      result = name;
+    }
+  }
+
+  for (int i = 0; i < entries_len && result == NULL; i++) {
+    const char *name = entries[i].name;
     if (has_extension(name, ".pear")) {
+      result = name;
+    }
+  }
+
+  for (int i = 0; i < entries_len && result == NULL; i++) {
+    const char *name = entries[i].name;
+    if (strcmp(name, "node.napi.node") == 0) {
       result = name;
     }
   }

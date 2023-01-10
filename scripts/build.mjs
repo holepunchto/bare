@@ -18,15 +18,27 @@ const result = await esbuild.build({
 })
 
 for (const file of result.outputFiles) {
-  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', Buffer.concat([file.contents, Buffer.from('\n//# sourceURL=<pearjs>/bootstrap.js')])))
+  const out = Buffer.concat([
+    Buffer.from('(function (pear) {\n'),
+    file.contents,
+    Buffer.from('\n//# sourceURL=<pearjs>/bootstrap.js\n})')
+  ])
+
+  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', out))
 }
 
-childProcess.spawnSync('cmake', ['-S', '.', '-B', 'build', '-DCMAKE_BUILD_TYPE=Release'], {
+let proc = null
+
+proc = childProcess.spawnSync('cmake', ['-S', '.', '-B', 'build', '-DCMAKE_BUILD_TYPE=Release'], {
   cwd: path.join(__dirname, '..'),
   stdio: 'inherit'
 })
 
-childProcess.spawnSync('cmake', ['--build', 'build'], {
+if (proc.status) process.exit(proc.status)
+
+proc = childProcess.spawnSync('cmake', ['--build', 'build'], {
   cwd: path.join(__dirname, '..'),
   stdio: 'inherit'
 })
+
+if (proc.status) process.exit(proc.status)

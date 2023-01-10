@@ -2,46 +2,33 @@
 #include <js.h>
 #include <uv.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <unistd.h>
 
+#include "runtime.h"
 #include "addons.h"
+#include "../build/bootstrap.h"
 
 static js_value_t *
-process_stdout (js_env_t *env, js_callback_info_t *info) {
-  js_value_t *argv[1];
-  size_t argc = 1;
+bindings_print (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
+  uint32_t fd;
   char data[65536];
   size_t data_len;
 
-  js_get_value_string_utf8(env, argv[0], data, 65536, &data_len);
+  js_get_value_uint32(env, argv[0], &fd);
+  js_get_value_string_utf8(env, argv[1], data, 65536, &data_len);
 
-  fprintf(stdout, "%s", data);
+  write(fd, data, data_len);
 
   return NULL;
 }
 
 static js_value_t *
-process_stderr (js_env_t *env, js_callback_info_t *info) {
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-
-  char data[65536];
-  size_t data_len;
-
-  js_get_value_string_utf8(env, argv[0], data, 65536, &data_len);
-
-  fprintf(stderr, "%s", data);
-
-  return NULL;
-}
-
-static js_value_t *
-process_load_addon (js_env_t *env, js_callback_info_t *info) {
+bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[2];
   size_t argc = 2;
 
@@ -57,7 +44,7 @@ process_load_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-process_resolve_addon (js_env_t *env, js_callback_info_t *info) {
+bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -203,7 +190,7 @@ read_source_sync (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-process_hrtime (js_env_t *env, js_callback_info_t *info) {
+bindings_hrtime (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[2];
   size_t argc = 2;
 
@@ -230,7 +217,7 @@ process_hrtime (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-process_exit (js_env_t *env, js_callback_info_t *info) {
+bindings_exit (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -245,7 +232,7 @@ process_exit (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-process_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
+bindings_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -265,133 +252,144 @@ process_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static int
+trigger_fatal_exception (js_env_t *env) {
+  js_value_t *exception;
+  js_get_and_clear_last_exception(env, &exception);
+  js_fatal_exception(env, exception);
+  return 1;
+}
+
 static void
 pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
-  js_value_t *proc = data;
+  js_value_t *exports = data;
   js_value_t *fn;
 
-  int err = js_get_named_property(env, proc, "_onfatalexception", &fn);
+  int err = js_get_named_property(env, exports, "onfatalexception", &fn);
+
   if (err < 0) {
     fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
     return;
   }
 
-  err = js_make_callback(env, proc, fn, 1, &error, NULL);
-  if (err < 0) {
-    js_value_t *exception;
-    js_get_and_clear_last_exception(env, &exception);
-    js_fatal_exception(env, exception);
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (!is_set) {
+    fprintf(stderr, "Fatal exception, but no handler set, exiting...\n");
+    exit(1);
+    return;
   }
+
+  err = js_make_callback(env, exports, fn, 1, &error, NULL);
+  if (err < 0) trigger_fatal_exception(env);
 }
 
 int
-pearjs_runtime_setup (js_env_t *env, const char *entry_point) {
+pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
   int err;
 
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  js_value_t *proc;
-  js_create_object(env, &proc);
+  js_create_object(env, &(config->exports));
+  js_value_t *exports = config->exports;
 
-  js_on_uncaught_exception(env, pearjs_on_uncaught_exception, proc);
+  js_on_uncaught_exception(env, pearjs_on_uncaught_exception, exports);
 
   {
     js_value_t *val;
     js_create_string_utf8(env, PEARJS_PLATFORM, -1, &val);
-    js_set_named_property(env, proc, "platform", val);
+    js_set_named_property(env, exports, "platform", val);
   }
 
   {
     js_value_t *val;
     js_create_string_utf8(env, PEARJS_ARCH, -1, &val);
-    js_set_named_property(env, proc, "arch", val);
+    js_set_named_property(env, exports, "arch", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "stdout", -1, process_stdout, NULL, &val);
-    js_set_named_property(env, proc, "_stdout", val);
+    js_create_function(env, "print", -1, bindings_print, NULL, &val);
+    js_set_named_property(env, exports, "print", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "stderr", -1, process_stderr, NULL, &val);
-    js_set_named_property(env, proc, "_stderr", val);
+    js_create_function(env, "hrtime", -1, bindings_hrtime, NULL, &val);
+    js_set_named_property(env, exports, "hrtime", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "hrtime", -1, process_hrtime, NULL, &val);
-    js_set_named_property(env, proc, "_hrtime", val);
+    js_create_function(env, "exit", -1, bindings_exit, NULL, &val);
+    js_set_named_property(env, exports, "exit", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "exit", -1, process_exit, NULL, &val);
-    js_set_named_property(env, proc, "_exit", val);
+    js_create_function(env, "stringToBuffer", -1, bindings_string_to_buffer, NULL, &val);
+    js_set_named_property(env, exports, "stringToBuffer", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "stringToBuffer", -1, process_string_to_buffer, NULL, &val);
-    js_set_named_property(env, proc, "_stringToBuffer", val);
+    js_create_function(env, "loadAddon", -1, bindings_load_addon, NULL, &val);
+    js_set_named_property(env, exports, "loadAddon", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, process_load_addon, NULL, &val);
-    js_set_named_property(env, proc, "_loadAddon", val);
+    js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, NULL, &val);
+    js_set_named_property(env, exports, "resolveAddon", val);
   }
 
-  {
-    js_value_t *val;
-    js_create_function(env, "resolveAddon", -1, process_resolve_addon, NULL, &val);
-    js_set_named_property(env, proc, "_resolveAddon", val);
-  }
-
-  {
+  { // TODO: replace me
     js_value_t *val;
     js_create_function(env, "existsSync", -1, exists_sync, NULL, &val);
-    js_set_named_property(env, proc, "_existsSync", val);
+    js_set_named_property(env, exports, "existsSync", val);
   }
 
-  {
+  { // TODO: replace me
     js_value_t *val;
     js_create_function(env, "readSourceSync", -1, read_source_sync, NULL, &val);
-    js_set_named_property(env, proc, "_readSourceSync", val);
+    js_set_named_property(env, exports, "readSourceSync", val);
   }
 
   {
     js_value_t *val;
-    js_create_string_utf8(env, entry_point, -1, &val);
-    js_set_named_property(env, proc, "_entryPoint", val);
+    js_create_string_utf8(env, config->argv[1], -1, &val);
+    js_set_named_property(env, exports, "main", val);
   }
 
   js_value_t *global;
   js_get_global(env, &global);
 
-  js_set_named_property(env, global, "process", proc);
   js_set_named_property(env, global, "global", global);
+
+  js_value_t *script;
+  js_create_string_utf8(env, (const char *) pearjs_bootstrap, pearjs_bootstrap_len, &script);
+
+  js_value_t *bootstrap;
+  err = js_run_script(env, script, &bootstrap);
+  if (err < 0) return trigger_fatal_exception(env);
+
+  err = js_call_function(env, global, bootstrap, 1, &exports, NULL);
+  if (err < 0) return trigger_fatal_exception(env);
 
   return 0;
 }
 
 void
-pearjs_runtime_teardown (js_env_t *env) {
-  js_value_t *proc;
-  js_value_t *global;
+pearjs_runtime_teardown (js_env_t *env, pearjs_runtime_t *config) {
   js_value_t *fn;
+  js_get_named_property(env, config->exports, "onexit", &fn);
 
-  js_get_global(env, &global);
-  js_get_named_property(env, global, "process", &proc);
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
 
-  js_get_named_property(env, proc, "_onexit", &fn);
-
-  int err = js_make_callback(env, proc, fn, 0, NULL, NULL);
-  if (err < 0) {
-    js_value_t *exception;
-    js_get_and_clear_last_exception(env, &exception);
-    js_fatal_exception(env, exception);
-  }
+  int err = js_make_callback(env, config->exports, fn, 0, NULL, NULL);
+  if (err < 0) trigger_fatal_exception(env);
 }
