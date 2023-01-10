@@ -13,7 +13,6 @@ const result = await esbuild.build({
     path.join(__dirname, '../src/bootstrap.js')
   ],
   bundle: true,
-  minify: true,
   write: false,
   outfile: path.join(__dirname, '../src/bootstrap.h')
 })
