@@ -61,4 +61,3 @@ target_link_libraries(
     js_static
     napi_static
 )
-
