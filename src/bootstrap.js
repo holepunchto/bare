@@ -75,7 +75,7 @@ class Module {
     function require (req) {
       if (req === 'module') return Module
       if (req === 'path') return path
-      if (req.endsWith('.node')) return process.addon(req, { resolve: false }) // node compat
+      if (req.endsWith('.node') || req.endsWith('.pear')) return process.addon(req, { resolve: false }) // node compat
       const filename = resolve(req)
       return Module.load(filename)
     }
