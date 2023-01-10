@@ -1,16 +1,21 @@
 import childProcess from 'child_process'
 import fs from 'fs/promises'
+import path from 'path'
+import url from 'url'
 import esbuild from 'esbuild'
 import includeStatic from 'include-static'
 
+const __filename = url.fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const result = await esbuild.build({
   entryPoints: [
-    'src/bootstrap.js'
+    path.join(__dirname, '../src/bootstrap.js')
   ],
   bundle: true,
   minify: true,
   write: false,
-  outfile: 'src/bootstrap.h'
+  outfile: path.join(__dirname, '../src/bootstrap.h')
 })
 
 for (const file of result.outputFiles) {
@@ -18,9 +23,11 @@ for (const file of result.outputFiles) {
 }
 
 childProcess.spawnSync('cmake', ['-S', '.', '-B', 'build', '-DCMAKE_BUILD_TYPE=Release'], {
+  cwd: path.join(__dirname, '..'),
   stdio: 'inherit'
 })
 
 childProcess.spawnSync('cmake', ['--build', 'build'], {
+  cwd: path.join(__dirname, '..'),
   stdio: 'inherit'
 })
