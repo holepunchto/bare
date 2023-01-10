@@ -5,19 +5,22 @@ import Corestore from 'corestore'
 import Hyperswarm from 'hyperswarm'
 import id from 'hypercore-id-encoding'
 import path from 'path'
-import os from 'os'
+import url from 'url'
 import fs from 'fs'
+
+const __filename = url.fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 childProcess.spawnSync('git', ['submodule', 'update', '--init', '--recursive'], {
   stdio: 'inherit'
 })
 
-const store = new Corestore(path.join(os.tmpdir(), 'corestore'))
+const store = new Corestore(path.join(__dirname, '../build/corestore'))
 const drive = new Hyperdrive(store, id.decode('dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo'))
 const swarm = new Hyperswarm()
 
 const host = process.platform + '-' + process.arch
-const prebuilds = path.join(import.meta.url.slice(7), '../../prebuilds/v8')
+const prebuilds = path.join(__dirname, '../prebuilds/v8')
 
 swarm.on('connection', c => store.replicate(c))
 
