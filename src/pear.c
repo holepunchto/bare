@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "runtime.h"
-#include "bootstrap.h"
+#include "../build/bootstrap.h"
 
 int
 main (int argc, char **argv) {
