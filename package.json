@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node scripts/build.mjs",
-    "fetch-v8": "node scripts/fetch-v8.mjs"
+    "install": "node scripts/install.mjs",
+    "build": "node scripts/build.mjs"
   },
   "repository": {
     "type": "git",

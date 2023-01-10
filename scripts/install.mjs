@@ -1,3 +1,4 @@
+import childProcess from 'child_process'
 import Hyperdrive from 'hyperdrive'
 import Localdrive from 'localdrive'
 import Corestore from 'corestore'
@@ -6,6 +7,10 @@ import id from 'hypercore-id-encoding'
 import path from 'path'
 import os from 'os'
 import fs from 'fs'
+
+childProcess.spawnSync('git', ['submodule', 'update', '--init', '--recursive'], {
+  stdio: 'inherit'
+})
 
 const store = new Corestore(path.join(os.tmpdir(), 'corestore'))
 const drive = new Hyperdrive(store, id.decode('dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo'))
