@@ -15,6 +15,8 @@ childProcess.spawnSync('git', ['submodule', 'update', '--init', '--recursive'], 
   stdio: 'inherit'
 })
 
+console.log('Fetching V8')
+
 const store = new Corestore(path.join(__dirname, '../build/corestore'))
 const drive = new Hyperdrive(store, id.decode('dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo'))
 const swarm = new Hyperswarm()
