@@ -22,6 +22,7 @@
     "@pearjs/events": "^1.1.0",
     "events": "^3.3.0",
     "streamx": "^2.13.0",
+    "tiny-buffers": "github:holepunchto/tiny-buffers#first-release",
     "tiny-paths": "^1.0.0"
   },
   "devDependencies": {
