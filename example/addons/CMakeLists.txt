@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.22)
 
 project(add_numbers C CXX)
 
-set(LIBRARY_OUTPUT_NAME, )
-
 include_directories(
   add_numbers
   PUBLIC
