@@ -18,11 +18,11 @@
   },
   "homepage": "https://github.com/holepunchto/pearjs-experiment#readme",
   "dependencies": {
+    "@pearjs/buffer": "github:holepunchto/pearjs-buffer#first-release",
     "@pearjs/console": "^2.0.0",
     "@pearjs/events": "^1.1.0",
     "events": "^3.3.0",
     "streamx": "^2.13.0",
-    "tiny-buffers": "github:holepunchto/tiny-buffers#first-release",
     "tiny-paths": "^1.0.0"
   },
   "devDependencies": {
