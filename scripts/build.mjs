@@ -24,6 +24,8 @@ for (const file of result.outputFiles) {
     Buffer.from('\n//# sourceURL=<pearjs>/bootstrap.js\n})')
   ])
 
+  await fs.mkdir(path.dirname(file.path) , { recursive: true })
+
   await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', out))
 }
 
