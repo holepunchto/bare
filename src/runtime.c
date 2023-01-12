@@ -331,7 +331,7 @@ pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
     return;
   }
 
-  err = js_make_callback(env, exports, fn, 1, &error, NULL);
+  err = js_call_function(env, exports, fn, 1, &error, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
@@ -471,6 +471,6 @@ pearjs_runtime_teardown (js_env_t *env, pearjs_runtime_t *config) {
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_make_callback(env, config->exports, fn, 0, NULL, NULL);
+  int err = js_call_function(env, config->exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
