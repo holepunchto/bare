@@ -6,7 +6,17 @@
 
 #include "runtime.h"
 #include "addons.h"
+#include "sync_fs.h"
 #include "../build/bootstrap.h"
+
+#define PEARJS_UV_CHECK(call) \
+  { \
+    int err = call; \
+    if (err < 0) { \
+      js_throw_error(env, uv_err_name(err), uv_strerror(err)); \
+      return NULL; \
+    } \
+  }
 
 static js_value_t *
 bindings_print (js_env_t *env, js_callback_info_t *info) {
@@ -236,6 +246,42 @@ bindings_exit (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bindings_cwd (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *val;
+
+  char cwd[PEARJS_SYNC_FS_MAX_PATH];
+  size_t cwd_len;
+
+  PEARJS_UV_CHECK(uv_cwd(cwd, &cwd_len))
+
+  js_create_string_utf8(env, cwd, cwd_len, &val);
+  return val;
+}
+
+static js_value_t *
+bindings_env (js_env_t *env, js_callback_info_t *info) {
+  uv_env_item_t *items;
+  int count;
+
+  PEARJS_UV_CHECK(uv_os_environ(&items, &count))
+
+  js_value_t *obj;
+  js_create_object(env, &obj);
+
+  for (int i = 0; i < count; i++) {
+    uv_env_item_t *item = items + i;
+
+    js_value_t *val;
+    js_create_string_utf8(env, item->value, -1, &val);
+    js_set_named_property(env, obj, item->name, val);
+  }
+
+  uv_os_free_environ(items, count);
+
+  return obj;
+}
+
+static js_value_t *
 bindings_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
@@ -311,6 +357,37 @@ pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
     js_value_t *val;
     js_create_string_utf8(env, PEARJS_ARCH, -1, &val);
     js_set_named_property(env, exports, "arch", val);
+  }
+
+  {
+    js_value_t *val;
+
+    char exec_path[PEARJS_SYNC_FS_MAX_PATH];
+    size_t exec_path_len;
+    uv_exepath(exec_path, &exec_path_len);
+
+    js_create_string_utf8(env, exec_path, exec_path_len, &val);
+    js_set_named_property(env, exports, "execPath", val);
+  }
+
+  {
+    js_value_t *val;
+    uv_pid_t pid = uv_os_getpid();
+
+    js_create_uint32(env, pid, &val);
+    js_set_named_property(env, exports, "pid", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "cwd", -1, bindings_cwd, NULL, &val);
+    js_set_named_property(env, exports, "cwd", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "env", -1, bindings_env, NULL, &val);
+    js_set_named_property(env, exports, "env", val);
   }
 
   {
