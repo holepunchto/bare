@@ -33,6 +33,7 @@
     "include-static": "^1.1.0",
     "localdrive": "^1.4.0",
     "napi-macros": "*",
+    "standard": "^17.0.0",
     "tiny-timers-native": "*"
   }
 }
