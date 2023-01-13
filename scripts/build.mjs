@@ -14,19 +14,19 @@ const result = await esbuild.build({
   ],
   bundle: true,
   write: false,
-  outfile: path.join(__dirname, '../build/bootstrap.h')
+  outfile: path.join(__dirname, '../build/bootstrap.h'),
+  banner: {
+    js: '(function (pear) {'
+  },
+  footer: {
+    js: '})\n//# sourceURL=<pearjs>/bootstrap.js'
+  }
 })
 
 for (const file of result.outputFiles) {
-  const out = Buffer.concat([
-    Buffer.from('(function (pear) {\n'),
-    file.contents,
-    Buffer.from('\n//# sourceURL=<pearjs>/bootstrap.js\n})')
-  ])
-
   await fs.mkdir(path.dirname(file.path) , { recursive: true })
 
-  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', out))
+  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', file.contents))
 }
 
 let proc = null
