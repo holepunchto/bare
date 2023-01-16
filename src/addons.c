@@ -97,8 +97,8 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
 }
 
 void
-pear_addons_set_static (bool is_static) {
-  pending_module = is_static ? &pending_static_module : &pending_dynamic_module;
+pear_addons_init () {
+  pending_module = &pending_dynamic_module;
 }
 
 int

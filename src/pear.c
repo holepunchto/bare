@@ -10,7 +10,7 @@
 
 int
 main (int argc, char **argv) {
-  pear_addons_set_static(false);
+  pear_addons_init();
 
   if (argc < 2) {
     fprintf(stderr, "Usage: pear <filename>\n");
