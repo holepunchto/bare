@@ -7,6 +7,7 @@
 
 #include "runtime.h"
 #include "addons.h"
+#include "sync_fs.h"
 
 int
 main (int argc, char **argv) {
@@ -22,17 +23,12 @@ main (int argc, char **argv) {
 
   uv_loop_t *loop = uv_default_loop();
 
-  uv_fs_t req;
-  uv_fs_realpath(loop, &req, argv[1], NULL);
+  err = pear_sync_fs_realpath(loop, argv[1], NULL, &entry_point);
 
-  if (req.result < 0) {
+  if (err < 0) {
     fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);
     return 1;
   }
-
-  entry_point = (char *) malloc(strlen(req.ptr) + 1);
-  strcpy(entry_point, req.ptr);
-  uv_fs_req_cleanup(&req);
 
   js_platform_options_t opts = {0};
 
@@ -44,10 +40,9 @@ main (int argc, char **argv) {
 
   pear_runtime_t config = {0};
 
-  config.argc = 2;
-  config.argv = argv;
-
-  argv[1] = entry_point;
+  config.main = entry_point;
+  config.argc = argc - 2;
+  config.argv = argv + 2;
 
   err = pear_runtime_setup(env, &config);
 

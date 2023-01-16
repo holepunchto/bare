@@ -8,6 +8,7 @@
 typedef struct {
   js_value_t *exports;
   bool bootstrapped;
+  char *main;
   int argc;
   char **argv;
 } pear_runtime_t;

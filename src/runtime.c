@@ -359,15 +359,39 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
     js_set_named_property(env, exports, "arch", val);
   }
 
-  {
-    js_value_t *val;
+  js_value_t *exec_path_val;
 
+  {
     char exec_path[PEAR_SYNC_FS_MAX_PATH];
     size_t exec_path_len;
     uv_exepath(exec_path, &exec_path_len);
 
-    js_create_string_utf8(env, exec_path, exec_path_len, &val);
-    js_set_named_property(env, exports, "execPath", val);
+    js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
+    js_set_named_property(env, exports, "execPath", exec_path_val);
+  }
+
+  {
+    js_value_t *val;
+    js_value_t *str;
+
+    // TODO: the +2 will prob change when we evolve a bit
+    js_create_array_with_length(env, config->argc + 2, &val);
+
+    int idx = 0;
+
+    js_create_string_utf8(env, config->main, -1, &str);
+
+    js_set_element(env, val, idx++, exec_path_val);
+    js_set_element(env, val, idx++, str);
+
+    for (int i = 0; i < config->argc; i++) {
+      char *a = config->argv[i];
+
+      js_create_string_utf8(env, a, -1, &str);
+      js_set_element(env, val, idx++, str);
+    }
+
+    js_set_named_property(env, exports, "argv", val);
   }
 
   {
@@ -461,7 +485,7 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
   {
     js_value_t *val;
-    js_create_string_utf8(env, config->argv[1], -1, &val);
+    js_create_string_utf8(env, config->main, -1, &val);
     js_set_named_property(env, exports, "main", val);
   }
 

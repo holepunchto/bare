@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "sync_fs.h"
 
@@ -13,6 +14,27 @@ pear_sync_fs_path_join (const char *a, const char *b, char *out) {
   *out = PEAR_SYNC_FS_SEP[0];
 
   memcpy(out + 1, b, len_b + 1);
+}
+
+int
+pear_sync_fs_realpath (uv_loop_t *loop, const char *path, size_t *len, char **res) {
+  uv_fs_t req;
+  uv_fs_realpath(loop, &req, path, NULL);
+
+  int err = req.result;
+
+  if (err < 0) {
+    uv_fs_req_cleanup(&req);
+    return err;
+  }
+
+  size_t l = strlen(req.ptr);
+  if (len != NULL) *len = l;
+  *res = (char *) malloc(l + 1);
+  strcpy(*res, req.ptr);
+  uv_fs_req_cleanup(&req);
+
+  return 0;
 }
 
 int
