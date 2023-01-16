@@ -1,13 +1,13 @@
-#ifndef PEARJS_ADDONS_H
-#define PEARJS_ADDONS_H
+#ifndef PEAR_ADDONS_H
+#define PEAR_ADDONS_H
 
 #include <uv.h>
 #include <js.h>
 
 int
-pearjs_addons_resolve (uv_loop_t *loop, const char *path, char *out);
+pear_addons_resolve (uv_loop_t *loop, const char *path, char *out);
 
 js_value_t *
-pearjs_addons_load (js_env_t *env, const char *path, bool resolve);
+pear_addons_load (js_env_t *env, const char *path, bool resolve);
 
 #endif

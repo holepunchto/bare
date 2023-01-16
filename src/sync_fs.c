@@ -3,20 +3,20 @@
 #include "sync_fs.h"
 
 void
-pearjs_sync_fs_path_join (const char *a, const char *b, char *out) {
+pear_sync_fs_path_join (const char *a, const char *b, char *out) {
   size_t len_a = strlen(a);
   size_t len_b = strlen(b);
 
   if (out != a) memcpy(out, a, len_a);
 
   out += len_a;
-  *out = PEARJS_SYNC_FS_SEP[0];
+  *out = PEAR_SYNC_FS_SEP[0];
 
   memcpy(out + 1, b, len_b + 1);
 }
 
 int
-pearjs_sync_fs_readdir (uv_loop_t *loop, const char *dirname, int entries_len, uv_dirent_t *entries) {
+pear_sync_fs_readdir (uv_loop_t *loop, const char *dirname, int entries_len, uv_dirent_t *entries) {
   uv_fs_t req;
 
   int num = 0;
@@ -49,7 +49,7 @@ pearjs_sync_fs_readdir (uv_loop_t *loop, const char *dirname, int entries_len, u
 }
 
 int
-pearjs_sync_fs_stat (uv_loop_t *loop, const char *path, int *type, size_t *len) {
+pear_sync_fs_stat (uv_loop_t *loop, const char *path, int *type, size_t *len) {
   uv_fs_t req;
   uv_fs_stat(loop, &req, path, NULL);
 
@@ -57,9 +57,9 @@ pearjs_sync_fs_stat (uv_loop_t *loop, const char *path, int *type, size_t *len) 
     uv_stat_t *st = req.ptr;
 
     if (st->st_mode & S_IFREG) {
-      if (type != NULL) *type = PEARJS_SYNC_FS_FILE;
+      if (type != NULL) *type = PEAR_SYNC_FS_FILE;
     } else if (st->st_mode & S_IFDIR) {
-      if (type != NULL) *type = PEARJS_SYNC_FS_DIR;
+      if (type != NULL) *type = PEAR_SYNC_FS_DIR;
     }
 
     if (len != NULL) *len = st->st_size;

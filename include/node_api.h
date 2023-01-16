@@ -2,6 +2,6 @@
 #define PEARJS_NODE_API_H
 
 #include <napi.h>
-#include <pearjs.h>
+#include <pear.h>
 
 #endif

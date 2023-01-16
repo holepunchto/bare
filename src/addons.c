@@ -3,20 +3,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <napi.h>
-#include <pearjs.h>
+#include <pear.h>
 #include <js.h>
 
 #include "addons.h"
 #include "sync_fs.h"
 
-#define PEARJS_ADDONS_MAX_ENTRIES 256
+#define PEAR_ADDONS_MAX_ENTRIES 256
 
-static pearjs_module_t *pearjs_pending_module = NULL;
+static pear_module_t *pear_pending_module = NULL;
 
-static pearjs_module_t *
+static pear_module_t *
 shift_pending_addon () {
-  pearjs_module_t *mod = pearjs_pending_module;
-  pearjs_module_t *prev = NULL;
+  pear_module_t *mod = pear_pending_module;
+  pear_module_t *prev = NULL;
 
   if (mod == NULL) return NULL;
 
@@ -25,7 +25,7 @@ shift_pending_addon () {
     mod = mod->next_addon;
   }
 
-  if (prev == NULL) pearjs_pending_module = NULL;
+  if (prev == NULL) pear_pending_module = NULL;
   else prev->next_addon = mod->next_addon;
 
   return mod;
@@ -41,8 +41,8 @@ has_extension (const char *s, const char *ext) {
 
 static bool
 check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
-  uv_dirent_t entries[PEARJS_ADDONS_MAX_ENTRIES];
-  int entries_len = pearjs_sync_fs_readdir(loop, path, PEARJS_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
+  uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
+  int entries_len = pear_sync_fs_readdir(loop, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
   if (entries_len <= 0) return false;
 
   const char *result = NULL;
@@ -76,7 +76,7 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
   }
 
   if (result != NULL) {
-    pearjs_sync_fs_path_join(path, result, out);
+    pear_sync_fs_path_join(path, result, out);
     return true;
   }
 
@@ -84,8 +84,8 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
 }
 
 int
-pearjs_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
-  char tmp[PEARJS_SYNC_FS_MAX_PATH];
+pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
+  char tmp[PEAR_SYNC_FS_MAX_PATH];
 
   if (has_extension(path, ".pear") || has_extension(path, ".node")) {
     if (out != path) strcpy(out, path);
@@ -95,24 +95,24 @@ pearjs_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
   // TODO: check where cmake likes to build...
 
   // node-gyp compat
-  pearjs_sync_fs_path_join(path, "build" PEARJS_SYNC_FS_SEP "Release", tmp);
+  pear_sync_fs_path_join(path, "build" PEAR_SYNC_FS_SEP "Release", tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
 
   // check for prebuilds
-  pearjs_sync_fs_path_join(path, "prebuilds" PEARJS_SYNC_FS_SEP PEARJS_PLATFORM "-" PEARJS_ARCH, tmp);
+  pear_sync_fs_path_join(path, "prebuilds" PEAR_SYNC_FS_SEP PEAR_PLATFORM "-" PEAR_ARCH, tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
 
   return UV_ENOENT;
 }
 
 js_value_t *
-pearjs_addons_load (js_env_t *env, const char *path, bool resolve) {
+pear_addons_load (js_env_t *env, const char *path, bool resolve) {
   int err;
 
   if (resolve) {
     uv_loop_t *loop;
     js_get_env_loop(env, &loop);
-    err = pearjs_addons_resolve(loop, path, (char *) path);
+    err = pear_addons_resolve(loop, path, (char *) path);
     if (err < 0) {
       js_throw_error(env, NULL, "Could not resolve addon");
       return NULL;
@@ -128,7 +128,7 @@ pearjs_addons_load (js_env_t *env, const char *path, bool resolve) {
     return NULL;
   }
 
-  pearjs_module_t *mod = shift_pending_addon();
+  pear_module_t *mod = shift_pending_addon();
 
   if (mod == NULL) {
     uv_dlclose(lib);
@@ -152,23 +152,23 @@ pearjs_addons_load (js_env_t *env, const char *path, bool resolve) {
 }
 
 void
-pearjs_module_register (pearjs_module_t *mod) {
-  pearjs_module_t *cpy = malloc(sizeof(pearjs_module_t));
-
+pear_module_register (pear_module_t *mod) {
+  pear_module_t *cpy = malloc(sizeof(pear_module_t));
+printf("register module...\n");
   *cpy = *mod;
 
-  cpy->next_addon = pearjs_pending_module;
-  pearjs_pending_module = cpy;
+  cpy->next_addon = pear_pending_module;
+  pear_pending_module = cpy;
 }
 
 void
 napi_module_register (napi_module *napi_mod) {
-  pearjs_module_t mod = {
-    .version = PEARJS_MODULE_VERSION,
+  pear_module_t mod = {
+    .version = PEAR_MODULE_VERSION,
     .filename = napi_mod->nm_filename,
     .modname = napi_mod->nm_modname,
     .register_addon = napi_mod->nm_register_func
   };
 
-  pearjs_module_register(&mod);
+  pear_module_register(&mod);
 }

@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <js.h>
-#include <pearjs.h>
+#include <pear.h>
 #include <stdlib.h>
 #include <uv.h>
 #include <string.h>
@@ -39,23 +39,23 @@ main (int argc, char **argv) {
   js_env_t *env;
   js_create_env(loop, platform, &env);
 
-  pearjs_runtime_t config = {0};
+  pear_runtime_t config = {0};
 
   config.argc = 2;
   config.argv = argv;
 
   argv[1] = entry_point;
 
-  err = pearjs_runtime_setup(env, &config);
+  err = pear_runtime_setup(env, &config);
 
   if (err < 0) {
-    fprintf(stderr, "pearjs_runtime_setup failed with %i\n", err);
+    fprintf(stderr, "pear_runtime_setup failed with %i\n", err);
     return 1;
   }
 
   uv_run(loop, UV_RUN_DEFAULT);
 
-  pearjs_runtime_teardown(env, &config);
+  pear_runtime_teardown(env, &config);
 
   js_destroy_env(env);
 

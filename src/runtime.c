@@ -1,4 +1,4 @@
-#include <pearjs.h>
+#include <pear.h>
 #include <js.h>
 #include <uv.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #include "sync_fs.h"
 #include "../build/bootstrap.h"
 
-#define PEARJS_UV_CHECK(call) \
+#define PEAR_UV_CHECK(call) \
   { \
     int err = call; \
     if (err < 0) { \
@@ -54,7 +54,7 @@ bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
   js_get_value_uint32(env, argv[1], &resolve);
 
-  return pearjs_addons_load(env, addon_file, (bool) resolve);
+  return pear_addons_load(env, addon_file, (bool) resolve);
 }
 
 static js_value_t *
@@ -70,7 +70,7 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   js_get_env_loop(env, &loop);
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
 
-  int err = pearjs_addons_resolve(loop, addon_file, addon_file);
+  int err = pear_addons_resolve(loop, addon_file, addon_file);
   if (err < 0) {
     js_throw_error(env, NULL, "Could not resolve addon");
     return NULL;
@@ -249,10 +249,10 @@ static js_value_t *
 bindings_cwd (js_env_t *env, js_callback_info_t *info) {
   js_value_t *val;
 
-  char cwd[PEARJS_SYNC_FS_MAX_PATH];
+  char cwd[PEAR_SYNC_FS_MAX_PATH];
   size_t cwd_len;
 
-  PEARJS_UV_CHECK(uv_cwd(cwd, &cwd_len))
+  PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
 
   js_create_string_utf8(env, cwd, cwd_len, &val);
   return val;
@@ -263,7 +263,7 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
   uv_env_item_t *items;
   int count;
 
-  PEARJS_UV_CHECK(uv_os_environ(&items, &count))
+  PEAR_UV_CHECK(uv_os_environ(&items, &count))
 
   js_value_t *obj;
   js_create_object(env, &obj);
@@ -311,7 +311,7 @@ trigger_fatal_exception (js_env_t *env) {
 }
 
 static void
-pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
+pear_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
   js_value_t *exports = data;
   js_value_t *fn;
 
@@ -336,7 +336,7 @@ pearjs_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
 }
 
 int
-pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
+pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
   int err;
 
   uv_loop_t *loop;
@@ -345,24 +345,24 @@ pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
   js_create_object(env, &(config->exports));
   js_value_t *exports = config->exports;
 
-  js_on_uncaught_exception(env, pearjs_on_uncaught_exception, exports);
+  js_on_uncaught_exception(env, pear_on_uncaught_exception, exports);
 
   {
     js_value_t *val;
-    js_create_string_utf8(env, PEARJS_PLATFORM, -1, &val);
+    js_create_string_utf8(env, PEAR_PLATFORM, -1, &val);
     js_set_named_property(env, exports, "platform", val);
   }
 
   {
     js_value_t *val;
-    js_create_string_utf8(env, PEARJS_ARCH, -1, &val);
+    js_create_string_utf8(env, PEAR_ARCH, -1, &val);
     js_set_named_property(env, exports, "arch", val);
   }
 
   {
     js_value_t *val;
 
-    char exec_path[PEARJS_SYNC_FS_MAX_PATH];
+    char exec_path[PEAR_SYNC_FS_MAX_PATH];
     size_t exec_path_len;
     uv_exepath(exec_path, &exec_path_len);
 
@@ -450,7 +450,7 @@ pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
   js_set_named_property(env, global, "global", global);
 
   js_value_t *script;
-  js_create_string_utf8(env, (const char *) pearjs_bootstrap, pearjs_bootstrap_len, &script);
+  js_create_string_utf8(env, (const char *) pear_bootstrap, pear_bootstrap_len, &script);
 
   js_value_t *bootstrap;
   err = js_run_script(env, script, &bootstrap);
@@ -463,7 +463,7 @@ pearjs_runtime_setup (js_env_t *env, pearjs_runtime_t *config) {
 }
 
 void
-pearjs_runtime_teardown (js_env_t *env, pearjs_runtime_t *config) {
+pear_runtime_teardown (js_env_t *env, pear_runtime_t *config) {
   js_value_t *fn;
   js_get_named_property(env, config->exports, "onexit", &fn);
 

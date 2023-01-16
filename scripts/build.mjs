@@ -26,7 +26,7 @@ const result = await esbuild.build({
 for (const file of result.outputFiles) {
   await fs.mkdir(path.dirname(file.path), { recursive: true })
 
-  await fs.writeFile(file.path, includeStatic('pearjs_bootstrap', file.contents))
+  await fs.writeFile(file.path, includeStatic('pear_bootstrap', file.contents))
 }
 
 let proc = null
