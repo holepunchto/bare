@@ -11,11 +11,13 @@
 
 #define PEAR_ADDONS_MAX_ENTRIES 256
 
-static pear_module_t *pear_pending_module = NULL;
+static pear_module_t *pending_dynamic_module = NULL;
+static pear_module_t *pending_static_module = NULL;
+static pear_module_t **pending_module = &pending_static_module;
 
 static pear_module_t *
-shift_pending_addon () {
-  pear_module_t *mod = pear_pending_module;
+shift_pending_dynamic_addon () {
+  pear_module_t *mod = pending_dynamic_module;
   pear_module_t *prev = NULL;
 
   if (mod == NULL) return NULL;
@@ -25,7 +27,7 @@ shift_pending_addon () {
     mod = mod->next_addon;
   }
 
-  if (prev == NULL) pear_pending_module = NULL;
+  if (prev == NULL) pending_dynamic_module = NULL;
   else prev->next_addon = mod->next_addon;
 
   return mod;
@@ -37,6 +39,17 @@ has_extension (const char *s, const char *ext) {
   size_t e_len = strlen(ext);
 
   return e_len <= s_len && strcmp(s + (s_len - e_len), ext) == 0;
+}
+
+static bool
+has_dirname (const char *s, const char *dir) {
+  size_t s_len = strlen(s);
+  size_t dir_len = strlen(dir);
+
+  if (dir_len >= s_len) return false;
+  if (memcmp(dir, s, dir_len) != 0) return false;
+
+  return *(s + dir_len) == PEAR_SYNC_FS_SEP[0];
 }
 
 static bool
@@ -83,6 +96,11 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
   return false;
 }
 
+void
+pear_addons_set_static (bool is_static) {
+  pending_module = is_static ? &pending_static_module : &pending_dynamic_module;
+}
+
 int
 pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
   char tmp[PEAR_SYNC_FS_MAX_PATH];
@@ -106,35 +124,65 @@ pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
 }
 
 js_value_t *
-pear_addons_load (js_env_t *env, const char *path, bool resolve) {
+pear_addons_load (js_env_t *env, const char *path, int mode) {
   int err;
 
-  if (resolve) {
-    uv_loop_t *loop;
-    js_get_env_loop(env, &loop);
-    err = pear_addons_resolve(loop, path, (char *) path);
+  pear_module_t *mod;
+
+  if (mode & PEAR_ADDONS_DYNAMIC) {
+    if (mode & PEAR_ADDONS_RESOLVE) {
+      uv_loop_t *loop;
+      js_get_env_loop(env, &loop);
+      err = pear_addons_resolve(loop, path, (char *) path);
+      if (err < 0) {
+        js_throw_error(env, NULL, "Could not resolve addon");
+        return NULL;
+      }
+    }
+
+    uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+    err = uv_dlopen(path, lib);
+
     if (err < 0) {
-      js_throw_error(env, NULL, "Could not resolve addon");
+      js_throw_error(env, NULL, uv_dlerror(lib));
+      free(lib);
+      return NULL;
+    }
+
+    mod = shift_pending_dynamic_addon();
+
+    if (mod == NULL) {
+      uv_dlclose(lib);
+      free(lib);
+      js_throw_error(env, NULL, "No module registered");
       return NULL;
     }
   }
 
-  uv_lib_t *lib = malloc(sizeof(uv_lib_t));
-  err = uv_dlopen(path, lib);
+  if (mode & PEAR_ADDONS_STATIC) {
+    mod = pending_static_module;
+    pear_module_t *prev = NULL;
 
-  if (err < 0) {
-    js_throw_error(env, NULL, uv_dlerror(lib));
-    free(lib);
-    return NULL;
-  }
+    while (mod != NULL) {
+      bool found = (mode & PEAR_ADDONS_RESOLVE) ? has_dirname(mod->filename, path) : (strcmp(mod->filename, path) == 0);
 
-  pear_module_t *mod = shift_pending_addon();
+      if (found) {
+        if (prev == NULL) {
+          pending_static_module = mod->next_addon;
+        } else {
+          prev->next_addon = mod->next_addon;
+        }
+        break;
+      }
 
-  if (mod == NULL) {
-    uv_dlclose(lib);
-    free(lib);
-    js_throw_error(env, NULL, "No module registered");
-    return NULL;
+      prev = mod;
+      mod = mod->next_addon;
+    }
+
+    if (mod == NULL) {
+      js_throw_error(env, NULL, "No relevant static module registered");
+      return NULL;
+    }
   }
 
   js_value_t *addon;
@@ -154,11 +202,11 @@ pear_addons_load (js_env_t *env, const char *path, bool resolve) {
 void
 pear_module_register (pear_module_t *mod) {
   pear_module_t *cpy = malloc(sizeof(pear_module_t));
-printf("register module...\n");
+
   *cpy = *mod;
 
-  cpy->next_addon = pear_pending_module;
-  pear_pending_module = cpy;
+  cpy->next_addon = *pending_module;
+  *pending_module = cpy;
 }
 
 void

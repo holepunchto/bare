@@ -49,12 +49,12 @@ bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
   char addon_file[4096];
-  uint32_t resolve;
+  uint32_t mode;
 
   js_get_value_string_utf8(env, argv[0], addon_file, 4096, NULL);
-  js_get_value_uint32(env, argv[1], &resolve);
+  js_get_value_uint32(env, argv[1], &mode);
 
-  return pear_addons_load(env, addon_file, (bool) resolve);
+  return pear_addons_load(env, addon_file, (int) mode);
 }
 
 static js_value_t *
@@ -368,6 +368,27 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
     js_create_string_utf8(env, exec_path, exec_path_len, &val);
     js_set_named_property(env, exports, "execPath", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
+    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_STATIC, &val);
+    js_set_named_property(env, exports, "ADDONS_STATIC", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_RESOLVE, &val);
+    js_set_named_property(env, exports, "ADDONS_RESOLVE", val);
   }
 
   {

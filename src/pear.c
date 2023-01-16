@@ -6,9 +6,12 @@
 #include <string.h>
 
 #include "runtime.h"
+#include "addons.h"
 
 int
 main (int argc, char **argv) {
+  pear_addons_set_static(false);
+
   if (argc < 2) {
     fprintf(stderr, "Usage: pear <filename>\n");
     return 1;
