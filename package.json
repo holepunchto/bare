@@ -22,7 +22,8 @@
     "@pearjs/events": "^1.1.0",
     "events": "^3.3.0",
     "streamx": "^2.13.0",
-    "tiny-paths": "^1.0.0"
+    "tiny-paths": "^1.0.0",
+    "tiny-timers-native": "^1.2.6"
   },
   "devDependencies": {
     "corestore": "^6.4.0",
@@ -33,7 +34,6 @@
     "include-static": "^1.1.0",
     "localdrive": "^1.4.0",
     "napi-macros": "*",
-    "standard": "^17.0.0",
-    "tiny-timers-native": "*"
+    "standard": "^17.0.0"
   }
 }
