@@ -12,6 +12,9 @@ void
 pear_sync_fs_path_join (const char *a, const char *b, char *out);
 
 int
+pear_sync_fs_read_file (uv_loop_t *loop, const char *path, size_t *size, char **data);
+
+int
 pear_sync_fs_realpath (uv_loop_t *loop, const char *path, size_t *len, char **res);
 
 int
