@@ -4,8 +4,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(pear C CXX)
 
-add_compile_definitions(NAPI_INLINE)
-
 if(NOT DEFINED V8)
   set(V8 ${PROJECT_SOURCE_DIR}/prebuilds/v8/host/lib/libv8.a)
   set(V8_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/prebuilds/v8/host/include)
@@ -52,6 +50,7 @@ set(pear_objects $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:uv>)
 
 # add builtins modules
 add_subdirectory(node_modules/tiny-timers-native EXCLUDE_FROM_ALL)
+target_compile_definitions(tiny_timers_native PUBLIC NAPI_INLINE)
 list(APPEND pear_objects $<TARGET_OBJECTS:tiny_timers_native>)
 
 add_executable(pear_bin ${pear_objects})
