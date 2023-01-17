@@ -4,7 +4,7 @@
   "description": "🍐js",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "standard",
     "install": "node scripts/install.mjs",
     "build": "node scripts/build.mjs"
   },
@@ -17,23 +17,19 @@
     "url": "https://github.com/holepunchto/pearjs-experiment/issues"
   },
   "homepage": "https://github.com/holepunchto/pearjs-experiment#readme",
-  "dependencies": {
+  "devDependencies": {
     "@pearjs/console": "^2.0.0",
     "@pearjs/events": "^1.1.0",
-    "events": "^3.3.0",
-    "streamx": "^2.13.0",
-    "tiny-paths": "^1.0.0",
-    "tiny-timers-native": "^1.2.6"
-  },
-  "devDependencies": {
+    "@pearjs/dev": "*",
     "corestore": "^6.4.0",
-    "esbuild": "^0.16.14",
     "hypercore-id-encoding": "^1.0.2",
     "hyperdrive": "next",
     "hyperswarm": "^4.3.5",
     "include-static": "^1.1.0",
     "localdrive": "^1.4.0",
-    "napi-macros": "*",
-    "standard": "^17.0.0"
+    "script-linker": "holepunchto/script-linker",
+    "standard": "^17.0.0",
+    "tiny-paths": "^1.0.0",
+    "tiny-timers-native": "^1.2.6"
   }
 }

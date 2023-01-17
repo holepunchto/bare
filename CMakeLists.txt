@@ -50,7 +50,7 @@ set(pear_objects $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:uv>)
 
 # add builtins modules
 add_subdirectory(node_modules/tiny-timers-native EXCLUDE_FROM_ALL)
-target_compile_definitions(tiny_timers_native PUBLIC NAPI_INLINE)
+target_compile_definitions(tiny_timers_native PUBLIC NAPI_INLINE NAPI_MODULE_FILENAME="/node_modules/tiny-timers-native")
 list(APPEND pear_objects $<TARGET_OBJECTS:tiny_timers_native>)
 
 add_executable(pear_bin ${pear_objects})
