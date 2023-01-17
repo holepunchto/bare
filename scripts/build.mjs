@@ -3,7 +3,6 @@ import childProcess from 'child_process'
 import fs from 'fs/promises'
 import path from 'path'
 import url from 'url'
-import esbuild from 'esbuild'
 import includeStatic from 'include-static'
 
 const __filename = url.fileURLToPath(import.meta.url)
@@ -26,7 +25,7 @@ const s = new ScriptLinker({
 
 const bundle = await s.bundle('/lib/bootstrap.js', {
   header: '(function (pear) {',
-  footer: '})',
+  footer: '//# sourceURL=<pearjs>/bootstrap.js\n})',
 })
 
 await fs.mkdir(path.dirname(path.join(root, 'build')), { recursive: true })

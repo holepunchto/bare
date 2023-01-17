@@ -46,7 +46,9 @@ has_dirname (const char *s, const char *dir) {
   size_t s_len = strlen(s);
   size_t dir_len = strlen(dir);
 
-  if (dir_len >= s_len) return false;
+  if (dir_len == s_len) return memcmp(dir, s, dir_len) == 0;
+
+  if (dir_len > s_len) return false;
   if (memcmp(dir, s, dir_len) != 0) return false;
 
   return *(s + dir_len) == PEAR_SYNC_FS_SEP[0];
