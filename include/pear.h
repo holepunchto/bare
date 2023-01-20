@@ -43,14 +43,15 @@
 
 #define PEAR_MODULE_VERSION 1
 
-#define PEAR_MODULE_NAME(name) #name
+#ifndef PEAR_MODULE_FILENAME
+#define PEAR_MODULE_FILENAME ""
+#endif
 
-#define PEAR_MODULE(name, fn) \
+#define PEAR_MODULE(fn) \
   PEAR_INITIALIZER(module_initializer) { \
     pear_module_t module = { \
       PEAR_MODULE_VERSION, \
-      __FILE__, \
-      PEAR_MODULE_NAME(name), \
+      PEAR_MODULE_FILENAME, \
       fn, \
       NULL \
     }; \
@@ -62,7 +63,6 @@ typedef js_value_t * (*pear_addon_register)(js_env_t *env, js_value_t *exports);
 typedef struct {
   int version;
   const char *filename;
-  const char *modname;
   pear_addon_register register_addon;
 
   void *next_addon;
