@@ -216,7 +216,6 @@ napi_module_register (napi_module *napi_mod) {
   pear_module_t mod = {
     .version = PEAR_MODULE_VERSION,
     .filename = napi_mod->nm_filename,
-    .modname = napi_mod->nm_modname,
     .register_addon = napi_mod->nm_register_func
   };
 
