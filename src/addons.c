@@ -114,6 +114,10 @@ pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
 
   // TODO: check where cmake likes to build...
 
+  // check for pearjs dev build compat
+  pear_sync_fs_path_join(path, "build", tmp);
+  if (check_addon_dir(loop, tmp, out)) return 0;
+
   // node-gyp compat
   pear_sync_fs_path_join(path, "build" PEAR_SYNC_FS_SEP "Release", tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
@@ -129,7 +133,28 @@ js_value_t *
 pear_addons_load (js_env_t *env, const char *path, int mode) {
   int err;
 
-  pear_module_t *mod;
+  pear_module_t *mod = NULL;
+
+  if (mode & PEAR_ADDONS_STATIC) {
+    mod = pending_static_module;
+    pear_module_t *prev = NULL;
+
+    while (mod != NULL) {
+      bool found = (mode & PEAR_ADDONS_RESOLVE) ? has_dirname(mod->filename, path) : (strcmp(mod->filename, path) == 0);
+
+      if (found) {
+        if (prev == NULL) {
+          pending_static_module = mod->next_addon;
+        } else {
+          prev->next_addon = mod->next_addon;
+        }
+        break;
+      }
+
+      prev = mod;
+      mod = mod->next_addon;
+    }
+  }
 
   if (mode & PEAR_ADDONS_DYNAMIC) {
     if (mode & PEAR_ADDONS_RESOLVE) {
@@ -156,35 +181,12 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
     if (mod == NULL) {
       uv_dlclose(lib);
       free(lib);
-      js_throw_error(env, NULL, "No module registered");
-      return NULL;
     }
   }
 
-  if (mode & PEAR_ADDONS_STATIC) {
-    mod = pending_static_module;
-    pear_module_t *prev = NULL;
-
-    while (mod != NULL) {
-      bool found = (mode & PEAR_ADDONS_RESOLVE) ? has_dirname(mod->filename, path) : (strcmp(mod->filename, path) == 0);
-
-      if (found) {
-        if (prev == NULL) {
-          pending_static_module = mod->next_addon;
-        } else {
-          prev->next_addon = mod->next_addon;
-        }
-        break;
-      }
-
-      prev = mod;
-      mod = mod->next_addon;
-    }
-
-    if (mod == NULL) {
-      js_throw_error(env, NULL, "No relevant static module registered");
-      return NULL;
-    }
+  if (mod == NULL) {
+    js_throw_error(env, NULL, "No module registered");
+    return NULL;
   }
 
   js_value_t *addon;
