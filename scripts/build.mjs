@@ -28,7 +28,7 @@ const bundle = await s.bundle('/lib/bootstrap.js', {
   footer: '//# sourceURL=<pearjs>/bootstrap.js\n})',
 })
 
-await fs.mkdir(path.dirname(path.join(root, 'build')), { recursive: true })
+await fs.mkdir(path.join(root, 'build'), { recursive: true })
 
 // just for debugging write the js file
 await fs.writeFile(path.join(root, 'build/bootstrap.js'), bundle)
