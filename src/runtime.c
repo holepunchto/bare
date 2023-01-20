@@ -18,6 +18,25 @@
     } \
   }
 
+#define PEAR_UV_ERROR_MAP_ITER(NAME, DESC) \
+  { \
+    js_value_t *key_val; \
+    js_create_array_with_length(env, 2, &key_val); \
+    js_value_t *val; \
+    js_create_array_with_length(env, 2, &val); \
+    js_value_t *name; \
+    js_create_string_utf8(env, #NAME, -1, &name); \
+    js_set_element(env, val, 0, name); \
+    js_value_t *desc; \
+    js_create_string_utf8(env, DESC, -1, &desc); \
+    js_set_element(env, val, 1, desc); \
+    js_value_t *key; \
+    js_create_int32(env, UV_ ## NAME, &key); \
+    js_set_element(env, key_val, 0, key); \
+    js_set_element(env, key_val, 1, val); \
+    js_set_element(env, arr, i++, key_val); \
+  }
+
 static js_value_t *
 bindings_print (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[2];
@@ -321,6 +340,16 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
     }
 
     js_set_named_property(env, exports, "argv", val);
+  }
+
+  {
+    js_value_t *arr;
+    int i = 0;
+
+    js_create_array(env, &arr);
+    UV_ERRNO_MAP(PEAR_UV_ERROR_MAP_ITER)
+
+    js_set_named_property(env, exports, "errnos", arr);
   }
 
   {
