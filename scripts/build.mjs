@@ -25,7 +25,7 @@ const s = new ScriptLinker({
 
 const bundle = await s.bundle('/lib/bootstrap.js', {
   header: '(function (pear) {',
-  footer: '//# sourceURL=<pearjs>/bootstrap.js\n})',
+  footer: '//# sourceURL=<pearjs>/bootstrap.js\n})'
 })
 
 await fs.mkdir(path.join(root, 'build'), { recursive: true })

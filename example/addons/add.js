@@ -6,25 +6,22 @@ for (let runs = 0; runs < 3; runs++) {
 
   console.time('js')
 
-  let n = 0
   for (let i = 0; i < 1e8; i++) {
-    n = addNumbersJS(i, i)
+    addNumbersJS(i, i)
   }
 
   console.timeEnd('js')
   console.time('native-slow')
 
-  n = 0
   for (let i = 0; i < 1e8; i++) {
-    n = addNumbersNativeSlow(i, i)
+    addNumbersNativeSlow(i, i)
   }
 
   console.timeEnd('native-slow')
   console.time('native-fast')
 
-  n = 0
   for (let i = 0; i < 1e8; i++) {
-    n = addNumbersNativeFast(i, i)
+    addNumbersNativeFast(i, i)
   }
 
   console.timeEnd('native-fast')

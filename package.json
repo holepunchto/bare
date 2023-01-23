@@ -8,6 +8,11 @@
     "install": "node scripts/install.mjs",
     "build": "node scripts/build.mjs"
   },
+  "standard": {
+    "ignore": [
+      "deps/**"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/pearjs-experiment.git"
