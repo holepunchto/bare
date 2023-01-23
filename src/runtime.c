@@ -230,7 +230,7 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
+bindings_buffer_byte_length (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
@@ -239,13 +239,62 @@ bindings_string_to_buffer (js_env_t *env, js_callback_info_t *info) {
   size_t str_len;
   js_get_value_string_utf8(env, argv[0], NULL, -1, &str_len);
 
-  char *buf;
   js_value_t *result;
-  str_len++; // to fit the NULL
+  js_create_uint32(env, (uint32_t) str_len, &result);
 
-  js_create_arraybuffer(env, str_len, (void **) &buf, &result);
+  return result;
+}
 
-  js_get_value_string_utf8(env, argv[0], buf, str_len, NULL);
+static js_value_t *
+bindings_buffer_write (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  size_t buf_len;
+  char *buf;
+
+  js_get_typedarray_info(env, argv[0], NULL, (void **) &buf, &buf_len, NULL, NULL);
+
+  size_t str_len;
+  js_get_value_string_utf8(env, argv[1], buf, buf_len, &str_len);
+
+  js_value_t *result;
+  js_create_uint32(env, (uint32_t) str_len, &result);
+
+  return result;
+}
+
+static js_value_t *
+bindings_buffer_compare (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  size_t a_len;
+  char *a;
+
+  size_t b_len;
+  char *b;
+
+  js_get_typedarray_info(env, argv[0], NULL, (void **) &a, &a_len, NULL, NULL);
+  js_get_typedarray_info(env, argv[1], NULL, (void **) &b, &b_len, NULL, NULL);
+
+  int r = memcmp(a, b, a_len < b_len ? a_len : b_len);
+
+  if (r == 0) {
+    if (a_len < b_len) r = -1;
+    else if (a_len > b_len) r = 1;
+  } else if (r < 0) {
+    r = -1;
+  } else {
+    r = 1;
+  }
+
+  js_value_t *result;
+  js_create_int32(env, (uint32_t) r, &result);
 
   return result;
 }
@@ -434,8 +483,20 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
   {
     js_value_t *val;
-    js_create_function(env, "stringToBuffer", -1, bindings_string_to_buffer, NULL, &val);
-    js_set_named_property(env, exports, "stringToBuffer", val);
+    js_create_function(env, "bufferByteLength", -1, bindings_buffer_byte_length, NULL, &val);
+    js_set_named_property(env, exports, "bufferByteLength", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "bufferWrite", -1, bindings_buffer_write, NULL, &val);
+    js_set_named_property(env, exports, "bufferWrite", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "bufferCompare", -1, bindings_buffer_compare, NULL, &val);
+    js_set_named_property(env, exports, "bufferCompare", val);
   }
 
   {

@@ -1,3 +1,4 @@
-const buf = Buffer.from('hello world')
+const a = Buffer.from('foobaz')
+const b = Buffer.from('foobar')
 
-console.log(buf)
+console.log(a.compare(b))
