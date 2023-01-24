@@ -1,5 +1,6 @@
 #include <pear.h>
 #include <js.h>
+#include <js/ffi.h>
 #include <uv.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -229,6 +230,19 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
   return obj;
 }
 
+static uint32_t
+bindings_buffer_byte_length_fast (js_ffi_receiver_t *receiver, js_ffi_string_t *str) {
+  int n = str->len;
+  uint32_t bytes = 0;
+
+  for (int i = 0; i < n; i++) {
+    uint8_t code = str->data[i];
+    bytes += code <= 0x7f ? 1 : 2;
+  }
+
+  return bytes;
+}
+
 static js_value_t *
 bindings_buffer_byte_length (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
@@ -266,6 +280,28 @@ bindings_buffer_write (js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static inline int
+compare_buffers (size_t a_len, char *a, size_t b_len, char *b) {
+  int r = memcmp(a, b, a_len < b_len ? a_len : b_len);
+
+  if (r == 0) {
+    if (a_len < b_len) return -1;
+    if (a_len > b_len) return 1;
+    return 0;
+  }
+
+  if (r < 0) {
+    return -1;
+  }
+
+  return 1;
+}
+
+static int32_t
+bindings_buffer_compare_fast (js_ffi_receiver_t *recv, js_ffi_typedarray_t *a, js_ffi_typedarray_t *b) {
+  return compare_buffers(a->len, (char *) a->data.u8, b->len, (char *) b->data.u8);
+}
+
 static js_value_t *
 bindings_buffer_compare (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[2];
@@ -282,19 +318,8 @@ bindings_buffer_compare (js_env_t *env, js_callback_info_t *info) {
   js_get_typedarray_info(env, argv[0], NULL, (void **) &a, &a_len, NULL, NULL);
   js_get_typedarray_info(env, argv[1], NULL, (void **) &b, &b_len, NULL, NULL);
 
-  int r = memcmp(a, b, a_len < b_len ? a_len : b_len);
-
-  if (r == 0) {
-    if (a_len < b_len) r = -1;
-    else if (a_len > b_len) r = 1;
-  } else if (r < 0) {
-    r = -1;
-  } else {
-    r = 1;
-  }
-
   js_value_t *result;
-  js_create_int32(env, (uint32_t) r, &result);
+  js_create_int32(env, compare_buffers(a_len, a, b_len, b), &result);
 
   return result;
 }
@@ -482,8 +507,21 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
   }
 
   {
+    js_ffi_type_info_t *return_info;
+    js_ffi_create_type_info(js_ffi_int32, &return_info);
+
+    js_ffi_type_info_t *arg_info[2];
+    js_ffi_create_type_info(js_ffi_receiver, &arg_info[0]);
+    js_ffi_create_type_info(js_ffi_string, &arg_info[1]);
+
+    js_ffi_function_info_t *function_info;
+    js_ffi_create_function_info(return_info, arg_info, 2, &function_info);
+
+    js_ffi_function_t *ffi;
+    js_ffi_create_function(bindings_buffer_byte_length_fast, function_info, &ffi);
+
     js_value_t *val;
-    js_create_function(env, "bufferByteLength", -1, bindings_buffer_byte_length, NULL, &val);
+    js_create_function_with_ffi(env, "bufferByteLength", -1, bindings_buffer_byte_length, NULL, ffi, &val);
     js_set_named_property(env, exports, "bufferByteLength", val);
   }
 
@@ -494,8 +532,22 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
   }
 
   {
+    js_ffi_type_info_t *return_info;
+    js_ffi_create_type_info(js_ffi_int32, &return_info);
+
+    js_ffi_type_info_t *arg_info[3];
+    js_ffi_create_type_info(js_ffi_receiver, &arg_info[0]);
+    js_ffi_create_type_info(js_ffi_uint8array, &arg_info[1]);
+    js_ffi_create_type_info(js_ffi_uint8array, &arg_info[2]);
+
+    js_ffi_function_info_t *function_info;
+    js_ffi_create_function_info(return_info, arg_info, 3, &function_info);
+
+    js_ffi_function_t *ffi;
+    js_ffi_create_function(bindings_buffer_compare_fast, function_info, &ffi);
+
     js_value_t *val;
-    js_create_function(env, "bufferCompare", -1, bindings_buffer_compare, NULL, &val);
+    js_create_function_with_ffi(env, "bufferCompare", -1, bindings_buffer_compare, NULL, ffi, &val);
     js_set_named_property(env, exports, "bufferCompare", val);
   }
 
