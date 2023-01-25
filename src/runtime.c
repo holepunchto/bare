@@ -406,6 +406,48 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
   {
     js_value_t *val;
+
+    js_create_uint32(env, PEAR_SYNC_FS_FILE, &val);
+    js_set_named_property(env, exports, "FS_FILE", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_SYNC_FS_DIR, &val);
+    js_set_named_property(env, exports, "FS_DIR", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
+    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
+    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_STATIC, &val);
+    js_set_named_property(env, exports, "ADDONS_STATIC", val);
+  }
+
+  {
+    js_value_t *val;
+
+    js_create_uint32(env, PEAR_ADDONS_RESOLVE, &val);
+    js_set_named_property(env, exports, "ADDONS_RESOLVE", val);
+  }
+
+  {
+    js_value_t *val;
     js_create_int32(env, 0, &val);
     js_set_named_property(env, exports, "exitCode", val);
   }
@@ -465,48 +507,6 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
     UV_ERRNO_MAP(PEAR_UV_ERROR_MAP_ITER)
 
     js_set_named_property(env, exports, "errnos", arr);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_SYNC_FS_FILE, &val);
-    js_set_named_property(env, exports, "FS_FILE", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_SYNC_FS_DIR, &val);
-    js_set_named_property(env, exports, "FS_DIR", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
-    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
-    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_ADDONS_STATIC, &val);
-    js_set_named_property(env, exports, "ADDONS_STATIC", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_ADDONS_RESOLVE, &val);
-    js_set_named_property(env, exports, "ADDONS_RESOLVE", val);
   }
 
   {
