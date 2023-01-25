@@ -230,6 +230,22 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
   return obj;
 }
 
+static js_value_t *
+bindings_buffer_alloc_unsafe (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  uint32_t size;
+  js_get_value_uint32(env, argv[0], &size);
+
+  js_value_t *result;
+  js_create_unsafe_arraybuffer(env, size, NULL, &result);
+
+  return result;
+}
+
 static uint32_t
 bindings_buffer_byte_length_fast (js_ffi_receiver_t *receiver, js_ffi_string_t *str) {
   int n = str->len;
@@ -571,6 +587,12 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
     js_value_t *val;
     js_create_function(env, "exit", -1, bindings_exit, NULL, &val);
     js_set_named_property(env, exports, "exit", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "bufferAllocUnsafe", -1, bindings_buffer_alloc_unsafe, NULL, &val);
+    js_set_named_property(env, exports, "bufferAllocUnsafe", val);
   }
 
   {
