@@ -324,6 +324,41 @@ bindings_buffer_compare (js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static js_value_t *
+bindings_set_title (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  size_t data_len;
+
+  js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
+
+  char *data = malloc(++data_len);
+
+  js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
+
+  uv_set_process_title(data);
+
+  free(data);
+  return NULL;
+}
+
+static js_value_t *
+bindings_get_title (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *result;
+
+  char *title = malloc(256);
+  int err = uv_get_process_title(title, 256);
+  if (err) memcpy(title, "pear", 5);
+
+  js_create_string_utf8(env, title, -1, &result);
+  free(title);
+
+  return result;
+}
+
 static int
 trigger_fatal_exception (js_env_t *env) {
   js_value_t *exception;
@@ -480,6 +515,18 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
     js_create_uint32(env, pid, &val);
     js_set_named_property(env, exports, "pid", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "setTitle", -1, bindings_set_title, NULL, &val);
+    js_set_named_property(env, exports, "setTitle", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "getTitle", -1, bindings_get_title, NULL, &val);
+    js_set_named_property(env, exports, "getTitle", val);
   }
 
   {

@@ -13,6 +13,8 @@ int
 main (int argc, char **argv) {
   pear_addons_init();
 
+  argv = uv_setup_args(argc, argv);
+
   if (argc < 2) {
     fprintf(stderr, "Usage: pear <filename>\n");
     return 1;
