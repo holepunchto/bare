@@ -1,6 +1,6 @@
 #include <js.h>
 #include <js/ffi.h>
-#include <pearjs.h>
+#include <pear.h>
 
 static uint32_t
 add_numbers_fast (uint32_t a, uint32_t b) {
@@ -56,4 +56,4 @@ pearjs_init (js_env_t *env, js_value_t *exports) {
   return exports;
 }
 
-PEARJS_MODULE("add_numbers", pearjs_init)
+PEAR_MODULE(pearjs_init)
