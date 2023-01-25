@@ -53,11 +53,11 @@ main (int argc, char **argv) {
 
   uv_run(loop, UV_RUN_DEFAULT);
 
-  pear_runtime_teardown(env, &config);
+  int exit_code = 0;
+  pear_runtime_teardown(env, &config, &exit_code);
 
   js_destroy_env(env);
-
   js_destroy_platform(platform);
 
-  return 0;
+  return exit_code;
 }

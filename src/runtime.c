@@ -371,6 +371,12 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
   {
     js_value_t *val;
+    js_create_int32(env, 0, &val);
+    js_set_named_property(env, exports, "exitCode", val);
+  }
+
+  {
+    js_value_t *val;
     js_create_string_utf8(env, PEAR_PLATFORM, -1, &val);
     js_set_named_property(env, exports, "platform", val);
   }
@@ -600,7 +606,7 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 }
 
 void
-pear_runtime_teardown (js_env_t *env, pear_runtime_t *config) {
+pear_runtime_teardown (js_env_t *env, pear_runtime_t *config, int *exit_code) {
   js_value_t *fn;
   js_get_named_property(env, config->exports, "onexit", &fn);
 
@@ -610,4 +616,10 @@ pear_runtime_teardown (js_env_t *env, pear_runtime_t *config) {
 
   int err = js_call_function(env, config->exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
+
+  if (exit_code != NULL) {
+    js_value_t *val;
+    js_get_named_property(env, config->exports, "exitCode", &val);
+    js_get_value_int32(env, val, exit_code);
+  }
 }
