@@ -606,6 +606,19 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 }
 
 void
+pear_runtime_before_teardown (js_env_t *env, pear_runtime_t *config) {
+  js_value_t *fn;
+  js_get_named_property(env, config->exports, "onbeforeexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  int err = js_call_function(env, config->exports, fn, 0, NULL, NULL);
+  if (err < 0) trigger_fatal_exception(env);
+}
+
+void
 pear_runtime_teardown (js_env_t *env, pear_runtime_t *config, int *exit_code) {
   js_value_t *fn;
   js_get_named_property(env, config->exports, "onexit", &fn);

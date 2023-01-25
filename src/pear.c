@@ -51,7 +51,10 @@ main (int argc, char **argv) {
     return 1;
   }
 
-  uv_run(loop, UV_RUN_DEFAULT);
+  do {
+    uv_run(loop, UV_RUN_DEFAULT);
+    pear_runtime_before_teardown(env, &config);
+  } while (uv_loop_alive(loop));
 
   int exit_code = 0;
   pear_runtime_teardown(env, &config, &exit_code);

@@ -17,6 +17,9 @@ int
 pear_runtime_setup (js_env_t *env, pear_runtime_t *config);
 
 void
+pear_runtime_before_teardown (js_env_t *env, pear_runtime_t *config);
+
+void
 pear_runtime_teardown (js_env_t *env, pear_runtime_t *config, int *exit_code);
 
 #endif
