@@ -35,6 +35,7 @@ target_sources(
     src/addons.c
     src/sync_fs.c
     src/runtime.c
+    build/bootstrap.h
 )
 
 target_include_directories(
