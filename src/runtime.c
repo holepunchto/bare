@@ -1,14 +1,14 @@
-#include <pear.h>
 #include <js.h>
 #include <js/ffi.h>
-#include <uv.h>
+#include <pear.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <uv.h>
 
-#include "runtime.h"
-#include "addons.h"
-#include "sync_fs.h"
 #include "../build/bootstrap.h"
+#include "addons.h"
+#include "runtime.h"
+#include "sync_fs.h"
 
 #define PEAR_UV_CHECK(call) \
   { \
@@ -32,7 +32,7 @@
     js_create_string_utf8(env, DESC, -1, &desc); \
     js_set_element(env, val, 1, desc); \
     js_value_t *key; \
-    js_create_int32(env, UV_ ## NAME, &key); \
+    js_create_int32(env, UV_##NAME, &key); \
     js_set_element(env, key_val, 0, key); \
     js_set_element(env, key_val, 1, val); \
     js_set_element(env, arr, i++, key_val); \
@@ -230,20 +230,24 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
   return obj;
 }
 
+static void
+bindings_buffer_set_zero_fill_enabled_fast (js_ffi_receiver_t *receiver, uint32_t enabled) {
+  js_set_arraybuffer_zero_fill_enabled(enabled);
+}
+
 static js_value_t *
-bindings_buffer_alloc_unsafe (js_env_t *env, js_callback_info_t *info) {
+bindings_buffer_set_zero_fill_enabled (js_env_t *env, js_callback_info_t *info) {
   js_value_t *argv[1];
   size_t argc = 1;
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
-  uint32_t size;
-  js_get_value_uint32(env, argv[0], &size);
+  uint32_t enabled;
+  js_get_value_uint32(env, argv[0], &enabled);
 
-  js_value_t *result;
-  js_create_unsafe_arraybuffer(env, size, NULL, &result);
+  js_set_arraybuffer_zero_fill_enabled(enabled);
 
-  return result;
+  return NULL;
 }
 
 static uint32_t
@@ -384,7 +388,7 @@ trigger_fatal_exception (js_env_t *env) {
 }
 
 static void
-pear_on_uncaught_exception (js_env_t * env, js_value_t *error, void *data) {
+pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
   js_value_t *exports = data;
   js_value_t *fn;
 
@@ -590,9 +594,22 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
   }
 
   {
+    js_ffi_type_info_t *return_info;
+    js_ffi_create_type_info(js_ffi_void, &return_info);
+
+    js_ffi_type_info_t *arg_info[2];
+    js_ffi_create_type_info(js_ffi_receiver, &arg_info[0]);
+    js_ffi_create_type_info(js_ffi_uint32, &arg_info[1]);
+
+    js_ffi_function_info_t *function_info;
+    js_ffi_create_function_info(return_info, arg_info, 2, &function_info);
+
+    js_ffi_function_t *ffi;
+    js_ffi_create_function(bindings_buffer_set_zero_fill_enabled_fast, function_info, &ffi);
+
     js_value_t *val;
-    js_create_function(env, "bufferAllocUnsafe", -1, bindings_buffer_alloc_unsafe, NULL, &val);
-    js_set_named_property(env, exports, "bufferAllocUnsafe", val);
+    js_create_function(env, "bufferSetZeroFillEnabled", -1, bindings_buffer_set_zero_fill_enabled, ffi, &val);
+    js_set_named_property(env, exports, "bufferSetZeroFillEnabled", val);
   }
 
   {
