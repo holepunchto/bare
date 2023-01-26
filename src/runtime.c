@@ -2,6 +2,7 @@
 #include <js/ffi.h>
 #include <pear.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <uv.h>
 
