@@ -199,7 +199,7 @@ bindings_cwd (js_env_t *env, js_callback_info_t *info) {
   js_value_t *val;
 
   char cwd[PEAR_SYNC_FS_MAX_PATH];
-  size_t cwd_len;
+  size_t cwd_len = PEAR_SYNC_FS_MAX_PATH;
 
   PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
 
@@ -502,8 +502,8 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 
   {
     char exec_path[PEAR_SYNC_FS_MAX_PATH];
-    size_t exec_path_len;
-    uv_exepath(exec_path, &exec_path_len);
+    size_t exec_path_len = PEAR_SYNC_FS_MAX_PATH;
+    int err = uv_exepath(exec_path, &exec_path_len);
 
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
     js_set_named_property(env, exports, "execPath", exec_path_val);
