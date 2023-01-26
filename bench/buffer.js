@@ -1,5 +1,8 @@
-for (let n = 0; n < 2; n++) {
-  if (n) console.log()
+console.log('Buffer benchmark')
+console.log('process.execPath =', process.execPath)
+
+for (let n = 0; n < 3; n++) {
+  console.log()
   console.log('Round ' + n)
 
   console.time('Buffer.allocUnsafe')
