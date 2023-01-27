@@ -1,12 +1,12 @@
 #include <js.h>
 #include <js/ffi.h>
-#include <pear.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <uv.h>
 
 #include "../build/bootstrap.h"
+#include "../include/pear.h"
 #include "addons.h"
 #include "runtime.h"
 #include "sync_fs.h"
@@ -414,7 +414,9 @@ pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
 }
 
 int
-pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
+pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
+  js_env_t *env = pear->env;
+
   int err;
 
   uv_loop_t *loop;
@@ -707,7 +709,9 @@ pear_runtime_setup (js_env_t *env, pear_runtime_t *config) {
 }
 
 void
-pear_runtime_before_teardown (js_env_t *env, pear_runtime_t *config) {
+pear_runtime_before_teardown (pear_t *pear, pear_runtime_t *config) {
+  js_env_t *env = pear->env;
+
   js_value_t *fn;
   js_get_named_property(env, config->exports, "onbeforeexit", &fn);
 
@@ -720,7 +724,9 @@ pear_runtime_before_teardown (js_env_t *env, pear_runtime_t *config) {
 }
 
 void
-pear_runtime_teardown (js_env_t *env, pear_runtime_t *config, int *exit_code) {
+pear_runtime_teardown (pear_t *pear, pear_runtime_t *config, int *exit_code) {
+  js_env_t *env = pear->env;
+
   js_value_t *fn;
   js_get_named_property(env, config->exports, "onexit", &fn);
 

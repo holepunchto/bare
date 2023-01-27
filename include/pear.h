@@ -53,22 +53,37 @@
       PEAR_MODULE_VERSION, \
       PEAR_MODULE_FILENAME, \
       fn, \
-      NULL \
+      NULL, \
     }; \
     pear_module_register(&module); \
   }
 
-typedef js_value_t * (*pear_addon_register)(js_env_t *env, js_value_t *exports);
+typedef struct pear_s pear_t;
+typedef struct pear_module_s pear_module_t;
 
-typedef struct {
+typedef js_value_t *(*pear_addon_register)(js_env_t *env, js_value_t *exports);
+
+struct pear_s {
+  uv_loop_t *loop;
+  js_platform_t *platform;
+  js_env_t *env;
+};
+
+struct pear_module_s {
   int version;
   const char *filename;
   pear_addon_register register_addon;
 
   void *next_addon;
-} pear_module_t;
+};
 
-extern void
+void
 pear_module_register (pear_module_t *mod);
+
+int
+pear_setup (pear_t *pear);
+
+int
+pear_teardown (pear_t *pear);
 
 #endif

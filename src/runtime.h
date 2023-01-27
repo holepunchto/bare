@@ -1,9 +1,11 @@
 #ifndef PEAR_RUNTIME_H
 #define PEAR_RUNTIME_H
 
-#include <uv.h>
 #include <js.h>
 #include <stdbool.h>
+#include <uv.h>
+
+#include "../include/pear.h"
 
 typedef struct {
   js_value_t *exports;
@@ -14,12 +16,12 @@ typedef struct {
 } pear_runtime_t;
 
 int
-pear_runtime_setup (js_env_t *env, pear_runtime_t *config);
+pear_runtime_setup (pear_t *pear, pear_runtime_t *config);
 
 void
-pear_runtime_before_teardown (js_env_t *env, pear_runtime_t *config);
+pear_runtime_before_teardown (pear_t *pear, pear_runtime_t *config);
 
 void
-pear_runtime_teardown (js_env_t *env, pear_runtime_t *config, int *exit_code);
+pear_runtime_teardown (pear_t *pear, pear_runtime_t *config, int *exit_code);
 
 #endif

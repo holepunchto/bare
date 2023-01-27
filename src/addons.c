@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <napi.h>
-#include <pear.h>
 #include <js.h>
 
+#include "../include/pear.h"
 #include "addons.h"
 #include "sync_fs.h"
 

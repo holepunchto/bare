@@ -57,6 +57,7 @@ target_compile_definitions(
 
 add_executable(
   pear_bin
+  bin/pear.c
   $<TARGET_OBJECTS:pear>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
@@ -68,6 +69,12 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME pear
   ENABLE_EXPORTS ON
+)
+
+target_include_directories(
+  pear_bin
+  PRIVATE
+    $<TARGET_PROPERTY:pear,INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(

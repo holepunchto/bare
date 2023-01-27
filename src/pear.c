@@ -1,68 +1,32 @@
 #include <assert.h>
 #include <js.h>
-#include <pear.h>
-#include <stdlib.h>
 #include <uv.h>
-#include <string.h>
 
-#include "runtime.h"
+#include "../include/pear.h"
 #include "addons.h"
-#include "sync_fs.h"
 
 int
-main (int argc, char **argv) {
+pear_setup (pear_t *env) {
   pear_addons_init();
 
-  argv = uv_setup_args(argc, argv);
+  env->loop = uv_default_loop();
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: pear <filename>\n");
-    return 1;
-  }
-
-  char *entry_point = NULL;
   int err;
 
-  uv_loop_t *loop = uv_default_loop();
+  err = js_create_platform(env->loop, NULL, &env->platform);
+  assert(err == 0);
 
-  err = pear_sync_fs_realpath(loop, argv[1], NULL, &entry_point);
+  err = js_create_env(env->loop, env->platform, &env->env);
+  assert(err == 0);
 
-  if (err < 0) {
-    fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);
-    return 1;
-  }
+  return 0;
+}
 
-  js_platform_options_t opts = {0};
+int
+pear_teardown (pear_t *pear) {
+  js_destroy_env(pear->env);
 
-  js_platform_t *platform;
-  js_create_platform(loop, &opts, &platform);
+  js_destroy_platform(pear->platform);
 
-  js_env_t *env;
-  js_create_env(loop, platform, &env);
-
-  pear_runtime_t config = {0};
-
-  config.main = entry_point;
-  config.argc = argc - 2;
-  config.argv = argv + 2;
-
-  err = pear_runtime_setup(env, &config);
-
-  if (err < 0) {
-    fprintf(stderr, "pear_runtime_setup failed with %i\n", err);
-    return 1;
-  }
-
-  do {
-    uv_run(loop, UV_RUN_DEFAULT);
-    pear_runtime_before_teardown(env, &config);
-  } while (uv_loop_alive(loop));
-
-  int exit_code = 0;
-  pear_runtime_teardown(env, &config, &exit_code);
-
-  js_destroy_env(env);
-  js_destroy_platform(platform);
-
-  return exit_code;
+  return 0;
 }
