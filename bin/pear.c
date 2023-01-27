@@ -3,12 +3,12 @@
 #include <uv.h>
 
 #include "../include/pear.h"
-#include "../src/addons.h"
-#include "../src/runtime.h"
 #include "../src/sync_fs.h"
 
 int
 main (int argc, char **argv) {
+  uv_loop_t *loop = uv_default_loop();
+
   argv = uv_setup_args(argc, argv);
 
   if (argc < 2) {
@@ -16,41 +16,26 @@ main (int argc, char **argv) {
     return 1;
   }
 
-  pear_t pear;
-  pear_setup(&pear);
-
   char *entry_point = NULL;
   int err;
 
-  err = pear_sync_fs_realpath(pear.loop, argv[1], NULL, &entry_point);
+  err = pear_sync_fs_realpath(loop, argv[1], NULL, &entry_point);
 
   if (err < 0) {
     fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);
     return 1;
   }
 
-  pear_runtime_t config = {0};
+  argv[1] = entry_point;
 
-  config.main = entry_point;
-  config.argc = argc - 2;
-  config.argv = argv + 2;
+  pear_t pear;
+  pear_setup(loop, &pear, argc, argv);
 
-  err = pear_runtime_setup(&pear, &config);
-
-  if (err < 0) {
-    fprintf(stderr, "pear_runtime_setup failed with %i\n", err);
-    return 1;
-  }
-
-  do {
-    uv_run(pear.loop, UV_RUN_DEFAULT);
-    pear_runtime_before_teardown(&pear, &config);
-  } while (uv_loop_alive(pear.loop));
+  pear_run_file(&pear, entry_point);
 
   int exit_code = 0;
-  pear_runtime_teardown(&pear, &config, &exit_code);
 
-  pear_teardown(&pear);
+  pear_teardown(&pear, &exit_code);
 
   return exit_code;
 }

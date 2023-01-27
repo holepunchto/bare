@@ -2,6 +2,7 @@
 #define PEAR_H
 
 #include <js.h>
+#include <uv.h>
 
 #ifdef __APPLE__
 #define PEAR_PLATFORM "darwin"
@@ -67,6 +68,12 @@ struct pear_s {
   uv_loop_t *loop;
   js_platform_t *platform;
   js_env_t *env;
+
+  struct {
+    js_value_t *exports;
+    int argc;
+    char **argv;
+  } runtime;
 };
 
 struct pear_module_s {
@@ -81,9 +88,15 @@ void
 pear_module_register (pear_module_t *mod);
 
 int
-pear_setup (pear_t *pear);
+pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv);
 
 int
-pear_teardown (pear_t *pear);
+pear_teardown (pear_t *pear, int *exit_code);
+
+int
+pear_run (pear_t *pear);
+
+int
+pear_run_file (pear_t *pear, const char *file);
 
 #endif

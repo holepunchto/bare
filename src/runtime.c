@@ -414,7 +414,7 @@ pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
 }
 
 int
-pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
+pear_runtime_setup (pear_t *pear) {
   js_env_t *env = pear->env;
 
   int err;
@@ -422,8 +422,8 @@ pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  js_create_object(env, &(config->exports));
-  js_value_t *exports = config->exports;
+  js_create_object(env, &pear->runtime.exports);
+  js_value_t *exports = pear->runtime.exports;
 
   js_on_uncaught_exception(env, pear_on_uncaught_exception, exports);
 
@@ -516,20 +516,14 @@ pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
     js_value_t *val;
     js_value_t *str;
 
-    // TODO: the +2 will prob change when we evolve a bit
-    js_create_array_with_length(env, config->argc + 2, &val);
+    js_create_array_with_length(env, pear->runtime.argc, &val);
 
     int idx = 0;
 
-    js_create_string_utf8(env, config->main, -1, &str);
-
     js_set_element(env, val, idx++, exec_path_val);
-    js_set_element(env, val, idx++, str);
 
-    for (int i = 0; i < config->argc; i++) {
-      char *a = config->argv[i];
-
-      js_create_string_utf8(env, a, -1, &str);
+    for (int i = 1; i < pear->runtime.argc; i++) {
+      js_create_string_utf8(env, pear->runtime.argv[i], -1, &str);
       js_set_element(env, val, idx++, str);
     }
 
@@ -684,12 +678,6 @@ pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
     js_set_named_property(env, exports, "readSourceSync", val);
   }
 
-  {
-    js_value_t *val;
-    js_create_string_utf8(env, config->main, -1, &val);
-    js_set_named_property(env, exports, "main", val);
-  }
-
   js_value_t *global;
   js_get_global(env, &global);
 
@@ -709,37 +697,37 @@ pear_runtime_setup (pear_t *pear, pear_runtime_t *config) {
 }
 
 void
-pear_runtime_before_teardown (pear_t *pear, pear_runtime_t *config) {
+pear_runtime_before_teardown (pear_t *pear) {
   js_env_t *env = pear->env;
 
   js_value_t *fn;
-  js_get_named_property(env, config->exports, "onbeforeexit", &fn);
+  js_get_named_property(env, pear->runtime.exports, "onbeforeexit", &fn);
 
   bool is_set;
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, config->exports, fn, 0, NULL, NULL);
+  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
 void
-pear_runtime_teardown (pear_t *pear, pear_runtime_t *config, int *exit_code) {
+pear_runtime_teardown (pear_t *pear, int *exit_code) {
   js_env_t *env = pear->env;
 
   js_value_t *fn;
-  js_get_named_property(env, config->exports, "onexit", &fn);
+  js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
 
   bool is_set;
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, config->exports, fn, 0, NULL, NULL);
+  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 
   if (exit_code != NULL) {
     js_value_t *val;
-    js_get_named_property(env, config->exports, "exitCode", &val);
+    js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
     js_get_value_int32(env, val, exit_code);
   }
 }

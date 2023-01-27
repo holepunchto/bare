@@ -7,21 +7,13 @@
 
 #include "../include/pear.h"
 
-typedef struct {
-  js_value_t *exports;
-  bool bootstrapped;
-  char *main;
-  int argc;
-  char **argv;
-} pear_runtime_t;
-
 int
-pear_runtime_setup (pear_t *pear, pear_runtime_t *config);
+pear_runtime_setup (pear_t *pear);
 
 void
-pear_runtime_before_teardown (pear_t *pear, pear_runtime_t *config);
+pear_runtime_before_teardown (pear_t *pear);
 
 void
-pear_runtime_teardown (pear_t *pear, pear_runtime_t *config, int *exit_code);
+pear_runtime_teardown (pear_t *pear, int *exit_code);
 
 #endif

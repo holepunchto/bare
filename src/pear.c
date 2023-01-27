@@ -4,29 +4,67 @@
 
 #include "../include/pear.h"
 #include "addons.h"
+#include "runtime.h"
 
 int
-pear_setup (pear_t *env) {
+pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
   pear_addons_init();
 
-  env->loop = uv_default_loop();
+  pear->loop = loop;
 
   int err;
 
-  err = js_create_platform(env->loop, NULL, &env->platform);
+  err = js_create_platform(pear->loop, NULL, &pear->platform);
   assert(err == 0);
 
-  err = js_create_env(env->loop, env->platform, &env->env);
+  err = js_create_env(pear->loop, pear->platform, &pear->env);
+  assert(err == 0);
+
+  pear->runtime.argc = argc;
+  pear->runtime.argv = argv;
+
+  err = pear_runtime_setup(pear);
   assert(err == 0);
 
   return 0;
 }
 
 int
-pear_teardown (pear_t *pear) {
+pear_teardown (pear_t *pear, int *exit_code) {
+  pear_runtime_teardown(pear, exit_code);
+
   js_destroy_env(pear->env);
 
   js_destroy_platform(pear->platform);
 
   return 0;
+}
+
+int
+pear_run (pear_t *pear) {
+  do {
+    uv_run(pear->loop, UV_RUN_DEFAULT);
+
+    pear_runtime_before_teardown(pear);
+  } while (uv_loop_alive(pear->loop));
+
+  return 0;
+}
+
+int
+pear_run_file (pear_t *pear, const char *file) {
+  int err;
+
+  js_value_t *bootstrap;
+  err = js_get_named_property(pear->env, pear->runtime.exports, "bootstrap", &bootstrap);
+  assert(err == 0);
+
+  js_value_t *args[1];
+  err = js_create_string_utf8(pear->env, file, -1, &args[0]);
+  if (err < 0) return err;
+
+  err = js_call_function(pear->env, pear->runtime.exports, bootstrap, 1, args, NULL);
+  if (err < 0) return err;
+
+  return pear_run(pear);
 }
