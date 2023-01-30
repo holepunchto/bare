@@ -473,10 +473,18 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *versions;
     js_create_object(env, &versions);
     js_value_t *val;
+
     js_create_string_utf8(env, "0.0.0", -1, &val);
     js_set_named_property(env, versions, "pear", val);
-    js_create_string_utf8(env, js_platform_version, -1, &val);
+
+    if (js_platform_version) {
+      js_create_string_utf8(env, js_platform_version, -1, &val);
+    } else {
+      js_create_string_utf8(env, "unknown", -1, &val);
+    }
+
     js_set_named_property(env, versions, js_platform_identifier, val);
+
     js_create_string_utf8(env, uv_version_string(), -1, &val);
     js_set_named_property(env, versions, "uv", val);
 
