@@ -79,7 +79,11 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INCLUDE_DIRECTORIES>
 )
 
-add_subdirectory(node_modules/tiny-timers-native EXCLUDE_FROM_ALL)
+add_subdirectory(
+  ${CMAKE_SOURCE_DIR}/node_modules/tiny-timers-native
+  node_modules/tiny-timers-native
+  EXCLUDE_FROM_ALL
+)
 
 target_compile_definitions(
   tiny_timers_native
@@ -87,14 +91,22 @@ target_compile_definitions(
     NAPI_MODULE_FILENAME="/node_modules/tiny-timers-native"
 )
 
-add_executable(
-  pear_bin
-  bin/pear.c
+add_library(
+  pear_static
+  STATIC
   $<TARGET_OBJECTS:pear>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:tiny_timers_native>
 )
+
+target_link_libraries(
+  pear_static
+  PUBLIC
+    js_static
+)
+
+add_executable(pear_bin bin/pear.c)
 
 set_target_properties(
   pear_bin
@@ -112,7 +124,7 @@ target_include_directories(
 target_link_libraries(
   pear_bin
   PRIVATE
-    js_static
+    pear_static
 )
 
 install(TARGETS pear_bin)
