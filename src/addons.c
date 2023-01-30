@@ -1,9 +1,9 @@
-#include <uv.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <napi.h>
 #include <js.h>
+#include <napi.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <uv.h>
 
 #include "../include/pear.h"
 #include "addons.h"
@@ -185,7 +185,7 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
   }
 
   if (mod == NULL) {
-    js_throw_error(env, NULL, "No module registered");
+    js_throw_errorf(env, NULL, "No module registered for %s", path);
     return NULL;
   }
 
@@ -218,7 +218,7 @@ napi_module_register (napi_module *napi_mod) {
   pear_module_t mod = {
     .version = PEAR_MODULE_VERSION,
     .filename = napi_mod->nm_filename,
-    .register_addon = napi_mod->nm_register_func
+    .register_addon = napi_mod->nm_register_func,
   };
 
   pear_module_register(&mod);
