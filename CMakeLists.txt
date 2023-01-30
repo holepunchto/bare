@@ -4,6 +4,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(pear C CXX)
 
+option(PEAR_USE_QUICKJS OFF)
+option(PEAR_USE_JAVASCRIPTCORE OFF)
+
 include(cmake/v8.cmake)
 
 if(NOT TARGET uv)
@@ -97,10 +100,20 @@ add_library(
   $<TARGET_OBJECTS:tiny_timers_native>
 )
 
+set(PEAR_ENGINE js_static)
+
+if(PEAR_USE_QUICKJS)
+  set(PEAR_ENGINE qjs_static)
+endif()
+
+if(PEAR_USE_JAVASCRIPTCORE)
+  set(PEAR_ENGINE jsc_static)
+endif()
+
 target_link_libraries(
   pear_static
   PUBLIC
-    js_static
+    ${PEAR_ENGINE}
 )
 
 add_executable(pear_bin bin/pear.c)
