@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.24)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -124,7 +124,7 @@ target_include_directories(
 target_link_libraries(
   pear_bin
   PRIVATE
-    pear_static
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
 )
 
 install(TARGETS pear_bin)
