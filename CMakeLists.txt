@@ -9,12 +9,24 @@ if(NOT DEFINED V8)
   set(V8_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/prebuilds/v8/host/include)
 endif()
 
+if(NOT TARGET uv)
+  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
+endif()
+
 if(NOT TARGET js)
-  add_subdirectory(deps/libjs EXCLUDE_FROM_ALL)
+  add_subdirectory(vendor/libjs EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET qjs)
+  add_subdirectory(vendor/libqjs EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET jsc)
+  add_subdirectory(vendor/libjsc EXCLUDE_FROM_ALL)
 endif()
 
 if(NOT TARGET napi)
-  add_subdirectory(deps/libnapi EXCLUDE_FROM_ALL)
+  add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
 add_library(pear OBJECT)

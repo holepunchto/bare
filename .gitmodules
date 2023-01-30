@@ -1,6 +1,20 @@
-[submodule "deps/libnapi"]
-	path = deps/libnapi
-	url = git@github.com:holepunchto/libnapi.git
-[submodule "deps/libjs"]
-	path = deps/libjs
+[submodule "vendor/libjs"]
+	path = vendor/libjs
 	url = git@github.com:holepunchto/libjs.git
+	shallow = true
+[submodule "vendor/libnapi"]
+	path = vendor/libnapi
+	url = git@github.com:holepunchto/libnapi.git
+	shallow = true
+[submodule "vendor/libqjs"]
+	path = vendor/libqjs
+	url = git@github.com:holepunchto/libqjs.git
+	shallow = true
+[submodule "vendor/libjsc"]
+	path = vendor/libjsc
+	url = git@github.com:holepunchto/libjsc.git
+	shallow = true
+[submodule "vendor/libuv"]
+	path = vendor/libuv
+	url = git@github.com:libuv/libuv.git
+	shallow = true
