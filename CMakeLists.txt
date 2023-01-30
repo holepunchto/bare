@@ -38,16 +38,36 @@ set_target_properties(
   CXX_STANDARD 20
 )
 
+add_custom_command(
+  COMMAND node scripts/link.mjs
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  OUTPUT
+    bootstrap.h
+    bootstrap.js
+  DEPENDS
+    lib/buffer/ascii.js
+    lib/buffer/base64.js
+    lib/buffer/hex.js
+    lib/buffer/index.js
+    lib/buffer/utf-8.js
+    lib/bootstrap.js
+    lib/load-addon.js
+    lib/module.js
+    lib/process.js
+    lib/queue-microtask.js
+  VERBATIM
+)
+
 target_sources(
   pear
   INTERFACE
     include/pearjs.h
   PRIVATE
+    bootstrap.h
     src/pear.c
     src/addons.c
     src/sync_fs.c
     src/runtime.c
-    build/bootstrap.h
 )
 
 target_include_directories(
@@ -94,3 +114,5 @@ target_link_libraries(
   PRIVATE
     js_static
 )
+
+install(TARGETS pear_bin)
