@@ -9,6 +9,7 @@ option(PEAR_ENABLE_ASAN OFF)
 option(PEAR_USE_QUICKJS OFF)
 option(PEAR_USE_JAVASCRIPTCORE OFF)
 
+include(cmake/module.cmake)
 include(cmake/v8.cmake)
 
 if(NOT TARGET uv)
@@ -81,16 +82,10 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INCLUDE_DIRECTORIES>
 )
 
-add_subdirectory(
-  ${CMAKE_SOURCE_DIR}/node_modules/tiny-timers-native
-  node_modules/tiny-timers-native
-  EXCLUDE_FROM_ALL
-)
-
-target_compile_definitions(
+add_static_module(
   tiny_timers_native
-  PUBLIC
-    NAPI_MODULE_FILENAME="/node_modules/tiny-timers-native"
+  node_modules/tiny-timers-native
+  node_modules/tiny-timers-native/binding.c
 )
 
 add_library(
