@@ -9,7 +9,7 @@ option(PEAR_ENABLE_ASAN OFF)
 option(PEAR_USE_QUICKJS OFF)
 option(PEAR_USE_JAVASCRIPTCORE OFF)
 
-include(cmake/module.cmake)
+include(cmake/pear.cmake)
 include(cmake/v8.cmake)
 
 if(NOT TARGET uv)
