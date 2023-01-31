@@ -5,21 +5,17 @@ for (let n = 0; n < 3; n++) {
   console.log()
   console.log('Round ' + n)
 
-  {
-    console.time('Buffer.allocUnsafe')
-    for (let i = 0; i < 1e6; i++) {
-      Buffer.allocUnsafe(65536)
-    }
-    console.timeEnd('Buffer.allocUnsafe')
+  console.time('Buffer.allocUnsafe')
+  for (let i = 0; i < 1e6; i++) {
+    Buffer.allocUnsafe(65536)
   }
+  console.timeEnd('Buffer.allocUnsafe')
 
-  {
-    console.time('Buffer.alloc')
-    for (let i = 0; i < 1e6; i++) {
-      Buffer.alloc(65536)
-    }
-    console.timeEnd('Buffer.alloc')
+  console.time('Buffer.alloc')
+  for (let i = 0; i < 1e6; i++) {
+    Buffer.alloc(65536)
   }
+  console.timeEnd('Buffer.alloc')
 
   {
     const a = Buffer.from('foobarz')
