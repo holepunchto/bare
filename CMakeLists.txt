@@ -82,10 +82,12 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INCLUDE_DIRECTORIES>
 )
 
-add_static_module(
+add_static_module(tiny_timers_native node_modules/tiny-timers-native)
+
+target_sources(
   tiny_timers_native
-  node_modules/tiny-timers-native
-  node_modules/tiny-timers-native/binding.c
+  PUBLIC
+    node_modules/tiny-timers-native/binding.c
 )
 
 add_library(

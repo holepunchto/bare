@@ -1,4 +1,4 @@
-function(add_static_module NAME PATH SOURCES)
+function(add_static_module NAME PATH)
   execute_process(
     COMMAND pearjs-dev --require napi-macros --cwd ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE NAPI_MACROS_INCLUDE
@@ -10,12 +10,6 @@ function(add_static_module NAME PATH SOURCES)
   )
 
   add_library(${NAME} OBJECT)
-
-  target_sources(
-    ${NAME}
-    PUBLIC
-      ${SOURCES}
-  )
 
   target_compile_definitions(
     ${NAME}
