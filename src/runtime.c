@@ -739,3 +739,30 @@ pear_runtime_teardown (pear_t *pear, int *exit_code) {
     js_get_value_int32(env, val, exit_code);
   }
 }
+
+int
+pear_runtime_bootstrap (pear_t *pear, const char *filename, const char *source, size_t len) {
+  js_env_t *env = pear->env;
+
+  int err;
+
+  js_value_t *bootstrap;
+  err = js_get_named_property(env, pear->runtime.exports, "bootstrap", &bootstrap);
+  assert(err == 0);
+
+  js_value_t *args[2];
+  err = js_create_string_utf8(env, filename, -1, &args[0]);
+  if (err < 0) return err;
+
+  if (source) {
+    err = js_create_string_utf8(env, source, len, &args[1]);
+    if (err < 0) return err;
+  } else {
+    js_get_undefined(env, &args[1]);
+  }
+
+  err = js_call_function(env, pear->runtime.exports, bootstrap, 2, args, NULL);
+  if (err < 0) return err;
+
+  return 0;
+}

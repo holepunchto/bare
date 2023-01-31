@@ -2,6 +2,7 @@
 #define PEAR_H
 
 #include <js.h>
+#include <stddef.h>
 #include <uv.h>
 
 #ifdef __APPLE__
