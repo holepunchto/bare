@@ -33,6 +33,7 @@
     "hyperswarm": "^4.3.5",
     "include-static": "^1.1.0",
     "localdrive": "^1.4.0",
+    "minimist": "^1.2.7",
     "script-linker": "holepunchto/script-linker",
     "standard": "^17.0.0",
     "tiny-paths": "^1.0.0",
