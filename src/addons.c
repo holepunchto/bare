@@ -162,7 +162,7 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
       js_get_env_loop(env, &loop);
       err = pear_addons_resolve(loop, path, (char *) path);
       if (err < 0) {
-        js_throw_error(env, NULL, "Could not resolve addon");
+        js_throw_errorf(env, NULL, "Could not resolve addon %s", path);
         return NULL;
       }
     }
