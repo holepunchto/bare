@@ -1,4 +1,4 @@
-function(add_static_module NAME PATH)
+function(add_pear_module NAME PATH)
   execute_process(
     COMMAND pearjs-dev --require napi-macros --cwd ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE NAPI_MACROS_INCLUDE
