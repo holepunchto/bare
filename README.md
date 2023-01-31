@@ -29,7 +29,7 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 
 ## Building
 
-To build :pear:.js, start by installing the JavaScript dependencies:
+To build :pear:.js, start by installing the dependencies:
 
 ```sh
 $ npm install
