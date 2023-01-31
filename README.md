@@ -38,7 +38,7 @@ $ npm install
 Next, run the build script:
 
 ```sh
-$ npm run build
+$ npm run build -- [--debug]
 ```
 
 When completed, the `pear` binary will be available in the `build/bin` directory.
