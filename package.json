@@ -24,8 +24,8 @@
   "homepage": "https://github.com/holepunchto/pearjs-next#readme",
   "devDependencies": {
     "@pearjs/console": "^2.0.0",
-    "@pearjs/events": "^1.1.0",
     "@pearjs/dev": "*",
+    "@pearjs/events": "^1.1.0",
     "corestore": "^6.4.0",
     "hypercore-id-encoding": "^1.0.2",
     "hyperdrive": "next",

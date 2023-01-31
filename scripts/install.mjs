@@ -1,12 +1,12 @@
+import path from 'path'
+import url from 'url'
+import fs from 'fs/promises'
 import childProcess from 'child_process'
 import Hyperdrive from 'hyperdrive'
 import Localdrive from 'localdrive'
 import Corestore from 'corestore'
 import Hyperswarm from 'hyperswarm'
 import id from 'hypercore-id-encoding'
-import path from 'path'
-import url from 'url'
-import fs from 'fs'
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -37,9 +37,9 @@ for await (const diff of drive.mirror(new Localdrive(prebuilds), { prefix: '/' +
 }
 
 try {
-  await fs.promises.unlink(path.join(prebuilds, 'host'))
+  await fs.unlink(path.join(prebuilds, 'host'))
 } catch {}
 
-await fs.promises.symlink(host, path.join(prebuilds, 'host'))
+await fs.symlink(host, path.join(prebuilds, 'host'))
 
 await swarm.destroy()
