@@ -7,7 +7,7 @@
 
 #include "../include/pear.h"
 #include "addons.h"
-#include "bootstrap.h"
+#include "bootstrap.js.h"
 #include "runtime.h"
 #include "sync_fs.h"
 
@@ -692,7 +692,7 @@ pear_runtime_setup (pear_t *pear) {
   js_set_named_property(env, global, "global", global);
 
   js_value_t *script;
-  js_create_string_utf8(env, (const char *) pear_bootstrap, pear_bootstrap_len, &script);
+  js_create_string_utf8(env, (const char *) pear_bootstrap_js, pear_bootstrap_js_len, &script);
 
   js_value_t *bootstrap;
   err = js_run_script(env, script, &bootstrap);

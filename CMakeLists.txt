@@ -44,7 +44,7 @@ add_custom_command(
   COMMAND node scripts/link.mjs
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
-    ${PROJECT_SOURCE_DIR}/src/bootstrap.h
+    ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
   DEPENDS
     lib/buffer/ascii.js
     lib/buffer/base64.js
@@ -64,7 +64,7 @@ target_sources(
   INTERFACE
     include/pearjs.h
   PRIVATE
-    src/bootstrap.h
+    src/bootstrap.js.h
     src/pear.c
     src/addons.c
     src/sync_fs.c
