@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <uv.h>
 
-#include "../build/bootstrap.h"
 #include "../include/pear.h"
 #include "addons.h"
+#include "bootstrap.h"
 #include "runtime.h"
 #include "sync_fs.h"
 

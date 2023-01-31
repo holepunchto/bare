@@ -1,6 +1,6 @@
-import fs from 'fs/promises'
 import path from 'path'
 import url from 'url'
+import fs from 'fs/promises'
 import ScriptLinker from 'script-linker'
 import includeStatic from 'include-static'
 
@@ -28,6 +28,4 @@ const bundle = await s.bundle('/lib/bootstrap.js', {
   footer: '//# sourceURL=<pearjs>/bootstrap.js\n})'
 })
 
-await fs.writeFile(path.join(root, 'build/bootstrap.js'), bundle)
-
-await fs.writeFile(path.join(root, 'build/bootstrap.h'), includeStatic('pear_bootstrap', Buffer.from(bundle)))
+await fs.writeFile(path.join(root, 'src/bootstrap.h'), includeStatic('pear_bootstrap', Buffer.from(bundle)))
