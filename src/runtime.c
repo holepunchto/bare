@@ -724,6 +724,8 @@ void
 pear_runtime_teardown (pear_t *pear, int *exit_code) {
   js_env_t *env = pear->env;
 
+  if (exit_code != NULL) *exit_code = 0;
+
   js_value_t *fn;
   js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
 
