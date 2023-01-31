@@ -4,6 +4,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(pear C CXX)
 
+option(PEAR_ENABLE_ASAN OFF)
+
 option(PEAR_USE_QUICKJS OFF)
 option(PEAR_USE_JAVASCRIPTCORE OFF)
 
@@ -136,5 +138,20 @@ target_link_libraries(
   PRIVATE
     $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
 )
+
+if(PEAR_ENABLE_ASAN)
+  target_compile_options(
+    pear_bin
+    PRIVATE
+      -fsanitize=address
+      -fno-omit-frame-pointer
+  )
+
+  target_link_options(
+    pear_bin
+    PRIVATE
+      -fsanitize=address
+  )
+endif()
 
 install(TARGETS pear_bin)
