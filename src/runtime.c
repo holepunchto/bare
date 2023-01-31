@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <js.h>
 #include <js/ffi.h>
 #include <stdlib.h>
