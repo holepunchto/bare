@@ -94,6 +94,6 @@ int
 pear_teardown (pear_t *pear, int *exit_code);
 
 int
-pear_run (pear_t *pear, const char *filename, const char *source);
+pear_run (pear_t *pear, const char *filename, const char *source, size_t len);
 
 #endif

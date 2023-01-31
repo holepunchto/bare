@@ -31,7 +31,7 @@ main (int argc, char **argv) {
   pear_t pear;
   pear_setup(loop, &pear, argc, argv);
 
-  pear_run(&pear, entry_point, NULL);
+  pear_run(&pear, entry_point, NULL, 0);
 
   int exit_code = 0;
 
