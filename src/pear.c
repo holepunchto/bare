@@ -41,7 +41,27 @@ pear_teardown (pear_t *pear, int *exit_code) {
 }
 
 int
-pear_run (pear_t *pear) {
+pear_run (pear_t *pear, const char *filename, const char *source) {
+  int err;
+
+  js_value_t *bootstrap;
+  err = js_get_named_property(pear->env, pear->runtime.exports, "bootstrap", &bootstrap);
+  assert(err == 0);
+
+  js_value_t *args[2];
+  err = js_create_string_utf8(pear->env, filename, -1, &args[0]);
+  if (err < 0) return err;
+
+  if (source) {
+    err = js_create_string_utf8(pear->env, source, -1, &args[1]);
+    if (err < 0) return err;
+  } else {
+    js_get_undefined(pear->env, &args[1]);
+  }
+
+  err = js_call_function(pear->env, pear->runtime.exports, bootstrap, 2, args, NULL);
+  if (err < 0) return err;
+
   do {
     uv_run(pear->loop, UV_RUN_DEFAULT);
 
@@ -49,22 +69,4 @@ pear_run (pear_t *pear) {
   } while (uv_loop_alive(pear->loop));
 
   return 0;
-}
-
-int
-pear_run_file (pear_t *pear, const char *file) {
-  int err;
-
-  js_value_t *bootstrap;
-  err = js_get_named_property(pear->env, pear->runtime.exports, "bootstrap", &bootstrap);
-  assert(err == 0);
-
-  js_value_t *args[1];
-  err = js_create_string_utf8(pear->env, file, -1, &args[0]);
-  if (err < 0) return err;
-
-  err = js_call_function(pear->env, pear->runtime.exports, bootstrap, 1, args, NULL);
-  if (err < 0) return err;
-
-  return pear_run(pear);
 }
