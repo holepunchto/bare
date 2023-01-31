@@ -28,4 +28,6 @@ const bundle = await s.bundle('/lib/bootstrap.js', {
   footer: '//# sourceURL=<pearjs>/bootstrap.js\n})'
 })
 
+await fs.writeFile(path.join(root, 'src/bootstrap.js'), bundle)
+
 await fs.writeFile(path.join(root, 'src/bootstrap.js.h'), includeStatic('pear_bootstrap_js', Buffer.from(bundle)))
