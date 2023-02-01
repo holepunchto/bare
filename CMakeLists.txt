@@ -131,19 +131,6 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
 )
 
-if(PEAR_ENABLE_ASAN)
-  target_compile_options(
-    pear_bin
-    PRIVATE
-      -fsanitize=address
-      -fno-omit-frame-pointer
-  )
-
-  target_link_options(
-    pear_bin
-    PRIVATE
-      -fsanitize=address
-  )
-endif()
+add_debug_options(pear_bin)
 
 install(TARGETS pear_bin)
