@@ -95,7 +95,7 @@ add_library(
 )
 
 set_target_properties(
-  pear
+  pear_static
   PROPERTIES
   OUTPUT_NAME pear
 )
