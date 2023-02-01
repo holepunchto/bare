@@ -89,7 +89,7 @@ add_library(
   pear_static
   STATIC
   $<TARGET_OBJECTS:pear>
-  $<TARGET_OBJECTS:uv>
+  $<TARGET_OBJECTS:uv_a>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:tiny_timers_native>
 )
