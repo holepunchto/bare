@@ -1,9 +1,15 @@
-if(DEFINED V8)
-  return()
-endif()
+set(V8 ${PROJECT_SOURCE_DIR}/prebuilds/v8/host)
 
-set(V8_ROOT ${PROJECT_SOURCE_DIR}/prebuilds/v8/host)
+add_library(v8 STATIC IMPORTED)
 
-set(V8 ${V8_ROOT}/lib/libv8.a)
+set_target_properties(
+  v8
+  PROPERTIES
+  IMPORTED_LOCATION ${V8}/lib/libv8.a
+)
 
-set(V8_INCLUDE_DIR ${V8_ROOT}/include)
+target_include_directories(
+  v8
+  INTERFACE
+    ${V8}/include
+)
