@@ -9,7 +9,8 @@ option(PEAR_ENABLE_ASAN OFF)
 option(PEAR_USE_QUICKJS OFF)
 option(PEAR_USE_JAVASCRIPTCORE OFF)
 
-include(cmake/pear.cmake)
+include(pear)
+
 include(cmake/v8.cmake)
 
 if(NOT TARGET uv)
@@ -82,13 +83,7 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INCLUDE_DIRECTORIES>
 )
 
-add_pear_module(timers node_modules/tiny-timers-native)
-
-target_sources(
-  timers
-  PUBLIC
-    node_modules/tiny-timers-native/binding.c
-)
+bundle_pear_module(tiny_timers_native node_modules/tiny-timers-native)
 
 add_library(
   pear_static
@@ -96,7 +91,7 @@ add_library(
   $<TARGET_OBJECTS:pear>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
-  $<TARGET_OBJECTS:timers>
+  $<TARGET_OBJECTS:tiny_timers_native>
 )
 
 set(PEAR_ENGINE js_static)
