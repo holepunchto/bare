@@ -65,16 +65,9 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
   DEPENDS
-    lib/buffer/ascii.js
-    lib/buffer/base64.js
-    lib/buffer/hex.js
-    lib/buffer/index.js
-    lib/buffer/utf-8.js
     lib/bootstrap.js
-    lib/load-addon.js
     lib/module.js
     lib/process.js
-    lib/queue-microtask.js
   VERBATIM
 )
 
@@ -99,15 +92,17 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-bundle_pear_module(tiny_timers_native node_modules/tiny-timers-native)
+bundle_pear_module(pear_timers node_modules/@pearjs/timers)
+bundle_pear_module(pear_buffer node_modules/@pearjs/buffer)
 
 add_library(
   pear_static
   STATIC
   $<TARGET_OBJECTS:pear>
+  $<TARGET_OBJECTS:pear_timers>
+  $<TARGET_OBJECTS:pear_buffer>
   $<TARGET_OBJECTS:uv_a>
   $<TARGET_OBJECTS:napi>
-  $<TARGET_OBJECTS:tiny_timers_native>
 )
 
 set_target_properties(

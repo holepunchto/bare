@@ -14,10 +14,6 @@ const s = new ScriptLinker({
   map (path) {
     return '<pearjs>' + path
   },
-  mapResolve (req, basedir) {
-    if (req === 'node-gyp-build') return '/lib/load-addon.js'
-    return req
-  },
   readFile (filename) {
     return fs.readFile(path.join(root, filename))
   }

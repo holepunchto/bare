@@ -24,9 +24,12 @@
   },
   "homepage": "https://github.com/holepunchto/pearjs-next#readme",
   "devDependencies": {
+    "@pearjs/buffer": "^1.0.0",
     "@pearjs/console": "^2.0.0",
     "@pearjs/dev": "^0.0.10",
     "@pearjs/events": "^1.1.0",
+    "@pearjs/path": "^1.0.0",
+    "@pearjs/timers": "^1.0.0",
     "corestore": "^6.4.0",
     "hypercore-id-encoding": "^1.0.2",
     "hyperdrive": "next",
@@ -35,8 +38,6 @@
     "localdrive": "^1.4.0",
     "minimist": "^1.2.7",
     "script-linker": "holepunchto/script-linker",
-    "standard": "^17.0.0",
-    "tiny-paths": "^1.0.0",
-    "tiny-timers-native": "^1.2.6"
+    "standard": "^17.0.0"
   }
 }
