@@ -394,7 +394,7 @@ pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
   js_value_t *exports = data;
   js_value_t *fn;
 
-  int err = js_get_named_property(env, exports, "onfatalexception", &fn);
+  int err = js_get_named_property(env, exports, "onuncaughtexception", &fn);
 
   if (err < 0) {
     fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
@@ -405,12 +405,39 @@ pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
   js_is_function(env, fn, &is_set);
 
   if (!is_set) {
-    fprintf(stderr, "Fatal exception, but no handler set, exiting...\n");
+    fprintf(stderr, "Uncaught exception, but no handler set, exiting...\n");
     exit(1);
     return;
   }
 
   err = js_call_function(env, exports, fn, 1, &error, NULL);
+  if (err < 0) trigger_fatal_exception(env);
+}
+
+static void
+pear_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
+  js_value_t *exports = data;
+  js_value_t *fn;
+
+  int err = js_get_named_property(env, exports, "onunhandledrejection", &fn);
+
+  if (err < 0) {
+    fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
+    return;
+  }
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (!is_set) {
+    fprintf(stderr, "Unhandled rejection, but no handler set, exiting...\n");
+    exit(1);
+    return;
+  }
+
+  js_value_t *args[2] = {reason, promise};
+
+  err = js_call_function(env, exports, fn, 2, args, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
@@ -427,6 +454,7 @@ pear_runtime_setup (pear_t *pear) {
   js_value_t *exports = pear->runtime.exports;
 
   js_on_uncaught_exception(env, pear_on_uncaught_exception, exports);
+  js_on_unhandled_rejection(env, pear_on_unhandled_rejection, exports);
 
   {
     js_value_t *val;
