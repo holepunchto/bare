@@ -94,9 +94,9 @@ target_include_directories(
   pear
   PUBLIC
     include
-    $<TARGET_PROPERTY:uv,INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:js,INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:napi,INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 bundle_pear_module(tiny_timers_native node_modules/tiny-timers-native)
@@ -144,7 +144,7 @@ set_target_properties(
 target_include_directories(
   pear_bin
   PRIVATE
-    $<TARGET_PROPERTY:pear,INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:pear,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
