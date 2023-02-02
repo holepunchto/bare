@@ -55,7 +55,7 @@ set_target_properties(
   pear
   PROPERTIES
   C_STANDARD 99
-  CXX_STANDARD 20
+  CXX_STANDARD 17
 )
 
 add_custom_command(
