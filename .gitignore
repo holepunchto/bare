@@ -1,6 +1,6 @@
-*.pear
-build
 node_modules
 package-lock.json
+build
 prebuilds
 sandbox
+corestore
