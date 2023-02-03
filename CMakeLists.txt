@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(WIN32)
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 project(pear C CXX)
 
 option(PEAR_ENABLE_ASAN OFF)
@@ -102,7 +106,6 @@ add_library(
   $<TARGET_OBJECTS:pear_buffer>
   $<TARGET_OBJECTS:pear_fs>
   $<TARGET_OBJECTS:pear_timers>
-  $<TARGET_OBJECTS:uv_a>
   $<TARGET_OBJECTS:napi>
 )
 
@@ -125,7 +128,7 @@ endif()
 target_link_libraries(
   pear_static
   PUBLIC
-    ${engine}
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
 add_executable(pear_bin bin/pear.c)
