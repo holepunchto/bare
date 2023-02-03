@@ -6,7 +6,8 @@
   "scripts": {
     "test": "standard",
     "install": "node scripts/install.mjs",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "link": "node scripts/link.mjs"
   },
   "standard": {
     "ignore": [
@@ -28,6 +29,7 @@
     "@pearjs/console": "^2.0.0",
     "@pearjs/dev": "^0.0.10",
     "@pearjs/events": "^1.1.0",
+    "@pearjs/module": "^1.0.0",
     "@pearjs/path": "^1.0.0",
     "@pearjs/timers": "^1.0.0",
     "corestore": "^6.4.0",

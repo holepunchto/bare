@@ -7,7 +7,7 @@
 
 #include "../include/pear.h"
 #include "addons.h"
-#include "sync_fs.h"
+#include "fs.h"
 
 #define PEAR_ADDONS_MAX_ENTRIES 256
 
@@ -22,13 +22,13 @@ shift_pending_dynamic_addon () {
 
   if (mod == NULL) return NULL;
 
-  while (mod->next_addon != NULL) {
+  while (mod->next_module != NULL) {
     prev = mod;
-    mod = mod->next_addon;
+    mod = mod->next_module;
   }
 
   if (prev == NULL) pending_dynamic_module = NULL;
-  else prev->next_addon = mod->next_addon;
+  else prev->next_module = mod->next_module;
 
   return mod;
 }
@@ -51,13 +51,13 @@ has_dirname (const char *s, const char *dir) {
   if (dir_len > s_len) return false;
   if (memcmp(dir, s, dir_len) != 0) return false;
 
-  return *(s + dir_len) == PEAR_SYNC_FS_SEP[0];
+  return *(s + dir_len) == PEAR_FS_SEP[0];
 }
 
 static bool
 check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
   uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
-  int entries_len = pear_sync_fs_readdir(loop, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
+  int entries_len = pear_fs_readdir_sync(loop, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
   if (entries_len <= 0) return false;
 
   const char *result = NULL;
@@ -91,7 +91,7 @@ check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
   }
 
   if (result != NULL) {
-    pear_sync_fs_path_join(path, result, out);
+    pear_fs_path_join(path, result, out);
     return true;
   }
 
@@ -105,7 +105,7 @@ pear_addons_init () {
 
 int
 pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
-  char tmp[PEAR_SYNC_FS_MAX_PATH];
+  char tmp[PEAR_FS_MAX_PATH];
 
   if (has_extension(path, ".pear") || has_extension(path, ".node")) {
     if (out != path) strcpy(out, path);
@@ -115,15 +115,15 @@ pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
   // TODO: check where cmake likes to build...
 
   // check for pearjs dev build compat
-  pear_sync_fs_path_join(path, "build", tmp);
+  pear_fs_path_join(path, "build", tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
 
   // node-gyp compat
-  pear_sync_fs_path_join(path, "build" PEAR_SYNC_FS_SEP "Release", tmp);
+  pear_fs_path_join(path, "build" PEAR_FS_SEP "Release", tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
 
   // check for prebuilds
-  pear_sync_fs_path_join(path, "prebuilds" PEAR_SYNC_FS_SEP PEAR_PLATFORM "-" PEAR_ARCH, tmp);
+  pear_fs_path_join(path, "prebuilds" PEAR_FS_SEP PEAR_PLATFORM "-" PEAR_ARCH, tmp);
   if (check_addon_dir(loop, tmp, out)) return 0;
 
   return UV_ENOENT;
@@ -144,15 +144,15 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
 
       if (found) {
         if (prev == NULL) {
-          pending_static_module = mod->next_addon;
+          pending_static_module = mod->next_module;
         } else {
-          prev->next_addon = mod->next_addon;
+          prev->next_module = mod->next_module;
         }
         break;
       }
 
       prev = mod;
-      mod = mod->next_addon;
+      mod = mod->next_module;
     }
   }
 
@@ -192,7 +192,7 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
   js_value_t *addon;
   js_create_object(env, &addon);
 
-  js_value_t *exports = mod->register_addon(env, addon);
+  js_value_t *exports = mod->register_module(env, addon);
 
   free(mod);
 
@@ -209,7 +209,7 @@ pear_module_register (pear_module_t *mod) {
 
   *cpy = *mod;
 
-  cpy->next_addon = *pending_module;
+  cpy->next_module = *pending_module;
   *pending_module = cpy;
 }
 
@@ -218,7 +218,7 @@ napi_module_register (napi_module *napi_mod) {
   pear_module_t mod = {
     .version = PEAR_MODULE_VERSION,
     .filename = napi_mod->nm_filename,
-    .register_addon = napi_mod->nm_register_func,
+    .register_module = napi_mod->nm_register_func,
   };
 
   pear_module_register(&mod);

@@ -3,7 +3,7 @@
 #include <uv.h>
 
 #include "../include/pear.h"
-#include "../src/sync_fs.h"
+#include "../src/fs.h"
 
 int
 main (int argc, char **argv) {
@@ -19,7 +19,7 @@ main (int argc, char **argv) {
   char *entry_point = NULL;
   int err;
 
-  err = pear_sync_fs_realpath(loop, argv[1], NULL, &entry_point);
+  err = pear_fs_realpath_sync(loop, argv[1], NULL, &entry_point);
 
   if (err < 0) {
     fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);

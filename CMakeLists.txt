@@ -66,7 +66,6 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
   DEPENDS
     lib/bootstrap.js
-    lib/module.js
     lib/process.js
   VERBATIM
 )
@@ -76,10 +75,10 @@ target_sources(
   INTERFACE
     include/pearjs.h
   PRIVATE
-    src/bootstrap.js.h
-    src/pear.c
     src/addons.c
-    src/sync_fs.c
+    src/bootstrap.js.h
+    src/fs.c
+    src/pear.c
     src/runtime.c
 )
 
@@ -92,15 +91,17 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-bundle_pear_module(pear_timers node_modules/@pearjs/timers)
 bundle_pear_module(pear_buffer node_modules/@pearjs/buffer)
+bundle_pear_module(pear_fs node_modules/@pearjs/fs)
+bundle_pear_module(pear_timers node_modules/@pearjs/timers)
 
 add_library(
   pear_static
   STATIC
   $<TARGET_OBJECTS:pear>
-  $<TARGET_OBJECTS:pear_timers>
   $<TARGET_OBJECTS:pear_buffer>
+  $<TARGET_OBJECTS:pear_fs>
+  $<TARGET_OBJECTS:pear_timers>
   $<TARGET_OBJECTS:uv_a>
   $<TARGET_OBJECTS:napi>
 )
@@ -151,3 +152,7 @@ target_link_libraries(
 add_debug_options(pear_bin)
 
 install(TARGETS pear_bin)
+
+install(FILES include/pear.h DESTINATION include)
+
+install(DIRECTORY include/pear DESTINATION include)

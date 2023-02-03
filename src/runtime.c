@@ -9,8 +9,8 @@
 #include "../include/pear.h"
 #include "addons.h"
 #include "bootstrap.js.h"
+#include "fs.h"
 #include "runtime.h"
-#include "sync_fs.h"
 
 #define PEAR_UV_CHECK(call) \
   { \
@@ -70,10 +70,10 @@ bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
-  char addon_file[PEAR_SYNC_FS_MAX_PATH];
+  char addon_file[PEAR_FS_MAX_PATH];
   uint32_t mode;
 
-  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_SYNC_FS_MAX_PATH, NULL);
+  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
   js_get_value_uint32(env, argv[1], &mode);
 
   return pear_addons_load(env, addon_file, (int) mode);
@@ -86,11 +86,11 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 
   js_get_callback_info(env, info, &argc, argv, NULL, NULL);
 
-  char addon_file[PEAR_SYNC_FS_MAX_PATH];
+  char addon_file[PEAR_FS_MAX_PATH];
   uv_loop_t *loop;
 
   js_get_env_loop(env, &loop);
-  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_SYNC_FS_MAX_PATH, NULL);
+  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
 
   int err = pear_addons_resolve(loop, addon_file, addon_file);
   if (err < 0) {
@@ -100,56 +100,6 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *result;
   js_create_string_utf8(env, addon_file, -1, &result);
-
-  return result;
-}
-
-static js_value_t *
-bindings_exists_sync (js_env_t *env, js_callback_info_t *info) {
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-
-  char path[PEAR_SYNC_FS_MAX_PATH];
-
-  js_get_value_string_utf8(env, argv[0], path, PEAR_SYNC_FS_MAX_PATH, NULL);
-
-  uv_loop_t *loop;
-  js_get_env_loop(env, &loop);
-
-  int type = 0;
-
-  pear_sync_fs_stat(loop, path, &type, NULL);
-
-  js_value_t *result;
-  js_create_uint32(env, type, &result);
-
-  return result;
-}
-
-static js_value_t *
-bindings_read_source_sync (js_env_t *env, js_callback_info_t *info) {
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-
-  char path[PEAR_SYNC_FS_MAX_PATH];
-
-  js_get_value_string_utf8(env, argv[0], path, PEAR_SYNC_FS_MAX_PATH, NULL);
-
-  uv_loop_t *loop;
-  js_get_env_loop(env, &loop);
-
-  size_t size;
-  char *data;
-
-  PEAR_UV_CHECK(pear_sync_fs_read_file(loop, path, &size, &data))
-
-  js_value_t *result;
-  js_create_string_utf8(env, data, size, &result);
-  free(data);
 
   return result;
 }
@@ -200,8 +150,8 @@ static js_value_t *
 bindings_cwd (js_env_t *env, js_callback_info_t *info) {
   js_value_t *val;
 
-  char cwd[PEAR_SYNC_FS_MAX_PATH];
-  size_t cwd_len = PEAR_SYNC_FS_MAX_PATH;
+  char cwd[PEAR_FS_MAX_PATH];
+  size_t cwd_len = PEAR_FS_MAX_PATH;
 
   PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
 
@@ -345,14 +295,14 @@ pear_runtime_setup (pear_t *pear) {
   {
     js_value_t *val;
 
-    js_create_uint32(env, PEAR_SYNC_FS_FILE, &val);
+    js_create_uint32(env, PEAR_FS_FILE, &val);
     js_set_named_property(env, exports, "FS_FILE", val);
   }
 
   {
     js_value_t *val;
 
-    js_create_uint32(env, PEAR_SYNC_FS_DIR, &val);
+    js_create_uint32(env, PEAR_FS_DIR, &val);
     js_set_named_property(env, exports, "FS_DIR", val);
   }
 
@@ -427,8 +377,8 @@ pear_runtime_setup (pear_t *pear) {
   js_value_t *exec_path_val;
 
   {
-    char exec_path[PEAR_SYNC_FS_MAX_PATH];
-    size_t exec_path_len = PEAR_SYNC_FS_MAX_PATH;
+    char exec_path[PEAR_FS_MAX_PATH];
+    size_t exec_path_len = PEAR_FS_MAX_PATH;
     int err = uv_exepath(exec_path, &exec_path_len);
 
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
@@ -523,18 +473,6 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *val;
     js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, NULL, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
-  }
-
-  { // TODO: replace me
-    js_value_t *val;
-    js_create_function(env, "existsSync", -1, bindings_exists_sync, NULL, &val);
-    js_set_named_property(env, exports, "existsSync", val);
-  }
-
-  { // TODO: replace me
-    js_value_t *val;
-    js_create_function(env, "readSourceSync", -1, bindings_read_source_sync, NULL, &val);
-    js_set_named_property(env, exports, "readSourceSync", val);
   }
 
   js_value_t *global;
