@@ -557,3 +557,33 @@ pear_runtime_bootstrap (pear_t *pear, const char *filename, const char *source, 
 
   return 0;
 }
+
+void
+pear_runtime_suspend (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onsuspend", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  if (err < 0) trigger_fatal_exception(env);
+}
+
+void
+pear_runtime_resume (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onresume", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  if (err < 0) trigger_fatal_exception(env);
+}

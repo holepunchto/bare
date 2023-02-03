@@ -2,6 +2,7 @@
 #define PEAR_H
 
 #include <js.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <uv.h>
 
@@ -31,6 +32,9 @@ struct pear_s {
   uv_loop_t *loop;
   js_platform_t *platform;
   js_env_t *env;
+  uv_async_t suspend;
+  uv_async_t resume;
+  bool suspended;
 
   struct {
     js_value_t *exports;
@@ -47,5 +51,11 @@ pear_teardown (pear_t *pear, int *exit_code);
 
 int
 pear_run (pear_t *pear, const char *filename, const char *source, size_t len);
+
+int
+pear_suspend (pear_t *pear);
+
+int
+pear_resume (pear_t *pear);
 
 #endif // PEAR_H
