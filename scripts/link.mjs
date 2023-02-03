@@ -14,8 +14,21 @@ const s = new ScriptLinker({
   map (path) {
     return '<pearjs>' + path
   },
+  mapResolve (req) {
+    if (req === 'events') return '@pearjs/events'
+    return req
+  },
   readFile (filename) {
     return fs.readFile(path.join(root, filename))
+  },
+  builtins: {
+    has () {
+      return false
+    },
+    async get () {},
+    keys () {
+      return []
+    }
   }
 })
 
