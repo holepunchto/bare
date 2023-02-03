@@ -95,9 +95,9 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-bundle_pear_module(pear_buffer node_modules/@pearjs/buffer)
-bundle_pear_module(pear_fs node_modules/@pearjs/fs)
-bundle_pear_module(pear_timers node_modules/@pearjs/timers)
+include_pear_module(pear_buffer node_modules/@pearjs/buffer)
+include_pear_module(pear_fs node_modules/@pearjs/fs)
+include_pear_module(pear_timers node_modules/@pearjs/timers)
 
 add_library(
   pear_static
