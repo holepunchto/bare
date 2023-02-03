@@ -1,6 +1,11 @@
-process.on('suspend', () => {
-  const timer = setTimeout(() => process.resume(), 1000)
-  timer.unref()
-})
+process
+  .on('suspend', () => {
+    console.log('process suspended')
 
-process.suspend()
+    const timer = setTimeout(() => process.resume(), 1000)
+    timer.unref()
+  })
+  .on('resume', () => {
+    console.log('process resumed')
+  })
+  .suspend()
