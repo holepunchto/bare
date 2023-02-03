@@ -217,6 +217,28 @@ bindings_get_title (js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static js_value_t *
+bindings_suspend (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
+  js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+
+  pear_suspend(pear);
+
+  return NULL;
+}
+
+static js_value_t *
+bindings_resume (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
+  js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+
+  pear_resume(pear);
+
+  return NULL;
+}
+
 static int
 trigger_fatal_exception (js_env_t *env) {
   js_value_t *exception;
@@ -473,6 +495,18 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *val;
     js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, NULL, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "suspend", -1, bindings_suspend, (void *) pear, &val);
+    js_set_named_property(env, exports, "suspend", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "resume", -1, bindings_resume, (void *) pear, &val);
+    js_set_named_property(env, exports, "resume", val);
   }
 
   js_value_t *global;
