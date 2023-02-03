@@ -155,7 +155,3 @@ target_link_libraries(
 add_debug_options(pear_bin)
 
 install(TARGETS pear_bin)
-
-install(FILES include/pear.h DESTINATION include)
-
-install(DIRECTORY include/pear DESTINATION include)
