@@ -62,8 +62,10 @@ set_target_properties(
   CXX_STANDARD 17
 )
 
+find_program(node NAMES node)
+
 add_custom_command(
-  COMMAND node scripts/link.mjs
+  COMMAND ${node} scripts/link.mjs
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js
