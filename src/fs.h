@@ -3,8 +3,6 @@
 
 #include <uv.h>
 
-#define PEAR_FS_FILE     1
-#define PEAR_FS_DIR      2
 #define PEAR_FS_MAX_PATH 4096
 #define PEAR_FS_SEP      "/"
 

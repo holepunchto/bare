@@ -133,6 +133,8 @@ target_link_libraries(
 
 add_executable(pear_bin bin/pear.c)
 
+add_debug_options(pear_bin)
+
 set_target_properties(
   pear_bin
   PROPERTIES
@@ -151,7 +153,5 @@ target_link_libraries(
   PRIVATE
     $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
 )
-
-add_debug_options(pear_bin)
 
 install(TARGETS pear_bin)

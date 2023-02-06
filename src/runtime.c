@@ -94,7 +94,7 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 
   int err = pear_addons_resolve(loop, addon_file, addon_file);
   if (err < 0) {
-    js_throw_error(env, NULL, "Could not resolve addon");
+    js_throw_errorf(env, NULL, "Could not resolve addon %s", addon_file);
     return NULL;
   }
 
@@ -308,43 +308,21 @@ pear_runtime_setup (pear_t *pear) {
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  js_create_object(env, &pear->runtime.exports);
-  js_value_t *exports = pear->runtime.exports;
+  js_value_t *exports;
+  js_create_object(env, &exports);
+  pear->runtime.exports = exports;
 
   js_on_uncaught_exception(env, pear_on_uncaught_exception, exports);
   js_on_unhandled_rejection(env, pear_on_unhandled_rejection, exports);
 
   {
     js_value_t *val;
-
-    js_create_uint32(env, PEAR_FS_FILE, &val);
-    js_set_named_property(env, exports, "FS_FILE", val);
-  }
-
-  {
-    js_value_t *val;
-
-    js_create_uint32(env, PEAR_FS_DIR, &val);
-    js_set_named_property(env, exports, "FS_DIR", val);
-  }
-
-  {
-    js_value_t *val;
-
     js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
     js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
   }
 
   {
     js_value_t *val;
-
-    js_create_uint32(env, PEAR_ADDONS_DYNAMIC, &val);
-    js_set_named_property(env, exports, "ADDONS_DYNAMIC", val);
-  }
-
-  {
-    js_value_t *val;
-
     js_create_uint32(env, PEAR_ADDONS_STATIC, &val);
     js_set_named_property(env, exports, "ADDONS_STATIC", val);
   }
@@ -401,7 +379,7 @@ pear_runtime_setup (pear_t *pear) {
   {
     char exec_path[PEAR_FS_MAX_PATH];
     size_t exec_path_len = PEAR_FS_MAX_PATH;
-    int err = uv_exepath(exec_path, &exec_path_len);
+    uv_exepath(exec_path, &exec_path_len);
 
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
     js_set_named_property(env, exports, "execPath", exec_path_val);
@@ -437,9 +415,7 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
-    uv_pid_t pid = uv_os_getpid();
-
-    js_create_uint32(env, pid, &val);
+    js_create_uint32(env, uv_os_getpid(), &val);
     js_set_named_property(env, exports, "pid", val);
   }
 
