@@ -156,4 +156,8 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
 )
 
-install(TARGETS pear_bin)
+install(
+  TARGETS pear_bin
+  RUNTIME DESTINATION bin
+  BUNDLE DESTINATION bin
+)
