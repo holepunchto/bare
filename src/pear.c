@@ -15,8 +15,6 @@ on_suspend (uv_async_t *handle) {
   if (pear->suspended) return;
   pear->suspended = true;
 
-  uv_ref((uv_handle_t *) &pear->suspend);
-
   pear_runtime_suspend(pear);
 }
 
@@ -28,6 +26,7 @@ on_resume (uv_async_t *handle) {
   pear->suspended = false;
 
   uv_unref((uv_handle_t *) &pear->suspend);
+  uv_unref((uv_handle_t *) &pear->resume);
 
   pear_runtime_resume(pear);
 }
@@ -97,10 +96,16 @@ pear_run (pear_t *pear, const char *filename, const char *source, size_t len) {
 
 int
 pear_suspend (pear_t *pear) {
+  // FIXME: Not thread safe!
+  uv_ref((uv_handle_t *) &pear->suspend);
+
   return uv_async_send(&pear->suspend);
 }
 
 int
 pear_resume (pear_t *pear) {
+  // FIXME: Not thread safe!
+  uv_ref((uv_handle_t *) &pear->resume);
+
   return uv_async_send(&pear->resume);
 }
