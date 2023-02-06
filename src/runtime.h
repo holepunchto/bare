@@ -26,4 +26,10 @@ pear_runtime_suspend (pear_t *pear);
 void
 pear_runtime_resume (pear_t *pear);
 
+int
+pear_runtime_get_data (pear_t *pear, const char *key, void **result);
+
+int
+pear_runtime_set_data (pear_t *pear, const char *key, void *value);
+
 #endif // PEAR_RUNTIME_H

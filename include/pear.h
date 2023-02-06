@@ -58,4 +58,10 @@ pear_suspend (pear_t *pear);
 int
 pear_resume (pear_t *pear);
 
+int
+pear_get_data (pear_t *pear, const char *key, void **result);
+
+int
+pear_set_data (pear_t *pear, const char *key, void *value);
+
 #endif // PEAR_H

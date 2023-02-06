@@ -109,3 +109,13 @@ pear_resume (pear_t *pear) {
 
   return uv_async_send(&pear->resume);
 }
+
+int
+pear_get_data (pear_t *pear, const char *key, void **result) {
+  return pear_runtime_get_data(pear, key, result);
+}
+
+int
+pear_set_data (pear_t *pear, const char *key, void *value) {
+  return pear_runtime_set_data(pear, key, value);
+}

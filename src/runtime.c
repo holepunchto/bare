@@ -485,6 +485,12 @@ pear_runtime_setup (pear_t *pear) {
     js_set_named_property(env, exports, "resume", val);
   }
 
+  {
+    js_value_t *val;
+    js_create_object(env, &val);
+    js_set_named_property(env, exports, "data", val);
+  }
+
   js_value_t *global;
   js_get_global(env, &global);
 
@@ -596,4 +602,44 @@ pear_runtime_resume (pear_t *pear) {
 
   int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
+}
+
+int
+pear_runtime_get_data (pear_t *pear, const char *key, void **result) {
+  js_env_t *env = pear->env;
+
+  int err;
+
+  js_value_t *data, *external;
+
+  err = js_get_named_property(env, pear->runtime.exports, "data", &data);
+  assert(err == 0);
+
+  err = js_get_named_property(env, data, key, &external);
+  if (err < 0) return err;
+
+  err = js_get_value_external(env, external, result);
+  if (err < 0) return err;
+
+  return 0;
+}
+
+int
+pear_runtime_set_data (pear_t *pear, const char *key, void *value) {
+  js_env_t *env = pear->env;
+
+  int err;
+
+  js_value_t *data, *external;
+
+  err = js_get_named_property(env, pear->runtime.exports, "data", &data);
+  assert(err == 0);
+
+  err = js_create_external(env, value, NULL, NULL, &external);
+  if (err < 0) return err;
+
+  err = js_set_named_property(env, data, key, external);
+  if (err < 0) return err;
+
+  return 0;
 }
