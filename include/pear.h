@@ -32,8 +32,7 @@ struct pear_s {
   uv_loop_t *loop;
   js_platform_t *platform;
   js_env_t *env;
-  uv_async_t suspend;
-  uv_async_t resume;
+  uv_idle_t idle;
   bool suspended;
 
   struct {

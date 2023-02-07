@@ -9,27 +9,7 @@
 #include "runtime.h"
 
 static void
-on_suspend (uv_async_t *handle) {
-  pear_t *pear = (pear_t *) handle->data;
-
-  if (pear->suspended) return;
-  pear->suspended = true;
-
-  pear_runtime_suspend(pear);
-}
-
-static void
-on_resume (uv_async_t *handle) {
-  pear_t *pear = (pear_t *) handle->data;
-
-  if (!pear->suspended) return;
-  pear->suspended = false;
-
-  uv_unref((uv_handle_t *) &pear->suspend);
-  uv_unref((uv_handle_t *) &pear->resume);
-
-  pear_runtime_resume(pear);
-}
+on_idle (uv_idle_t *handle) {}
 
 int
 pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
@@ -53,16 +33,9 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
 
   pear->suspended = false;
 
-  err = uv_async_init(loop, &pear->suspend, on_suspend);
+  err = uv_idle_init(loop, &pear->idle);
   assert(err == 0);
-  pear->suspend.data = (void *) pear;
-
-  err = uv_async_init(loop, &pear->resume, on_resume);
-  assert(err == 0);
-  pear->resume.data = (void *) pear;
-
-  uv_unref((uv_handle_t *) &pear->suspend);
-  uv_unref((uv_handle_t *) &pear->resume);
+  pear->idle.data = (void *) pear;
 
   return 0;
 }
@@ -74,8 +47,7 @@ pear_teardown (pear_t *pear, int *exit_code) {
   js_destroy_env(pear->env);
   js_destroy_platform(pear->platform);
 
-  uv_close((uv_handle_t *) &pear->suspend, NULL);
-  uv_close((uv_handle_t *) &pear->resume, NULL);
+  uv_close((uv_handle_t *) &pear->idle, NULL);
 
   return 0;
 }
@@ -96,18 +68,26 @@ pear_run (pear_t *pear, const char *filename, const char *source, size_t len) {
 
 int
 pear_suspend (pear_t *pear) {
-  // FIXME: Not thread safe!
-  uv_ref((uv_handle_t *) &pear->suspend);
+  if (pear->suspended) return -1;
+  pear->suspended = true;
 
-  return uv_async_send(&pear->suspend);
+  uv_idle_start(&pear->idle, on_idle);
+
+  pear_runtime_suspend(pear);
+
+  return 0;
 }
 
 int
 pear_resume (pear_t *pear) {
-  // FIXME: Not thread safe!
-  uv_ref((uv_handle_t *) &pear->resume);
+  if (!pear->suspended) return -1;
+  pear->suspended = false;
 
-  return uv_async_send(&pear->resume);
+  uv_idle_stop(&pear->idle);
+
+  pear_runtime_resume(pear);
+
+  return 0;
 }
 
 int
