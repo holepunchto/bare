@@ -45,8 +45,6 @@ add_custom_target(
     ${prebuilds_dir}/host/lib/libv8.a
 )
 
-file(MAKE_DIRECTORY ${prebuilds_dir}/host/include)
-
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
 
