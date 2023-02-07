@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,6 +34,71 @@ pear_fs_realpath_sync (uv_loop_t *loop, const char *path, size_t *len, char **re
   *res = (char *) malloc(l + 1);
   strcpy(*res, req.ptr);
   uv_fs_req_cleanup(&req);
+
+  return 0;
+}
+
+bool
+pear_fs_exists_sync (uv_loop_t *loop, const char *path) {
+  uv_fs_t req;
+  uv_fs_access(loop, &req, path, 0, NULL);
+
+  int err = req.result;
+  uv_fs_req_cleanup(&req);
+
+  return err == 0;
+}
+
+int
+pear_fs_read_sync (uv_loop_t *loop, const char *path, size_t *size, char **data) {
+  uv_fs_t req;
+  uv_fs_open(loop, &req, path, UV_FS_O_RDONLY, 0, NULL);
+
+  int fd = req.result;
+  uv_fs_req_cleanup(&req);
+
+  if (fd < 0) return fd;
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+  uv_stat_t *st = req.ptr;
+
+  size_t len = st->st_size;
+  char *base = malloc(len);
+
+  uv_buf_t buf = {
+    .base = base,
+    .len = len,
+  };
+
+  uv_fs_req_cleanup(&req);
+
+  int64_t read = 0;
+
+  while (true) {
+    uv_fs_read(loop, &req, fd, &buf, 1, read, NULL);
+
+    int res = req.result;
+    uv_fs_req_cleanup(&req);
+
+    if (res < 0) {
+      free(base);
+      uv_fs_close(loop, &req, fd, NULL);
+      uv_fs_req_cleanup(&req);
+      return res;
+    }
+
+    buf.base += res;
+    buf.len -= res;
+
+    read += res;
+    if (res == 0 || read == len) break;
+  }
+
+  uv_fs_close(loop, &req, fd, NULL);
+  uv_fs_req_cleanup(&req);
+
+  *data = base;
+  *size = read;
 
   return 0;
 }

@@ -239,6 +239,55 @@ bindings_resume (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static js_value_t *
+bindings_exists (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  char path[PEAR_FS_MAX_PATH];
+
+  js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+
+  uv_loop_t *loop;
+  js_get_env_loop(env, &loop);
+
+  bool exists = pear_fs_exists_sync(loop, path);
+
+  js_value_t *result;
+  js_create_uint32(env, exists, &result);
+
+  return result;
+}
+
+static js_value_t *
+bindings_read (js_env_t *env, js_callback_info_t *info) {
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+
+  char path[PEAR_FS_MAX_PATH];
+
+  js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+
+  uv_loop_t *loop;
+  js_get_env_loop(env, &loop);
+
+  size_t size;
+  char *data;
+
+  PEAR_UV_CHECK(pear_fs_read_sync(loop, path, &size, &data))
+
+  js_value_t *result;
+  js_create_string_utf8(env, data, size, &result);
+
+  free(data);
+
+  return result;
+}
+
 static int
 trigger_fatal_exception (js_env_t *env) {
   js_value_t *exception;
@@ -483,6 +532,18 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *val;
     js_create_function(env, "resume", -1, bindings_resume, (void *) pear, &val);
     js_set_named_property(env, exports, "resume", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "exists", -1, bindings_exists, (void *) pear, &val);
+    js_set_named_property(env, exports, "exists", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "read", -1, bindings_read, (void *) pear, &val);
+    js_set_named_property(env, exports, "read", val);
   }
 
   {
