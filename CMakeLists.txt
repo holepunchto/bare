@@ -15,21 +15,53 @@ option(PEAR_USE_JAVASCRIPTCORE OFF)
 
 include(pear)
 
-if(NOT TARGET v8)
-  set(V8 ${PROJECT_SOURCE_DIR}/prebuilds/v8/host)
+find_program(node NAMES node)
 
+set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
+
+add_custom_command(
+  COMMAND ${node} scripts/link.mjs
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  OUTPUT
+    ${PROJECT_SOURCE_DIR}/src/bootstrap.js
+    ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
+  DEPENDS
+    lib/bootstrap.js
+    lib/process.js
+  VERBATIM
+)
+
+add_custom_command(
+  COMMAND ${node} scripts/fetch.mjs
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  OUTPUT
+    ${prebuilds_dir}/host/lib/libv8.a
+  VERBATIM
+)
+
+add_custom_target(
+  pear_prebuilds
+  DEPENDS
+    ${prebuilds_dir}/host/lib/libv8.a
+)
+
+file(MAKE_DIRECTORY ${prebuilds_dir}/host/include)
+
+if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
+
+  add_dependencies(v8 pear_prebuilds)
 
   set_target_properties(
     v8
     PROPERTIES
-    IMPORTED_LOCATION ${V8}/lib/libv8.a
+    IMPORTED_LOCATION ${prebuilds_dir}/host/lib/libv8.a
   )
 
   target_include_directories(
     v8
     INTERFACE
-      ${V8}/include
+      ${prebuilds_dir}/host/include
   )
 endif()
 
@@ -53,6 +85,8 @@ if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
+add_dependencies(js pear_prebuilds)
+
 add_library(pear OBJECT)
 
 set_target_properties(
@@ -60,20 +94,6 @@ set_target_properties(
   PROPERTIES
   C_STANDARD 99
   CXX_STANDARD 17
-)
-
-find_program(node NAMES node)
-
-add_custom_command(
-  COMMAND ${node} scripts/link.mjs
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT
-    ${PROJECT_SOURCE_DIR}/src/bootstrap.js
-    ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
-  DEPENDS
-    lib/bootstrap.js
-    lib/process.js
-  VERBATIM
 )
 
 target_sources(
