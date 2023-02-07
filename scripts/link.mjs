@@ -12,7 +12,7 @@ const root = path.join(__dirname, '..')
 const s = new ScriptLinker({
   bare: true,
   map (path) {
-    return '<pearjs>' + path
+    return '<pear>' + path
   },
   mapResolve (req) {
     if (req === 'events') return '@pearjs/events'
@@ -34,7 +34,7 @@ const s = new ScriptLinker({
 
 const bundle = await s.bundle('/lib/bootstrap.js', {
   header: '(function (pear) {',
-  footer: '//# sourceURL=<pearjs>/bootstrap.js\n})'
+  footer: '//# sourceURL=<pear>/bootstrap.js\n})'
 })
 
 await fs.writeFile(path.join(root, 'src/bootstrap.js'), bundle)

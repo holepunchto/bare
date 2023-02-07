@@ -99,7 +99,8 @@ set_target_properties(
 target_sources(
   pear
   INTERFACE
-    include/pearjs.h
+    include/pear.h
+    include/pear/modules.h
   PRIVATE
     src/addons.c
     src/bootstrap.js.h
