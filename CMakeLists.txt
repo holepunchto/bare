@@ -100,11 +100,11 @@ target_sources(
     include/pear.h
     include/pear/modules.h
   PRIVATE
-    src/addons.c
+    src/addons.h
     src/bootstrap.js.h
-    src/fs.c
+    src/fs.h
     src/pear.c
-    src/runtime.c
+    src/runtime.h
 )
 
 target_include_directories(
