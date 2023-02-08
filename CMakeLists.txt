@@ -76,11 +76,11 @@ if(NOT TARGET js)
   add_subdirectory(vendor/libjs EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT TARGET qjs)
+if(NOT TARGET qjs AND PEAR_USE_QUICKJS)
   add_subdirectory(vendor/libqjs EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT TARGET jsc)
+if(NOT TARGET jsc AND PEAR_USE_JAVASCRIPTCORE)
   add_subdirectory(vendor/libjsc EXCLUDE_FROM_ALL)
 endif()
 
