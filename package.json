@@ -7,7 +7,8 @@
     "test": "standard",
     "install": "node scripts/install.mjs",
     "build": "node scripts/build.mjs",
-    "link": "node scripts/link.mjs"
+    "link": "node scripts/link.mjs",
+    "mirror": "drives mirror"
   },
   "standard": {
     "ignore": [
