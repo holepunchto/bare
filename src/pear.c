@@ -54,7 +54,7 @@ pear_teardown (pear_t *pear, int *exit_code) {
 
 int
 pear_run (pear_t *pear, const char *filename, const char *source, size_t len) {
-  int err = pear_runtime_bootstrap(pear, filename, source, len);
+  int err = pear_runtime_run(pear, filename, source, len);
   if (err < 0) return err;
 
   do {
