@@ -15,12 +15,16 @@ option(PEAR_USE_JAVASCRIPTCORE OFF)
 
 include(pear)
 
-find_program(node NAMES node)
+pear_target(target)
+
+find_program(npm NAMES npm)
+find_program(npx NAMES npx)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
+set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
 
 add_custom_command(
-  COMMAND ${node} scripts/link.mjs
+  COMMAND ${npm} run link
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js
@@ -32,17 +36,17 @@ add_custom_command(
 )
 
 add_custom_command(
-  COMMAND ${node} scripts/fetch.mjs
+  COMMAND ${npx} drives mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
-    ${prebuilds_dir}/host/lib/libv8.a
+    ${prebuilds_dir}/${target}/lib/libv8.a
   VERBATIM
 )
 
 add_custom_target(
   pear_prebuilds
   DEPENDS
-    ${prebuilds_dir}/host/lib/libv8.a
+    ${prebuilds_dir}/${target}/lib/libv8.a
 )
 
 if(NOT TARGET v8)
@@ -53,13 +57,13 @@ if(NOT TARGET v8)
   set_target_properties(
     v8
     PROPERTIES
-    IMPORTED_LOCATION ${prebuilds_dir}/host/lib/libv8.a
+    IMPORTED_LOCATION ${prebuilds_dir}/${target}/lib/libv8.a
   )
 
   target_include_directories(
     v8
     INTERFACE
-      ${prebuilds_dir}/host/include
+      ${prebuilds_dir}/${target}/include
   )
 endif()
 

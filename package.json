@@ -7,8 +7,7 @@
     "test": "standard",
     "install": "node scripts/install.mjs",
     "build": "node scripts/build.mjs",
-    "link": "node scripts/link.mjs",
-    "fetch": "node scripts/fetch.mjs"
+    "link": "node scripts/link.mjs"
   },
   "standard": {
     "ignore": [
@@ -33,12 +32,8 @@
     "@pearjs/module": "^1.1.0",
     "@pearjs/path": "^1.0.0",
     "@pearjs/timers": "^1.0.0",
-    "corestore": "^6.4.0",
-    "hypercore-id-encoding": "^1.0.2",
-    "hyperdrive": "next",
-    "hyperswarm": "^4.3.5",
+    "drives": "^0.0.8",
     "include-static": "^1.1.0",
-    "localdrive": "^1.4.0",
     "minimist": "^1.2.7",
     "script-linker": "holepunchto/script-linker",
     "standard": "^17.0.0"
