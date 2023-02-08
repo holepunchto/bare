@@ -120,6 +120,7 @@ target_include_directories(
 )
 
 include_pear_module(pear_buffer node_modules/@pearjs/buffer)
+include_pear_module(pear_module node_modules/@pearjs/module)
 include_pear_module(pear_timers node_modules/@pearjs/timers)
 
 add_library(
@@ -127,6 +128,7 @@ add_library(
   STATIC
   $<TARGET_OBJECTS:pear>
   $<TARGET_OBJECTS:pear_buffer>
+  $<TARGET_OBJECTS:pear_module>
   $<TARGET_OBJECTS:pear_timers>
   $<TARGET_OBJECTS:napi>
 )

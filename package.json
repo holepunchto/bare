@@ -30,7 +30,7 @@
     "@pearjs/console": "^2.0.0",
     "@pearjs/dev": "^0.1.0",
     "@pearjs/events": "^1.1.0",
-    "@pearjs/module": "^1.1.0",
+    "@pearjs/module": "^1.2.0",
     "@pearjs/path": "^1.0.0",
     "@pearjs/timers": "^1.0.0",
     "drives": "^0.0.8",
