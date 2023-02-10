@@ -1,0 +1,8 @@
+{
+  "entry": "/foo.js",
+  "files": {
+    "/foo.js": {
+      "source": "console.log('Hello bundle!')"
+    }
+  }
+}
