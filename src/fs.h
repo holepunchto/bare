@@ -23,9 +23,9 @@ pear_fs_path_join (const char *a, const char *b, char *out) {
 }
 
 static inline int
-pear_fs_realpath_sync (uv_loop_t *loop, const char *path, size_t *len, char **res) {
+pear_fs_realpath_sync (pear_t *pear, const char *path, size_t *len, char **res) {
   uv_fs_t req;
-  uv_fs_realpath(loop, &req, path, NULL);
+  uv_fs_realpath(pear->loop, &req, path, NULL);
 
   int err = req.result;
 
@@ -44,9 +44,9 @@ pear_fs_realpath_sync (uv_loop_t *loop, const char *path, size_t *len, char **re
 }
 
 static inline bool
-pear_fs_exists_sync (uv_loop_t *loop, const char *path) {
+pear_fs_exists_sync (pear_t *pear, const char *path) {
   uv_fs_t req;
-  uv_fs_access(loop, &req, path, 0, NULL);
+  uv_fs_access(pear->loop, &req, path, 0, NULL);
 
   int err = req.result;
   uv_fs_req_cleanup(&req);
@@ -55,20 +55,22 @@ pear_fs_exists_sync (uv_loop_t *loop, const char *path) {
 }
 
 static inline int
-pear_fs_read_sync (uv_loop_t *loop, const char *path, size_t *size, char **data) {
+pear_fs_read_sync (pear_t *pear, const char *path, js_value_t **result) {
   uv_fs_t req;
-  uv_fs_open(loop, &req, path, UV_FS_O_RDONLY, 0, NULL);
+  uv_fs_open(pear->loop, &req, path, UV_FS_O_RDONLY, 0, NULL);
 
   int fd = req.result;
   uv_fs_req_cleanup(&req);
 
   if (fd < 0) return fd;
 
-  uv_fs_fstat(loop, &req, fd, NULL);
+  uv_fs_fstat(pear->loop, &req, fd, NULL);
   uv_stat_t *st = req.ptr;
 
   size_t len = st->st_size;
-  char *base = malloc(len);
+  char *base;
+
+  js_create_arraybuffer(pear->env, len, (void **) &base, result);
 
   uv_buf_t buf = {
     .base = base,
@@ -80,14 +82,13 @@ pear_fs_read_sync (uv_loop_t *loop, const char *path, size_t *size, char **data)
   int64_t read = 0;
 
   while (true) {
-    uv_fs_read(loop, &req, fd, &buf, 1, read, NULL);
+    uv_fs_read(pear->loop, &req, fd, &buf, 1, read, NULL);
 
     int res = req.result;
     uv_fs_req_cleanup(&req);
 
     if (res < 0) {
-      free(base);
-      uv_fs_close(loop, &req, fd, NULL);
+      uv_fs_close(pear->loop, &req, fd, NULL);
       uv_fs_req_cleanup(&req);
       return res;
     }
@@ -99,22 +100,19 @@ pear_fs_read_sync (uv_loop_t *loop, const char *path, size_t *size, char **data)
     if (res == 0 || read == len) break;
   }
 
-  uv_fs_close(loop, &req, fd, NULL);
+  uv_fs_close(pear->loop, &req, fd, NULL);
   uv_fs_req_cleanup(&req);
-
-  *data = base;
-  *size = read;
 
   return 0;
 }
 
 static inline int
-pear_fs_readdir_sync (uv_loop_t *loop, const char *dirname, int entries_len, uv_dirent_t *entries) {
+pear_fs_readdir_sync (pear_t *pear, const char *dirname, int entries_len, uv_dirent_t *entries) {
   uv_fs_t req;
 
   int num = 0;
 
-  int err = uv_fs_opendir(loop, &req, dirname, NULL);
+  int err = uv_fs_opendir(pear->loop, &req, dirname, NULL);
   if (err < 0) {
     uv_fs_req_cleanup(&req);
     return err;
@@ -126,13 +124,13 @@ pear_fs_readdir_sync (uv_loop_t *loop, const char *dirname, int entries_len, uv_
   dir->dirents = entries;
   dir->nentries = entries_len;
 
-  num = uv_fs_readdir(loop, &req, dir, NULL);
+  num = uv_fs_readdir(pear->loop, &req, dir, NULL);
   if (num < 0) {
     uv_fs_req_cleanup(&req);
     return num;
   }
 
-  err = uv_fs_closedir(loop, &req, dir, NULL);
+  err = uv_fs_closedir(pear->loop, &req, dir, NULL);
   if (err < 0) {
     uv_fs_req_cleanup(&req);
     return err;

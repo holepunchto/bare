@@ -62,9 +62,10 @@ has_dirname (const char *s, const char *dir) {
 }
 
 static bool
-check_addon_dir (uv_loop_t *loop, const char *path, char *out) {
+check_addon_dir (pear_t *pear, const char *path, char *out) {
   uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
-  int entries_len = pear_fs_readdir_sync(loop, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
+
+  int entries_len = pear_fs_readdir_sync(pear, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
   if (entries_len <= 0) return false;
 
   const char *result = NULL;
@@ -111,7 +112,7 @@ pear_addons_init () {
 }
 
 static inline int
-pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
+pear_addons_resolve (pear_t *pear, const char *path, char *out) {
   char tmp[PEAR_FS_MAX_PATH];
 
   if (has_extension(path, ".pear") || has_extension(path, ".node")) {
@@ -123,21 +124,21 @@ pear_addons_resolve (uv_loop_t *loop, const char *path, char *out) {
 
   // check for pearjs dev build compat
   pear_fs_path_join(path, "build", tmp);
-  if (check_addon_dir(loop, tmp, out)) return 0;
+  if (check_addon_dir(pear, tmp, out)) return 0;
 
   // node-gyp compat
   pear_fs_path_join(path, "build" PEAR_FS_SEP "Release", tmp);
-  if (check_addon_dir(loop, tmp, out)) return 0;
+  if (check_addon_dir(pear, tmp, out)) return 0;
 
   // check for prebuilds
   pear_fs_path_join(path, "prebuilds" PEAR_FS_SEP PEAR_PLATFORM "-" PEAR_ARCH, tmp);
-  if (check_addon_dir(loop, tmp, out)) return 0;
+  if (check_addon_dir(pear, tmp, out)) return 0;
 
   return UV_ENOENT;
 }
 
 static inline js_value_t *
-pear_addons_load (js_env_t *env, const char *path, int mode) {
+pear_addons_load (pear_t *pear, const char *path, int mode) {
   int err;
 
   pear_module_t *mod = NULL;
@@ -166,10 +167,10 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
   if (mode & PEAR_ADDONS_DYNAMIC) {
     if (mode & PEAR_ADDONS_RESOLVE) {
       uv_loop_t *loop;
-      js_get_env_loop(env, &loop);
-      err = pear_addons_resolve(loop, path, (char *) path);
+      js_get_env_loop(pear->env, &loop);
+      err = pear_addons_resolve(pear, path, (char *) path);
       if (err < 0) {
-        js_throw_errorf(env, NULL, "Could not resolve addon %s", path);
+        js_throw_errorf(pear->env, NULL, "Could not resolve addon %s", path);
         return NULL;
       }
     }
@@ -178,7 +179,7 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
     err = uv_dlopen(path, lib);
 
     if (err < 0) {
-      js_throw_error(env, NULL, uv_dlerror(lib));
+      js_throw_error(pear->env, NULL, uv_dlerror(lib));
       free(lib);
       return NULL;
     }
@@ -192,14 +193,14 @@ pear_addons_load (js_env_t *env, const char *path, int mode) {
   }
 
   if (mod == NULL) {
-    js_throw_errorf(env, NULL, "No module registered for %s", path);
+    js_throw_errorf(pear->env, NULL, "No module registered for %s", path);
     return NULL;
   }
 
   js_value_t *addon;
-  js_create_object(env, &addon);
+  js_create_object(pear->env, &addon);
 
-  js_value_t *exports = mod->register_module(env, addon);
+  js_value_t *exports = mod->register_module(pear->env, addon);
 
   free(mod);
 

@@ -16,10 +16,12 @@ main (int argc, char **argv) {
     return 1;
   }
 
-  char *entry_point = NULL;
-  int err;
+  pear_t pear;
+  pear_setup(loop, &pear, argc, argv);
 
-  err = pear_fs_realpath_sync(loop, argv[1], NULL, &entry_point);
+  char *entry_point = NULL;
+
+  int err = pear_fs_realpath_sync(&pear, argv[1], NULL, &entry_point);
 
   if (err < 0) {
     fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);
@@ -27,9 +29,6 @@ main (int argc, char **argv) {
   }
 
   argv[1] = entry_point;
-
-  pear_t pear;
-  pear_setup(loop, &pear, argc, argv);
 
   pear_run(&pear, entry_point, NULL, 0);
 

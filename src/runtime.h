@@ -68,10 +68,12 @@ bindings_print (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
   js_value_t *argv[2];
   size_t argc = 2;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
 
   char addon_file[PEAR_FS_MAX_PATH];
   uint32_t mode;
@@ -79,15 +81,17 @@ bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
   js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
   js_get_value_uint32(env, argv[1], &mode);
 
-  return pear_addons_load(env, addon_file, (int) mode);
+  return pear_addons_load(pear, addon_file, (int) mode);
 }
 
 static js_value_t *
 bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
 
   char addon_file[PEAR_FS_MAX_PATH];
   uv_loop_t *loop;
@@ -95,7 +99,7 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   js_get_env_loop(env, &loop);
   js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
 
-  int err = pear_addons_resolve(loop, addon_file, addon_file);
+  int err = pear_addons_resolve(pear, addon_file, addon_file);
   if (err < 0) {
     js_throw_errorf(env, NULL, "Could not resolve addon %s", addon_file);
     return NULL;
@@ -244,10 +248,12 @@ bindings_resume (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_exists (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
 
   char path[PEAR_FS_MAX_PATH];
 
@@ -256,7 +262,7 @@ bindings_exists (js_env_t *env, js_callback_info_t *info) {
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  bool exists = pear_fs_exists_sync(loop, path);
+  bool exists = pear_fs_exists_sync(pear, path);
 
   js_value_t *result;
   js_create_uint32(env, exists, &result);
@@ -266,10 +272,12 @@ bindings_exists (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_read (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
 
   char path[PEAR_FS_MAX_PATH];
 
@@ -278,17 +286,11 @@ bindings_read (js_env_t *env, js_callback_info_t *info) {
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  size_t size;
-  char *data;
+  js_value_t *buffer;
 
-  PEAR_UV_CHECK(pear_fs_read_sync(loop, path, &size, &data))
+  PEAR_UV_CHECK(pear_fs_read_sync(pear, path, &buffer))
 
-  js_value_t *result;
-  js_create_string_utf8(env, data, size, &result);
-
-  free(data);
-
-  return result;
+  return buffer;
 }
 
 static int
@@ -515,13 +517,13 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, bindings_load_addon, NULL, &val);
+    js_create_function(env, "loadAddon", -1, bindings_load_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "loadAddon", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, NULL, &val);
+    js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
   }
 
