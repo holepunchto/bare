@@ -628,7 +628,15 @@ pear_runtime_run (pear_t *pear, const char *filename, const char *source, size_t
   if (err < 0) return err;
 
   if (source) {
-    err = js_create_string_utf8(env, source, len, &args[1]);
+    js_value_t *arraybuffer;
+    void *data;
+
+    err = js_create_arraybuffer(env, len, &data, &arraybuffer);
+    if (err < 0) return err;
+
+    memcpy(data, source, len);
+
+    err = js_create_typedarray(env, js_uint8_array, len, arraybuffer, 0, &args[1]);
     if (err < 0) return err;
   } else {
     js_get_undefined(env, &args[1]);
