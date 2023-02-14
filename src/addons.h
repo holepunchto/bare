@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <js.h>
 #include <napi.h>
+#include <path.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +37,7 @@ has_extension (const char *s, const char *ext) {
 }
 
 static bool
-check_addon_dir (pear_t *pear, const char *path, char *out) {
+check_addon_dir (pear_t *pear, const char *path, char *out, size_t *len) {
   uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
 
   int entries_len = pear_fs_readdir_sync(pear, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
@@ -73,7 +74,7 @@ check_addon_dir (pear_t *pear, const char *path, char *out) {
   }
 
   if (result != NULL) {
-    pear_fs_path_join(path, result, out);
+    path_join((const char *[]){path, result, NULL}, out, len, path_behavior_system);
     return true;
   }
 
@@ -86,7 +87,8 @@ pear_addons_init () {
 }
 
 static inline int
-pear_addons_resolve (pear_t *pear, const char *path, char *out) {
+pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
+  size_t tmp_len = PEAR_FS_MAX_PATH;
   char tmp[PEAR_FS_MAX_PATH];
 
   if (has_extension(path, ".pear") || has_extension(path, ".node")) {
@@ -97,16 +99,20 @@ pear_addons_resolve (pear_t *pear, const char *path, char *out) {
   // TODO: check where cmake likes to build...
 
   // check for pearjs dev build compat
-  pear_fs_path_join(path, "build", tmp);
-  if (check_addon_dir(pear, tmp, out)) return 0;
+  path_join((const char *[]){path, "build", NULL}, tmp, &tmp_len, path_behavior_system);
+  if (check_addon_dir(pear, tmp, out, len)) return 0;
+
+  tmp_len = PEAR_FS_MAX_PATH;
 
   // node-gyp compat
-  pear_fs_path_join(path, "build" PEAR_FS_SEP "Release", tmp);
-  if (check_addon_dir(pear, tmp, out)) return 0;
+  path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
+  if (check_addon_dir(pear, tmp, out, len)) return 0;
+
+  tmp_len = PEAR_FS_MAX_PATH;
 
   // check for prebuilds
-  pear_fs_path_join(path, "prebuilds" PEAR_FS_SEP PEAR_PLATFORM "-" PEAR_ARCH, tmp);
-  if (check_addon_dir(pear, tmp, out)) return 0;
+  path_join((const char *[]){path, "prebuilds", PEAR_PLATFORM "-" PEAR_ARCH, NULL}, tmp, &tmp_len, path_behavior_system);
+  if (check_addon_dir(pear, tmp, out, len)) return 0;
 
   return UV_ENOENT;
 }
@@ -128,7 +134,10 @@ pear_addons_load (pear_t *pear, const char *path) {
   }
 
   if (mod == NULL) {
-    err = pear_addons_resolve(pear, path, (char *) path);
+    size_t resolved_len = PEAR_FS_MAX_PATH;
+    char resolved[PEAR_FS_MAX_PATH];
+
+    err = pear_addons_resolve(pear, path, resolved, &resolved_len);
     if (err < 0) {
       js_throw_errorf(pear->env, NULL, "Could not resolve addon %s", path);
       return NULL;
@@ -136,7 +145,7 @@ pear_addons_load (pear_t *pear, const char *path) {
 
     uv_lib_t *lib = malloc(sizeof(uv_lib_t));
 
-    err = uv_dlopen(path, lib);
+    err = uv_dlopen(resolved, lib);
     if (err < 0) {
       js_throw_error(pear->env, NULL, uv_dlerror(lib));
       free(lib);

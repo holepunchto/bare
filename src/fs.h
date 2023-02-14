@@ -7,20 +7,6 @@
 #include <uv.h>
 
 #define PEAR_FS_MAX_PATH 4096
-#define PEAR_FS_SEP      "/"
-
-static inline void
-pear_fs_path_join (const char *a, const char *b, char *out) {
-  size_t len_a = strlen(a);
-  size_t len_b = strlen(b);
-
-  if (out != a) memcpy(out, a, len_a);
-
-  out += len_a;
-  *out = PEAR_FS_SEP[0];
-
-  memcpy(out + 1, b, len_b + 1);
-}
 
 static inline int
 pear_fs_realpath_sync (pear_t *pear, const char *path, size_t *len, char **res) {

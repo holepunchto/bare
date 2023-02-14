@@ -88,6 +88,10 @@ if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
+if(NOT TARGET path)
+  add_subdirectory(vendor/libpath EXCLUDE_FROM_ALL)
+endif()
+
 add_dependencies(js pear_prebuilds)
 
 add_library(pear OBJECT)
@@ -119,6 +123,7 @@ target_include_directories(
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:path,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 include_pear_module(pear_buffer node_modules/@pearjs/buffer)
@@ -154,6 +159,7 @@ endif()
 target_link_libraries(
   pear_static
   PUBLIC
+    path
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 

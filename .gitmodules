@@ -18,3 +18,7 @@
 	path = vendor/libuv
 	url = git@github.com:libuv/libuv.git
 	shallow = true
+[submodule "vendor/libpath"]
+	path = vendor/libpath
+	url = git@github.com:holepunchto/libpath.git
+	shallow = true
