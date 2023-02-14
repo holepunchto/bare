@@ -36,6 +36,7 @@
       PEAR_MODULE_FILENAME, \
       fn, \
       NULL, \
+      NULL, \
     }; \
     pear_module_register(&module); \
   }
@@ -47,9 +48,9 @@ typedef js_value_t *(*pear_module_cb)(js_env_t *env, js_value_t *exports);
 struct pear_module_s {
   int version;
   const char *filename;
-  pear_module_cb register_module;
-
-  void *next_module;
+  pear_module_cb init;
+  js_value_t *exports;
+  uv_lib_t *lib;
 };
 
 void
