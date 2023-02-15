@@ -17,13 +17,14 @@ include(pear)
 
 pear_target(target)
 
-find_program(npm NAMES npm)
+find_program(node NAMES node)
+find_program(npx NAMES npx)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
 
 add_custom_command(
-  COMMAND ${npm} run link
+  COMMAND ${node} scripts/bundle.mjs
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js
@@ -35,7 +36,7 @@ add_custom_command(
 )
 
 add_custom_command(
-  COMMAND ${npm} run mirror -- --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
+  COMMAND ${npx} drives mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${prebuilds_dir}/${target}/lib/libv8.a
