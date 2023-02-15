@@ -30,7 +30,13 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
   DEPENDS
     lib/bootstrap.js
-    lib/process.js
+    lib/builtins/buffer.js
+    lib/builtins/console.js
+    lib/builtins/events.js
+    lib/builtins/module.js
+    lib/builtins/path.js
+    lib/builtins/process.js
+    lib/builtins/timers.js
   VERBATIM
 )
 
