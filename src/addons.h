@@ -96,22 +96,26 @@ pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
     return 0;
   }
 
-  // TODO: check where cmake likes to build...
-
-  // check for pearjs dev build compat
   path_join((const char *[]){path, "build", NULL}, tmp, &tmp_len, path_behavior_system);
+
   if (check_addon_dir(pear, tmp, out, len)) return 0;
 
   tmp_len = PEAR_FS_MAX_PATH;
 
-  // node-gyp compat
   path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
+
   if (check_addon_dir(pear, tmp, out, len)) return 0;
 
   tmp_len = PEAR_FS_MAX_PATH;
 
-  // check for prebuilds
-  path_join((const char *[]){path, "prebuilds", PEAR_PLATFORM "-" PEAR_ARCH, NULL}, tmp, &tmp_len, path_behavior_system);
+  path_join((const char *[]){path, "build", "Debug", NULL}, tmp, &tmp_len, path_behavior_system);
+
+  if (check_addon_dir(pear, tmp, out, len)) return 0;
+
+  tmp_len = PEAR_FS_MAX_PATH;
+
+  path_join((const char *[]){path, "prebuilds", PEAR_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
+
   if (check_addon_dir(pear, tmp, out, len)) return 0;
 
   return UV_ENOENT;

@@ -26,6 +26,8 @@
 #error Unsupported architecture
 #endif
 
+#define PEAR_TARGET PEAR_PLATFORM "-" PEAR_ARCH
+
 typedef struct pear_s pear_t;
 
 struct pear_s {
