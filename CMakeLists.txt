@@ -27,7 +27,6 @@ add_custom_command(
   COMMAND ${node} scripts/bundle.mjs
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
-    ${PROJECT_SOURCE_DIR}/src/bootstrap.js
     ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
   DEPENDS
     lib/bootstrap.js
