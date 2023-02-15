@@ -17,8 +17,8 @@ include(pear)
 
 pear_target(target)
 
-find_program(node NAMES node)
-find_program(npx NAMES npx)
+find_program(node NAMES node REQUIRED)
+find_program(npx NAMES npx REQUIRED)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
