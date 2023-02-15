@@ -568,7 +568,7 @@ pear_runtime_setup (pear_t *pear) {
   js_create_string_utf8(env, (const char *) pear_bootstrap, pear_bootstrap_len, &script);
 
   js_value_t *bootstrap;
-  err = js_run_script(env, "<pear>/bootstrap.js", -1, 0, script, &bootstrap);
+  err = js_run_script(env, "pear:bootstrap.js", -1, 0, script, &bootstrap);
   if (err < 0) return trigger_fatal_exception(env);
 
   err = js_call_function(env, global, bootstrap, 1, &exports, NULL);
