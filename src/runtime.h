@@ -295,54 +295,82 @@ trigger_fatal_exception (js_env_t *env) {
 
 static void
 pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
-  js_value_t *exports = data;
+  pear_t *pear = (pear_t *) data;
+
+  int err;
+
   js_value_t *fn;
-
-  int err = js_get_named_property(env, exports, "onuncaughtexception", &fn);
-
-  if (err < 0) {
-    fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
-    return;
-  }
+  err = js_get_named_property(env, pear->runtime.exports, "onuncaughtexception", &fn);
+  if (err < 0) goto err;
 
   bool is_set;
   js_is_function(env, fn, &is_set);
+  if (!is_set) goto err;
 
-  if (!is_set) {
-    fprintf(stderr, "Uncaught exception, but no handler set, exiting...\n");
-    exit(1);
-    return;
-  }
+  js_value_t *global;
+  js_get_global(env, &global);
 
-  err = js_call_function(env, exports, fn, 1, &error, NULL);
+  err = js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
   if (err < 0) trigger_fatal_exception(env);
+
+  return;
+
+err : {
+  js_value_t *stack;
+  err = js_get_named_property(env, error, "stack", &stack);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
+  assert(err == 0);
+
+  char *str = malloc(len + 1);
+  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
+  assert(err == 0);
+
+  fprintf(stderr, "Uncaught %s\n", str);
+  exit(1);
+}
 }
 
 static void
 pear_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
-  js_value_t *exports = data;
+  pear_t *pear = (pear_t *) data;
+
+  int err;
+
   js_value_t *fn;
-
-  int err = js_get_named_property(env, exports, "onunhandledrejection", &fn);
-
-  if (err < 0) {
-    fprintf(stderr, "Error in internal bootstrap.js setup, likely a syntax error\n");
-    return;
-  }
+  err = js_get_named_property(env, pear->runtime.exports, "onunhandledrejection", &fn);
+  if (err < 0) goto err;
 
   bool is_set;
   js_is_function(env, fn, &is_set);
+  if (!is_set) goto err;
 
-  if (!is_set) {
-    fprintf(stderr, "Unhandled rejection, but no handler set, exiting...\n");
-    exit(1);
-    return;
-  }
+  js_value_t *global;
+  js_get_global(env, &global);
 
-  js_value_t *args[2] = {reason, promise};
-
-  err = js_call_function(env, exports, fn, 2, args, NULL);
+  err = js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
   if (err < 0) trigger_fatal_exception(env);
+
+  return;
+
+err : {
+  js_value_t *stack;
+  err = js_get_named_property(env, reason, "stack", &stack);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
+  assert(err == 0);
+
+  char *str = malloc(len + 1);
+  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
+  assert(err == 0);
+
+  fprintf(stderr, "Uncaught (in promise) %s\n", str);
+  exit(1);
+}
 }
 
 static inline int
@@ -351,12 +379,16 @@ pear_runtime_setup (pear_t *pear) {
 
   int err;
 
-  js_value_t *exports;
-  js_create_object(env, &exports);
-  pear->runtime.exports = exports;
+  err = js_create_object(env, &pear->runtime.exports);
+  assert(err == 0);
 
-  js_on_uncaught_exception(env, pear_on_uncaught_exception, exports);
-  js_on_unhandled_rejection(env, pear_on_unhandled_rejection, exports);
+  err = js_on_uncaught_exception(env, pear_on_uncaught_exception, (void *) pear);
+  assert(err == 0);
+
+  err = js_on_unhandled_rejection(env, pear_on_unhandled_rejection, (void *) pear);
+  assert(err == 0);
+
+  js_value_t *exports = pear->runtime.exports;
 
   {
     js_value_t *versions;
