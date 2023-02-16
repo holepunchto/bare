@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
-    "test": "standard",
+    "test": "standard && pear-dev test",
     "install": "node scripts/install.mjs",
     "build": "node scripts/build.mjs"
   },
@@ -26,7 +26,7 @@
     "@pearjs/assert": "^1.0.0",
     "@pearjs/buffer": "^1.0.0",
     "@pearjs/console": "^2.0.0",
-    "@pearjs/dev": "^0.1.12",
+    "@pearjs/dev": "^0.1.13",
     "@pearjs/events": "^1.1.3",
     "@pearjs/module": "^1.6.2",
     "@pearjs/path": "^1.0.4",
