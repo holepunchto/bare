@@ -17,14 +17,14 @@ include(pear)
 
 pear_target(target)
 
-find_program(node NAMES node REQUIRED)
+find_program(pear_dev NAMES pear-dev REQUIRED)
 find_program(npx NAMES npx REQUIRED)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key gy9t1gat1umpqo8bm5z7a4j38xm1g1z59zid69rq6quxzg3ij8uo)
 
 add_custom_command(
-  COMMAND ${node} scripts/bundle.mjs
+  COMMAND ${pear_dev} bundle --config bundle.config.js /lib/pear.js
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/src/pear.js.h
