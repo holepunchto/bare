@@ -47,10 +47,16 @@ To build :pear:.js, start by installing the dependencies:
 $ npm install
 ```
 
-Next, run the build script:
+Next, configure the build tree before performing the first build:
 
 ```sh
-$ npm run build -- [--debug]
+$ npm run configure -- [--debug]
+```
+
+Finally, perform the build:
+
+```sh
+$ npm run build
 ```
 
 When completed, the `pear` binary will be available in the `build/bin` directory.
