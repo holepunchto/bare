@@ -31,17 +31,7 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 
 :pear:.js provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, a `suspend` event will be emitted on the `process` object and an idle handler started on the event loop, keeping it from exiting. When the process is later resumed, a `resume` event will be emitted and the idle handler stopped, allowing the loop to exit when no work is left.
 
-The suspension API is available in both C and JavaScript:
-
-```c
-pear_suspend(pear);
-pear_resume(pear);
-```
-
-```js
-process.suspend()
-process.resume()
-```
+The suspension API is available through `pear_suspend()` and `pear_resume()` from C and `process.suspend()` and `process.resume()` from JavaScript. See [`example/suspend.js`](example/suspend.js) for an example of using the suspension API from JavaScript.
 
 ## Building
 
