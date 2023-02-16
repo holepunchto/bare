@@ -33,6 +33,12 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 
 The suspension API is available through `pear_suspend()` and `pear_resume()` from C and `process.suspend()` and `process.resume()` from JavaScript. See [`example/suspend.js`](example/suspend.js) for an example of using the suspension API from JavaScript.
 
+### User data
+
+:pear:.js provides a common API for simple user data exchange between the embedder, the JavaScript layer, and the native addon layer. The API provides a key/value store that associates string keys with arbitrary pointers, leaving it up to the embedder to decide on the meaning of the keys. Keys can be added and retrieved through `pear_set_data()` and `pear_get_data()` from C, and also retrived through `process.data()` from JavaScript which yields values of type `js_external`. 
+
+While the JavaScript layer cannot directly access the underlying user data pointers, it _can_ forward these as `js_external` values to native addons.
+
 ## Building
 
 To build :pear:.js, start by installing the dependencies:
