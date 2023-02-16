@@ -21,7 +21,7 @@ find_program(node NAMES node REQUIRED)
 find_program(npx NAMES npx REQUIRED)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
-set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
+set(prebuilds_key gy9t1gat1umpqo8bm5z7a4j38xm1g1z59zid69rq6quxzg3ij8uo)
 
 add_custom_command(
   COMMAND ${node} scripts/bundle.mjs
@@ -146,6 +146,7 @@ add_library(
   $<TARGET_OBJECTS:pear_timers>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
+  $<TARGET_OBJECTS:path>
 )
 
 set_target_properties(
@@ -167,7 +168,6 @@ endif()
 target_link_libraries(
   pear_static
   PUBLIC
-    path
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
