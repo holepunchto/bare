@@ -1,10 +1,12 @@
 list(APPEND tests
-  basic.c
-  basic.js
+  import-cjs.cjs
+  import-mjs.mjs
 )
 
 foreach(file IN LISTS tests)
-  get_filename_component(test ${file} NAME_WE)
+  get_filename_component(name ${file} NAME_WE)
+
+  string(MAKE_C_IDENTIFIER ${name} test)
 
   if(file MATCHES "\.c$")
     add_executable(${test} ${file})
@@ -30,7 +32,7 @@ foreach(file IN LISTS tests)
     set(command ${test})
   endif()
 
-  if(file MATCHES "\.js$")
+  if(file MATCHES "\.(c|m)?js$")
     set(command pear_bin test/${file})
   endif()
 
