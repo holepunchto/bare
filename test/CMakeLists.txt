@@ -10,7 +10,7 @@ list(APPEND tests
   user-data.c
 )
 
-add_subdirectory(fixtures/addon)
+add_subdirectory(fixtures/addon EXCLUDE_FROM_ALL)
 
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)

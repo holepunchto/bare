@@ -17,32 +17,31 @@ include(pear)
 
 pear_target(target)
 
-find_program(pear_dev NAMES pear-dev REQUIRED)
 find_program(npx NAMES npx REQUIRED)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key gy9t1gat1umpqo8bm5z7a4j38xm1g1z59zid69rq6quxzg3ij8uo)
 
 add_custom_command(
-  COMMAND ${pear_dev} bundle --config bundle.config.js /lib/pear.js
+  COMMAND ${npx} pear-dev bundle --config bundle.config.js src/pear.js
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/src/pear.js.h
   DEPENDS
-    lib/pear.js
-    lib/builtins/assert.js
-    lib/builtins/buffer.js
-    lib/builtins/console.js
-    lib/builtins/events.js
-    lib/builtins/module.js
-    lib/builtins/path.js
-    lib/builtins/process.js
-    lib/builtins/timers.js
+    src/pear.js
+    src/builtins/assert.js
+    src/builtins/buffer.js
+    src/builtins/console.js
+    src/builtins/events.js
+    src/builtins/module.js
+    src/builtins/path.js
+    src/builtins/process.js
+    src/builtins/timers.js
   VERBATIM
 )
 
 add_custom_command(
-  COMMAND ${pear_dev} bundle --out bin/pear.bundle.h --target c bin/pear.js
+  COMMAND ${npx} pear-dev bundle --out bin/pear.bundle.h --target c bin/pear.js
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${PROJECT_SOURCE_DIR}/bin/pear.bundle.h
