@@ -1,6 +1,10 @@
 list(APPEND tests
   import-cjs.cjs
+  import-cjs-from-mjs.mjs
   import-mjs.mjs
+  process-argv.js
+  timeout.js
+  timeout-clear.js
 )
 
 foreach(file IN LISTS tests)
