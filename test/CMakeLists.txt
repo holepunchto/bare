@@ -1,0 +1,48 @@
+list(APPEND tests
+  basic.c
+  basic.js
+)
+
+foreach(file IN LISTS tests)
+  get_filename_component(test ${file} NAME_WE)
+
+  if(file MATCHES "\.c$")
+    add_executable(${test} ${file})
+
+    set_target_properties(
+      ${test}
+      PROPERTIES
+      OUTPUT_NAME test/${test}
+    )
+
+    target_link_libraries(
+      ${test}
+      PRIVATE
+        pear_static
+    )
+
+    target_include_directories(
+      ${test}
+      PRIVATE
+        $<TARGET_PROPERTY:pear,INTERFACE_INCLUDE_DIRECTORIES>
+    )
+
+    set(command ${test})
+  endif()
+
+  if(file MATCHES "\.js$")
+    set(command pear_bin test/${file})
+  endif()
+
+  add_test(
+    NAME ${file}
+    COMMAND ${command}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  )
+
+  set_tests_properties(
+    ${file}
+    PROPERTIES
+    TIMEOUT 30000
+  )
+endforeach()
