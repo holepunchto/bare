@@ -1,4 +1,6 @@
 list(APPEND tests
+  import-addon.cjs
+  import-addon.mjs
   import-cjs.cjs
   import-cjs-from-mjs.mjs
   import-mjs.mjs
@@ -6,6 +8,8 @@ list(APPEND tests
   timeout.js
   timeout-clear.js
 )
+
+add_subdirectory(fixtures/addon)
 
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)
