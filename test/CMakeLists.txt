@@ -12,7 +12,7 @@ foreach(file IN LISTS tests)
     set_target_properties(
       ${test}
       PROPERTIES
-      OUTPUT_NAME test/${test}
+      OUTPUT_NAME test_${test}
     )
 
     target_link_libraries(
