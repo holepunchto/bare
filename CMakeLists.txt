@@ -8,8 +8,6 @@ endif()
 
 project(pear C CXX)
 
-option(PEAR_ENABLE_ASAN OFF)
-
 option(PEAR_USE_QUICKJS OFF)
 option(PEAR_USE_JAVASCRIPTCORE OFF)
 
@@ -111,7 +109,27 @@ endif()
 
 add_dependencies(js pear_prebuilds)
 
-add_library(pear OBJECT)
+if(PEAR_USE_QUICKJS)
+  set(engine qjs_static)
+elseif(PEAR_USE_JAVASCRIPTCORE)
+  set(engine jsc_static)
+else()
+  set(engine js_static)
+endif()
+
+include_pear_module(pear_buffer node_modules/@pearjs/buffer)
+include_pear_module(pear_module node_modules/@pearjs/module)
+include_pear_module(pear_timers node_modules/@pearjs/timers)
+
+add_library(
+  pear
+  OBJECT
+  $<TARGET_OBJECTS:pear_buffer>
+  $<TARGET_OBJECTS:pear_module>
+  $<TARGET_OBJECTS:pear_timers>
+  $<TARGET_OBJECTS:uv>
+  $<TARGET_OBJECTS:napi>
+)
 
 set_target_properties(
   pear
@@ -143,21 +161,7 @@ target_include_directories(
     $<TARGET_PROPERTY:path,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-include_pear_module(pear_buffer node_modules/@pearjs/buffer)
-include_pear_module(pear_module node_modules/@pearjs/module)
-include_pear_module(pear_timers node_modules/@pearjs/timers)
-
-add_library(
-  pear_static
-  STATIC
-  $<TARGET_OBJECTS:pear>
-  $<TARGET_OBJECTS:pear_buffer>
-  $<TARGET_OBJECTS:pear_module>
-  $<TARGET_OBJECTS:pear_timers>
-  $<TARGET_OBJECTS:uv>
-  $<TARGET_OBJECTS:napi>
-  $<TARGET_OBJECTS:path>
-)
+add_library(pear_static STATIC $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:path>)
 
 set_target_properties(
   pear_static
@@ -165,18 +169,22 @@ set_target_properties(
   OUTPUT_NAME pear
 )
 
-set(engine js_static)
-
-if(PEAR_USE_QUICKJS)
-  set(engine qjs_static)
-endif()
-
-if(PEAR_USE_JAVASCRIPTCORE)
-  set(engine jsc_static)
-endif()
-
 target_link_libraries(
   pear_static
+  PUBLIC
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+)
+
+add_library(pear_shared SHARED $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:path>)
+
+set_target_properties(
+  pear_shared
+  PROPERTIES
+  OUTPUT_NAME pear
+)
+
+target_link_libraries(
+  pear_shared
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
