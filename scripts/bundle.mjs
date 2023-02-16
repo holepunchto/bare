@@ -7,13 +7,13 @@ const __dirname = path.dirname(__filename)
 
 const cwd = path.join(__dirname, '..')
 
-dev.bundle('/lib/bootstrap.js', {
+dev.bundle('/lib/pear.js', {
   cwd,
   protocol: 'pear',
   format: 'js',
   target: 'c',
-  name: 'pear_bootstrap',
+  name: 'pear_bundle',
   header: '(function (pear) {',
   footer: '})',
-  out: 'src/bootstrap.js.h'
+  out: 'src/pear.js.h'
 })

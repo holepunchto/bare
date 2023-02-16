@@ -27,9 +27,9 @@ add_custom_command(
   COMMAND ${node} scripts/bundle.mjs
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
-    ${PROJECT_SOURCE_DIR}/src/bootstrap.js.h
+    ${PROJECT_SOURCE_DIR}/src/pear.js.h
   DEPENDS
-    lib/bootstrap.js
+    lib/pear.js
     lib/builtins/buffer.js
     lib/builtins/console.js
     lib/builtins/events.js
@@ -116,9 +116,9 @@ target_sources(
     include/pear/modules.h
   PRIVATE
     src/addons.h
-    src/bootstrap.js.h
     src/fs.h
     src/pear.c
+    src/pear.js.h
     src/runtime.h
 )
 
