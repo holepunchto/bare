@@ -55,6 +55,7 @@ add_custom_target(
 )
 
 file(MAKE_DIRECTORY ${prebuilds_dir}/${target}/include)
+file(MAKE_DIRECTORY ${prebuilds_dir}/${target}/lib)
 
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
