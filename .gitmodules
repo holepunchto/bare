@@ -1,24 +1,24 @@
 [submodule "vendor/libjs"]
 	path = vendor/libjs
-	url = git@github.com:holepunchto/libjs.git
+	url = ../../holepunchto/libjs.git
 	shallow = true
 [submodule "vendor/libnapi"]
 	path = vendor/libnapi
-	url = git@github.com:holepunchto/libnapi.git
+	url = ../../holepunchto/libnapi.git
 	shallow = true
 [submodule "vendor/libqjs"]
 	path = vendor/libqjs
-	url = git@github.com:holepunchto/libqjs.git
+	url = ../../holepunchto/libqjs.git
 	shallow = true
 [submodule "vendor/libjsc"]
 	path = vendor/libjsc
-	url = git@github.com:holepunchto/libjsc.git
+	url = ../../holepunchto/libjsc.git
 	shallow = true
 [submodule "vendor/libuv"]
 	path = vendor/libuv
-	url = git@github.com:libuv/libuv.git
+	url = ../../libuv/libuv.git
 	shallow = true
 [submodule "vendor/libpath"]
 	path = vendor/libpath
-	url = git@github.com:holepunchto/libpath.git
+	url = ../../holepunchto/libpath.git
 	shallow = true
