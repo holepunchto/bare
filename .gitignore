@@ -4,3 +4,5 @@ build
 prebuilds
 sandbox
 corestore
+*.js.h
+*.bundle.h
