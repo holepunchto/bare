@@ -1,6 +1,4 @@
 #include <assert.h>
-#include <js.h>
-#include <stdio.h>
 #include <uv.h>
 
 #include "../include/pear.h"
