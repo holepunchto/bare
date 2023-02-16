@@ -7,6 +7,7 @@ list(APPEND tests
   process-argv.js
   timeout.js
   timeout-clear.js
+  user-data.c
 )
 
 add_subdirectory(fixtures/addon)
@@ -28,7 +29,7 @@ foreach(file IN LISTS tests)
     target_link_libraries(
       ${test}
       PRIVATE
-        pear_static
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
     )
 
     target_include_directories(

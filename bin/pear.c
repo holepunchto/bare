@@ -6,7 +6,7 @@
 #include "../src/fs.h"
 
 int
-main (int argc, char **argv) {
+main (int argc, char *argv[]) {
   uv_loop_t *loop = uv_default_loop();
 
   argv = uv_setup_args(argc, argv);

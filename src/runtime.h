@@ -569,11 +569,11 @@ pear_runtime_setup (pear_t *pear) {
   js_value_t *script;
   js_create_string_utf8(env, (const char *) pear_bundle, pear_bundle_len, &script);
 
-  js_value_t *bootstrap;
-  err = js_run_script(env, "pear:pear.js", -1, 0, script, &bootstrap);
+  js_value_t *entry;
+  err = js_run_script(env, "pear:pear.js", -1, 0, script, &entry);
   if (err < 0) return trigger_fatal_exception(env);
 
-  err = js_call_function(env, global, bootstrap, 1, &exports, NULL);
+  err = js_call_function(env, global, entry, 1, &exports, NULL);
   if (err < 0) return trigger_fatal_exception(env);
 
   return 0;
@@ -598,7 +598,7 @@ static inline void
 pear_runtime_teardown (pear_t *pear, int *exit_code) {
   js_env_t *env = pear->env;
 
-  if (exit_code != NULL) *exit_code = 0;
+  if (exit_code) *exit_code = 0;
 
   js_value_t *fn;
   js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
@@ -610,7 +610,7 @@ pear_runtime_teardown (pear_t *pear, int *exit_code) {
   int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 
-  if (exit_code != NULL) {
+  if (exit_code) {
     js_value_t *val;
     js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
     js_get_value_int32(env, val, exit_code);
