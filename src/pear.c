@@ -2,6 +2,7 @@
 #include <js.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <uv.h>
 
 #include "../include/pear.h"
@@ -53,8 +54,8 @@ pear_teardown (pear_t *pear, int *exit_code) {
 }
 
 int
-pear_run (pear_t *pear, const char *filename, const char *source, size_t len) {
-  int err = pear_runtime_run(pear, filename, source, len);
+pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
+  int err = pear_runtime_run(pear, filename, source);
   if (err < 0) return err;
 
   do {

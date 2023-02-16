@@ -19,7 +19,7 @@ $ pear <filename>
 pear_t pear;
 pear_setup(uv_default_loop(), &pear, argc, argv);
 
-pear_run(&pear, filename, source, len);
+pear_run(&pear, filename, source);
 
 int exit_code;
 pear_teardown(&pear, &exit_code);

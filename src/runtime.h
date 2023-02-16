@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <js.h>
 #include <js/ffi.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -616,7 +618,7 @@ pear_runtime_teardown (pear_t *pear, int *exit_code) {
 }
 
 static inline int
-pear_runtime_run (pear_t *pear, const char *filename, const char *source, size_t len) {
+pear_runtime_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
   js_env_t *env = pear->env;
 
   int err;
@@ -633,12 +635,12 @@ pear_runtime_run (pear_t *pear, const char *filename, const char *source, size_t
     js_value_t *arraybuffer;
     void *data;
 
-    err = js_create_arraybuffer(env, len, &data, &arraybuffer);
+    err = js_create_arraybuffer(env, source->len, &data, &arraybuffer);
     if (err < 0) return err;
 
-    memcpy(data, source, len);
+    memcpy(data, source->base, source->len);
 
-    err = js_create_typedarray(env, js_uint8_array, len, arraybuffer, 0, &args[1]);
+    err = js_create_typedarray(env, js_uint8_array, source->len, arraybuffer, 0, &args[1]);
     if (err < 0) return err;
   } else {
     js_get_undefined(env, &args[1]);

@@ -30,7 +30,7 @@ main (int argc, char **argv) {
 
   argv[1] = entry_point;
 
-  pear_run(&pear, entry_point, NULL, 0);
+  pear_run(&pear, entry_point, NULL);
 
   int exit_code;
   pear_teardown(&pear, &exit_code);

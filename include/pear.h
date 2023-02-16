@@ -4,6 +4,7 @@
 #include <js.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <uv.h>
 
 #include "pear/modules.h"
@@ -51,7 +52,7 @@ int
 pear_teardown (pear_t *pear, int *exit_code);
 
 int
-pear_run (pear_t *pear, const char *filename, const char *source, size_t len);
+pear_run (pear_t *pear, const char *filename, const uv_buf_t *source);
 
 int
 pear_suspend (pear_t *pear);
