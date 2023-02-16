@@ -42,6 +42,16 @@ add_custom_command(
 )
 
 add_custom_command(
+  COMMAND ${pear_dev} bundle --out bin/pear.bundle.h --target c bin/pear.js
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  OUTPUT
+    ${PROJECT_SOURCE_DIR}/bin/pear.bundle.h
+  DEPENDS
+    bin/pear.js
+  VERBATIM
+)
+
+add_custom_command(
   COMMAND ${npx} drives mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
@@ -172,7 +182,7 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
-add_executable(pear_bin bin/pear.c)
+add_executable(pear_bin bin/pear.c bin/pear.bundle.h)
 
 add_debug_options(pear_bin)
 

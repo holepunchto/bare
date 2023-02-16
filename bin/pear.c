@@ -1,39 +1,29 @@
+#include <assert.h>
 #include <js.h>
 #include <stdio.h>
 #include <uv.h>
 
 #include "../include/pear.h"
-#include "../src/fs.h"
+#include "pear.bundle.h"
 
 int
 main (int argc, char *argv[]) {
-  uv_loop_t *loop = uv_default_loop();
+  int err;
 
   argv = uv_setup_args(argc, argv);
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: pear <filename>\n");
-    return 1;
-  }
-
   pear_t pear;
-  pear_setup(loop, &pear, argc, argv);
+  err = pear_setup(uv_default_loop(), &pear, argc, argv);
+  assert(err == 0);
 
-  char *entry_point = NULL;
+  uv_buf_t source = uv_buf_init((char *) bundle, bundle_len);
 
-  int err = pear_fs_realpath_sync(&pear, argv[1], NULL, &entry_point);
-
-  if (err < 0) {
-    fprintf(stderr, "Could not resolve entry point: %s\n", argv[1]);
-    return 1;
-  }
-
-  argv[1] = entry_point;
-
-  pear_run(&pear, entry_point, NULL);
+  err = pear_run(&pear, "pear.bundle", &source);
+  assert(err == 0);
 
   int exit_code;
-  pear_teardown(&pear, &exit_code);
+  err = pear_teardown(&pear, &exit_code);
+  assert(err == 0);
 
   return exit_code;
 }
