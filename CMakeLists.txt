@@ -30,6 +30,7 @@ add_custom_command(
     ${PROJECT_SOURCE_DIR}/src/pear.js.h
   DEPENDS
     lib/pear.js
+    lib/builtins/assert.js
     lib/builtins/buffer.js
     lib/builtins/console.js
     lib/builtins/events.js
