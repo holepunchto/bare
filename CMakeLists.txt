@@ -143,6 +143,7 @@ add_library(
   $<TARGET_OBJECTS:pear_buffer>
   $<TARGET_OBJECTS:pear_module>
   $<TARGET_OBJECTS:pear_timers>
+  $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
 )
 
