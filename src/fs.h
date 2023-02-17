@@ -11,12 +11,13 @@
 static inline bool
 pear_fs_exists_sync (pear_t *pear, const char *path) {
   uv_fs_t req;
-  uv_fs_access(pear->loop, &req, path, 0, NULL);
+  uv_fs_stat(pear->loop, &req, path, NULL);
 
-  int err = req.result;
+  uv_stat_t *st = req.result < 0 ? NULL : req.ptr;
+
   uv_fs_req_cleanup(&req);
 
-  return err == 0;
+  return st && st->st_mode & S_IFREG;
 }
 
 static inline int
