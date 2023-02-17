@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-if(WIN32)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
 project(pear C CXX)
 
 option(PEAR_USE_QUICKJS OFF)
@@ -163,32 +157,31 @@ list(APPEND objects
   $<TARGET_OBJECTS:path>
 )
 
-add_library(pear_static STATIC ${objects})
-
-set_target_properties(
-  pear_static
-  PROPERTIES
-  OUTPUT_NAME pear
-  ARCHIVE_OUTPUT_DIRECTORY lib
-)
-
-target_link_libraries(
-  pear_static
-  PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
-)
-
 add_library(pear_shared SHARED ${objects})
 
 set_target_properties(
   pear_shared
   PROPERTIES
   OUTPUT_NAME pear
-  LIBRARY_OUTPUT_DIRECTORY lib
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
 target_link_libraries(
   pear_shared
+  PUBLIC
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+)
+
+add_library(pear_static STATIC ${objects})
+
+set_target_properties(
+  pear_static
+  PROPERTIES
+  OUTPUT_NAME pear
+)
+
+target_link_libraries(
+  pear_static
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
