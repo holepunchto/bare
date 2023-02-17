@@ -29,7 +29,7 @@ foreach(file IN LISTS tests)
     target_link_libraries(
       ${test}
       PRIVATE
-        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_shared>
     )
 
     target_include_directories(
