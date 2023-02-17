@@ -193,8 +193,6 @@ target_link_libraries(
 
 add_executable(pear_bin bin/pear.c bin/pear.bundle.h)
 
-add_debug_options(pear_bin)
-
 set_target_properties(
   pear_bin
   PROPERTIES
