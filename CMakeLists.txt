@@ -121,15 +121,7 @@ include_pear_module(pear_buffer node_modules/@pearjs/buffer)
 include_pear_module(pear_module node_modules/@pearjs/module)
 include_pear_module(pear_timers node_modules/@pearjs/timers)
 
-add_library(
-  pear
-  OBJECT
-  $<TARGET_OBJECTS:pear_buffer>
-  $<TARGET_OBJECTS:pear_module>
-  $<TARGET_OBJECTS:pear_timers>
-  $<TARGET_OBJECTS:uv>
-  $<TARGET_OBJECTS:napi>
-)
+add_library(pear OBJECT)
 
 set_target_properties(
   pear
@@ -161,7 +153,17 @@ target_include_directories(
     $<TARGET_PROPERTY:path,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-add_library(pear_static STATIC $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:path>)
+list(APPEND objects
+  $<TARGET_OBJECTS:pear>
+  $<TARGET_OBJECTS:pear_buffer>
+  $<TARGET_OBJECTS:pear_module>
+  $<TARGET_OBJECTS:pear_timers>
+  $<TARGET_OBJECTS:uv>
+  $<TARGET_OBJECTS:napi>
+  $<TARGET_OBJECTS:path>
+)
+
+add_library(pear_static STATIC ${objects})
 
 set_target_properties(
   pear_static
@@ -175,7 +177,7 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
-add_library(pear_shared SHARED $<TARGET_OBJECTS:pear> $<TARGET_OBJECTS:path>)
+add_library(pear_shared SHARED ${objects})
 
 set_target_properties(
   pear_shared
