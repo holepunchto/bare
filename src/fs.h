@@ -8,27 +8,6 @@
 
 #define PEAR_FS_MAX_PATH 4096
 
-static inline int
-pear_fs_realpath_sync (pear_t *pear, const char *path, size_t *len, char **res) {
-  uv_fs_t req;
-  uv_fs_realpath(pear->loop, &req, path, NULL);
-
-  int err = req.result;
-
-  if (err < 0) {
-    uv_fs_req_cleanup(&req);
-    return err;
-  }
-
-  size_t l = strlen(req.ptr);
-  if (len != NULL) *len = l;
-  *res = (char *) malloc(l + 1);
-  strcpy(*res, req.ptr);
-  uv_fs_req_cleanup(&req);
-
-  return 0;
-}
-
 static inline bool
 pear_fs_exists_sync (pear_t *pear, const char *path) {
   uv_fs_t req;
