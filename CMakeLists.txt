@@ -169,6 +169,7 @@ set_target_properties(
   pear_static
   PROPERTIES
   OUTPUT_NAME pear
+  ARCHIVE_OUTPUT_DIRECTORY lib
 )
 
 target_link_libraries(
@@ -183,6 +184,7 @@ set_target_properties(
   pear_shared
   PROPERTIES
   OUTPUT_NAME pear
+  LIBRARY_OUTPUT_DIRECTORY lib
 )
 
 target_link_libraries(
@@ -198,6 +200,7 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME pear
   ENABLE_EXPORTS ON
+  RUNTIME_OUTPUT_DIRECTORY bin
 )
 
 target_include_directories(
