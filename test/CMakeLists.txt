@@ -20,16 +20,10 @@ foreach(file IN LISTS tests)
   if(file MATCHES "\.c$")
     add_executable(${test} ${file})
 
-    set_target_properties(
-      ${test}
-      PROPERTIES
-      OUTPUT_NAME test_${test}
-    )
-
     target_link_libraries(
       ${test}
       PRIVATE
-        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_shared>
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
     )
 
     target_include_directories(
