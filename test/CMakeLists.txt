@@ -3,14 +3,17 @@ list(APPEND tests
   import-addon.mjs
   import-cjs.cjs
   import-cjs-from-mjs.mjs
+  import-dynamic.mjs
+  import-dynamic-from-cjs.cjs
   import-mjs.mjs
+  import-mjs-from-cjs.cjs
   process-argv.js
   timeout.js
   timeout-clear.js
   user-data.c
 )
 
-add_subdirectory(fixtures/addon EXCLUDE_FROM_ALL)
+add_subdirectory(fixtures)
 
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)
