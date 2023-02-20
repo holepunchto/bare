@@ -178,6 +178,7 @@ set_target_properties(
   pear_static
   PROPERTIES
   OUTPUT_NAME pear
+  PREFIX lib
 )
 
 target_link_libraries(
