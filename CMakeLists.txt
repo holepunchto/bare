@@ -12,7 +12,7 @@ pear_target(target)
 find_program(npx NAMES npx REQUIRED)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
-set(prebuilds_key gy9t1gat1umpqo8bm5z7a4j38xm1g1z59zid69rq6quxzg3ij8uo)
+set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
 
 add_custom_command(
   COMMAND ${npx} pear-dev bundle --config bundle.config.js src/pear.js
