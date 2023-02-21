@@ -4,6 +4,5 @@ module.exports = {
   target: 'c',
   name: 'pear_bundle',
   header: '(function (pear) {',
-  footer: '})',
-  out: 'src/pear.js.h'
+  footer: '})'
 }
