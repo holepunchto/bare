@@ -5,4 +5,5 @@ prebuilds
 sandbox
 corestore
 *.js.h
+*.bundle
 *.bundle.h

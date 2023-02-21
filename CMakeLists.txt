@@ -14,11 +14,10 @@ find_program(npx NAMES npx REQUIRED)
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
 
-add_custom_command(
-  COMMAND ${npx} pear-dev bundle --config bundle.config.js src/pear.js
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT
-    ${PROJECT_SOURCE_DIR}/src/pear.js.h
+add_pear_bundle(
+  ENTRY src/pear.js
+  OUT src/pear.js.h
+  CONFIG bundle.config.js
   DEPENDS
     src/pear.js
     src/builtins/assert.js
@@ -29,17 +28,14 @@ add_custom_command(
     src/builtins/path.js
     src/builtins/process.js
     src/builtins/timers.js
-  VERBATIM
 )
 
-add_custom_command(
-  COMMAND ${npx} pear-dev bundle --out bin/pear.bundle.h --target c bin/pear.js
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT
-    ${PROJECT_SOURCE_DIR}/bin/pear.bundle.h
+add_pear_bundle(
+  ENTRY bin/pear.js
+  OUT bin/pear.bundle.h
+  TARGET c
   DEPENDS
     bin/pear.js
-  VERBATIM
 )
 
 add_custom_command(

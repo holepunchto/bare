@@ -1,6 +1,7 @@
 list(APPEND tests
   import-addon.cjs
   import-addon.mjs
+  import-bundle.js
   import-cjs.cjs
   import-cjs-from-mjs.mjs
   import-dynamic.mjs
