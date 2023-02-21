@@ -9,7 +9,7 @@ include(pear)
 
 pear_target(target)
 
-find_program(npx NAMES npx REQUIRED)
+find_pear_dev(pear_dev)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
@@ -39,7 +39,7 @@ add_pear_bundle(
 )
 
 add_custom_command(
-  COMMAND ${npx} drives mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
+  COMMAND ${pear_dev} drive mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT
     ${prebuilds_dir}/${target}/lib/libv8.a
