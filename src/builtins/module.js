@@ -13,7 +13,7 @@ Module._builtins.timers = require('./timers')
 
 Module._protocols['file:'] = new Module.Protocol({
   exists (filename) {
-    return pear.exists(filename)
+    return pear.exists(filename) !== 0
   },
 
   read (filename) {
