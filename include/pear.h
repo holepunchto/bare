@@ -31,12 +31,18 @@
 
 typedef struct pear_s pear_t;
 
+typedef void (*pear_before_exit_cb)(pear_t *);
+typedef void (*pear_exit_cb)(pear_t *);
+
 struct pear_s {
   uv_loop_t *loop;
   js_platform_t *platform;
   js_env_t *env;
   uv_idle_t idle;
   bool suspended;
+
+  pear_before_exit_cb on_before_exit;
+  pear_exit_cb on_exit;
 
   struct {
     js_value_t *exports;
@@ -59,6 +65,12 @@ pear_suspend (pear_t *pear);
 
 int
 pear_resume (pear_t *pear);
+
+int
+pear_on_before_exit (pear_t *pear, pear_before_exit_cb cb);
+
+int
+pear_on_exit (pear_t *pear, pear_exit_cb cb);
 
 int
 pear_get_data (pear_t *pear, const char *key, void **result);
