@@ -15,6 +15,17 @@ list(APPEND tests
   user-data.c
 )
 
+if(PEAR_USE_JAVASCRIPTCORE)
+  list(APPEND skipped_tests
+    import-addon.mjs
+    import-cjs-from-mjs.mjs
+    import-dynamic.mjs
+    import-dynamic-from-cjs.cjs
+    import-mjs.mjs
+    import-mjs-from-cjs.cjs
+  )
+endif()
+
 add_subdirectory(fixtures)
 
 foreach(file IN LISTS tests)
@@ -55,4 +66,12 @@ foreach(file IN LISTS tests)
     PROPERTIES
     TIMEOUT 30
   )
+
+  if(${file} IN_LIST skipped_tests)
+    set_tests_properties(
+      ${file}
+      PROPERTIES
+      DISABLED True
+    )
+  endif()
 endforeach()
