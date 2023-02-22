@@ -1,5 +1,3 @@
-#!/usr/bin/env pear
-
 const Module = require('module')
 const path = require('path')
 
