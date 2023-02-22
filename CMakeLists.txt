@@ -17,6 +17,7 @@ add_pear_bundle(
   OUT src/pear.js.h
   CONFIG bundle.config.js
   DEPENDS
+    bundle.config.js
     src/pear.js
     src/builtins/assert.js
     src/builtins/buffer.js
