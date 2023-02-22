@@ -53,6 +53,6 @@ foreach(file IN LISTS tests)
   set_tests_properties(
     ${file}
     PROPERTIES
-    TIMEOUT 30000
+    TIMEOUT 30
   )
 endforeach()
