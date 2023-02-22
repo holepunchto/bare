@@ -9,8 +9,6 @@ include(pear)
 
 pear_target(target)
 
-find_pear_dev(pear_dev)
-
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key dphphcdt16t4igfutyn9wikcn69trsd5qamgjwhxyjyfa4mix4fo)
 
@@ -38,22 +36,12 @@ add_pear_bundle(
     bin/pear.js
 )
 
-add_custom_command(
-  COMMAND ${pear_dev} drive mirror --prefix /${target} ${prebuilds_key} ${prebuilds_dir}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT
-    ${prebuilds_dir}/${target}/lib/libv8.a
-  VERBATIM
-)
-
-add_custom_target(
+mirror_drive(
   pear_prebuilds
-  DEPENDS
-    ${prebuilds_dir}/${target}/lib/libv8.a
+  SOURCE ${prebuilds_key}
+  DESTINATION ${prebuilds_dir}
+  PREFIX /${target}
 )
-
-file(MAKE_DIRECTORY ${prebuilds_dir}/${target}/include)
-file(MAKE_DIRECTORY ${prebuilds_dir}/${target}/lib)
 
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
