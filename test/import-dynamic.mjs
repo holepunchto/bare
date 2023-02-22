@@ -1,5 +1,5 @@
 import assert from 'assert'
 
-const { default: mod } = await import('./fixtures/esm')
-
-assert(mod === 'Hello from ESM')
+import('./fixtures/esm').then(({ default: mod }) =>
+  assert(mod === 'Hello from ESM')
+)
