@@ -9,6 +9,6 @@ module.exports = exports = function hrtime (prev = EMPTY) {
 }
 
 exports.bigint = function hrtime () {
-  const time = process.hrtime()
+  const time = exports.hrtime()
   return BigInt(time[0]) * BigInt(1e9) + BigInt(time[1])
 }
