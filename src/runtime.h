@@ -47,20 +47,27 @@
 
 static js_value_t *
 bindings_print (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   js_value_t *argv[2];
   size_t argc = 2;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
 
   uint32_t fd;
+  err = js_get_value_uint32(env, argv[0], &fd);
+  assert(err == 0);
+
   size_t data_len;
+  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &data_len);
+  assert(err == 0);
 
-  js_get_value_uint32(env, argv[0], &fd);
-  js_get_value_string_utf8(env, argv[1], NULL, 0, &data_len);
-
-  char *data = malloc(++data_len);
-
-  js_get_value_string_utf8(env, argv[1], data, data_len, &data_len);
+  char *data = malloc(data_len);
+  err = js_get_value_string_utf8(env, argv[1], data, data_len, &data_len);
+  assert(err == 0);
 
   write(fd, data, data_len);
   free(data);
@@ -72,81 +79,98 @@ static js_value_t *
 bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
+  int err;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  assert(err == 0);
 
-  char addon_file[PEAR_FS_MAX_PATH];
-  uint32_t mode;
+  assert(argc == 1);
 
-  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
+  char specifier[PEAR_FS_MAX_PATH];
+  err = js_get_value_string_utf8(env, argv[0], specifier, PEAR_FS_MAX_PATH, NULL);
+  assert(err == 0);
 
-  return pear_addons_load(pear, addon_file);
+  return pear_addons_load(pear, specifier);
 }
 
 static js_value_t *
 bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
+  int err;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  assert(err == 0);
 
-  size_t addon_file_len = PEAR_FS_MAX_PATH;
-  char addon_file[PEAR_FS_MAX_PATH];
+  assert(argc == 1);
 
-  js_get_value_string_utf8(env, argv[0], addon_file, PEAR_FS_MAX_PATH, NULL);
+  size_t specifier_len = PEAR_FS_MAX_PATH;
+  char specifier[PEAR_FS_MAX_PATH];
 
-  int err = pear_addons_resolve(pear, addon_file, addon_file, &addon_file_len);
+  err = js_get_value_string_utf8(env, argv[0], specifier, PEAR_FS_MAX_PATH, NULL);
+  assert(err == 0);
+
+  err = pear_addons_resolve(pear, specifier, specifier, &specifier_len);
   if (err < 0) {
-    js_throw_errorf(env, NULL, "Could not resolve addon %s", addon_file);
+    js_throw_errorf(env, NULL, "Could not resolve addon %s", specifier);
     return NULL;
   }
 
   js_value_t *result;
-  js_create_string_utf8(env, addon_file, -1, &result);
+  err = js_create_string_utf8(env, specifier, -1, &result);
+  assert(err == 0);
 
   return result;
 }
 
 static js_value_t *
 bindings_hrtime (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   js_value_t *argv[2];
   size_t argc = 2;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
 
-  size_t arr_len;
-  uint32_t *arr;
+  assert(argc == 2);
 
-  size_t prev_len;
+  uint32_t *next;
+  err = js_get_typedarray_info(env, argv[0], NULL, (void **) &next, NULL, NULL, NULL);
+  assert(err == 0);
+
   uint32_t *prev;
+  err = js_get_typedarray_info(env, argv[1], NULL, (void **) &prev, NULL, NULL, NULL);
+  assert(err == 0);
 
-  js_get_typedarray_info(env, argv[0], NULL, (void **) &arr, &arr_len, NULL, NULL);
-  js_get_typedarray_info(env, argv[1], NULL, (void **) &prev, &prev_len, NULL, NULL);
+  uint64_t then = prev[0] * 1e9 + prev[1];
+  uint64_t now = uv_hrtime() - then;
 
-  if (arr_len < 2 || prev_len < 2) return NULL;
-
-  uint64_t p = prev[0] * 1e9 + prev[1];
-  uint64_t now = uv_hrtime() - p;
-
-  arr[0] = now / ((uint32_t) 1e9);
-  arr[1] = now % ((uint32_t) 1e9);
+  next[0] = now / ((uint32_t) 1e9);
+  next[1] = now % ((uint32_t) 1e9);
 
   return NULL;
 }
 
 static js_value_t *
 bindings_exit (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
 
   int32_t code;
-  js_get_value_int32(env, argv[0], &code);
+  err = js_get_value_int32(env, argv[0], &code);
+  assert(err == 0);
 
   exit(code);
 
@@ -155,33 +179,43 @@ bindings_exit (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_cwd (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   js_value_t *val;
 
-  char cwd[PEAR_FS_MAX_PATH];
   size_t cwd_len = PEAR_FS_MAX_PATH;
+  char cwd[PEAR_FS_MAX_PATH];
 
   PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
 
-  js_create_string_utf8(env, cwd, cwd_len, &val);
+  err = js_create_string_utf8(env, cwd, cwd_len, &val);
+  assert(err == 0);
+
   return val;
 }
 
 static js_value_t *
 bindings_env (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   uv_env_item_t *items;
   int count;
 
   PEAR_UV_CHECK(uv_os_environ(&items, &count))
 
   js_value_t *obj;
-  js_create_object(env, &obj);
+  err = js_create_object(env, &obj);
+  assert(err == 0);
 
   for (int i = 0; i < count; i++) {
     uv_env_item_t *item = items + i;
 
     js_value_t *val;
-    js_create_string_utf8(env, item->value, -1, &val);
-    js_set_named_property(env, obj, item->name, val);
+    err = js_create_string_utf8(env, item->value, -1, &val);
+    assert(err == 0);
+
+    err = js_set_named_property(env, obj, item->name, val);
+    assert(err == 0);
   }
 
   uv_os_free_environ(items, count);
@@ -191,34 +225,45 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_set_title (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
 
   size_t data_len;
-
-  js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
+  assert(err == 0);
 
   char *data = malloc(++data_len);
+  err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
+  assert(err == 0);
 
-  js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
-
-  uv_set_process_title(data);
+  err = uv_set_process_title(data);
+  assert(err == 0);
 
   free(data);
+
   return NULL;
 }
 
 static js_value_t *
 bindings_get_title (js_env_t *env, js_callback_info_t *info) {
+  int er;
+
   js_value_t *result;
 
   char *title = malloc(256);
-  int err = uv_get_process_title(title, 256);
+  err = uv_get_process_title(title, 256);
   if (err) memcpy(title, "pear", 5);
 
-  js_create_string_utf8(env, title, -1, &result);
+  err = js_create_string_utf8(env, title, -1, &result);
+  assert(err == 0);
+
   free(title);
 
   return result;
@@ -228,7 +273,8 @@ static js_value_t *
 bindings_suspend (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
-  js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+  int err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+  assert(err == 0);
 
   pear_suspend(pear);
 
@@ -239,7 +285,8 @@ static js_value_t *
 bindings_resume (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
-  js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+  int err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+  assert(err == 0);
 
   pear_resume(pear);
 
@@ -248,37 +295,48 @@ bindings_resume (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_exists (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   pear_t *pear;
 
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  assert(err == 0);
+
+  assert(argc == 1);
 
   char path[PEAR_FS_MAX_PATH];
-
-  js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+  err = js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+  assert(err == 0);
 
   bool exists = pear_fs_exists_sync(pear, path);
 
   js_value_t *result;
-  js_create_uint32(env, exists, &result);
+  err = js_create_uint32(env, exists, &result);
+  assert(err == 0);
 
   return result;
 }
 
 static js_value_t *
 bindings_read (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
   pear_t *pear;
 
   js_value_t *argv[1];
   size_t argc = 1;
 
-  js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &pear);
+  assert(err == 0);
+
+  assert(argc == 1);
 
   char path[PEAR_FS_MAX_PATH];
-
-  js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+  err = js_get_value_string_utf8(env, argv[0], path, PEAR_FS_MAX_PATH, NULL);
+  assert(err == 0);
 
   js_value_t *buffer;
 
@@ -590,7 +648,10 @@ pear_runtime_before_teardown (pear_t *pear) {
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
@@ -607,7 +668,10 @@ pear_runtime_teardown (pear_t *pear, int *exit_code) {
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 
   if (exit_code) {
@@ -646,7 +710,10 @@ pear_runtime_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
     js_get_undefined(env, &args[1]);
   }
 
-  err = js_call_function(env, pear->runtime.exports, run, 2, args, NULL);
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  err = js_call_function(env, global, run, 2, args, NULL);
   if (err < 0) return err;
 
   return 0;
@@ -663,7 +730,10 @@ pear_runtime_suspend (pear_t *pear) {
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
@@ -678,7 +748,10 @@ pear_runtime_resume (pear_t *pear) {
   js_is_function(env, fn, &is_set);
   if (!is_set) return;
 
-  int err = js_call_function(env, pear->runtime.exports, fn, 0, NULL, NULL);
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
   if (err < 0) trigger_fatal_exception(env);
 }
 
