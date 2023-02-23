@@ -455,7 +455,7 @@ pear_runtime_setup (pear_t *pear) {
     js_create_object(env, &versions);
     js_value_t *val;
 
-    js_create_string_utf8(env, "0.0.0", -1, &val);
+    js_create_string_utf8(env, PEAR_VERSION, -1, &val);
     js_set_named_property(env, versions, "pear", val);
 
     if (js_platform_version) {

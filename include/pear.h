@@ -8,6 +8,7 @@
 #include <uv.h>
 
 #include "pear/modules.h"
+#include "pear/version.h"
 
 #if defined(__APPLE__)
 #define PEAR_PLATFORM "darwin"
