@@ -10,6 +10,7 @@ list(APPEND tests
   import-mjs-from-cjs.cjs
   process-argv.js
   suspend-resume.js
+  suspend-resume-immediate.js
   timeout.js
   timeout-clear.js
   user-data.c

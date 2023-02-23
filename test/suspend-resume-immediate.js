@@ -5,9 +5,11 @@ let suspended = false
 process
   .on('suspend', () => {
     suspended = true
+
+    process.resume()
   })
   .on('idle', () => {
-    process.resume()
+    assert(false, 'Should not idle')
   })
   .on('resume', () => {
     assert(suspended)
