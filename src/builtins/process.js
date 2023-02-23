@@ -104,9 +104,9 @@ exports.nextTick = function nextTick (cb, ...args) {
   queueMicrotask(cb.bind(null, ...args))
 }
 
-exports.addon = require('./exports/addon')
+exports.addon = require('./process/addon')
 
-exports.hrtime = require('./exports/hrtime')
+exports.hrtime = require('./process/hrtime')
 
 function toExitCode (code) {
   return (Number(code) || 0) & 0xff
