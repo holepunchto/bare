@@ -253,7 +253,7 @@ bindings_set_title (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bindings_get_title (js_env_t *env, js_callback_info_t *info) {
-  int er;
+  int err;
 
   js_value_t *result;
 
