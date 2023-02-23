@@ -16,7 +16,7 @@ main (int argc, char *argv[]) {
 
   uv_buf_t source = uv_buf_init((char *) bundle, bundle_len);
 
-  err = pear_run(&pear, "pear.bundle", &source);
+  err = pear_run(&pear, "/pear.bundle", &source);
   assert(err == 0);
 
   int exit_code;
