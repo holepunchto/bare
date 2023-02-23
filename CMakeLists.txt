@@ -26,6 +26,7 @@ add_pear_bundle(
     src/builtins/module.js
     src/builtins/path.js
     src/builtins/process.js
+    src/builtins/process/addon.js
     src/builtins/timers.js
 )
 

@@ -104,23 +104,7 @@ process.nextTick = function nextTick (cb, ...args) {
   queueMicrotask(cb.bind(null, ...args))
 }
 
-process.addon = function addon (dirname) {
-  if (typeof dirname !== 'string') throw new TypeError('dirname must be a string')
-
-  if (process.addon.cache[dirname]) return process.addon.cache[dirname]
-
-  const addon = process.addon.cache[dirname] = pear.loadAddon(dirname)
-
-  return addon
-}
-
-process.addon.cache = Object.create(null)
-
-process.addon.resolve = function resolve (dirname) {
-  if (typeof dirname !== 'string') throw new TypeError('dirname must be a string')
-
-  return pear.resolveAddon(dirname)
-}
+process.addon = require('./process/addon')
 
 const EMPTY = new Uint32Array([0, 0])
 
