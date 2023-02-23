@@ -170,16 +170,11 @@ pear_addons_load (pear_t *pear, const char *path) {
     return NULL;
   }
 
-  js_value_t *exports = mod->exports;
+  js_value_t *exports;
+  err = js_create_object(pear->env, &exports);
+  assert(err == 0);
 
-  if (exports == NULL) {
-    err = js_create_object(pear->env, &exports);
-    assert(err == 0);
-
-    exports = mod->exports = mod->init(pear->env, exports);
-  }
-
-  return exports;
+  return mod->init(pear->env, exports);
 }
 
 void

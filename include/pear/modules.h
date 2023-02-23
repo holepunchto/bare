@@ -49,7 +49,6 @@ struct pear_module_s {
   int version;
   const char *filename;
   pear_module_cb init;
-  js_value_t *exports;
   uv_lib_t *lib;
 };
 
