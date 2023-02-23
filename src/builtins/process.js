@@ -2,46 +2,46 @@
 
 const EventEmitter = require('@pearjs/events')
 
-const process = global.process = module.exports = new EventEmitter()
+global.process = module.exports = exports = new EventEmitter()
 
 pear.onbeforeexit = function onbeforeexit () {
-  process.emit('beforeExit')
+  exports.emit('beforeExit')
 }
 
 pear.onexit = function onexit () {
-  process.emit('exit')
+  exports.emit('exit')
 }
 
 pear.onsuspend = function onsuspend () {
-  process.emit('suspend')
+  exports.emit('suspend')
 }
 
 pear.onresume = function onresume () {
-  process.emit('resume')
+  exports.emit('resume')
 }
 
 pear.onuncaughtexception = function onuncaughtexception (err) {
-  if (process.emit('uncaughtException', err)) return
+  if (exports.emit('uncaughtException', err)) return
   pear.print(2, `Uncaught ${err.stack}\n`)
   pear.exit(1)
 }
 
 pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
-  if (process.emit('unhandledRejection', reason, promise)) return
+  if (exports.emit('unhandledRejection', reason, promise)) return
   pear.print(2, `Uncaught (in promise) ${reason.stack}\n`)
   pear.exit(1)
 }
 
-process.platform = pear.platform
-process.arch = pear.arch
-process.execPath = pear.execPath
-process.argv = pear.argv
-process.pid = pear.pid
-process.versions = pear.versions
+exports.platform = pear.platform
+exports.arch = pear.arch
+exports.execPath = pear.execPath
+exports.argv = pear.argv
+exports.pid = pear.pid
+exports.versions = pear.versions
 
 let env = null
 
-Object.defineProperty(process, 'env', {
+Object.defineProperty(exports, 'env', {
   get () {
     if (env === null) env = pear.env()
     return env
@@ -50,13 +50,13 @@ Object.defineProperty(process, 'env', {
   configurable: false
 })
 
-process.errnos = new Map(pear.errnos)
+exports.errnos = new Map(pear.errnos)
 
-process.cwd = function cwd () {
+exports.cwd = function cwd () {
   return pear.cwd()
 }
 
-Object.defineProperty(process, 'title', {
+Object.defineProperty(exports, 'title', {
   get () {
     return pear.getTitle()
   },
@@ -67,7 +67,7 @@ Object.defineProperty(process, 'title', {
   configurable: false
 })
 
-Object.defineProperty(process, 'exitCode', {
+Object.defineProperty(exports, 'exitCode', {
   get () {
     return pear.exitCode
   },
@@ -78,19 +78,19 @@ Object.defineProperty(process, 'exitCode', {
   configurable: false
 })
 
-process.exit = function exit (code = process.exitCode) {
+exports.exit = function exit (code = exports.exitCode) {
   pear.exit(toExitCode(code))
 }
 
-process.suspend = function suspend () {
+exports.suspend = function suspend () {
   pear.suspend()
 }
 
-process.resume = function resume () {
+exports.resume = function resume () {
   pear.resume()
 }
 
-process.data = function data (key) {
+exports.data = function data (key) {
   return pear.data[key] || null
 }
 
@@ -100,13 +100,13 @@ global.queueMicrotask = function queueMicrotask (fn) {
   resolved.then(fn)
 }
 
-process.nextTick = function nextTick (cb, ...args) {
+exports.nextTick = function nextTick (cb, ...args) {
   queueMicrotask(cb.bind(null, ...args))
 }
 
-process.addon = require('./process/addon')
+exports.addon = require('./exports/addon')
 
-process.hrtime = require('./process/hrtime')
+exports.hrtime = require('./exports/hrtime')
 
 function toExitCode (code) {
   return (Number(code) || 0) & 0xff
