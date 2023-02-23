@@ -738,6 +738,24 @@ pear_runtime_suspend (pear_t *pear) {
 }
 
 static inline void
+pear_runtime_idle (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onidle", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
+  if (err < 0) trigger_fatal_exception(env);
+}
+
+static inline void
 pear_runtime_resume (pear_t *pear) {
   js_env_t *env = pear->env;
 

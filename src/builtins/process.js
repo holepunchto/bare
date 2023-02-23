@@ -4,6 +4,18 @@ const EventEmitter = require('@pearjs/events')
 
 global.process = module.exports = exports = new EventEmitter()
 
+pear.onuncaughtexception = function onuncaughtexception (err) {
+  if (exports.emit('uncaughtException', err)) return
+  pear.print(2, `Uncaught ${err.stack}\n`)
+  pear.exit(1)
+}
+
+pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
+  if (exports.emit('unhandledRejection', reason, promise)) return
+  pear.print(2, `Uncaught (in promise) ${reason.stack}\n`)
+  pear.exit(1)
+}
+
 pear.onbeforeexit = function onbeforeexit () {
   exports.emit('beforeExit')
 }
@@ -16,20 +28,12 @@ pear.onsuspend = function onsuspend () {
   exports.emit('suspend')
 }
 
+pear.onidle = function onidle () {
+  exports.emit('idle')
+}
+
 pear.onresume = function onresume () {
   exports.emit('resume')
-}
-
-pear.onuncaughtexception = function onuncaughtexception (err) {
-  if (exports.emit('uncaughtException', err)) return
-  pear.print(2, `Uncaught ${err.stack}\n`)
-  pear.exit(1)
-}
-
-pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
-  if (exports.emit('unhandledRejection', reason, promise)) return
-  pear.print(2, `Uncaught (in promise) ${reason.stack}\n`)
-  pear.exit(1)
 }
 
 exports.platform = pear.platform

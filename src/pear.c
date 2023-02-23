@@ -40,6 +40,9 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
 
   pear->on_before_exit = NULL;
   pear->on_exit = NULL;
+  pear->on_suspend = NULL;
+  pear->on_idle = NULL;
+  pear->on_resume = NULL;
 
   return 0;
 }
@@ -66,9 +69,17 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
   do {
     uv_run(pear->loop, UV_RUN_DEFAULT);
 
-    pear_runtime_before_teardown(pear);
+    if (pear->suspended) {
+      uv_idle_start(&pear->idle, on_idle);
 
-    if (pear->on_before_exit) pear->on_before_exit(pear);
+      pear_runtime_idle(pear);
+
+      if (pear->on_idle) pear->on_idle(pear);
+    } else {
+      pear_runtime_before_teardown(pear);
+
+      if (pear->on_before_exit) pear->on_before_exit(pear);
+    }
   } while (uv_loop_alive(pear->loop));
 
   return 0;
@@ -79,9 +90,9 @@ pear_suspend (pear_t *pear) {
   if (pear->suspended) return -1;
   pear->suspended = true;
 
-  uv_idle_start(&pear->idle, on_idle);
-
   pear_runtime_suspend(pear);
+
+  if (pear->on_suspend) pear->on_suspend(pear);
 
   return 0;
 }
@@ -94,6 +105,8 @@ pear_resume (pear_t *pear) {
   uv_idle_stop(&pear->idle);
 
   pear_runtime_resume(pear);
+
+  if (pear->on_resume) pear->on_resume(pear);
 
   return 0;
 }
@@ -108,6 +121,27 @@ pear_on_before_exit (pear_t *pear, pear_before_exit_cb cb) {
 int
 pear_on_exit (pear_t *pear, pear_exit_cb cb) {
   pear->on_exit = cb;
+
+  return 0;
+}
+
+int
+pear_on_suspend (pear_t *pear, pear_suspend_cb cb) {
+  pear->on_suspend = cb;
+
+  return 0;
+}
+
+int
+pear_on_idle (pear_t *pear, pear_idle_cb cb) {
+  pear->on_idle = cb;
+
+  return 0;
+}
+
+int
+pear_on_resume (pear_t *pear, pear_resume_cb cb) {
+  pear->on_resume = cb;
 
   return 0;
 }
