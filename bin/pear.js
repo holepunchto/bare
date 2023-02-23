@@ -2,6 +2,7 @@ const Module = require('module')
 const path = require('path')
 
 const argv = require('minimist')(process.argv, {
+  stopEarly: true,
   boolean: [
     'version'
   ],
