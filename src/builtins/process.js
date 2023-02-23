@@ -4,30 +4,30 @@ const EventEmitter = require('@pearjs/events')
 
 const process = global.process = module.exports = new EventEmitter()
 
-pear.onexit = function onexit () {
-  process.emit('exit')
-}
-
 pear.onbeforeexit = function onbeforeexit () {
   process.emit('beforeExit')
+}
+
+pear.onexit = function onexit () {
+  process.emit('exit')
 }
 
 pear.onsuspend = function onsuspend () {
   process.emit('suspend')
 }
 
-pear.onresume = function () {
+pear.onresume = function onresume () {
   process.emit('resume')
 }
 
 pear.onuncaughtexception = function onuncaughtexception (err) {
-  if (process.emit('uncaughtException', err) === true) return
+  if (process.emit('uncaughtException', err)) return
   pear.print(2, `Uncaught ${err.stack}\n`)
   pear.exit(1)
 }
 
-pear.onunhandledrejection = function unhandledRejection (reason, promise) {
-  if (process.emit('unhandledRejection', reason, promise) === true) return
+pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
+  if (process.emit('unhandledRejection', reason, promise)) return
   pear.print(2, `Uncaught (in promise) ${reason.stack}\n`)
   pear.exit(1)
 }
@@ -106,19 +106,7 @@ process.nextTick = function nextTick (cb, ...args) {
 
 process.addon = require('./process/addon')
 
-const EMPTY = new Uint32Array([0, 0])
-
-// TODO: a bit more safety on this one (ie validate prev)
-process.hrtime = function hrtime (prev = EMPTY) {
-  const result = new Uint32Array(2)
-  pear.hrtime(result, prev)
-  return result
-}
-
-process.hrtime.bigint = function () {
-  const time = process.hrtime()
-  return BigInt(time[0]) * BigInt(1e9) + BigInt(time[1])
-}
+process.hrtime = require('./process/hrtime')
 
 function toExitCode (code) {
   return (Number(code) || 0) & 0xff
