@@ -8,7 +8,3 @@ global.clearInterval = timers.clearInterval
 
 global.setImmediate = timers.setImmediate
 global.clearImmediate = timers.clearImmediate
-
-process
-  .on('suspend', () => timers.pause())
-  .on('resume', () => timers.resume())
