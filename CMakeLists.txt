@@ -198,8 +198,12 @@ target_link_libraries(
 
 install(
   TARGETS pear_bin
-  RUNTIME DESTINATION bin
-  BUNDLE DESTINATION bin
+  RUNTIME
+    DESTINATION bin
+    COMPONENT core
+  BUNDLE
+    DESTINATION bin
+    COMPONENT core
 )
 
 if(PROJECT_IS_TOP_LEVEL)
