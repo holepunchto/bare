@@ -116,9 +116,9 @@ target_sources(
   INTERFACE
     include/pear.h
     include/pear/modules.h
+    include/pear/version.h
   PRIVATE
     src/addons.h
-    src/fs.h
     src/pear.c
     src/pear.js.h
     src/runtime.h

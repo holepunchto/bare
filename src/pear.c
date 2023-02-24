@@ -29,8 +29,7 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
   pear->runtime.argc = argc;
   pear->runtime.argv = argv;
 
-  err = pear_runtime_setup(pear);
-  assert(err == 0);
+  pear_runtime_setup(pear);
 
   pear->suspended = false;
 
@@ -49,12 +48,17 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
 
 int
 pear_teardown (pear_t *pear, int *exit_code) {
-  pear_runtime_teardown(pear, exit_code);
+  int err;
+
+  pear_runtime_on_exit(pear, exit_code);
 
   if (pear->on_exit) pear->on_exit(pear);
 
-  js_destroy_env(pear->env);
-  js_destroy_platform(pear->platform);
+  err = js_destroy_env(pear->env);
+  assert(err == 0);
+
+  err = js_destroy_platform(pear->platform);
+  assert(err == 0);
 
   uv_close((uv_handle_t *) &pear->idle, NULL);
 
@@ -72,11 +76,11 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
     if (pear->suspended) {
       uv_idle_start(&pear->idle, on_idle);
 
-      pear_runtime_idle(pear);
+      pear_runtime_on_idle(pear);
 
       if (pear->on_idle) pear->on_idle(pear);
     } else {
-      pear_runtime_before_teardown(pear);
+      pear_runtime_on_before_exit(pear);
 
       if (pear->on_before_exit) pear->on_before_exit(pear);
     }
@@ -90,7 +94,7 @@ pear_suspend (pear_t *pear) {
   if (pear->suspended) return -1;
   pear->suspended = true;
 
-  pear_runtime_suspend(pear);
+  pear_runtime_on_suspend(pear);
 
   if (pear->on_suspend) pear->on_suspend(pear);
 
@@ -104,7 +108,7 @@ pear_resume (pear_t *pear) {
 
   uv_idle_stop(&pear->idle);
 
-  pear_runtime_resume(pear);
+  pear_runtime_on_resume(pear);
 
   if (pear->on_resume) pear->on_resume(pear);
 

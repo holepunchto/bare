@@ -13,7 +13,6 @@
 
 #include "../include/pear.h"
 #include "addons.h"
-#include "fs.h"
 #include "pear.js.h"
 #include "runtime.h"
 
@@ -45,8 +44,88 @@
     js_set_element(env, arr, i++, key_val); \
   }
 
+static void
+pear_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
+  pear_t *pear = (pear_t *) data;
+
+  int err;
+
+  js_value_t *fn;
+  err = js_get_named_property(env, pear->runtime.exports, "onuncaughtexception", &fn);
+  if (err < 0) goto err;
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) goto err;
+
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  err = js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
+  if (err < 0) goto err;
+
+  return;
+
+err : {
+  js_value_t *stack;
+  err = js_get_named_property(env, error, "stack", &stack);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
+  assert(err == 0);
+
+  char *str = malloc(len + 1);
+  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
+  assert(err == 0);
+
+  fprintf(stderr, "Uncaught %s\n", str);
+  exit(1);
+}
+}
+
+static void
+pear_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
+  pear_t *pear = (pear_t *) data;
+
+  int err;
+
+  js_value_t *fn;
+  err = js_get_named_property(env, pear->runtime.exports, "onunhandledrejection", &fn);
+  if (err < 0) goto err;
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) goto err;
+
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  err = js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
+  if (err < 0) goto err;
+
+  return;
+
+err : {
+  js_value_t *stack;
+  err = js_get_named_property(env, reason, "stack", &stack);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
+  assert(err == 0);
+
+  char *str = malloc(len + 1);
+  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
+  assert(err == 0);
+
+  fprintf(stderr, "Uncaught (in promise) %s\n", str);
+  exit(1);
+}
+}
+
 static js_value_t *
-bindings_print (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_print (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[2];
@@ -76,7 +155,7 @@ bindings_print (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
   int err;
@@ -89,15 +168,15 @@ bindings_load_addon (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  char specifier[PEAR_FS_MAX_PATH];
-  err = js_get_value_string_utf8(env, argv[0], specifier, PEAR_FS_MAX_PATH, NULL);
+  char specifier[PATH_MAX];
+  err = js_get_value_string_utf8(env, argv[0], specifier, PATH_MAX, NULL);
   assert(err == 0);
 
   return pear_addons_load(pear, specifier);
 }
 
 static js_value_t *
-bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
   int err;
@@ -110,10 +189,10 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  size_t specifier_len = PEAR_FS_MAX_PATH;
-  char specifier[PEAR_FS_MAX_PATH];
+  size_t specifier_len = PATH_MAX;
+  char specifier[PATH_MAX];
 
-  err = js_get_value_string_utf8(env, argv[0], specifier, PEAR_FS_MAX_PATH, NULL);
+  err = js_get_value_string_utf8(env, argv[0], specifier, PATH_MAX, NULL);
   assert(err == 0);
 
   err = pear_addons_resolve(pear, specifier, specifier, &specifier_len);
@@ -130,7 +209,7 @@ bindings_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_hrtime (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[2];
@@ -159,7 +238,7 @@ bindings_hrtime (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_exit (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_exit (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[1];
@@ -178,13 +257,13 @@ bindings_exit (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_cwd (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *val;
 
-  size_t cwd_len = PEAR_FS_MAX_PATH;
-  char cwd[PEAR_FS_MAX_PATH];
+  size_t cwd_len = PATH_MAX;
+  char cwd[PATH_MAX];
 
   PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
 
@@ -195,7 +274,7 @@ bindings_cwd (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_env (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   uv_env_item_t *items;
@@ -224,7 +303,7 @@ bindings_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_set_title (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[1];
@@ -252,7 +331,7 @@ bindings_set_title (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_get_title (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *result;
@@ -270,7 +349,7 @@ bindings_get_title (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_suspend (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
   int err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
@@ -282,7 +361,7 @@ bindings_suspend (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bindings_resume (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_resume (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
   int err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
@@ -293,95 +372,7 @@ bindings_resume (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
-static int
-trigger_fatal_exception (js_env_t *env) {
-  js_value_t *exception;
-  js_get_and_clear_last_exception(env, &exception);
-  js_fatal_exception(env, exception);
-  return 1;
-}
-
-static void
-pear_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
-  pear_t *pear = (pear_t *) data;
-
-  int err;
-
-  js_value_t *fn;
-  err = js_get_named_property(env, pear->runtime.exports, "onuncaughtexception", &fn);
-  if (err < 0) goto err;
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) goto err;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  err = js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
-  if (err < 0) trigger_fatal_exception(env);
-
-  return;
-
-err : {
-  js_value_t *stack;
-  err = js_get_named_property(env, error, "stack", &stack);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
-  assert(err == 0);
-
-  char *str = malloc(len + 1);
-  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
-  assert(err == 0);
-
-  fprintf(stderr, "Uncaught %s\n", str);
-  exit(1);
-}
-}
-
-static void
-pear_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
-  pear_t *pear = (pear_t *) data;
-
-  int err;
-
-  js_value_t *fn;
-  err = js_get_named_property(env, pear->runtime.exports, "onunhandledrejection", &fn);
-  if (err < 0) goto err;
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) goto err;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  err = js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
-  if (err < 0) trigger_fatal_exception(env);
-
-  return;
-
-err : {
-  js_value_t *stack;
-  err = js_get_named_property(env, reason, "stack", &stack);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
-  assert(err == 0);
-
-  char *str = malloc(len + 1);
-  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
-  assert(err == 0);
-
-  fprintf(stderr, "Uncaught (in promise) %s\n", str);
-  exit(1);
-}
-}
-
-static inline int
+static inline void
 pear_runtime_setup (pear_t *pear) {
   js_env_t *env = pear->env;
 
@@ -390,10 +381,10 @@ pear_runtime_setup (pear_t *pear) {
   err = js_create_object(env, &pear->runtime.exports);
   assert(err == 0);
 
-  err = js_on_uncaught_exception(env, pear_on_uncaught_exception, (void *) pear);
+  err = js_on_uncaught_exception(env, pear_runtime_on_uncaught_exception, (void *) pear);
   assert(err == 0);
 
-  err = js_on_unhandled_rejection(env, pear_on_unhandled_rejection, (void *) pear);
+  err = js_on_unhandled_rejection(env, pear_runtime_on_unhandled_rejection, (void *) pear);
   assert(err == 0);
 
   js_value_t *exports = pear->runtime.exports;
@@ -441,8 +432,8 @@ pear_runtime_setup (pear_t *pear) {
   js_value_t *exec_path_val;
 
   {
-    char exec_path[PEAR_FS_MAX_PATH];
-    size_t exec_path_len = PEAR_FS_MAX_PATH;
+    char exec_path[PATH_MAX];
+    size_t exec_path_len = PATH_MAX;
     uv_exepath(exec_path, &exec_path_len);
 
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
@@ -485,67 +476,67 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
-    js_create_function(env, "setTitle", -1, bindings_set_title, NULL, &val);
+    js_create_function(env, "setTitle", -1, pear_runtime_set_title, NULL, &val);
     js_set_named_property(env, exports, "setTitle", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "getTitle", -1, bindings_get_title, NULL, &val);
+    js_create_function(env, "getTitle", -1, pear_runtime_get_title, NULL, &val);
     js_set_named_property(env, exports, "getTitle", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "cwd", -1, bindings_cwd, NULL, &val);
+    js_create_function(env, "cwd", -1, pear_runtime_cwd, NULL, &val);
     js_set_named_property(env, exports, "cwd", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "env", -1, bindings_env, NULL, &val);
+    js_create_function(env, "env", -1, pear_runtime_env, NULL, &val);
     js_set_named_property(env, exports, "env", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "print", -1, bindings_print, NULL, &val);
+    js_create_function(env, "print", -1, pear_runtime_print, NULL, &val);
     js_set_named_property(env, exports, "print", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "hrtime", -1, bindings_hrtime, NULL, &val);
+    js_create_function(env, "hrtime", -1, pear_runtime_hrtime, NULL, &val);
     js_set_named_property(env, exports, "hrtime", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "exit", -1, bindings_exit, NULL, &val);
+    js_create_function(env, "exit", -1, pear_runtime_exit, NULL, &val);
     js_set_named_property(env, exports, "exit", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, bindings_load_addon, (void *) pear, &val);
+    js_create_function(env, "loadAddon", -1, pear_runtime_load_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "loadAddon", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "resolveAddon", -1, bindings_resolve_addon, (void *) pear, &val);
+    js_create_function(env, "resolveAddon", -1, pear_runtime_resolve_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "suspend", -1, bindings_suspend, (void *) pear, &val);
+    js_create_function(env, "suspend", -1, pear_runtime_suspend, (void *) pear, &val);
     js_set_named_property(env, exports, "suspend", val);
   }
 
   {
     js_value_t *val;
-    js_create_function(env, "resume", -1, bindings_resume, (void *) pear, &val);
+    js_create_function(env, "resume", -1, pear_runtime_resume, (void *) pear, &val);
     js_set_named_property(env, exports, "resume", val);
   }
 
@@ -565,56 +556,10 @@ pear_runtime_setup (pear_t *pear) {
 
   js_value_t *entry;
   err = js_run_script(env, "pear:pear.js", -1, 0, script, &entry);
-  if (err < 0) return trigger_fatal_exception(env);
+  assert(err == 0);
 
   err = js_call_function(env, global, entry, 1, &exports, NULL);
-  if (err < 0) return trigger_fatal_exception(env);
-
-  return 0;
-}
-
-static inline void
-pear_runtime_before_teardown (pear_t *pear) {
-  js_env_t *env = pear->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onbeforeexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  if (err < 0) trigger_fatal_exception(env);
-}
-
-static inline void
-pear_runtime_teardown (pear_t *pear, int *exit_code) {
-  js_env_t *env = pear->env;
-
-  if (exit_code) *exit_code = 0;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  if (err < 0) trigger_fatal_exception(env);
-
-  if (exit_code) {
-    js_value_t *val;
-    js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
-    js_get_value_int32(env, val, exit_code);
-  }
+  assert(err == 0);
 }
 
 static inline int
@@ -656,7 +601,51 @@ pear_runtime_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
 }
 
 static inline void
-pear_runtime_suspend (pear_t *pear) {
+pear_runtime_on_before_exit (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onbeforeexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
+  assert(err == 0);
+}
+
+static inline void
+pear_runtime_on_exit (pear_t *pear, int *exit_code) {
+  js_env_t *env = pear->env;
+
+  if (exit_code) *exit_code = 0;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+  if (!is_set) return;
+
+  js_value_t *global;
+  js_get_global(env, &global);
+
+  int err = js_call_function(env, global, fn, 0, NULL, NULL);
+  assert(err == 0);
+
+  if (exit_code) {
+    js_value_t *val;
+    js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
+    js_get_value_int32(env, val, exit_code);
+  }
+}
+
+static inline void
+pear_runtime_on_suspend (pear_t *pear) {
   js_env_t *env = pear->env;
 
   js_value_t *fn;
@@ -670,11 +659,11 @@ pear_runtime_suspend (pear_t *pear) {
   js_get_global(env, &global);
 
   int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  if (err < 0) trigger_fatal_exception(env);
+  assert(err == 0);
 }
 
 static inline void
-pear_runtime_idle (pear_t *pear) {
+pear_runtime_on_idle (pear_t *pear) {
   js_env_t *env = pear->env;
 
   js_value_t *fn;
@@ -688,11 +677,11 @@ pear_runtime_idle (pear_t *pear) {
   js_get_global(env, &global);
 
   int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  if (err < 0) trigger_fatal_exception(env);
+  assert(err == 0);
 }
 
 static inline void
-pear_runtime_resume (pear_t *pear) {
+pear_runtime_on_resume (pear_t *pear) {
   js_env_t *env = pear->env;
 
   js_value_t *fn;
@@ -706,7 +695,7 @@ pear_runtime_resume (pear_t *pear) {
   js_get_global(env, &global);
 
   int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  if (err < 0) trigger_fatal_exception(env);
+  assert(err == 0);
 }
 
 static inline int
