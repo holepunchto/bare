@@ -3,11 +3,13 @@ list(APPEND tests
   import-addon.mjs
   import-bundle.js
   import-cjs.cjs
-  import-cjs-from-mjs.mjs
-  import-dynamic.mjs
-  import-dynamic-from-cjs.cjs
+  import-cjs.mjs
+  import-dynamic-cjs.cjs
+  import-dynamic-cjs.mjs
+  import-dynamic-mjs.cjs
+  import-dynamic-mjs.mjs
+  import-mjs.cjs
   import-mjs.mjs
-  import-mjs-from-cjs.cjs
   process-argv.js
   suspend-resume.js
   suspend-resume-immediate.js
