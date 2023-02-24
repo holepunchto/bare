@@ -36,7 +36,6 @@
       PEAR_MODULE_FILENAME, \
       fn, \
       NULL, \
-      NULL, \
     }; \
     pear_module_register(&module); \
   }
