@@ -1,7 +1,7 @@
 const Module = require('module')
 const path = require('path')
 
-const argv = require('minimist')(process.argv, {
+const argv = require('minimist')(process.argv.slice(1), {
   stopEarly: true,
   boolean: [
     'version'
@@ -11,7 +11,7 @@ const argv = require('minimist')(process.argv, {
   }
 })
 
-process.argv = argv._
+process.argv = [process.argv[0], ...argv._]
 
 if (argv.version) {
   const pkg = require('../package.json')
