@@ -16,15 +16,6 @@
 #include "pear.js.h"
 #include "runtime.h"
 
-#define PEAR_UV_CHECK(call) \
-  { \
-    int err = call; \
-    if (err < 0) { \
-      js_throw_error(env, uv_err_name(err), uv_strerror(err)); \
-      return NULL; \
-    } \
-  }
-
 #define PEAR_UV_ERROR_MAP_ITER(NAME, DESC) \
   { \
     js_value_t *key_val; \
@@ -265,12 +256,48 @@ pear_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
   size_t cwd_len = PATH_MAX;
   char cwd[PATH_MAX];
 
-  PEAR_UV_CHECK(uv_cwd(cwd, &cwd_len))
+  err = uv_cwd(cwd, &cwd_len);
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    return NULL;
+  }
 
   err = js_create_string_utf8(env, cwd, cwd_len, &val);
   assert(err == 0);
 
   return val;
+}
+
+static js_value_t *
+pear_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t dir_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &dir_len);
+  assert(err == 0);
+
+  char *dir = malloc(++dir_len);
+  err = js_get_value_string_utf8(env, argv[0], dir, dir_len, &dir_len);
+  assert(err == 0);
+
+  err = uv_chdir(dir);
+
+  free(dir);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    return NULL;
+  }
+
+  return NULL;
 }
 
 static js_value_t *
@@ -288,7 +315,11 @@ pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
   uv_env_item_t *items;
   int count;
 
-  PEAR_UV_CHECK(uv_os_environ(&items, &count))
+  err = uv_os_environ(&items, &count);
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    return NULL;
+  }
 
   js_value_t *result = argv[0];
 

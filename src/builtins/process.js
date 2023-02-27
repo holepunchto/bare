@@ -59,6 +59,10 @@ class Process extends EventEmitter {
     return pear.cwd()
   }
 
+  chdir (directory) {
+    pear.chdir(directory)
+  }
+
   exit (code = this.exitCode) {
     pear.exit(toExitCode(code))
   }
