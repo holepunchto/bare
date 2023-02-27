@@ -595,6 +595,12 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
+    js_create_function(env, "chdir", -1, pear_runtime_chdir, NULL, &val);
+    js_set_named_property(env, exports, "chdir", val);
+  }
+
+  {
+    js_value_t *val;
     js_create_function(env, "env", -1, pear_runtime_env, NULL, &val);
     js_set_named_property(env, exports, "env", val);
   }
