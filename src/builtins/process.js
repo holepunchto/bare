@@ -99,7 +99,7 @@ pear.onbeforeexit = function onbeforeexit () {
 }
 
 pear.onexit = function onexit () {
-  exports.emit('exit')
+  exports.emit('exit', pear.exitCode)
 }
 
 pear.onsuspend = function onsuspend () {
