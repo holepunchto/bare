@@ -5,7 +5,9 @@ module.exports = new Proxy(pear.data, {
     return target[property] || null
   },
 
-  set (target, property, value) {},
+  set (target, property, value) {
+    target[property] = value
+  },
 
   deleteProperty (target, property) {
     delete target[property]
