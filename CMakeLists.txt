@@ -27,6 +27,8 @@ add_pear_bundle(
     src/builtins/path.js
     src/builtins/process.js
     src/builtins/process/addon.js
+    src/builtins/process/data.js
+    src/builtins/process/env.js
     src/builtins/process/hrtime.js
     src/builtins/timers.js
 )
