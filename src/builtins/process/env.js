@@ -1,6 +1,6 @@
 /* global pear */
 
-module.exports = new Proxy(pear.env(), {
+module.exports = new Proxy(pear.env(Object.create(null)), {
   get (target, property) {
     return target[property]
   },

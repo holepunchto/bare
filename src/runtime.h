@@ -277,14 +277,20 @@ static js_value_t *
 pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
   uv_env_item_t *items;
   int count;
 
   PEAR_UV_CHECK(uv_os_environ(&items, &count))
 
-  js_value_t *result;
-  err = js_create_object(env, &result);
-  assert(err == 0);
+  js_value_t *result = argv[0];
 
   for (int i = 0; i < count; i++) {
     uv_env_item_t *item = items + i;
@@ -306,8 +312,8 @@ static js_value_t *
 pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *argv[2];
   size_t argc = 2;
+  js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
@@ -343,8 +349,8 @@ static js_value_t *
 pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *argv[1];
   size_t argc = 1;
+  js_value_t *argv[1];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
@@ -371,8 +377,8 @@ static js_value_t *
 pear_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *argv[1];
   size_t argc = 1;
+  js_value_t *argv[1];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
@@ -399,12 +405,11 @@ static js_value_t *
 pear_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *result;
-
   char *title = malloc(256);
   err = uv_get_process_title(title, 256);
   if (err) memcpy(title, "pear", 5);
 
+  js_value_t *result;
   err = js_create_string_utf8(env, title, -1, &result);
   assert(err == 0);
 
