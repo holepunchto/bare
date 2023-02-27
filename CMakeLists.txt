@@ -116,6 +116,7 @@ target_sources(
   INTERFACE
     include/pear.h
     include/pear/modules.h
+    include/pear/target.h
     include/pear/version.h
   PRIVATE
     src/addons.h

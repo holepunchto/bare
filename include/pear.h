@@ -8,27 +8,8 @@
 #include <uv.h>
 
 #include "pear/modules.h"
+#include "pear/target.h"
 #include "pear/version.h"
-
-#if defined(__APPLE__)
-#define PEAR_PLATFORM "darwin"
-#elif defined(__linux__)
-#define PEAR_PLATFORM "linux"
-#else
-#error Unsupported platform
-#endif
-
-#if defined(__aarch64__)
-#define PEAR_ARCH "arm64"
-#elif defined(__x86_64)
-#define PEAR_ARCH "x64"
-#elif defined(__i386__)
-#define PEAR_ARCH "ia32"
-#else
-#error Unsupported architecture
-#endif
-
-#define PEAR_TARGET PEAR_PLATFORM "-" PEAR_ARCH
 
 typedef struct pear_s pear_t;
 
