@@ -2,7 +2,85 @@
 
 const EventEmitter = require('@pearjs/events')
 
-global.process = module.exports = exports = new EventEmitter()
+const resolved = Promise.resolve()
+
+global.queueMicrotask = function queueMicrotask (fn) {
+  resolved.then(fn)
+}
+
+class Process extends EventEmitter {
+  constructor () {
+    super()
+
+    this.errnos = new Map(pear.errnos)
+  }
+
+  get platform () {
+    return pear.platform
+  }
+
+  get arch () {
+    return pear.arch
+  }
+
+  get execPath () {
+    return pear.execPath
+  }
+
+  get argv () {
+    return pear.argv
+  }
+
+  get pid () {
+    return pear.pid
+  }
+
+  get versions () {
+    return pear.versions
+  }
+
+  get title () {
+    return pear.getTitle()
+  }
+
+  set title (title) {
+    if (typeof title === 'string') pear.setTitle(title)
+  }
+
+  get exitCode () {
+    return pear.exitCode
+  }
+
+  set exitCode (code) {
+    pear.exitCode = toExitCode(code)
+  }
+
+  cwd () {
+    return pear.cwd()
+  }
+
+  exit (code = this.exitCode) {
+    pear.exit(toExitCode(code))
+  }
+
+  suspend () {
+    pear.suspend()
+  }
+
+  resume () {
+    pear.resume()
+  }
+
+  data (key) {
+    return pear.data[key] || null
+  }
+
+  nextTick (cb, ...args) {
+    queueMicrotask(cb.bind(null, ...args))
+  }
+}
+
+global.process = module.exports = exports = new Process()
 
 pear.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
@@ -36,80 +114,8 @@ pear.onresume = function onresume () {
   exports.emit('resume')
 }
 
-exports.platform = pear.platform
-exports.arch = pear.arch
-exports.execPath = pear.execPath
-exports.argv = pear.argv
-exports.pid = pear.pid
-exports.versions = pear.versions
-
-let env = null
-
-Object.defineProperty(exports, 'env', {
-  get () {
-    if (env === null) env = pear.env()
-    return env
-  },
-  enumerable: true,
-  configurable: false
-})
-
-exports.errnos = new Map(pear.errnos)
-
-exports.cwd = function cwd () {
-  return pear.cwd()
-}
-
-Object.defineProperty(exports, 'title', {
-  get () {
-    return pear.getTitle()
-  },
-  set (title) {
-    if (typeof title === 'string') pear.setTitle(title)
-  },
-  enumerable: true,
-  configurable: false
-})
-
-Object.defineProperty(exports, 'exitCode', {
-  get () {
-    return pear.exitCode
-  },
-  set (code) {
-    pear.exitCode = toExitCode(code)
-  },
-  enumerable: true,
-  configurable: false
-})
-
-exports.exit = function exit (code = exports.exitCode) {
-  pear.exit(toExitCode(code))
-}
-
-exports.suspend = function suspend () {
-  pear.suspend()
-}
-
-exports.resume = function resume () {
-  pear.resume()
-}
-
-exports.data = function data (key) {
-  return pear.data[key] || null
-}
-
-const resolved = Promise.resolve()
-
-global.queueMicrotask = function queueMicrotask (fn) {
-  resolved.then(fn)
-}
-
-exports.nextTick = function nextTick (cb, ...args) {
-  queueMicrotask(cb.bind(null, ...args))
-}
-
+exports.env = require('./process/env')
 exports.addon = require('./process/addon')
-
 exports.hrtime = require('./process/hrtime')
 
 function toExitCode (code) {

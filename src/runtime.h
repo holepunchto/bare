@@ -282,8 +282,8 @@ pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
 
   PEAR_UV_CHECK(uv_os_environ(&items, &count))
 
-  js_value_t *obj;
-  err = js_create_object(env, &obj);
+  js_value_t *result;
+  err = js_create_object(env, &result);
   assert(err == 0);
 
   for (int i = 0; i < count; i++) {
@@ -293,13 +293,78 @@ pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
     err = js_create_string_utf8(env, item->value, -1, &val);
     assert(err == 0);
 
-    err = js_set_named_property(env, obj, item->name, val);
+    err = js_set_named_property(env, result, item->name, val);
     assert(err == 0);
   }
 
   uv_os_free_environ(items, count);
 
-  return obj;
+  return result;
+}
+
+static js_value_t *
+pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  size_t name_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
+  assert(err == 0);
+
+  char *name = malloc(++name_len);
+  err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
+  assert(err == 0);
+
+  size_t value_len;
+  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &value_len);
+  assert(err == 0);
+
+  char *value = malloc(++value_len);
+  err = js_get_value_string_utf8(env, argv[1], value, value_len, &value_len);
+  assert(err == 0);
+
+  err = uv_os_setenv(name, value);
+  assert(err == 0);
+
+  free(name);
+  free(value);
+
+  return NULL;
+}
+
+static js_value_t *
+pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t name_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
+  assert(err == 0);
+
+  char *name = malloc(++name_len);
+  err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
+  assert(err == 0);
+
+  err = uv_os_unsetenv(name);
+  assert(err == 0);
+
+  free(name);
+
+  return NULL;
 }
 
 static js_value_t *
@@ -496,6 +561,18 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *val;
     js_create_function(env, "env", -1, pear_runtime_env, NULL, &val);
     js_set_named_property(env, exports, "env", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "setEnv", -1, pear_runtime_set_env, NULL, &val);
+    js_set_named_property(env, exports, "setEnv", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "unsetEnv", -1, pear_runtime_unset_env, NULL, &val);
+    js_set_named_property(env, exports, "unsetEnv", val);
   }
 
   {
