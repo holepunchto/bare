@@ -5,10 +5,82 @@ Small and modular JavaScript runtime for desktop and mobile.
 ## Usage
 
 ```sh
-$ pear <filename>
+$ pear [options] <filename>
 ```
 
 ## API
+
+### `process`
+
+The core JavaScript API of :pear:.js is available through the global `process` object, which is also available by importing the builtin `process` module. The `process` object provides information about, and control over, the :pear:.js process and also provides access to core functionality like loading native addons.
+
+#### `process.platform`
+
+#### `process.arch`
+
+#### `process.execPath`
+
+#### `process.argv`
+
+#### `process.pid`
+
+#### `process.versions`
+
+#### `process.title`
+
+#### `process.exitCode`
+
+#### `process.env`
+
+#### `process.data`
+
+#### `process.cwd()`
+
+#### `process.chdir(directory)`
+
+#### `process.exit([code])`
+
+#### `process.suspend()`
+
+#### `process.resume()`
+
+#### `process.addon(specifier)`
+
+#### `process.addon.resolve(specifier)`
+
+#### `process.hrtime([previous])`
+
+#### `process.hrtime.bigint()`
+
+#### `process.nextTick(callback[, ...args])`
+
+#### `process.on('uncaughtException', err)`
+
+#### `process.on('unhandledRejection', reason, promise)`
+
+#### `process.on('beforeExit')`
+
+#### `process.on('exit', code)`
+
+#### `process.on('suspend')`
+
+#### `process.on('idle')`
+
+#### `process.on('resume')`
+
+### Modules
+
+In addition to the core `process` module, :pear:.js provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
+
+- `assert` (<https://github.com/holepunchto/pearjs-assert>)
+- `buffer` (<https://github.com/holepunchto/pearjs-buffer>)
+- `console` (<https://github.com/holepunchto/pearjs-console>)
+- `events` (<https://github.com/holepunchto/pearjs-events>)
+- `module` (<https://github.com/holepunchto/pearjs-module>)
+- `path` (<https://github.com/holepunchto/pearjs-path>)
+- `timers` (<https://github.com/holepunchto/pearjs-timers>)
+
+### Embedding
 
 :pear:.js can easily be embedded using the C API defined in [`include/pear.h`](include/pear.h):
 
