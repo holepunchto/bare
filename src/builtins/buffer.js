@@ -1,5 +1,3 @@
-const Buffer = global.Buffer = require('@pearjs/buffer')
+global.Buffer = module.exports = exports = require('@pearjs/buffer')
 
-module.exports = {
-  Buffer
-}
+exports.Buffer = Buffer
