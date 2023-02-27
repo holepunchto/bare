@@ -40,7 +40,6 @@ add_pear_bundle(
 )
 
 mirror_drive(
-  pear_prebuilds
   SOURCE ${prebuilds_key}
   DESTINATION ${prebuilds_dir}
   PREFIX /${target}
@@ -48,8 +47,6 @@ mirror_drive(
 
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
-
-  add_dependencies(v8 pear_prebuilds)
 
   set_target_properties(
     v8
@@ -87,8 +84,6 @@ endif()
 if(NOT TARGET path)
   add_subdirectory(vendor/libpath EXCLUDE_FROM_ALL)
 endif()
-
-add_dependencies(js pear_prebuilds)
 
 if(PEAR_USE_QUICKJS)
   set(engine qjs_static)

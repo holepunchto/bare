@@ -27,7 +27,7 @@
     "@pearjs/assert": "^1.0.0",
     "@pearjs/buffer": "^1.0.0",
     "@pearjs/console": "^2.0.0",
-    "@pearjs/dev": "^0.1.34",
+    "@pearjs/dev": "^0.1.36",
     "@pearjs/events": "^1.1.3",
     "@pearjs/module": "^1.6.16",
     "@pearjs/path": "^1.0.4",
