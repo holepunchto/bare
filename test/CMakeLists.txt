@@ -10,7 +10,10 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
+  process-addon.js
+  process-addon-resolve.js
   process-argv.js
+  process-chdir.js
   suspend-resume.js
   suspend-resume-immediate.js
   timeout.js
