@@ -89,9 +89,15 @@ int
 pear_on_resume (pear_t *pear, pear_resume_cb cb);
 
 int
-pear_get_data (pear_t *pear, const char *key, void **result);
+pear_get_data (pear_t *pear, const char *key, js_value_t **result);
 
 int
-pear_set_data (pear_t *pear, const char *key, void *value);
+pear_get_data_external (pear_t *pear, const char *key, void **result);
+
+int
+pear_set_data (pear_t *pear, const char *key, js_value_t *value);
+
+int
+pear_set_data_external (pear_t *pear, const char *key, void *value);
 
 #endif // PEAR_H

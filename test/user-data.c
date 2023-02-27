@@ -32,7 +32,7 @@ main (int argc, char *argv[]) {
   pear_t pear;
   pear_setup(uv_default_loop(), &pear, argc, argv);
 
-  pear_set_data(&pear, "hello", (void *) 42);
+  pear_set_data_external(&pear, "hello", (void *) 42);
 
   js_value_t *global;
   js_get_global(pear.env, &global);

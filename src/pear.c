@@ -151,11 +151,28 @@ pear_on_resume (pear_t *pear, pear_resume_cb cb) {
 }
 
 int
-pear_get_data (pear_t *pear, const char *key, void **result) {
+pear_get_data (pear_t *pear, const char *key, js_value_t **result) {
   return pear_runtime_get_data(pear, key, result);
 }
 
 int
-pear_set_data (pear_t *pear, const char *key, void *value) {
+pear_get_data_external (pear_t *pear, const char *key, void **result) {
+  js_value_t *external;
+  int err = pear_get_data(pear, key, &external);
+  if (err < 0) return err;
+
+  return js_get_value_external(pear->env, external, result);
+}
+
+int
+pear_set_data (pear_t *pear, const char *key, js_value_t *value) {
   return pear_runtime_set_data(pear, key, value);
+}
+
+int
+pear_set_data_external (pear_t *pear, const char *key, void *value) {
+  js_value_t *external;
+  int err = js_create_external(pear->env, value, NULL, NULL, &external);
+
+  return pear_set_data(pear, key, external);
 }
