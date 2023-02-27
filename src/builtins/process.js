@@ -71,10 +71,6 @@ class Process extends EventEmitter {
     pear.resume()
   }
 
-  data (key) {
-    return pear.data[key] || null
-  }
-
   nextTick (cb, ...args) {
     queueMicrotask(cb.bind(null, ...args))
   }
@@ -115,6 +111,7 @@ pear.onresume = function onresume () {
 }
 
 exports.env = require('./process/env')
+exports.data = require('./process/data')
 exports.addon = require('./process/addon')
 exports.hrtime = require('./process/hrtime')
 
