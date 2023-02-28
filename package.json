@@ -31,7 +31,7 @@
     "@pearjs/events": "^1.1.3",
     "@pearjs/module": "^1.6.17",
     "@pearjs/path": "^1.0.4",
-    "@pearjs/timers": "^1.2.10",
+    "@pearjs/timers": "^1.3.0",
     "minimist": "^1.2.8",
     "standard": "^17.0.0"
   }
