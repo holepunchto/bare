@@ -23,7 +23,7 @@ struct pear_s {
   uv_loop_t *loop;
   js_platform_t *platform;
   js_env_t *env;
-  uv_idle_t idle;
+  uv_prepare_t prepare;
   bool suspended;
 
   pear_before_exit_cb on_before_exit;

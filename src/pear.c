@@ -10,7 +10,7 @@
 #include "runtime.h"
 
 static void
-on_idle (uv_idle_t *handle) {}
+on_prepare (uv_prepare_t *handle) {}
 
 int
 pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
@@ -33,9 +33,9 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
 
   pear->suspended = false;
 
-  err = uv_idle_init(loop, &pear->idle);
+  err = uv_prepare_init(loop, &pear->prepare);
   assert(err == 0);
-  pear->idle.data = (void *) pear;
+  pear->prepare.data = (void *) pear;
 
   pear->on_before_exit = NULL;
   pear->on_exit = NULL;
@@ -60,7 +60,7 @@ pear_teardown (pear_t *pear, int *exit_code) {
   err = js_destroy_platform(pear->platform);
   assert(err == 0);
 
-  uv_close((uv_handle_t *) &pear->idle, NULL);
+  uv_close((uv_handle_t *) &pear->prepare, NULL);
 
   return 0;
 }
@@ -74,7 +74,7 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
     uv_run(pear->loop, UV_RUN_DEFAULT);
 
     if (pear->suspended) {
-      uv_idle_start(&pear->idle, on_idle);
+      uv_prepare_start(&pear->prepare, on_prepare);
 
       pear_runtime_on_idle(pear);
 
@@ -106,7 +106,7 @@ pear_resume (pear_t *pear) {
   if (!pear->suspended) return -1;
   pear->suspended = false;
 
-  uv_idle_stop(&pear->idle);
+  uv_prepare_stop(&pear->prepare);
 
   pear_runtime_on_resume(pear);
 
