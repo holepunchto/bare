@@ -33,9 +33,8 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
 
   pear->suspended = false;
 
-  err = uv_prepare_init(loop, &pear->prepare);
+  err = uv_sem_init(&pear->idle, 0);
   assert(err == 0);
-  pear->prepare.data = (void *) pear;
 
   pear->on_before_exit = NULL;
   pear->on_exit = NULL;
@@ -60,7 +59,7 @@ pear_teardown (pear_t *pear, int *exit_code) {
   err = js_destroy_platform(pear->platform);
   assert(err == 0);
 
-  uv_close((uv_handle_t *) &pear->prepare, NULL);
+  uv_sem_destroy(&pear->idle);
 
   return 0;
 }
@@ -74,11 +73,11 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
     uv_run(pear->loop, UV_RUN_DEFAULT);
 
     if (pear->suspended) {
-      uv_prepare_start(&pear->prepare, on_prepare);
-
       pear_runtime_on_idle(pear);
 
       if (pear->on_idle) pear->on_idle(pear);
+
+      uv_sem_wait(&pear->idle);
     } else {
       pear_runtime_on_before_exit(pear);
 
@@ -106,7 +105,7 @@ pear_resume (pear_t *pear) {
   if (!pear->suspended) return -1;
   pear->suspended = false;
 
-  uv_prepare_stop(&pear->prepare);
+  uv_sem_post(&pear->idle);
 
   pear_runtime_on_resume(pear);
 
