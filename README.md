@@ -137,4 +137,4 @@ When linking against the static `libpear.a` library, make sure to use whole arch
 
 ## License
 
-MIT
+Apache-2.0

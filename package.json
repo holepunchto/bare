@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "pearjs-next",
   "version": "0.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
@@ -18,7 +19,7 @@
     "url": "git+https://github.com/holepunchto/pearjs-next.git"
   },
   "author": "Holepunch",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/holepunchto/pearjs-next/issues"
   },
