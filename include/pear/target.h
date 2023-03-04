@@ -20,6 +20,8 @@
 
 #if defined(__aarch64__)
 #define PEAR_ARCH "arm64"
+#elif defined(__arm__)
+#define PEAR_ARCH "arm"
 #elif defined(__x86_64)
 #define PEAR_ARCH "x64"
 #elif defined(__i386__)
