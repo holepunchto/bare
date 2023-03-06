@@ -1,6 +1,10 @@
 #ifndef PEAR_H
 #define PEAR_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <js.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -80,5 +84,9 @@ pear_set_data (pear_t *pear, const char *key, js_value_t *value);
 
 int
 pear_set_data_external (pear_t *pear, const char *key, void *value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PEAR_H
