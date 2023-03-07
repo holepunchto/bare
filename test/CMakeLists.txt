@@ -1,4 +1,5 @@
 list(APPEND tests
+  argv-empty.c
   import-addon.cjs
   import-addon.mjs
   import-bundle.js
