@@ -11,7 +11,6 @@
 #include <uv.h>
 
 #include "../include/pear.h"
-#include "addons.h"
 
 #define PEAR_ADDONS_MAX_ENTRIES 256
 

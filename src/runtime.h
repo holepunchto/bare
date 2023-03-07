@@ -14,7 +14,6 @@
 #include "../include/pear.h"
 #include "addons.h"
 #include "pear.js.h"
-#include "runtime.h"
 
 #define PEAR_UV_ERROR_MAP_ITER(NAME, DESC) \
   { \
