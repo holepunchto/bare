@@ -15,6 +15,12 @@
 #include "addons.h"
 #include "pear.js.h"
 
+#ifdef PEAR_PLATFORM_ANDROID
+#include "runtime/android.h"
+#else
+#include "runtime/posix.h"
+#endif
+
 #define PEAR_UV_ERROR_MAP_ITER(NAME, DESC) \
   { \
     js_value_t *key_val; \
@@ -69,7 +75,9 @@ err : {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  fprintf(stderr, "Uncaught %s\n", str);
+  err = pear_runtime__print_error("Uncaught %s\n", str);
+  assert(err >= 0);
+
   exit(1);
 }
 }
@@ -109,36 +117,68 @@ err : {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  fprintf(stderr, "Uncaught (in promise) %s\n", str);
+  err = pear_runtime__print_error("Uncaught (in promise) %s\n", str);
+  assert(err >= 0);
+
   exit(1);
 }
 }
 
 static js_value_t *
-pear_runtime_print (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *argv[2];
-  size_t argc = 2;
+  js_value_t *argv[1];
+  size_t argc = 1;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 2);
-
-  uint32_t fd;
-  err = js_get_value_uint32(env, argv[0], &fd);
-  assert(err == 0);
+  assert(argc == 1);
 
   size_t data_len;
-  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &data_len);
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
   assert(err == 0);
+
+  data_len += 1 /* NULL */;
 
   char *data = malloc(data_len);
-  err = js_get_value_string_utf8(env, argv[1], data, data_len, &data_len);
+  err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  write(fd, data, data_len);
+  err = pear_runtime__print_info(data);
+  assert(err >= 0);
+
+  free(data);
+
+  return NULL;
+}
+
+static js_value_t *
+pear_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t data_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
+  assert(err == 0);
+
+  data_len += 1 /* NULL */;
+
+  char *data = malloc(data_len);
+  err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
+  assert(err == 0);
+
+  err = pear_runtime__print_error(data);
+  assert(err >= 0);
+
   free(data);
 
   return NULL;
@@ -618,8 +658,14 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
-    js_create_function(env, "print", -1, pear_runtime_print, NULL, &val);
-    js_set_named_property(env, exports, "print", val);
+    js_create_function(env, "printInfo", -1, pear_runtime_print_info, NULL, &val);
+    js_set_named_property(env, exports, "printInfo", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "printError", -1, pear_runtime_print_error, NULL, &val);
+    js_set_named_property(env, exports, "printError", val);
   }
 
   {

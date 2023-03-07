@@ -11,11 +11,13 @@
 #define PEAR_PLATFORM_DARWIN
 #endif
 #elif defined(__linux__)
-#define PEAR_PLATFORM "linux"
-#define PEAR_PLATFORM_LINUX
-#elif defined(__ANDROID__)
+#if defined(__ANDROID__)
 #define PEAR_PLATFORM "android"
 #define PEAR_PLATFORM_ANDROID
+#else
+#define PEAR_PLATFORM "linux"
+#define PEAR_PLATFORM_LINUX
+#endif
 #elif defined(_WIN32)
 #define PEAR_PLATFORM "win32"
 #define PEAR_PLATFORM_WINDOWS

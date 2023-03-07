@@ -120,6 +120,8 @@ target_sources(
     src/pear.c
     src/pear.js.h
     src/runtime.h
+    src/runtime/android.h
+    src/runtime/posix.h
 )
 
 target_include_directories(
