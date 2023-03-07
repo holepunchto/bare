@@ -29,10 +29,14 @@ int
 main (int argc, char *argv[]) {
   argv = uv_setup_args(argc, argv);
 
-  pear_t pear;
-  pear_setup(uv_default_loop(), &pear, argc, argv);
+  int e;
 
-  pear_set_data_external(&pear, "hello", (void *) 42);
+  pear_t pear;
+  e = pear_setup(uv_default_loop(), &pear, argc, argv);
+  assert(e == 0);
+
+  e = pear_set_data_external(&pear, "hello", (void *) 42);
+  assert(e == 0);
 
   js_value_t *global;
   js_get_global(pear.env, &global);
@@ -41,12 +45,14 @@ main (int argc, char *argv[]) {
   js_create_function(pear.env, "callback", -1, on_callback, NULL, &fn);
   js_set_named_property(pear.env, global, "callback", fn);
 
-  pear_run(&pear, "./test/fixtures/user-data.js", NULL);
+  e = pear_run(&pear, "./test/fixtures/user-data.js", NULL);
+  assert(e == 0);
 
   assert(callback_called);
 
   int exit_code;
-  pear_teardown(&pear, &exit_code);
+  e = pear_teardown(&pear, &exit_code);
+  assert(e == 0);
 
   return exit_code;
 }
