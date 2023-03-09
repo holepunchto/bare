@@ -26,7 +26,7 @@
   "homepage": "https://github.com/holepunchto/pearjs-next#readme",
   "devDependencies": {
     "@pearjs/assert": "^1.0.0",
-    "@pearjs/buffer": "^1.1.2",
+    "@pearjs/buffer": "^1.1.3",
     "@pearjs/console": "^2.0.0",
     "@pearjs/dev": "^0.1.46",
     "@pearjs/events": "^1.1.3",
