@@ -6,19 +6,35 @@ const argv = require('minimist')(process.argv.slice(1), {
   boolean: [
     'version'
   ],
+  string: [
+    'import-map'
+  ],
   alias: {
-    version: 'v'
+    version: 'v',
+    'import-map': 'm'
   }
 })
 
-process.argv = [process.argv[0], ...argv._]
+process.argv.splice(1, process.argv.length - 1, ...argv._)
 
-if (argv.version) {
+if (argv.v) {
   const pkg = require('../package.json')
 
   console.log(`v${pkg.version}`)
 
   process.exit()
+}
+
+if (argv.m) {
+  const { exports: map } = Module.load(
+    Module.resolve(path.resolve(process.cwd(), argv.m))
+  )
+
+  if (map && map.imports) {
+    for (const [from, to] of Object.entries(map.imports)) {
+      Module._imports[from] = to
+    }
+  }
 }
 
 Module.load(
