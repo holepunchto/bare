@@ -146,7 +146,7 @@ pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = pear_runtime__print_info(data);
+  err = pear_runtime__print_info("%s", data);
   assert(err >= 0);
 
   free(data);
@@ -176,7 +176,7 @@ pear_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = pear_runtime__print_error(data);
+  err = pear_runtime__print_error("%s", data);
   assert(err >= 0);
 
   free(data);
