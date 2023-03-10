@@ -1,6 +1,12 @@
 {
 	"imports": {
+		"assert": "./builtins/assert.js",
+		"buffer": "./builtins/buffer.js",
+		"console": "./builtins/console.js",
 		"events": "./builtins/events.js",
-		"path": "./builtins/path.js"
+		"module": "./builtins/module.js",
+		"path": "./builtins/path.js",
+		"process": "./builtins/process.js",
+		"timers": "./builtins/timers.js"
 	}
 }

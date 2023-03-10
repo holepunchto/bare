@@ -1,6 +1,6 @@
 /* global pear */
 
-const path = require('@pearjs/path')
+const path = require('../path')
 
 module.exports = exports = function addon (specifier) {
   if (typeof specifier !== 'string') throw new TypeError('dirname must be a string')

@@ -1,6 +1,6 @@
 /* global pear */
 
-const EventEmitter = require('@pearjs/events')
+const EventEmitter = require('./events')
 
 const resolved = Promise.resolve()
 
