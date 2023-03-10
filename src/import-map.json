@@ -1,0 +1,6 @@
+{
+	"imports": {
+		"events": "./builtins/events.js",
+		"path": "./builtins/path.js"
+	}
+}
