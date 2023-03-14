@@ -226,7 +226,11 @@ pear_module_register (pear_module_t *mod) {
 void
 napi_module_register (napi_module *mod) {
   pear_module_register(&(pear_module_t){
+    // As Node-API modules rely on an already stable ABI that does not change
+    // with the runtime ABI, we should be able to safely assume that Node-API
+    // modules will always be compatible with the current module version.
     .version = PEAR_MODULE_VERSION,
+
     .filename = mod->nm_filename,
     .init = mod->nm_register_func,
   });
