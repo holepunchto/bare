@@ -1,3 +1,6 @@
+import process from 'node:process'
+import { Buffer } from 'node:buffer'
+
 console.log(process.execPath)
 
 console.time('Buffer.alloc')

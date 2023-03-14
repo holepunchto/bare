@@ -1,3 +1,6 @@
+import process from 'node:process'
+import { Buffer } from 'node:buffer'
+
 console.log(process.execPath)
 
 const buffer = Buffer.alloc(65536, 'a')
