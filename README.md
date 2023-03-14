@@ -16,33 +16,63 @@ The core JavaScript API of :pear:.js is available through the global `process` o
 
 #### `process.platform`
 
+The identifier of the operating system for which :pear:.js was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
+
 #### `process.arch`
+
+The identifier of the processor architecture for which :pear:.js was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
 
 #### `process.execPath`
 
+The absolute path, with any symbolic links resolved, to the binary that started the current process.
+
 #### `process.argv`
+
+The command line arguments passed to the process when launched.
 
 #### `process.pid`
 
-#### `process.versions`
+The ID of the current process.
 
 #### `process.title`
 
+The title of the current process. Assigning a new value will change the title of the process. On platforms where the process title is backed by a buffer with a fixed size, the new title will be truncated if larger than the previous title. See <http://docs.libuv.org/en/v1.x/misc.html#c.uv_set_process_title> for more information.
+
 #### `process.exitCode`
+
+The code that will be returned once the process exits. If the process is exited using `process.exit()` without specifying a code, `process.exitCode` is used.
 
 #### `process.env`
 
+The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, but will not be reflected outside of it.
+
 #### `process.data`
+
+The current user data. If modified, the changes will be visible to JavaScript and native code running in the current process. See [User data](##user-data) for more information.
+
+#### `process.versions`
+
+An object containing the version strings of :pear:.js and its dependencies.
 
 #### `process.cwd()`
 
+Get the current working directory of the process.
+
 #### `process.chdir(directory)`
+
+Change the current working directory of the process.
 
 #### `process.exit([code])`
 
+Synchronously exit the current process with an exit status of `code` which defaults to `process.exitCode`. The process will not terminate until all `exit` event listeners have been called.
+
 #### `process.suspend()`
 
+Suspend the current process. This will emit a `suspend` event signalling that all I/O should stop immediately. When all I/O has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block and allow no further I/O until the process is resumed.
+
 #### `process.resume()`
+
+Resume the process after suspension. This can be used to cancel process suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
 
 #### `process.addon(specifier)`
 
