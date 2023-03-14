@@ -51,8 +51,6 @@ pear_teardown (pear_t *pear, int *exit_code) {
 
   pear_runtime_on_exit(pear, exit_code);
 
-  if (pear->on_exit) pear->on_exit(pear);
-
   err = js_destroy_env(pear->env);
   assert(err == 0);
 
@@ -75,15 +73,23 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
     if (pear->suspended) {
       pear_runtime_on_idle(pear);
 
-      if (pear->on_idle) pear->on_idle(pear);
-
       uv_sem_wait(&pear->idle);
     } else {
       pear_runtime_on_before_exit(pear);
-
-      if (pear->on_before_exit) pear->on_before_exit(pear);
     }
   } while (uv_loop_alive(pear->loop));
+
+  return 0;
+}
+
+int
+pear_exit (pear_t *pear, int exit_code) {
+  if (pear->exited) return -1;
+  pear->exited = true;
+
+  pear_runtime_on_exit(pear, exit_code == -1 ? &exit_code : NULL);
+
+  exit(exit_code);
 
   return 0;
 }
@@ -94,8 +100,6 @@ pear_suspend (pear_t *pear) {
   pear->suspended = true;
 
   pear_runtime_on_suspend(pear);
-
-  if (pear->on_suspend) pear->on_suspend(pear);
 
   return 0;
 }
@@ -108,8 +112,6 @@ pear_resume (pear_t *pear) {
   uv_sem_post(&pear->idle);
 
   pear_runtime_on_resume(pear);
-
-  if (pear->on_resume) pear->on_resume(pear);
 
   return 0;
 }

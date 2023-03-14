@@ -35,10 +35,6 @@ class Process extends EventEmitter {
     return pear.pid
   }
 
-  get versions () {
-    return pear.versions
-  }
-
   get title () {
     return pear.getTitle()
   }
@@ -52,7 +48,11 @@ class Process extends EventEmitter {
   }
 
   set exitCode (code) {
-    pear.exitCode = toExitCode(code)
+    pear.exitCode = (Number(code) || 0) & 0xff
+  }
+
+  get versions () {
+    return pear.versions
   }
 
   cwd () {
@@ -64,7 +64,8 @@ class Process extends EventEmitter {
   }
 
   exit (code = this.exitCode) {
-    pear.exit(toExitCode(code))
+    this.exitCode = code
+    pear.exit()
   }
 
   suspend () {
@@ -85,13 +86,15 @@ global.process = module.exports = exports = new Process()
 pear.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
   pear.printError(`Uncaught ${err.stack}\n`)
-  pear.exit(1)
+  pear.exitCode = 1
+  pear.exit()
 }
 
 pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
   pear.printError(`Uncaught (in promise) ${reason.stack}\n`)
-  pear.exit(1)
+  pear.exitCode = 1
+  pear.exit()
 }
 
 pear.onbeforeexit = function onbeforeexit () {
@@ -118,7 +121,3 @@ exports.env = require('./process/env')
 exports.data = require('./process/data')
 exports.addon = require('./process/addon')
 exports.hrtime = require('./process/hrtime')
-
-function toExitCode (code) {
-  return (Number(code) || 0) & 0xff
-}

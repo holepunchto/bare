@@ -29,6 +29,7 @@ struct pear_s {
   js_env_t *env;
   uv_sem_t idle;
   bool suspended;
+  bool exited;
 
   pear_before_exit_cb on_before_exit;
   pear_exit_cb on_exit;
@@ -51,6 +52,9 @@ pear_teardown (pear_t *pear, int *exit_code);
 
 int
 pear_run (pear_t *pear, const char *filename, const uv_buf_t *source);
+
+int
+pear_exit (pear_t *pear, int exit_code);
 
 int
 pear_suspend (pear_t *pear);

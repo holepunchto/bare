@@ -124,6 +124,119 @@ err : {
 }
 }
 
+static inline void
+pear_runtime_on_before_exit (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onbeforeexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+
+  if (pear->on_before_exit) pear->on_before_exit(pear);
+}
+
+static inline void
+pear_runtime_on_exit (pear_t *pear, int *exit_code) {
+  js_env_t *env = pear->env;
+
+  if (exit_code) *exit_code = 0;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+
+  if (pear->on_exit) pear->on_exit(pear);
+
+  if (exit_code) {
+    js_value_t *val;
+    js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
+    js_get_value_int32(env, val, exit_code);
+  }
+}
+
+static inline void
+pear_runtime_on_suspend (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onsuspend", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+
+  if (pear->on_suspend) pear->on_suspend(pear);
+}
+
+static inline void
+pear_runtime_on_idle (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onidle", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+
+  if (pear->on_idle) pear->on_idle(pear);
+}
+
+static inline void
+pear_runtime_on_resume (pear_t *pear) {
+  js_env_t *env = pear->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, pear->runtime.exports, "onresume", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+
+  if (pear->on_resume) pear->on_resume(pear);
+}
+
 static js_value_t *
 pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -263,25 +376,6 @@ pear_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
 
   next[0] = now / ((uint32_t) 1e9);
   next[1] = now % ((uint32_t) 1e9);
-
-  return NULL;
-}
-
-static js_value_t *
-pear_runtime_exit (js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  int32_t code;
-  err = js_get_value_int32(env, argv[0], &code);
-  assert(err == 0);
-
-  exit(code);
 
   return NULL;
 }
@@ -489,6 +583,20 @@ pear_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+pear_runtime_exit (js_env_t *env, js_callback_info_t *info) {
+  pear_t *pear;
+
+  int err;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &pear);
+  assert(err == 0);
+
+  pear_exit(pear, -1);
+
+  return NULL;
+}
+
+static js_value_t *
 pear_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
   pear_t *pear;
 
@@ -676,12 +784,6 @@ pear_runtime_setup (pear_t *pear) {
 
   {
     js_value_t *val;
-    js_create_function(env, "exit", -1, pear_runtime_exit, NULL, &val);
-    js_set_named_property(env, exports, "exit", val);
-  }
-
-  {
-    js_value_t *val;
     js_create_function(env, "loadAddon", -1, pear_runtime_load_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "loadAddon", val);
   }
@@ -690,6 +792,12 @@ pear_runtime_setup (pear_t *pear) {
     js_value_t *val;
     js_create_function(env, "resolveAddon", -1, pear_runtime_resolve_addon, (void *) pear, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
+  }
+
+  {
+    js_value_t *val;
+    js_create_function(env, "exit", -1, pear_runtime_exit, (void *) pear, &val);
+    js_set_named_property(env, exports, "exit", val);
   }
 
   {
@@ -762,104 +870,6 @@ pear_runtime_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
   if (err < 0) return err;
 
   return 0;
-}
-
-static inline void
-pear_runtime_on_before_exit (pear_t *pear) {
-  js_env_t *env = pear->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onbeforeexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  assert(err == 0);
-}
-
-static inline void
-pear_runtime_on_exit (pear_t *pear, int *exit_code) {
-  js_env_t *env = pear->env;
-
-  if (exit_code) *exit_code = 0;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  assert(err == 0);
-
-  if (exit_code) {
-    js_value_t *val;
-    js_get_named_property(env, pear->runtime.exports, "exitCode", &val);
-    js_get_value_int32(env, val, exit_code);
-  }
-}
-
-static inline void
-pear_runtime_on_suspend (pear_t *pear) {
-  js_env_t *env = pear->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onsuspend", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  assert(err == 0);
-}
-
-static inline void
-pear_runtime_on_idle (pear_t *pear) {
-  js_env_t *env = pear->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onidle", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  assert(err == 0);
-}
-
-static inline void
-pear_runtime_on_resume (pear_t *pear) {
-  js_env_t *env = pear->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, pear->runtime.exports, "onresume", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) return;
-
-  js_value_t *global;
-  js_get_global(env, &global);
-
-  int err = js_call_function(env, global, fn, 0, NULL, NULL);
-  assert(err == 0);
 }
 
 static inline int
