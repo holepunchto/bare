@@ -201,6 +201,11 @@ pear_addons_load (pear_t *pear, const char *path) {
     return NULL;
   }
 
+  if (mod->version != PEAR_MODULE_VERSION) {
+    js_throw_errorf(pear->env, NULL, "Unsupported ABI version %d for module %s", mod->version, path);
+    return NULL;
+  }
+
   js_value_t *exports;
   err = js_create_object(pear->env, &exports);
   assert(err == 0);
