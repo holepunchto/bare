@@ -68,7 +68,7 @@ Synchronously exit the current process with an exit status of `code` which defau
 
 #### `process.suspend()`
 
-Suspend the current process. This will emit a `suspend` event signalling that all I/O should stop immediately. When all I/O has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block and allow no further I/O until the process is resumed.
+Suspend the current process. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block and allow no further work until the process is resumed.
 
 #### `process.resume()`
 
@@ -76,27 +76,55 @@ Resume the process after suspension. This can be used to cancel process suspensi
 
 #### `process.addon(specifier)`
 
+Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, :pear:.js will instead look for a matching dynamic object library using `process.addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = process.addon(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
+
 #### `process.addon.resolve(specifier)`
+
+Resolve a dynamic native addon specifier by searching for a dynamic object library matching `specifier`.
 
 #### `process.hrtime([previous])`
 
+Get the current high-resolution real time as a `[seconds, nanoseconds]` 32-bit unsigned integer tuple. If `previous` is specified, the returned tuple will contain the delta from the `previous` time.
+
 #### `process.hrtime.bigint()`
+
+Get the current high-resolution real time in nanoseconds as a `bigint`.
 
 #### `process.nextTick(callback[, ...args])`
 
+A wrapper around `queueMicrotask()` for compatibility purposes.
+
 #### `process.on('uncaughtException', err)`
+
+Emitted when a JavaScript exception is thrown within an exectuion context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes exited with an exit status of 1. Adding an event listener for the `uncaughtException` event overrides the default behavior.
 
 #### `process.on('unhandledRejection', reason, promise)`
 
-#### `process.on('beforeExit')`
+Emitted when a JavaScript promise is rejected within an execution context without that rejection being handled within that execution context. By default, unhandled rejections are printed to `stderr` and the process exited with an exit status of 1. Adding an event listener for the `unhandledRejection` event overrides the default behavior.
+
+#### `process.on('beforeExit', code)`
+
+Emitted when the loop runs out of work and before the process exits. This provides a chance to schedule additional work and keep the process from exiting. If additional work is scheduled, `beforeExit` will be emitted again once the loop runs out of work.
+
+If the process is exited explicitly, such as by calling `process.exit()` or as the result of an uncaught exception, the `beforeExit` event will not be emitted.
 
 #### `process.on('exit', code)`
 
+Emitted just before the process terminates. Any additional work scheduled after `exit` has been emitted will not be performed and so event listeners can only perform synchronous operations.
+
+All registered `exit` event listeners will be called before the process terminates. An event listener may override the final exit code by setting `process.exitCode` or by calling `process.exit(code)`. Calling `process.exit()` from an `exit` event listener will not prevent the remaining event listeners from running.
+
 #### `process.on('suspend')`
+
+Emitted when the process is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work may be scheduled.
 
 #### `process.on('idle')`
 
+Emitted when the process becomes idle after suspension. After this, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `process.resume()` to cancel the suspension.
+
 #### `process.on('resume')`
+
+Emitted when the process resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
 
 ### Modules
 

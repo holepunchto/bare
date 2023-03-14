@@ -98,7 +98,7 @@ pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
 }
 
 pear.onbeforeexit = function onbeforeexit () {
-  exports.emit('beforeExit')
+  exports.emit('beforeExit', pear.exitCode)
 }
 
 pear.onexit = function onexit () {
