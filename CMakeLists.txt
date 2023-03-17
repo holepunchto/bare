@@ -11,6 +11,7 @@ pear_target(target)
 
 set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
 set(prebuilds_key ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y)
+set(prebuilds_version 1061)
 
 add_pear_bundle(
   ENTRY src/pear.js
@@ -45,6 +46,7 @@ mirror_drive(
   SOURCE ${prebuilds_key}
   DESTINATION ${prebuilds_dir}
   PREFIX /${target}
+  CHECKOUT ${prebuilds_version}
 )
 
 if(NOT TARGET v8)
