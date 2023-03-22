@@ -30,8 +30,8 @@
 #define PEAR_MODULE_FILENAME ""
 #endif
 
-#define PEAR_MODULE(fn) \
-  PEAR_INITIALIZER(module_initializer) { \
+#define PEAR_MODULE(id, fn) \
+  PEAR_INITIALIZER(module_initializer_##id) { \
     pear_module_t module = { \
       PEAR_MODULE_VERSION, \
       PEAR_MODULE_FILENAME, \
