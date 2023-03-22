@@ -25,16 +25,16 @@
 #error Unsupported platform
 #endif
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(_M_ARM64)
 #define PEAR_ARCH "arm64"
 #define PEAR_ARCH_ARM64
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(_M_ARM)
 #define PEAR_ARCH "arm"
 #define PEAR_ARCH_ARM
-#elif defined(__x86_64)
+#elif defined(__x86_64) || defined(_M_AMD64)
 #define PEAR_ARCH "x64"
 #define PEAR_ARCH_X64
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(_M_IX86)
 #define PEAR_ARCH "ia32"
 #define PEAR_ARCH_IA32
 #else
