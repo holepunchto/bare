@@ -16,7 +16,8 @@
 #pragma section(".CRT$XCU", read)
 #define PEAR_INITIALIZER(f) \
   static void f(void); \
-  __declspec(dllexport, allocate(".CRT$XCU")) void (*f##_)(void) = f;
+  __declspec(dllexport, allocate(".CRT$XCU")) void (*f##_)(void) = f; \
+  static void f(void)
 #else
 #define PEAR_INITIALIZER(f) \
   static void f(void) __attribute__((constructor)); \
