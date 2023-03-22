@@ -220,6 +220,15 @@ pear_module_register (pear_module_t *mod) {
   next->mod = *mod;
   next->next = *pending_module;
 
+  if (mod->filename) {
+    size_t normalized_len = 4096;
+    char normalized[4096];
+
+    path_normalize(mod->filename, normalized, &normalized_len, path_behavior_system);
+
+    next->mod.filename = strdup(normalized);
+  }
+
   *pending_module = next;
 }
 
