@@ -25,7 +25,7 @@ exports.resolve = function resolve (specifier) {
 }
 
 function normalize (specifier) {
-  const i = specifier.indexOf('/node_modules/')
+  const i = specifier.indexOf(path.resolve(path.sep, 'node_modules'))
 
   if (i >= 0) specifier = path.join(process.cwd(), specifier.slice(i))
 
