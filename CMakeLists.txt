@@ -49,13 +49,24 @@ mirror_drive(
   CHECKOUT ${prebuilds_version}
 )
 
+if(MSVC)
+  add_compile_options($<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)
+endif()
+
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
+
+  find_library(
+    v8
+    NAMES v8 libv8
+    HINTS ${prebuilds_dir}/${target}/lib
+    REQUIRED
+  )
 
   set_target_properties(
     v8
     PROPERTIES
-    IMPORTED_LOCATION ${prebuilds_dir}/${target}/lib/libv8.a
+    IMPORTED_LOCATION ${v8}
   )
 
   target_include_directories(
