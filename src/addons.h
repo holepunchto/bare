@@ -119,8 +119,8 @@ pear_addons_check_dir (pear_t *pear, const char *path, char *out, size_t *len) {
 
 static inline int
 pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
-  size_t tmp_len = PATH_MAX;
-  char tmp[PATH_MAX];
+  size_t tmp_len = 4096;
+  char tmp[4096];
 
   if (pear_addons_has_extension(path, ".pear") || pear_addons_has_extension(path, ".node")) {
     if (out != path) strcpy(out, path);
@@ -131,19 +131,19 @@ pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
 
   if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
 
-  tmp_len = PATH_MAX;
+  tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
 
   if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
 
-  tmp_len = PATH_MAX;
+  tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Debug", NULL}, tmp, &tmp_len, path_behavior_system);
 
   if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
 
-  tmp_len = PATH_MAX;
+  tmp_len = 4096;
 
   path_join((const char *[]){path, "prebuilds", PEAR_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
 
@@ -169,8 +169,8 @@ pear_addons_load (pear_t *pear, const char *path) {
   }
 
   if (mod == NULL) {
-    size_t resolved_len = PATH_MAX;
-    char resolved[PATH_MAX];
+    size_t resolved_len = 4096;
+    char resolved[4096];
 
     err = pear_addons_resolve(pear, path, resolved, &resolved_len);
     if (err < 0) {

@@ -310,8 +310,8 @@ pear_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  char specifier[PATH_MAX];
-  err = js_get_value_string_utf8(env, argv[0], specifier, PATH_MAX, NULL);
+  char specifier[4096];
+  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
   return pear_addons_load(pear, specifier);
@@ -331,10 +331,10 @@ pear_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  size_t specifier_len = PATH_MAX;
-  char specifier[PATH_MAX];
+  size_t specifier_len = 4096;
+  char specifier[4096];
 
-  err = js_get_value_string_utf8(env, argv[0], specifier, PATH_MAX, NULL);
+  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
   err = pear_addons_resolve(pear, specifier, specifier, &specifier_len);
@@ -385,8 +385,8 @@ pear_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *val;
 
-  size_t cwd_len = PATH_MAX;
-  char cwd[PATH_MAX];
+  size_t cwd_len = 4096;
+  char cwd[4096];
 
   err = uv_cwd(cwd, &cwd_len);
   if (err < 0) {
@@ -683,8 +683,8 @@ pear_runtime_setup (pear_t *pear) {
   js_value_t *exec_path_val;
 
   {
-    char exec_path[PATH_MAX];
-    size_t exec_path_len = PATH_MAX;
+    char exec_path[4096];
+    size_t exec_path_len = 4096;
     uv_exepath(exec_path, &exec_path_len);
 
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
