@@ -155,6 +155,8 @@ list(APPEND objects
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:path>
+  $<TARGET_OBJECTS:base64>
+  $<TARGET_OBJECTS:hex>
 )
 
 add_library(pear_shared SHARED ${objects})
