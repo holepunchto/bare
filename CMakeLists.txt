@@ -119,6 +119,7 @@ set_target_properties(
   PROPERTIES
   C_STANDARD 99
   CXX_STANDARD 17
+  POSITION_INDEPENDENT_CODE ON
 )
 
 target_sources(
