@@ -187,11 +187,11 @@ Finally, perform the build:
 $ npm run build
 ```
 
-When completed, the `pear` binary will be available in the `build/bin` directory and the `libpear.a` and `libpear.(dylib|dll)` libraries will be available in the root of the `build` directory.
+When completed, the `pear` binary will be available in the `build/bin` directory and the `libpear.(a|lib)` and `(lib)pear.(dylib|dll)` libraries will be available in the root of the `build` directory.
 
 ### Linking
 
-When linking against the static `libpear.a` library, make sure to use whole archive linking as :pear:.js relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
+When linking against the static `libpear.(a|lib)` library, make sure to use whole archive linking as :pear:.js relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
 
 ## License
 
