@@ -59,8 +59,10 @@ if(NOT TARGET v8)
   find_library(
     v8
     NAMES v8 libv8
-    HINTS ${prebuilds_dir}/${target}/lib
+    PATHS ${prebuilds_dir}/${target}/lib
     REQUIRED
+    NO_DEFAULT_PATH
+    NO_CMAKE_FIND_ROOT_PATH
   )
 
   set_target_properties(
