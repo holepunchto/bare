@@ -2,16 +2,19 @@ cmake_minimum_required(VERSION 3.25)
 
 project(pear C CXX)
 
-option(PEAR_USE_QUICKJS OFF)
-option(PEAR_USE_JAVASCRIPTCORE OFF)
+set(PEAR_USE_QUICKJS OFF CACHE BOOL "Use QuickJS instead of V8")
+
+set(PEAR_USE_JAVASCRIPTCORE OFF CACHE BOOL "Use JavaScriptCore instead of V8")
+
+set(PEAR_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
+
+set(PEAR_PREBUILDS_KEY ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y CACHE STRING "Key of the prebuilds drive")
+
+set(PEAR_PREBUILDS_VERSION 1702 CACHE STRING "Version of the prebuilds drive")
 
 include(pear)
 
 pear_target(target)
-
-set(prebuilds_dir ${PROJECT_SOURCE_DIR}/prebuilds)
-set(prebuilds_key ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y)
-set(prebuilds_version 1702)
 
 add_pear_bundle(
   ENTRY src/pear.js
@@ -43,10 +46,10 @@ add_pear_bundle(
 )
 
 mirror_drive(
-  SOURCE ${prebuilds_key}
-  DESTINATION ${prebuilds_dir}
+  SOURCE ${PEAR_PREBUILDS_KEY}
+  DESTINATION ${PEAR_PREBUILDS_DIR}
   PREFIX /${target}
-  CHECKOUT ${prebuilds_version}
+  CHECKOUT ${PEAR_PREBUILDS_VERSION}
 )
 
 if(MSVC)
@@ -59,7 +62,7 @@ if(NOT TARGET v8)
   find_library(
     v8
     NAMES v8 libv8
-    PATHS ${prebuilds_dir}/${target}/lib
+    PATHS ${PEAR_PREBUILDS_DIR}/${target}/lib
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -74,7 +77,7 @@ if(NOT TARGET v8)
   target_include_directories(
     v8
     INTERFACE
-      ${prebuilds_dir}/${target}/include
+      ${PEAR_PREBUILDS_DIR}/${target}/include
   )
 endif()
 
