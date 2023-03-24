@@ -25,11 +25,13 @@ list(APPEND tests
 if(PEAR_USE_JAVASCRIPTCORE)
   list(APPEND skipped_tests
     import-addon.mjs
-    import-cjs-from-mjs.mjs
-    import-dynamic.mjs
-    import-dynamic-from-cjs.cjs
+    import-cjs.mjs
+    import-dynamic-cjs.cjs
+    import-dynamic-cjs.mjs
+    import-dynamic-mjs.cjs
+    import-dynamic-mjs.mjs
+    import-mjs.cjs
     import-mjs.mjs
-    import-mjs-from-cjs.cjs
   )
 endif()
 
