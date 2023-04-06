@@ -4,9 +4,21 @@
 #include "../include/pear.h"
 #include "pear.bundle.h"
 
+void print_help () {
+  printf("\U0001F350 Pear.js\n"
+         "Small and modular JavaScript runtime for desktop and mobile.\n"
+         "Usage:\n"
+         "    pear [-m, --import-map <path>] <filename>\n");
+}
+
 int
 main (int argc, char *argv[]) {
   int err;
+
+  if (argc == 1) {
+    print_help();
+    return 1;
+  }
 
   argv = uv_setup_args(argc, argv);
 
