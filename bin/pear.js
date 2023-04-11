@@ -4,18 +4,34 @@ const path = require('path')
 const argv = require('minimist')(process.argv.slice(1), {
   stopEarly: true,
   boolean: [
-    'version'
+    'version',
+    'help'
   ],
   string: [
     'import-map'
   ],
   alias: {
     version: 'v',
+    help: 'h',
     'import-map': 'm'
   }
 })
 
-process.argv.splice(1, process.argv.length - 1, ...argv._)
+const argc = argv._.length
+
+process.argv.splice(1, argc, ...argv._)
+
+if (argv.h || argc === 0) {
+  console.log(`
+🍐.js
+Small and modular JavaScript runtime for desktop and mobile.
+
+Usage:
+  pear [-m, --import-map <path>] <filename>
+  `.trim())
+
+  process.exit(argv.h || argc > 0 ? 0 : 1)
+}
 
 if (argv.v) {
   const pkg = require('../package.json')
