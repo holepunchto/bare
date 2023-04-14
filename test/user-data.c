@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <js.h>
 #include <pear.h>
 #include <uv.h>
 
@@ -31,27 +32,31 @@ main (int argc, char *argv[]) {
 
   int e;
 
-  pear_t pear;
-  e = pear_setup(uv_default_loop(), &pear, argc, argv);
+  pear_t *pear;
+  e = pear_setup(uv_default_loop(), argc, argv, &pear);
   assert(e == 0);
 
-  e = pear_set_data_external(&pear, "hello", (void *) 42);
+  e = pear_set_data_external(pear, "hello", (void *) 42);
+  assert(e == 0);
+
+  js_env_t *env;
+  e = pear_get_env(pear, &env);
   assert(e == 0);
 
   js_value_t *global;
-  js_get_global(pear.env, &global);
+  js_get_global(env, &global);
 
   js_value_t *fn;
-  js_create_function(pear.env, "callback", -1, on_callback, NULL, &fn);
-  js_set_named_property(pear.env, global, "callback", fn);
+  js_create_function(env, "callback", -1, on_callback, NULL, &fn);
+  js_set_named_property(env, global, "callback", fn);
 
-  e = pear_run(&pear, "./test/fixtures/user-data.js", NULL);
+  e = pear_run(pear, "./test/fixtures/user-data.js", NULL);
   assert(e == 0);
 
   assert(callback_called);
 
   int exit_code;
-  e = pear_teardown(&pear, &exit_code);
+  e = pear_teardown(pear, &exit_code);
   assert(e == 0);
 
   return exit_code;

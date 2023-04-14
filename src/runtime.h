@@ -13,6 +13,7 @@
 #include "../include/pear.h"
 #include "addons.h"
 #include "pear.js.h"
+#include "types.h"
 
 #ifdef PEAR_PLATFORM_ANDROID
 #include "runtime/android.h"

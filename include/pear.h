@@ -23,29 +23,8 @@ typedef void (*pear_suspend_cb)(pear_t *);
 typedef void (*pear_idle_cb)(pear_t *);
 typedef void (*pear_resume_cb)(pear_t *);
 
-struct pear_s {
-  uv_loop_t *loop;
-  js_platform_t *platform;
-  js_env_t *env;
-  uv_sem_t idle;
-  bool suspended;
-  bool exited;
-
-  pear_before_exit_cb on_before_exit;
-  pear_exit_cb on_exit;
-  pear_suspend_cb on_suspend;
-  pear_idle_cb on_idle;
-  pear_resume_cb on_resume;
-
-  struct {
-    js_value_t *exports;
-    int argc;
-    char **argv;
-  } runtime;
-};
-
 int
-pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv);
+pear_setup (uv_loop_t *loop, int argc, char **argv, pear_t **result);
 
 int
 pear_teardown (pear_t *pear, int *exit_code);
@@ -76,6 +55,12 @@ pear_on_idle (pear_t *pear, pear_idle_cb cb);
 
 int
 pear_on_resume (pear_t *pear, pear_resume_cb cb);
+
+int
+pear_get_platform (pear_t *pear, js_platform_t **result);
+
+int
+pear_get_env (pear_t *pear, js_env_t **result);
 
 int
 pear_get_data (pear_t *pear, const char *key, js_value_t **result);

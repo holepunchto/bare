@@ -3,17 +3,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <uv.h>
 
 #include "../include/pear.h"
 #include "addons.h"
 #include "runtime.h"
+#include "types.h"
 
 static void
 on_prepare (uv_prepare_t *handle) {}
 
 int
-pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
+pear_setup (uv_loop_t *loop, int argc, char **argv, pear_t **result) {
+  pear_t *pear = malloc(sizeof(pear_t));
+
   pear_addons_init();
 
   pear->loop = loop;
@@ -42,6 +46,8 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
   pear->on_idle = NULL;
   pear->on_resume = NULL;
 
+  *result = pear;
+
   return 0;
 }
 
@@ -58,6 +64,8 @@ pear_teardown (pear_t *pear, int *exit_code) {
   assert(err == 0);
 
   uv_sem_destroy(&pear->idle);
+
+  free(pear);
 
   return 0;
 }
@@ -147,6 +155,20 @@ pear_on_idle (pear_t *pear, pear_idle_cb cb) {
 int
 pear_on_resume (pear_t *pear, pear_resume_cb cb) {
   pear->on_resume = cb;
+
+  return 0;
+}
+
+int
+pear_get_platform (pear_t *pear, js_platform_t **result) {
+  *result = pear->platform;
+
+  return 0;
+}
+
+int
+pear_get_env (pear_t *pear, js_env_t **result) {
+  *result = pear->env;
 
   return 0;
 }
