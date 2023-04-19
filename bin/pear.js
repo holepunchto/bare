@@ -48,7 +48,7 @@ if (argv.m) {
 
   if (map && map.imports) {
     for (const [from, to] of Object.entries(map.imports)) {
-      if (/^(\/|\.{1,2}\/?)/.test(to)) {
+      if (/^([a-z]:)?([/\\]|\.{1,2}[/\\]?)/.test(to)) {
         Module._imports[from] = path.resolve(process.cwd(), path.dirname(argv.m), to)
       } else {
         Module._imports[from] = to
