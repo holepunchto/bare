@@ -27,10 +27,6 @@ module.exports = exports = class Thread {
       pear.threads[head._index = this._index] = head
     }
   }
-
-  static get data () {
-    return Buffer.from(pear.threadData)
-  }
 }
 
 exports.isMainThread = pear.isMainThread
