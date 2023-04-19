@@ -933,6 +933,12 @@ pear_runtime_setup (pear_runtime_t *runtime) {
     js_set_named_property(env, exports, "data", val);
   }
 
+  {
+    js_value_t *val;
+    js_create_array(env, &val);
+    js_set_named_property(env, exports, "threads", val);
+  }
+
   js_value_t *global;
   js_get_global(env, &global);
 

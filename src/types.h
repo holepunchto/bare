@@ -30,9 +30,6 @@ struct pear_s {
   bool suspended;
   bool exited;
 
-  pear_thread_t **threads;
-  size_t threads_len;
-
   pear_before_exit_cb on_before_exit;
   pear_exit_cb on_exit;
   pear_suspend_cb on_suspend;
