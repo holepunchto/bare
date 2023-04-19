@@ -17,6 +17,7 @@ list(APPEND tests
   process-chdir.js
   suspend-resume.js
   suspend-resume-immediate.js
+  thread.js
   timeout.js
   timeout-clear.js
   user-data.c
