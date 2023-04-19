@@ -682,8 +682,8 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   thread->runtime.platform = runtime->platform;
   thread->runtime.env = NULL;
 
-  thread->runtime.argc = 0;
-  thread->runtime.argv = NULL;
+  thread->runtime.argc = runtime->argc;
+  thread->runtime.argv = runtime->argv;
 
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
