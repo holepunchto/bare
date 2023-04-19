@@ -3,10 +3,14 @@
 const EventEmitter = require('./events')
 
 module.exports = exports = class Thread extends EventEmitter {
-  constructor (filename) {
+  constructor (filename, opts = {}) {
+    const {
+      stackSize = 0
+    } = opts
+
     super()
 
-    this._handle = pear.setupThread(filename)
+    this._handle = pear.setupThread(filename, stackSize)
   }
 
   join () {

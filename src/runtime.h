@@ -633,13 +633,13 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   pear_runtime_t *runtime;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 2;
+  js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   uv_loop_t *loop = malloc(sizeof(uv_loop_t));
 
@@ -658,6 +658,10 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
   assert(err == 0);
 
+  uint32_t stack_size;
+  err = js_get_value_uint32(env, argv[1], &stack_size);
+  assert(err == 0);
+
   pear_thread_t *thread = malloc(sizeof(pear_thread_t));
 
   thread->filename = str;
@@ -672,7 +676,12 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   thread->runtime.argc = 0;
   thread->runtime.argv = NULL;
 
-  err = uv_thread_create(&thread->id, pear_runtime_on_thread, (void *) thread);
+  uv_thread_options_t options = {
+    .flags = UV_THREAD_HAS_STACK_SIZE,
+    .stack_size = stack_size,
+  };
+
+  err = uv_thread_create_ex(&thread->id, &options, pear_runtime_on_thread, (void *) thread);
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
     free(thread);
