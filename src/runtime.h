@@ -175,6 +175,25 @@ pear_runtime_on_exit (pear_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
+pear_runtime_on_thread_exit (pear_runtime_t *runtime) {
+  js_env_t *env = runtime->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, runtime->exports, "onthreadexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
+}
+
+static inline void
 pear_runtime_on_suspend (pear_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
@@ -730,6 +749,19 @@ pear_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static js_value_t *
+pear_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  uv_loop_t *loop;
+  err = js_get_env_loop(env, &loop);
+  assert(err == 0);
+
+  uv_stop(loop);
+
+  return NULL;
+}
+
 static inline void
 pear_runtime_setup (pear_runtime_t *runtime) {
   int err;
@@ -940,6 +972,18 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 
   {
     js_value_t *val;
+    js_create_function(env, "stopCurrentThread", -1, pear_runtime_stop_current_thread, (void *) runtime, &val);
+    js_set_named_property(env, exports, "stopCurrentThread", val);
+  }
+
+  {
+    js_value_t *val;
+    js_get_boolean(env, &runtime->process->runtime == runtime, &val);
+    js_set_named_property(env, exports, "isMainThread", val);
+  }
+
+  {
+    js_value_t *val;
     js_create_object(env, &val);
     js_set_named_property(env, exports, "data", val);
   }
@@ -1034,9 +1078,9 @@ pear_runtime_on_thread (void *data) {
   assert(err == 0);
 
   err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
-  assert(err == 0);
+  assert(err >= 0);
 
-  pear_runtime_on_exit(&thread->runtime, NULL);
+  pear_runtime_on_thread_exit(&thread->runtime);
 
   err = js_destroy_env(thread->runtime.env);
   assert(err == 0);

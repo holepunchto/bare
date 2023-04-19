@@ -105,6 +105,10 @@ pear.onexit = function onexit () {
   exports.emit('exit', pear.exitCode)
 }
 
+pear.onthreadexit = function onthreadexit () {
+  exports.thread.emit('exit')
+}
+
 pear.onsuspend = function onsuspend () {
   exports.emit('suspend')
 }
@@ -121,3 +125,4 @@ exports.env = require('./process/env')
 exports.data = require('./process/data')
 exports.addon = require('./process/addon')
 exports.hrtime = require('./process/hrtime')
+exports.thread = require('./process/thread')

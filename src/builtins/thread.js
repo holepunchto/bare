@@ -37,3 +37,5 @@ module.exports = exports = class Thread {
     return Buffer.from(pear.threadData)
   }
 }
+
+exports.isMainThread = pear.isMainThread
