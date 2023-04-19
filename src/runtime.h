@@ -652,13 +652,13 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   pear_runtime_t *runtime;
 
-  size_t argc = 3;
-  js_value_t *argv[3];
+  size_t argc = 4;
+  js_value_t *argv[4];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 3);
+  assert(argc == 4);
 
   uv_loop_t *loop = malloc(sizeof(uv_loop_t));
 
@@ -677,13 +677,25 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
   assert(err == 0);
 
+  size_t source_len = 0;
+  void *source = NULL;
+
+  bool is_buffer;
+  err = js_is_typedarray(env, argv[1], &is_buffer);
+  assert(err == 0);
+
+  if (is_buffer) {
+    err = js_get_typedarray_info(env, argv[1], NULL, &source, &source_len, NULL, NULL);
+    assert(err == 0);
+  }
+
   size_t data_len;
   void *data;
-  err = js_get_typedarray_info(env, argv[1], NULL, &data, &data_len, NULL, NULL);
+  err = js_get_typedarray_info(env, argv[2], NULL, &data, &data_len, NULL, NULL);
   assert(err == 0);
 
   uint32_t stack_size;
-  err = js_get_value_uint32(env, argv[2], &stack_size);
+  err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
   pear_thread_t *thread = malloc(sizeof(pear_thread_t));
@@ -692,6 +704,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   thread->filename = str;
+  thread->source = uv_buf_init(source, source_len);
   thread->data = uv_buf_init(data, data_len);
 
   thread->runtime.loop = loop;
@@ -1074,7 +1087,7 @@ pear_runtime_on_thread (void *data) {
 
   uv_sem_post(&thread->ready);
 
-  err = pear_runtime_run(&thread->runtime, thread->filename, NULL);
+  err = pear_runtime_run(&thread->runtime, thread->filename, thread->source.base ? &thread->source : NULL);
   assert(err == 0);
 
   err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);

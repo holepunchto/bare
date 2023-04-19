@@ -1,21 +1,16 @@
 /* global pear */
 
 module.exports = exports = class Thread {
-  constructor (filename, data, opts) {
-    if (ArrayBuffer.isView(data)) {
-      opts = opts || {}
-    } else {
-      opts = data || {}
-      data = Buffer.alloc(0)
-    }
-
+  constructor (filename, opts) {
     const {
+      source = null,
+      data = Buffer.alloc(0),
       stackSize = 0
     } = opts
 
     this._joined = false
 
-    this._handle = pear.setupThread(filename, data, stackSize)
+    this._handle = pear.setupThread(filename, source, data, stackSize)
 
     this._index = pear.threads.push(this) - 1
   }

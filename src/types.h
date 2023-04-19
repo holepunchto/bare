@@ -45,6 +45,7 @@ struct pear_thread_s {
   uv_sem_t ready;
 
   char *filename;
+  uv_buf_t source;
   uv_buf_t data;
 
   pear_runtime_t runtime;
