@@ -42,7 +42,10 @@ struct pear_s {
 struct pear_thread_s {
   uv_thread_t id;
 
+  uv_sem_t ready;
+
   char *filename;
+  uv_buf_t data;
 
   pear_runtime_t runtime;
 };

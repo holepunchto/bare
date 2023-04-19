@@ -633,13 +633,13 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   pear_runtime_t *runtime;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
+  size_t argc = 3;
+  js_value_t *argv[3];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 3);
 
   uv_loop_t *loop = malloc(sizeof(uv_loop_t));
 
@@ -658,13 +658,22 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
   assert(err == 0);
 
+  size_t data_len;
+  void *data;
+  err = js_get_typedarray_info(env, argv[1], NULL, &data, &data_len, NULL, NULL);
+  assert(err == 0);
+
   uint32_t stack_size;
-  err = js_get_value_uint32(env, argv[1], &stack_size);
+  err = js_get_value_uint32(env, argv[2], &stack_size);
   assert(err == 0);
 
   pear_thread_t *thread = malloc(sizeof(pear_thread_t));
 
+  err = uv_sem_init(&thread->ready, 0);
+  assert(err == 0);
+
   thread->filename = str;
+  thread->data = uv_buf_init(data, data_len);
 
   thread->runtime.loop = loop;
 
@@ -688,6 +697,8 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
     free(loop);
     return NULL;
   }
+
+  uv_sem_wait(&thread->ready);
 
   js_value_t *result;
   err = js_create_external(env, (void *) thread, NULL, NULL, &result);
@@ -1004,6 +1015,21 @@ pear_runtime_on_thread (void *data) {
 
   pear_runtime_setup(&thread->runtime);
 
+  js_value_t *thread_data;
+
+  {
+    void *data;
+    err = js_create_arraybuffer(thread->runtime.env, thread->data.len, &data, &thread_data);
+    assert(err == 0);
+
+    memcpy(data, thread->data.base, thread->data.len);
+  }
+
+  err = js_set_named_property(thread->runtime.env, thread->runtime.exports, "threadData", thread_data);
+  assert(err == 0);
+
+  uv_sem_post(&thread->ready);
+
   err = pear_runtime_run(&thread->runtime, thread->filename, NULL);
   assert(err == 0);
 
@@ -1024,6 +1050,8 @@ pear_runtime_on_thread (void *data) {
   } while (err == UV_EBUSY);
 
   free(thread->runtime.loop);
+
+  uv_sem_destroy(&thread->ready);
 }
 
 static inline int
