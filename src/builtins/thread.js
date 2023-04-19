@@ -1,8 +1,6 @@
 /* global pear */
 
-const EventEmitter = require('./events')
-
-module.exports = exports = class Thread extends EventEmitter {
+module.exports = exports = class Thread {
   constructor (filename, data, opts) {
     if (ArrayBuffer.isView(data)) {
       opts = opts || {}
@@ -14,8 +12,6 @@ module.exports = exports = class Thread extends EventEmitter {
     const {
       stackSize = 0
     } = opts
-
-    super()
 
     this._joined = false
 
