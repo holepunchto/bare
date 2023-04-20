@@ -4,7 +4,7 @@ module.exports = exports = class Thread {
   constructor (filename, opts) {
     const {
       source = null,
-      data = Buffer.alloc(0),
+      data = null,
       stackSize = 0
     } = opts
 

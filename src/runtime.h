@@ -679,20 +679,27 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   size_t source_len = 0;
   void *source = NULL;
+  bool has_source;
 
-  bool is_buffer;
-  err = js_is_typedarray(env, argv[1], &is_buffer);
+  err = js_is_typedarray(env, argv[1], &has_source);
   assert(err == 0);
 
-  if (is_buffer) {
+  if (has_source) {
     err = js_get_typedarray_info(env, argv[1], NULL, &source, &source_len, NULL, NULL);
     assert(err == 0);
   }
 
-  size_t data_len;
-  void *data;
-  err = js_get_typedarray_info(env, argv[2], NULL, &data, &data_len, NULL, NULL);
+  size_t data_len = 0;
+  void *data = NULL;
+  bool has_data;
+
+  err = js_is_typedarray(env, argv[2], &has_data);
   assert(err == 0);
+
+  if (has_data) {
+    err = js_get_typedarray_info(env, argv[2], NULL, &data, &data_len, NULL, NULL);
+    assert(err == 0);
+  }
 
   uint32_t stack_size;
   err = js_get_value_uint32(env, argv[3], &stack_size);
@@ -704,8 +711,12 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   thread->filename = str;
+
   thread->source = uv_buf_init(source, source_len);
+  thread->has_source = has_source;
+
   thread->data = uv_buf_init(data, data_len);
+  thread->has_data = has_data;
 
   thread->runtime.loop = loop;
 
@@ -1074,12 +1085,15 @@ pear_runtime_on_thread (void *data) {
 
   js_value_t *thread_data;
 
-  {
+  if (thread->has_data) {
     void *data;
     err = js_create_arraybuffer(thread->runtime.env, thread->data.len, &data, &thread_data);
     assert(err == 0);
 
     memcpy(data, thread->data.base, thread->data.len);
+  } else {
+    err = js_get_null(thread->runtime.env, &thread_data);
+    assert(err == 0);
   }
 
   err = js_set_named_property(thread->runtime.env, thread->runtime.exports, "threadData", thread_data);
@@ -1087,7 +1101,7 @@ pear_runtime_on_thread (void *data) {
 
   uv_sem_post(&thread->ready);
 
-  err = pear_runtime_run(&thread->runtime, thread->filename, thread->source.base ? &thread->source : NULL);
+  err = pear_runtime_run(&thread->runtime, thread->filename, thread->has_source ? &thread->source : NULL);
   assert(err == 0);
 
   err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
