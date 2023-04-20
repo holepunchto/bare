@@ -147,6 +147,20 @@ pear_runtime_on_before_exit (pear_runtime_t *runtime) {
 
 static inline void
 pear_runtime_on_exit (pear_runtime_t *runtime, int *exit_code) {
+  uv_mutex_lock(&runtime->process->threads_lock);
+
+  while (runtime->process->threads) {
+    uv_thread_t id = runtime->process->threads->thread.id;
+
+    uv_mutex_unlock(&runtime->process->threads_lock);
+
+    uv_thread_join(&id);
+
+    uv_mutex_lock(&runtime->process->threads_lock);
+  }
+
+  uv_mutex_unlock(&runtime->process->threads_lock);
+
   js_env_t *env = runtime->env;
 
   if (exit_code) *exit_code = 0;
@@ -705,7 +719,12 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  pear_thread_t *thread = malloc(sizeof(pear_thread_t));
+  pear_thread_list_t *next = malloc(sizeof(pear_thread_list_t));
+
+  next->previous = NULL;
+  next->next = NULL;
+
+  pear_thread_t *thread = &next->thread;
 
   err = uv_sem_init(&thread->ready, 0);
   assert(err == 0);
@@ -728,6 +747,17 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   thread->runtime.argc = runtime->argc;
   thread->runtime.argv = runtime->argv;
 
+  uv_mutex_lock(&runtime->process->threads_lock);
+
+  if (runtime->process->threads) {
+    next->next = runtime->process->threads;
+    next->next->previous = next;
+  }
+
+  runtime->process->threads = next;
+
+  uv_mutex_unlock(&runtime->process->threads_lock);
+
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
     .stack_size = stack_size,
@@ -736,7 +766,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = uv_thread_create_ex(&thread->id, &options, pear_runtime_on_thread, (void *) thread);
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
-    free(thread);
+    free(next);
     free(loop);
     return NULL;
   }
@@ -744,7 +774,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   uv_sem_wait(&thread->ready);
 
   js_value_t *result;
-  err = js_create_external(env, (void *) thread, NULL, NULL, &result);
+  err = js_create_external(env, (void *) thread->id, NULL, NULL, &result);
   assert(err == 0);
 
   return result;
@@ -764,11 +794,11 @@ pear_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  pear_thread_t *thread;
+  uv_thread_t thread;
   err = js_get_value_external(env, argv[0], (void **) &thread);
   assert(err == 0);
 
-  uv_thread_join(&thread->id);
+  uv_thread_join(&thread);
 
   return NULL;
 }
@@ -1012,12 +1042,6 @@ pear_runtime_setup (pear_runtime_t *runtime) {
     js_set_named_property(env, exports, "data", val);
   }
 
-  {
-    js_value_t *val;
-    js_create_array(env, &val);
-    js_set_named_property(env, exports, "threads", val);
-  }
-
   js_value_t *global;
   js_get_global(env, &global);
 
@@ -1120,9 +1144,26 @@ pear_runtime_on_thread (void *data) {
     }
   } while (err == UV_EBUSY);
 
-  free(thread->runtime.loop);
+  uv_mutex_lock(&thread->runtime.process->threads_lock);
+
+  pear_thread_list_t *node = (pear_thread_list_t *) thread;
+
+  if (node->previous) {
+    node->previous->next = node->next;
+  } else {
+    thread->runtime.process->threads = node->next;
+  }
+
+  if (node->next) {
+    node->next->previous = node->previous;
+  }
+
+  uv_mutex_unlock(&thread->runtime.process->threads_lock);
 
   uv_sem_destroy(&thread->ready);
+
+  free(thread->runtime.loop);
+  free(thread);
 }
 
 static inline int

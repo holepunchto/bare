@@ -10,6 +10,7 @@
 
 typedef struct pear_runtime_s pear_runtime_t;
 typedef struct pear_thread_s pear_thread_t;
+typedef struct pear_thread_list_s pear_thread_list_t;
 
 struct pear_runtime_s {
   uv_loop_t *loop;
@@ -36,6 +37,9 @@ struct pear_s {
   pear_idle_cb on_idle;
   pear_resume_cb on_resume;
 
+  uv_mutex_t threads_lock;
+  pear_thread_list_t *threads;
+
   pear_runtime_t runtime;
 };
 
@@ -53,6 +57,13 @@ struct pear_thread_s {
   bool has_data;
 
   pear_runtime_t runtime;
+};
+
+struct pear_thread_list_s {
+  pear_thread_t thread;
+
+  pear_thread_list_t *previous;
+  pear_thread_list_t *next;
 };
 
 #endif // PEAR_TYPES_H
