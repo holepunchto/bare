@@ -37,6 +37,7 @@ pear_setup (uv_loop_t *loop, int argc, char **argv, pear_t **result) {
   pear_runtime_setup(&pear->runtime);
 
   pear->suspended = false;
+  pear->exited = false;
 
   err = uv_sem_init(&pear->idle, 0);
   assert(err == 0);
