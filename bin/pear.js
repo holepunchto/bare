@@ -21,6 +21,14 @@ const argc = argv._.length
 
 process.argv.splice(1, argc, ...argv._)
 
+if (argv.v) {
+  const pkg = require('../package.json')
+
+  console.log(`v${pkg.version}`)
+
+  process.exit()
+}
+
 if (argv.h || argc === 0) {
   console.log(`
 🍐.js
@@ -31,14 +39,6 @@ Usage:
   `.trim())
 
   process.exit(argv.h || argc > 0 ? 0 : 1)
-}
-
-if (argv.v) {
-  const pkg = require('../package.json')
-
-  console.log(`v${pkg.version}`)
-
-  process.exit()
 }
 
 if (argv.m) {
