@@ -44,14 +44,17 @@ pear_setup (uv_loop_t *loop, int argc, char **argv, pear_t **result) {
 
   pear->threads = NULL;
 
-  err = uv_mutex_init(&pear->threads_lock);
-  assert(err == 0);
-
   pear->on_before_exit = NULL;
   pear->on_exit = NULL;
   pear->on_suspend = NULL;
   pear->on_idle = NULL;
   pear->on_resume = NULL;
+
+  err = uv_rwlock_init(&pear->locks.threads);
+  assert(err == 0);
+
+  err = uv_rwlock_init(&pear->locks.env);
+  assert(err == 0);
 
   *result = pear;
 
@@ -72,7 +75,9 @@ pear_teardown (pear_t *pear, int *exit_code) {
 
   uv_sem_destroy(&pear->idle);
 
-  uv_mutex_destroy(&pear->threads_lock);
+  uv_rwlock_destroy(&pear->locks.threads);
+
+  uv_rwlock_destroy(&pear->locks.env);
 
   free(pear);
 

@@ -147,19 +147,19 @@ pear_runtime_on_before_exit (pear_runtime_t *runtime) {
 
 static inline void
 pear_runtime_on_exit (pear_runtime_t *runtime, int *exit_code) {
-  uv_mutex_lock(&runtime->process->threads_lock);
+  uv_rwlock_rdlock(&runtime->process->locks.threads);
 
   while (runtime->process->threads) {
     uv_thread_t id = runtime->process->threads->thread.id;
 
-    uv_mutex_unlock(&runtime->process->threads_lock);
+    uv_rwlock_rdunlock(&runtime->process->locks.threads);
 
     uv_thread_join(&id);
 
-    uv_mutex_lock(&runtime->process->threads_lock);
+    uv_rwlock_rdlock(&runtime->process->locks.threads);
   }
 
-  uv_mutex_unlock(&runtime->process->threads_lock);
+  uv_rwlock_rdunlock(&runtime->process->locks.threads);
 
   js_env_t *env = runtime->env;
 
@@ -467,52 +467,154 @@ pear_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_env (js_env_t *env, js_callback_info_t *info) {
+pear_runtime_get_env_keys (js_env_t *env, js_callback_info_t *info) {
+  pear_runtime_t *runtime;
+
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
-
   uv_env_item_t *items;
-  int count;
+  int len;
 
-  err = uv_os_environ(&items, &count);
+  uv_rwlock_rdlock(&runtime->process->locks.env);
+
+  err = uv_os_environ(&items, &len);
+
+  uv_rwlock_rdunlock(&runtime->process->locks.env);
+
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
     return NULL;
   }
 
-  js_value_t *result = argv[0];
+  js_value_t *result;
+  err = js_create_array_with_length(env, len, &result);
+  assert(err == 0);
 
-  for (int i = 0; i < count; i++) {
-    uv_env_item_t *item = items + i;
+  for (int i = 0; i < len; i++) {
+    uv_env_item_t *item = &items[i];
 
     js_value_t *val;
-    err = js_create_string_utf8(env, item->value, -1, &val);
+    err = js_create_string_utf8(env, item->name, -1, &val);
     assert(err == 0);
 
-    err = js_set_named_property(env, result, item->name, val);
+    err = js_set_element(env, result, i, val);
     assert(err == 0);
   }
 
-  uv_os_free_environ(items, count);
+  uv_os_free_environ(items, len);
+
+  return result;
+}
+
+static js_value_t *
+pear_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
+  pear_runtime_t *runtime;
+
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t name_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
+  assert(err == 0);
+
+  char *name = malloc(++name_len);
+  err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
+  assert(err == 0);
+
+  uv_rwlock_rdlock(&runtime->process->locks.env);
+
+  size_t value_len = 1;
+  err = uv_os_getenv(name, "", &value_len);
+
+  js_value_t *result;
+
+  if (err == UV_ENOENT) {
+    err = js_get_undefined(env, &result);
+    assert(err == 0);
+  } else {
+    assert(err == UV_ENOBUFS);
+
+    char *value = malloc(value_len);
+    err = uv_os_getenv(name, value, &value_len);
+    assert(err == 0);
+
+    err = js_create_string_utf8(env, value, value_len, &result);
+    assert(err == 0);
+
+    free(value);
+  }
+
+  uv_rwlock_rdunlock(&runtime->process->locks.env);
+
+  free(name);
+
+  return result;
+}
+
+static js_value_t *
+pear_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
+  pear_runtime_t *runtime;
+
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t name_len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
+  assert(err == 0);
+
+  char *name = malloc(++name_len);
+  err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
+  assert(err == 0);
+
+  uv_rwlock_rdlock(&runtime->process->locks.env);
+
+  size_t value_len = 1;
+  err = uv_os_getenv(name, "", &value_len);
+
+  uv_rwlock_rdunlock(&runtime->process->locks.env);
+
+  if (err != 0 && err != UV_ENOENT && err != UV_ENOBUFS) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    free(name);
+    return NULL;
+  }
+
+  free(name);
+
+  js_value_t *result;
+  err = js_get_boolean(env, err != UV_ENOENT, &result);
+  assert(err == 0);
 
   return result;
 }
 
 static js_value_t *
 pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
+  pear_runtime_t *runtime;
+
   int err;
 
   size_t argc = 2;
   js_value_t *argv[2];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 2);
@@ -533,8 +635,18 @@ pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[1], value, value_len, &value_len);
   assert(err == 0);
 
+  uv_rwlock_wrlock(&runtime->process->locks.env);
+
   err = uv_os_setenv(name, value);
-  assert(err == 0);
+
+  uv_rwlock_wrunlock(&runtime->process->locks.env);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    free(name);
+    free(value);
+    return NULL;
+  }
 
   free(name);
   free(value);
@@ -544,12 +656,14 @@ pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
+  pear_runtime_t *runtime;
+
   int err;
 
   size_t argc = 1;
   js_value_t *argv[1];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 1);
@@ -562,8 +676,17 @@ pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
+  uv_rwlock_wrlock(&runtime->process->locks.env);
+
   err = uv_os_unsetenv(name);
-  assert(err == 0);
+
+  uv_rwlock_wrunlock(&runtime->process->locks.env);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    free(name);
+    return NULL;
+  }
 
   free(name);
 
@@ -747,7 +870,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   thread->runtime.argc = runtime->argc;
   thread->runtime.argv = runtime->argv;
 
-  uv_mutex_lock(&runtime->process->threads_lock);
+  uv_rwlock_wrlock(&runtime->process->locks.threads);
 
   if (runtime->process->threads) {
     next->next = runtime->process->threads;
@@ -756,7 +879,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   runtime->process->threads = next;
 
-  uv_mutex_unlock(&runtime->process->threads_lock);
+  uv_rwlock_wrunlock(&runtime->process->locks.threads);
 
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
@@ -764,6 +887,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   };
 
   err = uv_thread_create_ex(&thread->id, &options, pear_runtime_on_thread, (void *) thread);
+
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
     free(next);
@@ -858,27 +982,22 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 
     js_set_named_property(env, exports, "versions", versions);
   }
-
   {
     js_value_t *val;
     js_create_int32(env, 0, &val);
     js_set_named_property(env, exports, "exitCode", val);
   }
-
   {
     js_value_t *val;
     js_create_string_utf8(env, PEAR_PLATFORM, -1, &val);
     js_set_named_property(env, exports, "platform", val);
   }
-
   {
     js_value_t *val;
     js_create_string_utf8(env, PEAR_ARCH, -1, &val);
     js_set_named_property(env, exports, "arch", val);
   }
-
   js_value_t *exec_path_val;
-
   {
     char exec_path[4096];
     size_t exec_path_len = 4096;
@@ -887,7 +1006,6 @@ pear_runtime_setup (pear_runtime_t *runtime) {
     js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
     js_set_named_property(env, exports, "execPath", exec_path_val);
   }
-
   {
     js_value_t *val;
     js_value_t *str;
@@ -905,137 +1023,126 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 
     js_set_named_property(env, exports, "argv", val);
   }
-
   {
     js_value_t *arr;
     int i = 0;
 
     js_create_array(env, &arr);
+
     UV_ERRNO_MAP(PEAR_UV_ERROR_MAP_ITER)
 
     js_set_named_property(env, exports, "errnos", arr);
   }
-
   {
     js_value_t *val;
     js_create_uint32(env, uv_os_getpid(), &val);
     js_set_named_property(env, exports, "pid", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "setTitle", -1, pear_runtime_set_title, NULL, &val);
     js_set_named_property(env, exports, "setTitle", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "getTitle", -1, pear_runtime_get_title, NULL, &val);
     js_set_named_property(env, exports, "getTitle", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "cwd", -1, pear_runtime_cwd, NULL, &val);
     js_set_named_property(env, exports, "cwd", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "chdir", -1, pear_runtime_chdir, NULL, &val);
     js_set_named_property(env, exports, "chdir", val);
   }
-
   {
     js_value_t *val;
-    js_create_function(env, "env", -1, pear_runtime_env, NULL, &val);
-    js_set_named_property(env, exports, "env", val);
+    js_create_function(env, "getEnvKeys", -1, pear_runtime_get_env_keys, (void *) runtime, &val);
+    js_set_named_property(env, exports, "getEnvKeys", val);
   }
-
   {
     js_value_t *val;
-    js_create_function(env, "setEnv", -1, pear_runtime_set_env, NULL, &val);
+    js_create_function(env, "getEnv", -1, pear_runtime_get_env, (void *) runtime, &val);
+    js_set_named_property(env, exports, "getEnv", val);
+  }
+  {
+    js_value_t *val;
+    js_create_function(env, "hasEnv", -1, pear_runtime_has_env, (void *) runtime, &val);
+    js_set_named_property(env, exports, "hasEnv", val);
+  }
+  {
+    js_value_t *val;
+    js_create_function(env, "setEnv", -1, pear_runtime_set_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "setEnv", val);
   }
-
   {
     js_value_t *val;
-    js_create_function(env, "unsetEnv", -1, pear_runtime_unset_env, NULL, &val);
+    js_create_function(env, "unsetEnv", -1, pear_runtime_unset_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "unsetEnv", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "printInfo", -1, pear_runtime_print_info, NULL, &val);
     js_set_named_property(env, exports, "printInfo", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "printError", -1, pear_runtime_print_error, NULL, &val);
     js_set_named_property(env, exports, "printError", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "hrtime", -1, pear_runtime_hrtime, NULL, &val);
     js_set_named_property(env, exports, "hrtime", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "loadAddon", -1, pear_runtime_load_addon, (void *) runtime, &val);
     js_set_named_property(env, exports, "loadAddon", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "resolveAddon", -1, pear_runtime_resolve_addon, (void *) runtime, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "exit", -1, pear_runtime_exit, (void *) runtime, &val);
     js_set_named_property(env, exports, "exit", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "suspend", -1, pear_runtime_suspend, (void *) runtime, &val);
     js_set_named_property(env, exports, "suspend", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "resume", -1, pear_runtime_resume, (void *) runtime, &val);
     js_set_named_property(env, exports, "resume", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "setupThread", -1, pear_runtime_setup_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "setupThread", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "joinThread", -1, pear_runtime_join_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "joinThread", val);
   }
-
   {
     js_value_t *val;
     js_create_function(env, "stopCurrentThread", -1, pear_runtime_stop_current_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "stopCurrentThread", val);
   }
-
   {
     js_value_t *val;
     js_get_boolean(env, &runtime->process->runtime == runtime, &val);
     js_set_named_property(env, exports, "isMainThread", val);
   }
-
   {
     js_value_t *val;
     js_create_object(env, &val);
@@ -1144,7 +1251,7 @@ pear_runtime_on_thread (void *data) {
     }
   } while (err == UV_EBUSY);
 
-  uv_mutex_lock(&thread->runtime.process->threads_lock);
+  uv_rwlock_wrlock(&thread->runtime.process->locks.threads);
 
   pear_thread_list_t *node = (pear_thread_list_t *) thread;
 
@@ -1158,7 +1265,7 @@ pear_runtime_on_thread (void *data) {
     node->next->previous = node->previous;
   }
 
-  uv_mutex_unlock(&thread->runtime.process->threads_lock);
+  uv_rwlock_wrunlock(&thread->runtime.process->locks.threads);
 
   uv_sem_destroy(&thread->ready);
 

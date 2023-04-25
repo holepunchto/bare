@@ -37,10 +37,14 @@ struct pear_s {
   pear_idle_cb on_idle;
   pear_resume_cb on_resume;
 
-  uv_mutex_t threads_lock;
   pear_thread_list_t *threads;
 
   pear_runtime_t runtime;
+
+  struct {
+    uv_rwlock_t threads;
+    uv_rwlock_t env;
+  } locks;
 };
 
 struct pear_thread_s {
