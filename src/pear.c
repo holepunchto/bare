@@ -186,30 +186,3 @@ pear_get_env (pear_t *pear, js_env_t **result) {
 
   return 0;
 }
-
-int
-pear_get_data (pear_t *pear, const char *key, js_value_t **result) {
-  return pear_runtime_get_data(&pear->runtime, key, result);
-}
-
-int
-pear_get_data_external (pear_t *pear, const char *key, void **result) {
-  js_value_t *external;
-  int err = pear_get_data(pear, key, &external);
-  if (err < 0) return err;
-
-  return js_get_value_external(pear->runtime.env, external, result);
-}
-
-int
-pear_set_data (pear_t *pear, const char *key, js_value_t *value) {
-  return pear_runtime_set_data(&pear->runtime, key, value);
-}
-
-int
-pear_set_data_external (pear_t *pear, const char *key, void *value) {
-  js_value_t *external;
-  int err = js_create_external(pear->runtime.env, value, NULL, NULL, &external);
-
-  return pear_set_data(pear, key, external);
-}

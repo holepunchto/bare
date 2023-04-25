@@ -20,7 +20,6 @@ list(APPEND tests
   thread.js
   timeout.js
   timeout-clear.js
-  user-data.c
 )
 
 if(PEAR_USE_JAVASCRIPTCORE)

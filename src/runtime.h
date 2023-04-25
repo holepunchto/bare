@@ -1143,11 +1143,6 @@ pear_runtime_setup (pear_runtime_t *runtime) {
     js_get_boolean(env, &runtime->process->runtime == runtime, &val);
     js_set_named_property(env, exports, "isMainThread", val);
   }
-  {
-    js_value_t *val;
-    js_create_object(env, &val);
-    js_set_named_property(env, exports, "data", val);
-  }
 
   js_value_t *global;
   js_get_global(env, &global);
@@ -1271,40 +1266,6 @@ pear_runtime_on_thread (void *data) {
 
   free(thread->runtime.loop);
   free(thread);
-}
-
-static inline int
-pear_runtime_get_data (pear_runtime_t *runtime, const char *key, js_value_t **result) {
-  js_env_t *env = runtime->env;
-
-  int err;
-
-  js_value_t *data;
-
-  err = js_get_named_property(env, runtime->exports, "data", &data);
-  assert(err == 0);
-
-  err = js_get_named_property(env, data, key, result);
-  if (err < 0) return err;
-
-  return 0;
-}
-
-static inline int
-pear_runtime_set_data (pear_runtime_t *runtime, const char *key, js_value_t *value) {
-  js_env_t *env = runtime->env;
-
-  int err;
-
-  js_value_t *data;
-
-  err = js_get_named_property(env, runtime->exports, "data", &data);
-  assert(err == 0);
-
-  err = js_set_named_property(env, data, key, value);
-  if (err < 0) return err;
-
-  return 0;
 }
 
 #endif // PEAR_RUNTIME_H

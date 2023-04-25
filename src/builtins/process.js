@@ -122,7 +122,6 @@ pear.onresume = function onresume () {
 }
 
 exports.env = require('./process/env')
-exports.data = require('./process/data')
 exports.addon = require('./process/addon')
 exports.hrtime = require('./process/hrtime')
 exports.thread = require('./process/thread')

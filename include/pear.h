@@ -62,18 +62,6 @@ pear_get_platform (pear_t *pear, js_platform_t **result);
 int
 pear_get_env (pear_t *pear, js_env_t **result);
 
-int
-pear_get_data (pear_t *pear, const char *key, js_value_t **result);
-
-int
-pear_get_data_external (pear_t *pear, const char *key, void **result);
-
-int
-pear_set_data (pear_t *pear, const char *key, js_value_t *value);
-
-int
-pear_set_data_external (pear_t *pear, const char *key, void *value);
-
 #ifdef __cplusplus
 }
 #endif
