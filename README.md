@@ -44,11 +44,11 @@ The code that will be returned once the process exits. If the process is exited 
 
 #### `process.env`
 
-The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, but will not be reflected outside of it.
+The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
 
 #### `process.data`
 
-The current user data. If modified, the changes will be visible to JavaScript and native code running in the current process. See [User data](##user-data) for more information.
+The current thread-local user data. If modified, the changes will be visible to JavaScript and native code running in the current thread. See [User data](#user-data) for more information.
 
 #### `process.versions`
 
@@ -210,7 +210,7 @@ The suspension API is available through `pear_suspend()` and `pear_resume()` fro
 
 ### User data
 
-:pear:.js provides a common API for simple user data exchange between the embedder, the JavaScript layer, and the native addon layer. The API provides a key/value store that associates string keys with JavaScript values, leaving it up to the embedder to decide on the meaning of the keys. Keys can be added and retrieved through `pear_set_data()` and `pear_get_data()` from C, and also accessed through `process.data` from JavaScript. 
+:pear:.js provides a common API for simple thread-local user data exchange between the embedder, the JavaScript layer, and the native addon layer. The API provides a key/value store that associates string keys with JavaScript values, leaving it up to the embedder to decide on the meaning of the keys. Keys can be added and retrieved through `pear_set_data()` and `pear_get_data()` from C, and also accessed through `process.data` from JavaScript.
 
 ## Building
 
