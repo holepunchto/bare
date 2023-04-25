@@ -153,7 +153,7 @@ Options include:
 
 #### `thread.join()`
 
-Wait for the thread to exit. Before the spawning thread exits, it will implicitly join any threads that it has created, releasing all allocated resources in the process. By explicitly joining the thread, allocated resources can be released earlier.
+Block and wait for the thread to exit.
 
 #### `process.thread`
 
