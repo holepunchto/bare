@@ -11,12 +11,12 @@ main (int argc, char *argv[]) {
 
   int e;
 
-  pear_t pear;
-  e = pear_setup(uv_default_loop(), &pear, argc, argv);
+  pear_t *pear;
+  e = pear_setup(uv_default_loop(), argc, argv, &pear);
   assert(e == 0);
 
   int exit_code;
-  e = pear_teardown(&pear, &exit_code);
+  e = pear_teardown(pear, &exit_code);
   assert(e == 0);
 
   return exit_code;

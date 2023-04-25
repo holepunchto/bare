@@ -11,6 +11,7 @@
 #include <uv.h>
 
 #include "../include/pear.h"
+#include "types.h"
 
 #define PEAR_ADDONS_MAX_ENTRIES 256
 
@@ -40,12 +41,12 @@ pear_addons_has_extension (const char *s, const char *ext) {
 }
 
 static inline int
-pear_addons_readdir (pear_t *pear, const char *dirname, int entries_len, uv_dirent_t *entries) {
+pear_addons_readdir (pear_runtime_t *runtime, const char *dirname, int entries_len, uv_dirent_t *entries) {
   uv_fs_t req;
 
   int num = 0;
 
-  int err = uv_fs_opendir(pear->loop, &req, dirname, NULL);
+  int err = uv_fs_opendir(runtime->loop, &req, dirname, NULL);
   if (err < 0) {
     uv_fs_req_cleanup(&req);
     return err;
@@ -57,13 +58,13 @@ pear_addons_readdir (pear_t *pear, const char *dirname, int entries_len, uv_dire
   dir->dirents = entries;
   dir->nentries = entries_len;
 
-  num = uv_fs_readdir(pear->loop, &req, dir, NULL);
+  num = uv_fs_readdir(runtime->loop, &req, dir, NULL);
   if (num < 0) {
     uv_fs_req_cleanup(&req);
     return num;
   }
 
-  err = uv_fs_closedir(pear->loop, &req, dir, NULL);
+  err = uv_fs_closedir(runtime->loop, &req, dir, NULL);
   if (err < 0) {
     uv_fs_req_cleanup(&req);
     return err;
@@ -73,10 +74,10 @@ pear_addons_readdir (pear_t *pear, const char *dirname, int entries_len, uv_dire
 }
 
 static bool
-pear_addons_check_dir (pear_t *pear, const char *path, char *out, size_t *len) {
+pear_addons_check_dir (pear_runtime_t *runtime, const char *path, char *out, size_t *len) {
   uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
 
-  int entries_len = pear_addons_readdir(pear, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
+  int entries_len = pear_addons_readdir(runtime, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
   if (entries_len <= 0) return false;
 
   const char *result = NULL;
@@ -118,7 +119,7 @@ pear_addons_check_dir (pear_t *pear, const char *path, char *out, size_t *len) {
 }
 
 static inline int
-pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
+pear_addons_resolve (pear_runtime_t *runtime, const char *path, char *out, size_t *len) {
   size_t tmp_len = 4096;
   char tmp[4096];
 
@@ -129,31 +130,31 @@ pear_addons_resolve (pear_t *pear, const char *path, char *out, size_t *len) {
 
   path_join((const char *[]){path, "build", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
+  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
+  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Debug", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
+  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
   path_join((const char *[]){path, "prebuilds", PEAR_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(pear, tmp, out, len)) return 0;
+  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   return UV_ENOENT;
 }
 
 static inline js_value_t *
-pear_addons_load (pear_t *pear, const char *path) {
+pear_addons_load (pear_runtime_t *runtime, const char *path) {
   int err;
 
   pear_module_t *mod = NULL;
@@ -172,9 +173,9 @@ pear_addons_load (pear_t *pear, const char *path) {
     size_t resolved_len = 4096;
     char resolved[4096];
 
-    err = pear_addons_resolve(pear, path, resolved, &resolved_len);
+    err = pear_addons_resolve(runtime, path, resolved, &resolved_len);
     if (err < 0) {
-      js_throw_errorf(pear->env, NULL, "Could not resolve addon %s", path);
+      js_throw_errorf(runtime->env, NULL, "Could not resolve addon %s", path);
       return NULL;
     }
 
@@ -182,7 +183,7 @@ pear_addons_load (pear_t *pear, const char *path) {
 
     err = uv_dlopen(resolved, lib);
     if (err < 0) {
-      js_throw_error(pear->env, NULL, uv_dlerror(lib));
+      js_throw_error(runtime->env, NULL, uv_dlerror(lib));
       free(lib);
       return NULL;
     }
@@ -197,20 +198,20 @@ pear_addons_load (pear_t *pear, const char *path) {
   }
 
   if (mod == NULL) {
-    js_throw_errorf(pear->env, NULL, "No module registered for %s", path);
+    js_throw_errorf(runtime->env, NULL, "No module registered for %s", path);
     return NULL;
   }
 
   if (mod->version != PEAR_MODULE_VERSION) {
-    js_throw_errorf(pear->env, NULL, "Unsupported ABI version %d for module %s", mod->version, path);
+    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, path);
     return NULL;
   }
 
   js_value_t *exports;
-  err = js_create_object(pear->env, &exports);
+  err = js_create_object(runtime->env, &exports);
   assert(err == 0);
 
-  return mod->init(pear->env, exports);
+  return mod->init(runtime->env, exports);
 }
 
 void

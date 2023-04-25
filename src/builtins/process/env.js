@@ -1,8 +1,16 @@
 /* global pear */
 
-module.exports = new Proxy(pear.env(Object.create(null)), {
+module.exports = new Proxy(Object.create(null), {
+  ownKeys (target) {
+    return pear.getEnvKeys()
+  },
+
   get (target, property) {
-    return target[property]
+    return pear.getEnv(property)
+  },
+
+  has (target, property) {
+    return pear.hasEnv(property)
   },
 
   set (target, property, value) {
@@ -15,13 +23,18 @@ module.exports = new Proxy(pear.env(Object.create(null)), {
     value = String(value)
 
     pear.setEnv(property, value)
-
-    target[property] = value
   },
 
   deleteProperty (target, property) {
     pear.unsetEnv(property)
+  },
 
-    delete target[property]
+  getOwnPropertyDescriptor (target, property) {
+    return {
+      value: this.get(target, property),
+      enumerable: true,
+      configurable: true,
+      writable: true
+    }
   }
 })

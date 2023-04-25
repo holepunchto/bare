@@ -3,33 +3,38 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <uv.h>
 
 #include "../include/pear.h"
 #include "addons.h"
 #include "runtime.h"
+#include "types.h"
 
 static void
 on_prepare (uv_prepare_t *handle) {}
 
 int
-pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
+pear_setup (uv_loop_t *loop, int argc, char **argv, pear_t **result) {
+  pear_t *pear = malloc(sizeof(pear_t));
+
   pear_addons_init();
 
-  pear->loop = loop;
+  pear->runtime.loop = loop;
 
   int err;
 
-  err = js_create_platform(pear->loop, NULL, &pear->platform);
+  err = js_create_platform(pear->runtime.loop, NULL, &pear->runtime.platform);
   assert(err == 0);
 
-  err = js_create_env(pear->loop, pear->platform, &pear->env);
+  err = js_create_env(pear->runtime.loop, pear->runtime.platform, &pear->runtime.env);
   assert(err == 0);
 
+  pear->runtime.process = pear;
   pear->runtime.argc = argc;
   pear->runtime.argv = argv;
 
-  pear_runtime_setup(pear);
+  pear_runtime_setup(&pear->runtime);
 
   pear->suspended = false;
   pear->exited = false;
@@ -37,11 +42,21 @@ pear_setup (uv_loop_t *loop, pear_t *pear, int argc, char **argv) {
   err = uv_sem_init(&pear->idle, 0);
   assert(err == 0);
 
+  pear->threads = NULL;
+
   pear->on_before_exit = NULL;
   pear->on_exit = NULL;
   pear->on_suspend = NULL;
   pear->on_idle = NULL;
   pear->on_resume = NULL;
+
+  err = uv_rwlock_init(&pear->locks.threads);
+  assert(err == 0);
+
+  err = uv_rwlock_init(&pear->locks.env);
+  assert(err == 0);
+
+  *result = pear;
 
   return 0;
 }
@@ -50,35 +65,41 @@ int
 pear_teardown (pear_t *pear, int *exit_code) {
   int err;
 
-  pear_runtime_on_exit(pear, exit_code);
+  pear_runtime_on_exit(&pear->runtime, exit_code);
 
-  err = js_destroy_env(pear->env);
+  err = js_destroy_env(pear->runtime.env);
   assert(err == 0);
 
-  err = js_destroy_platform(pear->platform);
+  err = js_destroy_platform(pear->runtime.platform);
   assert(err == 0);
 
   uv_sem_destroy(&pear->idle);
+
+  uv_rwlock_destroy(&pear->locks.threads);
+
+  uv_rwlock_destroy(&pear->locks.env);
+
+  free(pear);
 
   return 0;
 }
 
 int
 pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
-  int err = pear_runtime_run(pear, filename, source);
+  int err = pear_runtime_run(&pear->runtime, filename, source);
   if (err < 0) return err;
 
   do {
-    uv_run(pear->loop, UV_RUN_DEFAULT);
+    uv_run(pear->runtime.loop, UV_RUN_DEFAULT);
 
     if (pear->suspended) {
-      pear_runtime_on_idle(pear);
+      pear_runtime_on_idle(&pear->runtime);
 
       uv_sem_wait(&pear->idle);
     } else {
-      pear_runtime_on_before_exit(pear);
+      pear_runtime_on_before_exit(&pear->runtime);
     }
-  } while (uv_loop_alive(pear->loop));
+  } while (uv_loop_alive(pear->runtime.loop));
 
   return 0;
 }
@@ -88,7 +109,7 @@ pear_exit (pear_t *pear, int exit_code) {
   if (pear->exited) return -1;
   pear->exited = true;
 
-  pear_runtime_on_exit(pear, exit_code == -1 ? &exit_code : NULL);
+  pear_runtime_on_exit(&pear->runtime, exit_code == -1 ? &exit_code : NULL);
 
   exit(exit_code);
 
@@ -100,7 +121,7 @@ pear_suspend (pear_t *pear) {
   if (pear->suspended) return -1;
   pear->suspended = true;
 
-  pear_runtime_on_suspend(pear);
+  pear_runtime_on_suspend(&pear->runtime);
 
   return 0;
 }
@@ -112,7 +133,7 @@ pear_resume (pear_t *pear) {
 
   uv_sem_post(&pear->idle);
 
-  pear_runtime_on_resume(pear);
+  pear_runtime_on_resume(&pear->runtime);
 
   return 0;
 }
@@ -153,28 +174,15 @@ pear_on_resume (pear_t *pear, pear_resume_cb cb) {
 }
 
 int
-pear_get_data (pear_t *pear, const char *key, js_value_t **result) {
-  return pear_runtime_get_data(pear, key, result);
+pear_get_platform (pear_t *pear, js_platform_t **result) {
+  *result = pear->runtime.platform;
+
+  return 0;
 }
 
 int
-pear_get_data_external (pear_t *pear, const char *key, void **result) {
-  js_value_t *external;
-  int err = pear_get_data(pear, key, &external);
-  if (err < 0) return err;
+pear_get_env (pear_t *pear, js_env_t **result) {
+  *result = pear->runtime.env;
 
-  return js_get_value_external(pear->env, external, result);
-}
-
-int
-pear_set_data (pear_t *pear, const char *key, js_value_t *value) {
-  return pear_runtime_set_data(pear, key, value);
-}
-
-int
-pear_set_data_external (pear_t *pear, const char *key, void *value) {
-  js_value_t *external;
-  int err = js_create_external(pear->env, value, NULL, NULL, &external);
-
-  return pear_set_data(pear, key, external);
+  return 0;
 }

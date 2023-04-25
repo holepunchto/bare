@@ -44,15 +44,15 @@ The code that will be returned once the process exits. If the process is exited 
 
 #### `process.env`
 
-The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, but will not be reflected outside of it.
-
-#### `process.data`
-
-The current user data. If modified, the changes will be visible to JavaScript and native code running in the current process. See [User data](##user-data) for more information.
+The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
 
 #### `process.versions`
 
 An object containing the version strings of :pear:.js and its dependencies.
+
+#### `process.thread`
+
+A reference to the current thread. Will be `null` on the main thread. See [Threads](#threads) for more information.
 
 #### `process.cwd()`
 
@@ -126,9 +126,50 @@ Emitted when the process becomes idle after suspension. After this, the loop wil
 
 Emitted when the process resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
 
+### Threads
+
+The builtin `thread` module provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
+
+#### `Thread.isMainThread`
+
+`true` if the current thread is the main thread.
+
+#### `const thread = new Thread(filename[, options])`
+
+Start a new thread that will load and run `filename`.
+
+Options include:
+
+```js
+{
+  source: Buffer, // Optional file source, will be read from `filename` if not provided
+  data: Buffer // Optional thread data
+}
+```
+
+#### `thread.join()`
+
+Block and wait for the thread to exit.
+
+#### `process.thread`
+
+A reference to the current thread. Will be `null` on the main thread.
+
+#### `process.thread.data`
+
+A copy of the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
+
+#### `process.thread.stop()`
+
+Stop and exit the current thread as soon as possible.
+
+#### `process.thread.on('exit')`
+
+Emitted when the current thread exits.
+
 ### Modules
 
-In addition to the core `process` module, :pear:.js provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
+In addition to the core `process` and `thread` modules, :pear:.js provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
 
 - `assert` (<https://github.com/holepunchto/pearjs-assert>)
 - `buffer` (<https://github.com/holepunchto/pearjs-buffer>)
@@ -162,10 +203,6 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 :pear:.js provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, a `suspend` event will be emitted on the `process` object. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
 
 The suspension API is available through `pear_suspend()` and `pear_resume()` from C and `process.suspend()` and `process.resume()` from JavaScript. See [`example/suspend.js`](example/suspend.js) for an example of using the suspension API from JavaScript.
-
-### User data
-
-:pear:.js provides a common API for simple user data exchange between the embedder, the JavaScript layer, and the native addon layer. The API provides a key/value store that associates string keys with JavaScript values, leaving it up to the embedder to decide on the meaning of the keys. Keys can be added and retrieved through `pear_set_data()` and `pear_get_data()` from C, and also accessed through `process.data` from JavaScript. 
 
 ## Building
 
