@@ -7,6 +7,7 @@
     "module": "./builtins/module.js",
     "path": "./builtins/path.js",
     "process": "./builtins/process.js",
+    "repl": "./builtins/repl.js",
     "timers": "./builtins/timers.js"
   }
 }

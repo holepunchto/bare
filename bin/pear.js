@@ -29,7 +29,7 @@ if (argv.v) {
   process.exit()
 }
 
-if (argv.h || argc === 0) {
+if (argv.h) {
   console.log(`
 🍐.js
 Small and modular JavaScript runtime for desktop and mobile.
@@ -57,8 +57,14 @@ if (argv.m) {
   }
 }
 
-Module.load(
-  process.argv[1] = Module.resolve(
-    path.resolve(process.cwd(), process.argv[1])
+if (argc === 0) {
+  const REPL = require('repl')
+  const repl = new REPL()
+  repl.start()
+} else {
+  Module.load(
+    process.argv[1] = Module.resolve(
+      path.resolve(process.cwd(), process.argv[1])
+    )
   )
-)
+}

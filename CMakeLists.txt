@@ -34,6 +34,7 @@ add_pear_bundle(
     src/builtins/process/env.js
     src/builtins/process/hrtime.js
     src/builtins/process/thread.js
+    src/builtins/repl.js
     src/builtins/thread.js
     src/builtins/timers.js
 )
@@ -117,6 +118,7 @@ endif()
 include_pear_module(pear_buffer node_modules/@pearjs/buffer)
 include_pear_module(pear_module node_modules/@pearjs/module)
 include_pear_module(pear_timers node_modules/@pearjs/timers)
+include_pear_module(pear_repl node_modules/@pearjs/repl)
 
 add_library(pear OBJECT)
 
@@ -159,6 +161,7 @@ list(APPEND objects
   $<TARGET_OBJECTS:pear_buffer>
   $<TARGET_OBJECTS:pear_module>
   $<TARGET_OBJECTS:pear_timers>
+  $<TARGET_OBJECTS:pear_repl>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:mem>
