@@ -1,14 +1,11 @@
-import process from 'node:process'
+/* global bench */
+
 import { Buffer } from 'node:buffer'
 
-console.log(process.execPath)
+import '../harness.js'
 
 const buffer = Buffer.alloc(65536, 'a')
 
-console.time('buffer.toString()')
-
-for (let i = 0; i < 1e6; i++) {
+bench('buffer.toString()', () => {
   buffer.toString()
-}
-
-console.timeEnd('buffer.toString()')
+})

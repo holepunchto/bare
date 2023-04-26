@@ -1,11 +1,9 @@
-console.log(process.execPath)
+/* global bench */
+
+require('../harness')
 
 const buffer = Buffer.alloc(65536, 'a')
 
-console.time('buffer.toString()')
-
-for (let i = 0; i < 1e6; i++) {
+bench('buffer.toString()', () => {
   buffer.toString()
-}
-
-console.timeEnd('buffer.toString()')
+})

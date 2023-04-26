@@ -1,12 +1,9 @@
-import process from 'node:process'
+/* global bench */
+
 import { Buffer } from 'node:buffer'
 
-console.log(process.execPath)
+import '../harness.js'
 
-console.time('Buffer.allocUnsafe')
-
-for (let i = 0; i < 1e7; i++) {
+bench('Buffer.allocUnsafe', () => {
   Buffer.allocUnsafe(65536)
-}
-
-console.timeEnd('Buffer.allocUnsafe')
+})

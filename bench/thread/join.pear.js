@@ -1,13 +1,13 @@
+/* global bench */
+
 const Thread = require('thread')
+
+require('../harness')
 
 const source = Buffer.alloc(0)
 
-console.time('new Thread().join()')
-
-for (let i = 0; i < 1000; i++) {
+bench('new Thread().join()', () => {
   const thread = new Thread('overhead.js', { source })
 
   thread.join()
-}
-
-console.timeEnd('new Thread().join()')
+})

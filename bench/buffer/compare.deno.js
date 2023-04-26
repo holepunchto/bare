@@ -1,15 +1,12 @@
-import process from 'node:process'
+/* global bench */
+
 import { Buffer } from 'node:buffer'
 
-console.log(process.execPath)
+import '../harness.js'
 
 const a = Buffer.alloc(65536, 'a')
 const b = Buffer.alloc(65536, 'b')
 
-console.time('a.compare(b)')
-
-for (let i = 0; i < 1e7; i++) {
+bench('a.compare(b)', () => {
   a.compare(b)
-}
-
-console.timeEnd('a.compare(b)')
+})

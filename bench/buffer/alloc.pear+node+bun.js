@@ -1,9 +1,7 @@
-console.log(process.execPath)
+/* global bench */
 
-console.time('Buffer.alloc')
+require('../harness')
 
-for (let i = 0; i < 1e7; i++) {
-  Buffer.allocUnsafe(65536)
-}
-
-console.timeEnd('Buffer.alloc')
+bench('Buffer.alloc', () => {
+  Buffer.alloc(65536)
+})
