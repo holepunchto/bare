@@ -19,10 +19,11 @@ pear_target(target)
 add_pear_bundle(
   ENTRY src/pear.js
   OUT src/pear.js.h
-  CONFIG bundle.config.js
+  CONFIG src/bundle.config.js
   DEPENDS
-    bundle.config.js
     src/pear.js
+    src/bundle.config.js
+    src/import-map.json
     src/builtins/assert.js
     src/builtins/buffer.js
     src/builtins/console.js
