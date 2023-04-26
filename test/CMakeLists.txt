@@ -18,6 +18,7 @@ list(APPEND tests
   suspend-resume.js
   suspend-resume-immediate.js
   thread.js
+  thread-source.js
   timeout.js
   timeout-clear.js
 )
