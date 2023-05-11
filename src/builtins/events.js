@@ -1,1 +1,3 @@
-module.exports = require('@pearjs/events')
+const EventEmitter = module.exports = exports = require('@pearjs/events')
+
+exports.EventEmitter = EventEmitter
