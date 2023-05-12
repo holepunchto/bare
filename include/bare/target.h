@@ -1,46 +1,46 @@
-#ifndef PEAR_TARGET_H
-#define PEAR_TARGET_H
+#ifndef BARE_TARGET_H
+#define BARE_TARGET_H
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #if TARGET_OS_IOS
-#define PEAR_PLATFORM "ios"
-#define PEAR_PLATFORM_IOS
+#define BARE_PLATFORM "ios"
+#define BARE_PLATFORM_IOS
 #else
-#define PEAR_PLATFORM "darwin"
-#define PEAR_PLATFORM_DARWIN
+#define BARE_PLATFORM "darwin"
+#define BARE_PLATFORM_DARWIN
 #endif
 #elif defined(__linux__)
 #if defined(__ANDROID__)
-#define PEAR_PLATFORM "android"
-#define PEAR_PLATFORM_ANDROID
+#define BARE_PLATFORM "android"
+#define BARE_PLATFORM_ANDROID
 #else
-#define PEAR_PLATFORM "linux"
-#define PEAR_PLATFORM_LINUX
+#define BARE_PLATFORM "linux"
+#define BARE_PLATFORM_LINUX
 #endif
 #elif defined(_WIN32)
-#define PEAR_PLATFORM "win32"
-#define PEAR_PLATFORM_WINDOWS
+#define BARE_PLATFORM "win32"
+#define BARE_PLATFORM_WINDOWS
 #else
 #error Unsupported platform
 #endif
 
 #if defined(__aarch64__) || defined(_M_ARM64)
-#define PEAR_ARCH "arm64"
-#define PEAR_ARCH_ARM64
+#define BARE_ARCH "arm64"
+#define BARE_ARCH_ARM64
 #elif defined(__arm__) || defined(_M_ARM)
-#define PEAR_ARCH "arm"
-#define PEAR_ARCH_ARM
+#define BARE_ARCH "arm"
+#define BARE_ARCH_ARM
 #elif defined(__x86_64) || defined(_M_AMD64)
-#define PEAR_ARCH "x64"
-#define PEAR_ARCH_X64
+#define BARE_ARCH "x64"
+#define BARE_ARCH_X64
 #elif defined(__i386__) || defined(_M_IX86)
-#define PEAR_ARCH "ia32"
-#define PEAR_ARCH_IA32
+#define BARE_ARCH "ia32"
+#define BARE_ARCH_IA32
 #else
 #error Unsupported architecture
 #endif
 
-#define PEAR_TARGET PEAR_PLATFORM "-" PEAR_ARCH
+#define BARE_TARGET BARE_PLATFORM "-" BARE_ARCH
 
-#endif // PEAR_TARGET_H
+#endif // BARE_TARGET_H
