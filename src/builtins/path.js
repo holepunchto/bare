@@ -1,1 +1,1 @@
-module.exports = require('@pearjs/path')
+module.exports = require('bare-path')

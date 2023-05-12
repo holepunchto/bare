@@ -1,5 +1,5 @@
-#ifndef PEAR_RUNTIME_H
-#define PEAR_RUNTIME_H
+#ifndef BARE_RUNTIME_H
+#define BARE_RUNTIME_H
 
 #include <assert.h>
 #include <js.h>
@@ -10,18 +10,18 @@
 #include <string.h>
 #include <uv.h>
 
-#include "../include/pear.h"
+#include "../include/bare.h"
 #include "addons.h"
-#include "pear.js.h"
+#include "bare.js.h"
 #include "types.h"
 
-#ifdef PEAR_PLATFORM_ANDROID
+#ifdef BARE_PLATFORM_ANDROID
 #include "runtime/android.h"
 #else
 #include "runtime/posix.h"
 #endif
 
-#define PEAR_UV_ERROR_MAP_ITER(NAME, DESC) \
+#define BARE_UV_ERROR_MAP_ITER(NAME, DESC) \
   { \
     js_value_t *key_val; \
     js_create_array_with_length(env, 2, &key_val); \
@@ -41,8 +41,8 @@
   }
 
 static void
-pear_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
-  pear_runtime_t *runtime = (pear_runtime_t *) data;
+bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
+  bare_runtime_t *runtime = (bare_runtime_t *) data;
 
   int err;
 
@@ -75,7 +75,7 @@ err : {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = pear_runtime__print_error("Uncaught %s\n", str);
+  err = bare_runtime__print_error("Uncaught %s\n", str);
   assert(err >= 0);
 
   exit(1);
@@ -83,8 +83,8 @@ err : {
 }
 
 static void
-pear_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
-  pear_runtime_t *runtime = (pear_runtime_t *) data;
+bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
+  bare_runtime_t *runtime = (bare_runtime_t *) data;
 
   int err;
 
@@ -117,7 +117,7 @@ err : {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = pear_runtime__print_error("Uncaught (in promise) %s\n", str);
+  err = bare_runtime__print_error("Uncaught (in promise) %s\n", str);
   assert(err >= 0);
 
   exit(1);
@@ -125,7 +125,7 @@ err : {
 }
 
 static inline void
-pear_runtime_on_before_exit (pear_runtime_t *runtime) {
+bare_runtime_on_before_exit (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
@@ -146,7 +146,7 @@ pear_runtime_on_before_exit (pear_runtime_t *runtime) {
 }
 
 static inline void
-pear_runtime_on_exit (pear_runtime_t *runtime, int *exit_code) {
+bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
   uv_rwlock_rdlock(&runtime->process->locks.threads);
 
   while (runtime->process->threads) {
@@ -189,7 +189,7 @@ pear_runtime_on_exit (pear_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
-pear_runtime_on_thread_exit (pear_runtime_t *runtime) {
+bare_runtime_on_thread_exit (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
@@ -208,7 +208,7 @@ pear_runtime_on_thread_exit (pear_runtime_t *runtime) {
 }
 
 static inline void
-pear_runtime_on_suspend (pear_runtime_t *runtime) {
+bare_runtime_on_suspend (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
@@ -229,7 +229,7 @@ pear_runtime_on_suspend (pear_runtime_t *runtime) {
 }
 
 static inline void
-pear_runtime_on_idle (pear_runtime_t *runtime) {
+bare_runtime_on_idle (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
@@ -250,7 +250,7 @@ pear_runtime_on_idle (pear_runtime_t *runtime) {
 }
 
 static inline void
-pear_runtime_on_resume (pear_runtime_t *runtime) {
+bare_runtime_on_resume (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
@@ -271,7 +271,7 @@ pear_runtime_on_resume (pear_runtime_t *runtime) {
 }
 
 static js_value_t *
-pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[1];
@@ -292,7 +292,7 @@ pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = pear_runtime__print_info("%s", data);
+  err = bare_runtime__print_info("%s", data);
   assert(err >= 0);
 
   free(data);
@@ -301,7 +301,7 @@ pear_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[1];
@@ -322,7 +322,7 @@ pear_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = pear_runtime__print_error("%s", data);
+  err = bare_runtime__print_error("%s", data);
   assert(err >= 0);
 
   free(data);
@@ -331,8 +331,8 @@ pear_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -348,12 +348,12 @@ pear_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  return pear_addons_load(runtime, specifier);
+  return bare_addons_load(runtime, specifier);
 }
 
 static js_value_t *
-pear_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -371,7 +371,7 @@ pear_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  err = pear_addons_resolve(runtime, specifier, specifier, &specifier_len);
+  err = bare_addons_resolve(runtime, specifier, specifier, &specifier_len);
   if (err < 0) {
     js_throw_errorf(env, NULL, "Could not resolve addon %s", specifier);
     return NULL;
@@ -385,7 +385,7 @@ pear_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *argv[2];
@@ -414,7 +414,7 @@ pear_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_value_t *val;
@@ -435,7 +435,7 @@ pear_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -467,8 +467,8 @@ pear_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_get_env_keys (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_get_env_keys (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -510,8 +510,8 @@ pear_runtime_get_env_keys (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -562,8 +562,8 @@ pear_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -606,8 +606,8 @@ pear_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -655,8 +655,8 @@ pear_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
@@ -694,7 +694,7 @@ pear_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -722,12 +722,12 @@ pear_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   char *title = malloc(256);
   err = uv_get_process_title(title, 256);
-  if (err) memcpy(title, "pear", 5);
+  if (err) memcpy(title, "bare", 5);
 
   js_value_t *result;
   err = js_create_string_utf8(env, title, -1, &result);
@@ -739,55 +739,55 @@ pear_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_exit (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_exit (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  pear_exit(runtime->process, -1);
+  bare_exit(runtime->process, -1);
 
   return NULL;
 }
 
 static js_value_t *
-pear_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  pear_suspend(runtime->process);
+  bare_suspend(runtime->process);
 
   return NULL;
 }
 
 static js_value_t *
-pear_runtime_resume (js_env_t *env, js_callback_info_t *info) {
-  pear_runtime_t *runtime;
+bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
 
   int err;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  pear_resume(runtime->process);
+  bare_resume(runtime->process);
 
   return NULL;
 }
 
 static void
-pear_runtime_on_thread (void *data);
+bare_runtime_on_thread (void *data);
 
 static js_value_t *
-pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  pear_runtime_t *runtime;
+  bare_runtime_t *runtime;
 
   size_t argc = 4;
   js_value_t *argv[4];
@@ -842,12 +842,12 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  pear_thread_list_t *next = malloc(sizeof(pear_thread_list_t));
+  bare_thread_list_t *next = malloc(sizeof(bare_thread_list_t));
 
   next->previous = NULL;
   next->next = NULL;
 
-  pear_thread_t *thread = &next->thread;
+  bare_thread_t *thread = &next->thread;
 
   err = uv_sem_init(&thread->ready, 0);
   assert(err == 0);
@@ -886,7 +886,7 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
     .stack_size = stack_size,
   };
 
-  err = uv_thread_create_ex(&thread->id, &options, pear_runtime_on_thread, (void *) thread);
+  err = uv_thread_create_ex(&thread->id, &options, bare_runtime_on_thread, (void *) thread);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -905,10 +905,10 @@ pear_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  pear_runtime_t *runtime;
+  bare_runtime_t *runtime;
 
   size_t argc = 1;
   js_value_t *argv[1];
@@ -928,7 +928,7 @@ pear_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-pear_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   uv_loop_t *loop;
@@ -941,7 +941,7 @@ pear_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static inline void
-pear_runtime_setup (pear_runtime_t *runtime) {
+bare_runtime_setup (bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -949,10 +949,10 @@ pear_runtime_setup (pear_runtime_t *runtime) {
   err = js_create_object(env, &runtime->exports);
   assert(err == 0);
 
-  err = js_on_uncaught_exception(env, pear_runtime_on_uncaught_exception, (void *) runtime);
+  err = js_on_uncaught_exception(env, bare_runtime_on_uncaught_exception, (void *) runtime);
   assert(err == 0);
 
-  err = js_on_unhandled_rejection(env, pear_runtime_on_unhandled_rejection, (void *) runtime);
+  err = js_on_unhandled_rejection(env, bare_runtime_on_unhandled_rejection, (void *) runtime);
   assert(err == 0);
 
   js_value_t *exports = runtime->exports;
@@ -963,10 +963,10 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 
     js_value_t *val;
 
-    js_create_string_utf8(env, PEAR_VERSION, -1, &val);
-    js_set_named_property(env, versions, "pear", val);
+    js_create_string_utf8(env, BARE_VERSION, -1, &val);
+    js_set_named_property(env, versions, "bare", val);
 
-    js_create_string_utf8(env, PEAR_STRING(PEAR_MODULE_VERSION), -1, &val);
+    js_create_string_utf8(env, BARE_STRING(BARE_MODULE_VERSION), -1, &val);
     js_set_named_property(env, versions, "modules", val);
 
     if (js_platform_version) {
@@ -989,12 +989,12 @@ pear_runtime_setup (pear_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_string_utf8(env, PEAR_PLATFORM, -1, &val);
+    js_create_string_utf8(env, BARE_PLATFORM, -1, &val);
     js_set_named_property(env, exports, "platform", val);
   }
   {
     js_value_t *val;
-    js_create_string_utf8(env, PEAR_ARCH, -1, &val);
+    js_create_string_utf8(env, BARE_ARCH, -1, &val);
     js_set_named_property(env, exports, "arch", val);
   }
   js_value_t *exec_path_val;
@@ -1029,7 +1029,7 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 
     js_create_array(env, &arr);
 
-    UV_ERRNO_MAP(PEAR_UV_ERROR_MAP_ITER)
+    UV_ERRNO_MAP(BARE_UV_ERROR_MAP_ITER)
 
     js_set_named_property(env, exports, "errnos", arr);
   }
@@ -1040,102 +1040,102 @@ pear_runtime_setup (pear_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_function(env, "setTitle", -1, pear_runtime_set_title, NULL, &val);
+    js_create_function(env, "setTitle", -1, bare_runtime_set_title, NULL, &val);
     js_set_named_property(env, exports, "setTitle", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "getTitle", -1, pear_runtime_get_title, NULL, &val);
+    js_create_function(env, "getTitle", -1, bare_runtime_get_title, NULL, &val);
     js_set_named_property(env, exports, "getTitle", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "cwd", -1, pear_runtime_cwd, NULL, &val);
+    js_create_function(env, "cwd", -1, bare_runtime_cwd, NULL, &val);
     js_set_named_property(env, exports, "cwd", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "chdir", -1, pear_runtime_chdir, NULL, &val);
+    js_create_function(env, "chdir", -1, bare_runtime_chdir, NULL, &val);
     js_set_named_property(env, exports, "chdir", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "getEnvKeys", -1, pear_runtime_get_env_keys, (void *) runtime, &val);
+    js_create_function(env, "getEnvKeys", -1, bare_runtime_get_env_keys, (void *) runtime, &val);
     js_set_named_property(env, exports, "getEnvKeys", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "getEnv", -1, pear_runtime_get_env, (void *) runtime, &val);
+    js_create_function(env, "getEnv", -1, bare_runtime_get_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "getEnv", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "hasEnv", -1, pear_runtime_has_env, (void *) runtime, &val);
+    js_create_function(env, "hasEnv", -1, bare_runtime_has_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "hasEnv", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "setEnv", -1, pear_runtime_set_env, (void *) runtime, &val);
+    js_create_function(env, "setEnv", -1, bare_runtime_set_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "setEnv", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "unsetEnv", -1, pear_runtime_unset_env, (void *) runtime, &val);
+    js_create_function(env, "unsetEnv", -1, bare_runtime_unset_env, (void *) runtime, &val);
     js_set_named_property(env, exports, "unsetEnv", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "printInfo", -1, pear_runtime_print_info, NULL, &val);
+    js_create_function(env, "printInfo", -1, bare_runtime_print_info, NULL, &val);
     js_set_named_property(env, exports, "printInfo", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "printError", -1, pear_runtime_print_error, NULL, &val);
+    js_create_function(env, "printError", -1, bare_runtime_print_error, NULL, &val);
     js_set_named_property(env, exports, "printError", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "hrtime", -1, pear_runtime_hrtime, NULL, &val);
+    js_create_function(env, "hrtime", -1, bare_runtime_hrtime, NULL, &val);
     js_set_named_property(env, exports, "hrtime", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, pear_runtime_load_addon, (void *) runtime, &val);
+    js_create_function(env, "loadAddon", -1, bare_runtime_load_addon, (void *) runtime, &val);
     js_set_named_property(env, exports, "loadAddon", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "resolveAddon", -1, pear_runtime_resolve_addon, (void *) runtime, &val);
+    js_create_function(env, "resolveAddon", -1, bare_runtime_resolve_addon, (void *) runtime, &val);
     js_set_named_property(env, exports, "resolveAddon", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "exit", -1, pear_runtime_exit, (void *) runtime, &val);
+    js_create_function(env, "exit", -1, bare_runtime_exit, (void *) runtime, &val);
     js_set_named_property(env, exports, "exit", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "suspend", -1, pear_runtime_suspend, (void *) runtime, &val);
+    js_create_function(env, "suspend", -1, bare_runtime_suspend, (void *) runtime, &val);
     js_set_named_property(env, exports, "suspend", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "resume", -1, pear_runtime_resume, (void *) runtime, &val);
+    js_create_function(env, "resume", -1, bare_runtime_resume, (void *) runtime, &val);
     js_set_named_property(env, exports, "resume", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "setupThread", -1, pear_runtime_setup_thread, (void *) runtime, &val);
+    js_create_function(env, "setupThread", -1, bare_runtime_setup_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "setupThread", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "joinThread", -1, pear_runtime_join_thread, (void *) runtime, &val);
+    js_create_function(env, "joinThread", -1, bare_runtime_join_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "joinThread", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "stopCurrentThread", -1, pear_runtime_stop_current_thread, (void *) runtime, &val);
+    js_create_function(env, "stopCurrentThread", -1, bare_runtime_stop_current_thread, (void *) runtime, &val);
     js_set_named_property(env, exports, "stopCurrentThread", val);
   }
   {
@@ -1150,10 +1150,10 @@ pear_runtime_setup (pear_runtime_t *runtime) {
   js_set_named_property(env, global, "global", global);
 
   js_value_t *script;
-  js_create_string_utf8(env, (const char *) pear_bundle, pear_bundle_len, &script);
+  js_create_string_utf8(env, (const char *) bare_bundle, bare_bundle_len, &script);
 
   js_value_t *entry;
-  err = js_run_script(env, "pear:pear.js", -1, 0, script, &entry);
+  err = js_run_script(env, "bare:bare.js", -1, 0, script, &entry);
   assert(err == 0);
 
   err = js_call_function(env, global, entry, 1, &exports, NULL);
@@ -1161,7 +1161,7 @@ pear_runtime_setup (pear_runtime_t *runtime) {
 }
 
 static inline int
-pear_runtime_run (pear_runtime_t *runtime, const char *filename, const uv_buf_t *source) {
+bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source) {
   js_env_t *env = runtime->env;
 
   int err;
@@ -1199,15 +1199,15 @@ pear_runtime_run (pear_runtime_t *runtime, const char *filename, const uv_buf_t 
 }
 
 static void
-pear_runtime_on_thread (void *data) {
-  pear_thread_t *thread = (pear_thread_t *) data;
+bare_runtime_on_thread (void *data) {
+  bare_thread_t *thread = (bare_thread_t *) data;
 
   int err;
 
   err = js_create_env(thread->runtime.loop, thread->runtime.platform, &thread->runtime.env);
   assert(err == 0);
 
-  pear_runtime_setup(&thread->runtime);
+  bare_runtime_setup(&thread->runtime);
 
   js_value_t *thread_data;
 
@@ -1227,13 +1227,13 @@ pear_runtime_on_thread (void *data) {
 
   uv_sem_post(&thread->ready);
 
-  err = pear_runtime_run(&thread->runtime, thread->filename, thread->has_source ? &thread->source : NULL);
+  err = bare_runtime_run(&thread->runtime, thread->filename, thread->has_source ? &thread->source : NULL);
   assert(err == 0);
 
   err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
   assert(err >= 0);
 
-  pear_runtime_on_thread_exit(&thread->runtime);
+  bare_runtime_on_thread_exit(&thread->runtime);
 
   err = js_destroy_env(thread->runtime.env);
   assert(err == 0);
@@ -1248,7 +1248,7 @@ pear_runtime_on_thread (void *data) {
 
   uv_rwlock_wrlock(&thread->runtime.process->locks.threads);
 
-  pear_thread_list_t *node = (pear_thread_list_t *) thread;
+  bare_thread_list_t *node = (bare_thread_list_t *) thread;
 
   if (node->previous) {
     node->previous->next = node->next;
@@ -1268,4 +1268,4 @@ pear_runtime_on_thread (void *data) {
   free(thread);
 }
 
-#endif // PEAR_RUNTIME_H
+#endif // BARE_RUNTIME_H

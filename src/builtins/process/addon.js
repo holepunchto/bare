@@ -1,4 +1,4 @@
-/* global pear */
+/* global bare */
 
 const path = require('../path')
 
@@ -9,7 +9,7 @@ module.exports = exports = function addon (specifier) {
 
   if (exports.cache[specifier]) return exports.cache[specifier]
 
-  const addon = exports.cache[specifier] = pear.loadAddon(specifier)
+  const addon = exports.cache[specifier] = bare.loadAddon(specifier)
 
   return addon
 }
@@ -21,7 +21,7 @@ exports.resolve = function resolve (specifier) {
 
   specifier = normalize(specifier)
 
-  return pear.resolveAddon(specifier)
+  return bare.resolveAddon(specifier)
 }
 
 function normalize (specifier) {

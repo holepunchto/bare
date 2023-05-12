@@ -1,16 +1,16 @@
-/* global pear */
+/* global bare */
 
 module.exports = new Proxy(Object.create(null), {
   ownKeys (target) {
-    return pear.getEnvKeys()
+    return bare.getEnvKeys()
   },
 
   get (target, property) {
-    return pear.getEnv(property)
+    return bare.getEnv(property)
   },
 
   has (target, property) {
-    return pear.hasEnv(property)
+    return bare.hasEnv(property)
   },
 
   set (target, property, value) {
@@ -22,11 +22,11 @@ module.exports = new Proxy(Object.create(null), {
 
     value = String(value)
 
-    pear.setEnv(property, value)
+    bare.setEnv(property, value)
   },
 
   deleteProperty (target, property) {
-    pear.unsetEnv(property)
+    bare.unsetEnv(property)
   },
 
   getOwnPropertyDescriptor (target, property) {

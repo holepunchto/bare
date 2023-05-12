@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(pear_addon C)
+project(bare_addon C)
 
-include(pear)
+include(bare)
 
-add_pear_module(pear_addon)
+add_bare_module(bare_addon)
 
 target_sources(
-  pear_addon
+  bare_addon
   PRIVATE
     binding.c
 )

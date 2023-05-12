@@ -1,4 +1,4 @@
-const timers = module.exports = require('@pearjs/timers')
+const timers = module.exports = require('bare-timers')
 
 global.setTimeout = timers.setTimeout
 global.clearTimeout = timers.clearTimeout

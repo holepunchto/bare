@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <uv.h>
 
-#include "../include/pear.h"
-#include "pear.bundle.h"
+#include "../include/bare.h"
+#include "bare.bundle.h"
 
 int
 main (int argc, char *argv[]) {
@@ -10,17 +10,17 @@ main (int argc, char *argv[]) {
 
   argv = uv_setup_args(argc, argv);
 
-  pear_t *pear;
-  err = pear_setup(uv_default_loop(), argc, argv, &pear);
+  bare_t *bare;
+  err = bare_setup(uv_default_loop(), argc, argv, &bare);
   assert(err == 0);
 
   uv_buf_t source = uv_buf_init((char *) bundle, bundle_len);
 
-  err = pear_run(pear, "/pear.bundle", &source);
+  err = bare_run(bare, "/bare.bundle", &source);
   assert(err == 0);
 
   int exit_code;
-  err = pear_teardown(pear, &exit_code);
+  err = bare_teardown(bare, &exit_code);
   assert(err == 0);
 
   return exit_code;

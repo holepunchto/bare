@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <bare.h>
 #include <js.h>
-#include <pear.h>
 
 static js_value_t *
 init (js_env_t *env, js_value_t *exports) {
@@ -10,4 +10,4 @@ init (js_env_t *env, js_value_t *exports) {
   return exports;
 }
 
-PEAR_MODULE(test_binding, init)
+BARE_MODULE(test_binding, init)

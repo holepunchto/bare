@@ -1,13 +1,13 @@
 {
   "private": true,
-  "name": "pearjs-next",
+  "name": "bare",
   "version": "0.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
-    "test": "standard && pear-dev test",
-    "install": "pear-dev vendor sync",
-    "configure": "pear-dev configure",
-    "build": "pear-dev build"
+    "test": "standard && bare-dev test",
+    "install": "bare-dev vendor sync",
+    "configure": "bare-dev configure",
+    "build": "bare-dev build"
   },
   "standard": {
     "ignore": [
@@ -16,23 +16,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/holepunchto/pearjs-next.git"
+    "url": "git+https://github.com/holepunchto/bare.git"
   },
   "author": "Holepunch",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/holepunchto/pearjs-next/issues"
+    "url": "https://github.com/holepunchto/bare/issues"
   },
-  "homepage": "https://github.com/holepunchto/pearjs-next#readme",
+  "homepage": "https://github.com/holepunchto/bare#readme",
   "devDependencies": {
-    "@pearjs/assert": "^1.0.0",
-    "@pearjs/buffer": "^1.2.0",
-    "@pearjs/console": "^2.0.0",
-    "@pearjs/dev": "^0.2.5",
-    "@pearjs/events": "^1.2.0",
-    "@pearjs/module": "^1.8.3",
-    "@pearjs/path": "^1.0.5",
-    "@pearjs/timers": "^1.4.2",
+    "bare-assert": "^1.0.0",
+    "bare-buffer": "^1.2.0",
+    "bare-console": "^2.0.0",
+    "bare-dev": "^0.2.5",
+    "bare-events": "^1.2.0",
+    "bare-module": "^1.8.3",
+    "bare-path": "^1.0.5",
+    "bare-timers": "^1.4.2",
     "minimist": "^1.2.8",
     "standard": "^17.0.0"
   }

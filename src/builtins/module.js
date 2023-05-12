@@ -1,4 +1,4 @@
-const Module = module.exports = require('@pearjs/module')
+const Module = module.exports = require('bare-module')
 
 Module._builtins.assert = require('./assert')
 Module._builtins.buffer = require('./buffer')

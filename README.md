@@ -1,26 +1,26 @@
-# :pear:.js
+# Bare
 
 Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for writing applications in the lingua franca of modern software. Unlike Node.js, it makes embedding and cross-device support core use cases, aiming to run just as well on your phone as on your laptop. The result is a runtime ideal for networked, peer-to-peer applications that can run on a wide selection of hardware.
 
 ## Usage
 
 ```sh
-$ pear [-m, --import-map <path>] <filename>
+$ bare [-m, --import-map <path>] <filename>
 ```
 
 ## API
 
 ### `process`
 
-The core JavaScript API of :pear:.js is available through the global `process` object, which is also available by importing the builtin `process` module. The `process` object provides information about, and control over, the :pear:.js process and also provides access to core functionality like loading native addons.
+The core JavaScript API of Bare is available through the global `process` object, which is also available by importing the builtin `process` module. The `process` object provides information about, and control over, the Bare process and also provides access to core functionality like loading native addons.
 
 #### `process.platform`
 
-The identifier of the operating system for which :pear:.js was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
+The identifier of the operating system for which Bare was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
 
 #### `process.arch`
 
-The identifier of the processor architecture for which :pear:.js was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
+The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
 
 #### `process.execPath`
 
@@ -48,7 +48,7 @@ The current user environment. If modified, the changes will be visible to JavaSc
 
 #### `process.versions`
 
-An object containing the version strings of :pear:.js and its dependencies.
+An object containing the version strings of Bare and its dependencies.
 
 #### `process.thread`
 
@@ -76,7 +76,7 @@ Resume the process after suspension. This can be used to cancel process suspensi
 
 #### `process.addon(specifier)`
 
-Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, :pear:.js will instead look for a matching dynamic object library using `process.addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = process.addon(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
+Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, Bare will instead look for a matching dynamic object library using `process.addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = process.addon(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
 
 #### `process.addon.resolve(specifier)`
 
@@ -169,44 +169,44 @@ Emitted when the current thread exits.
 
 ### Modules
 
-In addition to the core `process` and `thread` modules, :pear:.js provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
+In addition to the core `process` and `thread` modules, Bare provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
 
-- `assert` (<https://github.com/holepunchto/pearjs-assert>)
-- `buffer` (<https://github.com/holepunchto/pearjs-buffer>)
-- `console` (<https://github.com/holepunchto/pearjs-console>)
-- `events` (<https://github.com/holepunchto/pearjs-events>)
-- `module` (<https://github.com/holepunchto/pearjs-module>)
-- `path` (<https://github.com/holepunchto/pearjs-path>)
-- `timers` (<https://github.com/holepunchto/pearjs-timers>)
+- `assert` (<https://github.com/holepunchto/barejs-assert>)
+- `buffer` (<https://github.com/holepunchto/barejs-buffer>)
+- `console` (<https://github.com/holepunchto/barejs-console>)
+- `events` (<https://github.com/holepunchto/barejs-events>)
+- `module` (<https://github.com/holepunchto/barejs-module>)
+- `path` (<https://github.com/holepunchto/barejs-path>)
+- `timers` (<https://github.com/holepunchto/barejs-timers>)
 
 ### Embedding
 
-:pear:.js can easily be embedded using the C API defined in [`include/pear.h`](include/pear.h):
+Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):
 
 ```c
-#include <pear.h>
+#include <bare.h>
 #include <uv.h>
 
-pear_t pear;
-pear_setup(uv_default_loop(), &pear, argc, argv);
+bare_t bare;
+bare_setup(uv_default_loop(), &bare, argc, argv);
 
-pear_run(&pear, filename, source);
+bare_run(&bare, filename, source);
 
 int exit_code;
-pear_teardown(&pear, &exit_code);
+bare_teardown(&bare, &exit_code);
 ```
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime.
 
 ### Suspension
 
-:pear:.js provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, a `suspend` event will be emitted on the `process` object. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
+Bare provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, a `suspend` event will be emitted on the `process` object. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
 
-The suspension API is available through `pear_suspend()` and `pear_resume()` from C and `process.suspend()` and `process.resume()` from JavaScript. See [`example/suspend.js`](example/suspend.js) for an example of using the suspension API from JavaScript.
+The suspension API is available through `bare_suspend()` and `bare_resume()` from C and `process.suspend()` and `process.resume()` from JavaScript. See [`example/suspend.js`](example/suspend.js) for an example of using the suspension API from JavaScript.
 
 ## Building
 
-To build :pear:.js, start by installing the dependencies:
+To build Bare, start by installing the dependencies:
 
 ```sh
 $ npm install
@@ -224,11 +224,11 @@ Finally, perform the build:
 $ npm run build
 ```
 
-When completed, the `pear` binary will be available in the `build/bin` directory and the `libpear.(a|lib)` and `(lib)pear.(dylib|dll)` libraries will be available in the root of the `build` directory.
+When completed, the `bare` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll)` libraries will be available in the root of the `build` directory.
 
 ### Linking
 
-When linking against the static `libpear.(a|lib)` library, make sure to use whole archive linking as :pear:.js relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
+When linking against the static `libbare.(a|lib)` library, make sure to use whole archive linking as Bare relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
 
 ## License
 

@@ -1,4 +1,4 @@
-add_pear_bundle(
+add_bare_bundle(
   ENTRY mod.js
   OUT mod.bundle
 )

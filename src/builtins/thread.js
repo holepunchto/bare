@@ -1,4 +1,4 @@
-/* global pear */
+/* global bare */
 
 module.exports = exports = class Thread {
   constructor (filename, opts = {}) {
@@ -10,15 +10,15 @@ module.exports = exports = class Thread {
 
     this._joined = false
 
-    this._handle = pear.setupThread(filename, source, data, stackSize)
+    this._handle = bare.setupThread(filename, source, data, stackSize)
   }
 
   join () {
     if (this._joined) return
     this._joined = true
 
-    pear.joinThread(this._handle)
+    bare.joinThread(this._handle)
   }
 }
 
-exports.isMainThread = pear.isMainThread
+exports.isMainThread = bare.isMainThread

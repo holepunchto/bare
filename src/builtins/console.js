@@ -1,13 +1,13 @@
-/* global pear */
+/* global bare */
 
-const Console = require('@pearjs/console')
+const Console = require('bare-console')
 
 global.console = module.exports = exports = new Console({
   stdout (data) {
-    pear.printInfo(data)
+    bare.printInfo(data)
   },
   stderr (data) {
-    pear.printError(data)
+    bare.printError(data)
   }
 })
 

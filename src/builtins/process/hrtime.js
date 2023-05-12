@@ -1,10 +1,10 @@
-/* global pear */
+/* global bare */
 
 const EMPTY = new Uint32Array([0, 0])
 
 module.exports = exports = function hrtime (prev = EMPTY) {
   const result = new Uint32Array(2)
-  pear.hrtime(result, prev)
+  bare.hrtime(result, prev)
   return result
 }
 

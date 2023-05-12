@@ -1,3 +1,3 @@
-global.Buffer = module.exports = exports = require('@pearjs/buffer')
+global.Buffer = module.exports = exports = require('bare-buffer')
 
 exports.Buffer = Buffer

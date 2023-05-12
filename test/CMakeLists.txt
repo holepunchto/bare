@@ -23,7 +23,7 @@ list(APPEND tests
   timeout-clear.js
 )
 
-if(PEAR_USE_JAVASCRIPTCORE)
+if(BARE_USE_JAVASCRIPTCORE)
   list(APPEND skipped_tests
     import-addon.mjs
     import-cjs.mjs
@@ -49,20 +49,20 @@ foreach(file IN LISTS tests)
     target_link_libraries(
       ${test}
       PRIVATE
-        $<LINK_LIBRARY:WHOLE_ARCHIVE,pear_static>
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
     )
 
     target_include_directories(
       ${test}
       PRIVATE
-        $<TARGET_PROPERTY:pear,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
     )
 
     set(command ${test})
   endif()
 
   if(file MATCHES "\.(c|m)?js$")
-    set(command pear_bin test/${file})
+    set(command bare_bin test/${file})
   endif()
 
   add_test(

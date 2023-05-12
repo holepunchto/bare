@@ -1,1 +1,1 @@
-module.exports = require('@pearjs/assert')
+module.exports = require('bare-assert')

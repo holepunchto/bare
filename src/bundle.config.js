@@ -1,9 +1,9 @@
 module.exports = {
-  protocol: 'pear',
+  protocol: 'bare',
   format: 'js',
   target: 'c',
-  name: 'pear_bundle',
+  name: 'bare_bundle',
   importMap: require.resolve('./import-map.json'),
-  header: '(function (pear) {',
+  header: '(function (bare) {',
   footer: '})'
 }

@@ -35,7 +35,7 @@ if (argv.h || argc === 0) {
 Small and modular JavaScript runtime for desktop and mobile.
 
 Usage:
-  pear [-m, --import-map <path>] <filename>
+  bare [-m, --import-map <path>] <filename>
   `.trim())
 
   process.exit(argv.h || argc > 0 ? 0 : 1)

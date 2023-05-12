@@ -1,21 +1,21 @@
-#ifndef PEAR_TYPES_H
-#define PEAR_TYPES_H
+#ifndef BARE_TYPES_H
+#define BARE_TYPES_H
 
 #include <js.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <uv.h>
 
-#include "../include/pear.h"
+#include "../include/bare.h"
 
-typedef struct pear_runtime_s pear_runtime_t;
-typedef struct pear_thread_s pear_thread_t;
-typedef struct pear_thread_list_s pear_thread_list_t;
+typedef struct bare_runtime_s bare_runtime_t;
+typedef struct bare_thread_s bare_thread_t;
+typedef struct bare_thread_list_s bare_thread_list_t;
 
-struct pear_runtime_s {
+struct bare_runtime_s {
   uv_loop_t *loop;
 
-  pear_t *process;
+  bare_t *process;
 
   js_platform_t *platform;
   js_env_t *env;
@@ -26,20 +26,20 @@ struct pear_runtime_s {
   char **argv;
 };
 
-struct pear_s {
+struct bare_s {
   uv_sem_t idle;
   bool suspended;
   bool exited;
 
-  pear_before_exit_cb on_before_exit;
-  pear_exit_cb on_exit;
-  pear_suspend_cb on_suspend;
-  pear_idle_cb on_idle;
-  pear_resume_cb on_resume;
+  bare_before_exit_cb on_before_exit;
+  bare_exit_cb on_exit;
+  bare_suspend_cb on_suspend;
+  bare_idle_cb on_idle;
+  bare_resume_cb on_resume;
 
-  pear_thread_list_t *threads;
+  bare_thread_list_t *threads;
 
-  pear_runtime_t runtime;
+  bare_runtime_t runtime;
 
   struct {
     uv_rwlock_t threads;
@@ -47,7 +47,7 @@ struct pear_s {
   } locks;
 };
 
-struct pear_thread_s {
+struct bare_thread_s {
   uv_thread_t id;
 
   uv_sem_t ready;
@@ -60,14 +60,14 @@ struct pear_thread_s {
   uv_buf_t data;
   bool has_data;
 
-  pear_runtime_t runtime;
+  bare_runtime_t runtime;
 };
 
-struct pear_thread_list_s {
-  pear_thread_t thread;
+struct bare_thread_list_s {
+  bare_thread_t thread;
 
-  pear_thread_list_t *previous;
-  pear_thread_list_t *next;
+  bare_thread_list_t *previous;
+  bare_thread_list_t *next;
 };
 
-#endif // PEAR_TYPES_H
+#endif // BARE_TYPES_H

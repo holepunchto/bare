@@ -2,9 +2,9 @@ const assert = require('assert')
 const path = require('path')
 
 const [
-  pear,
+  bare,
   file
 ] = process.argv
 
-assert(pear === path.resolve(process.cwd(), 'build/bin/pear'))
+assert(bare === path.resolve(process.cwd(), 'build/bin/bare'))
 assert(file === path.resolve(process.cwd(), 'test/process-argv.js'))

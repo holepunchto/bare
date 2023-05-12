@@ -1,7 +1,7 @@
-/* global pear */
+/* global bare */
 
 require('./builtins/process')
 
 const Module = require('./builtins/module')
 
-pear.run = Module.load.bind(Module)
+bare.run = Module.load.bind(Module)

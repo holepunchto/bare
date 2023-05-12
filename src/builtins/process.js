@@ -1,4 +1,4 @@
-/* global pear */
+/* global bare */
 
 const EventEmitter = require('./events')
 
@@ -12,68 +12,68 @@ class Process extends EventEmitter {
   constructor () {
     super()
 
-    this.errnos = new Map(pear.errnos)
+    this.errnos = new Map(bare.errnos)
   }
 
   get platform () {
-    return pear.platform
+    return bare.platform
   }
 
   get arch () {
-    return pear.arch
+    return bare.arch
   }
 
   get execPath () {
-    return pear.execPath
+    return bare.execPath
   }
 
   get argv () {
-    return pear.argv
+    return bare.argv
   }
 
   get pid () {
-    return pear.pid
+    return bare.pid
   }
 
   get title () {
-    return pear.getTitle()
+    return bare.getTitle()
   }
 
   set title (title) {
-    if (typeof title === 'string') pear.setTitle(title)
+    if (typeof title === 'string') bare.setTitle(title)
   }
 
   get exitCode () {
-    return pear.exitCode
+    return bare.exitCode
   }
 
   set exitCode (code) {
-    pear.exitCode = (Number(code) || 0) & 0xff
+    bare.exitCode = (Number(code) || 0) & 0xff
   }
 
   get versions () {
-    return pear.versions
+    return bare.versions
   }
 
   cwd () {
-    return pear.cwd()
+    return bare.cwd()
   }
 
   chdir (directory) {
-    pear.chdir(directory)
+    bare.chdir(directory)
   }
 
   exit (code = this.exitCode) {
     this.exitCode = code
-    pear.exit()
+    bare.exit()
   }
 
   suspend () {
-    pear.suspend()
+    bare.suspend()
   }
 
   resume () {
-    pear.resume()
+    bare.resume()
   }
 
   nextTick (cb, ...args) {
@@ -83,41 +83,41 @@ class Process extends EventEmitter {
 
 global.process = module.exports = exports = new Process()
 
-pear.onuncaughtexception = function onuncaughtexception (err) {
+bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
-  pear.printError(`Uncaught ${err.stack}\n`)
-  pear.exitCode = 1
-  pear.exit()
+  bare.printError(`Uncaught ${err.stack}\n`)
+  bare.exitCode = 1
+  bare.exit()
 }
 
-pear.onunhandledrejection = function onunhandledrejection (reason, promise) {
+bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
-  pear.printError(`Uncaught (in promise) ${reason.stack}\n`)
-  pear.exitCode = 1
-  pear.exit()
+  bare.printError(`Uncaught (in promise) ${reason.stack}\n`)
+  bare.exitCode = 1
+  bare.exit()
 }
 
-pear.onbeforeexit = function onbeforeexit () {
-  exports.emit('beforeExit', pear.exitCode)
+bare.onbeforeexit = function onbeforeexit () {
+  exports.emit('beforeExit', bare.exitCode)
 }
 
-pear.onexit = function onexit () {
-  exports.emit('exit', pear.exitCode)
+bare.onexit = function onexit () {
+  exports.emit('exit', bare.exitCode)
 }
 
-pear.onthreadexit = function onthreadexit () {
+bare.onthreadexit = function onthreadexit () {
   exports.thread.emit('exit')
 }
 
-pear.onsuspend = function onsuspend () {
+bare.onsuspend = function onsuspend () {
   exports.emit('suspend')
 }
 
-pear.onidle = function onidle () {
+bare.onidle = function onidle () {
   exports.emit('idle')
 }
 
-pear.onresume = function onresume () {
+bare.onresume = function onresume () {
   exports.emit('resume')
 }
 

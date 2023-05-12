@@ -1,5 +1,5 @@
-#ifndef PEAR_ADDONS_H
-#define PEAR_ADDONS_H
+#ifndef BARE_ADDONS_H
+#define BARE_ADDONS_H
 
 #include <assert.h>
 #include <js.h>
@@ -10,30 +10,30 @@
 #include <string.h>
 #include <uv.h>
 
-#include "../include/pear.h"
+#include "../include/bare.h"
 #include "types.h"
 
-#define PEAR_ADDONS_MAX_ENTRIES 256
+#define BARE_ADDONS_MAX_ENTRIES 256
 
-typedef struct pear_module_list_s pear_module_list_t;
+typedef struct bare_module_list_s bare_module_list_t;
 
-struct pear_module_list_s {
-  pear_module_t mod;
-  pear_module_list_t *next;
+struct bare_module_list_s {
+  bare_module_t mod;
+  bare_module_list_t *next;
 };
 
-static pear_module_list_t *static_modules = NULL;
-static pear_module_list_t *dynamic_modules = NULL;
+static bare_module_list_t *static_modules = NULL;
+static bare_module_list_t *dynamic_modules = NULL;
 
-static pear_module_list_t **pending_module = &static_modules;
+static bare_module_list_t **pending_module = &static_modules;
 
 static inline void
-pear_addons_init () {
+bare_addons_init () {
   pending_module = &dynamic_modules;
 }
 
 static bool
-pear_addons_has_extension (const char *s, const char *ext) {
+bare_addons_has_extension (const char *s, const char *ext) {
   size_t s_len = strlen(s);
   size_t e_len = strlen(ext);
 
@@ -41,7 +41,7 @@ pear_addons_has_extension (const char *s, const char *ext) {
 }
 
 static inline int
-pear_addons_readdir (pear_runtime_t *runtime, const char *dirname, int entries_len, uv_dirent_t *entries) {
+bare_addons_readdir (bare_runtime_t *runtime, const char *dirname, int entries_len, uv_dirent_t *entries) {
   uv_fs_t req;
 
   int num = 0;
@@ -74,24 +74,24 @@ pear_addons_readdir (pear_runtime_t *runtime, const char *dirname, int entries_l
 }
 
 static bool
-pear_addons_check_dir (pear_runtime_t *runtime, const char *path, char *out, size_t *len) {
-  uv_dirent_t entries[PEAR_ADDONS_MAX_ENTRIES];
+bare_addons_check_dir (bare_runtime_t *runtime, const char *path, char *out, size_t *len) {
+  uv_dirent_t entries[BARE_ADDONS_MAX_ENTRIES];
 
-  int entries_len = pear_addons_readdir(runtime, path, PEAR_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
+  int entries_len = bare_addons_readdir(runtime, path, BARE_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
   if (entries_len <= 0) return false;
 
   const char *result = NULL;
 
   for (int i = 0; i < entries_len && result == NULL; i++) {
     const char *name = entries[i].name;
-    if (strcmp(name, "node.napi.pear") == 0) {
+    if (strcmp(name, "node.napi.bare") == 0) {
       result = name;
     }
   }
 
   for (int i = 0; i < entries_len && result == NULL; i++) {
     const char *name = entries[i].name;
-    if (pear_addons_has_extension(name, ".pear")) {
+    if (bare_addons_has_extension(name, ".bare")) {
       result = name;
     }
   }
@@ -105,7 +105,7 @@ pear_addons_check_dir (pear_runtime_t *runtime, const char *path, char *out, siz
 
   for (int i = 0; i < entries_len && result == NULL; i++) {
     const char *name = entries[i].name;
-    if (pear_addons_has_extension(name, ".node")) {
+    if (bare_addons_has_extension(name, ".node")) {
       result = name;
     }
   }
@@ -119,49 +119,49 @@ pear_addons_check_dir (pear_runtime_t *runtime, const char *path, char *out, siz
 }
 
 static inline int
-pear_addons_resolve (pear_runtime_t *runtime, const char *path, char *out, size_t *len) {
+bare_addons_resolve (bare_runtime_t *runtime, const char *path, char *out, size_t *len) {
   size_t tmp_len = 4096;
   char tmp[4096];
 
-  if (pear_addons_has_extension(path, ".pear") || pear_addons_has_extension(path, ".node")) {
+  if (bare_addons_has_extension(path, ".bare") || bare_addons_has_extension(path, ".node")) {
     if (out != path) strcpy(out, path);
     return 0;
   }
 
   path_join((const char *[]){path, "build", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
+  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
+  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
   path_join((const char *[]){path, "build", "Debug", NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
+  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   tmp_len = 4096;
 
-  path_join((const char *[]){path, "prebuilds", PEAR_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
+  path_join((const char *[]){path, "prebuilds", BARE_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
 
-  if (pear_addons_check_dir(runtime, tmp, out, len)) return 0;
+  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
 
   return UV_ENOENT;
 }
 
 static inline js_value_t *
-pear_addons_load (pear_runtime_t *runtime, const char *path) {
+bare_addons_load (bare_runtime_t *runtime, const char *path) {
   int err;
 
-  pear_module_t *mod = NULL;
-  pear_module_list_t *next = static_modules;
+  bare_module_t *mod = NULL;
+  bare_module_list_t *next = static_modules;
 
   while (next) {
-    if (pear_addons_has_extension(path, next->mod.filename)) {
+    if (bare_addons_has_extension(path, next->mod.filename)) {
       mod = &next->mod;
       break;
     }
@@ -173,7 +173,7 @@ pear_addons_load (pear_runtime_t *runtime, const char *path) {
     size_t resolved_len = 4096;
     char resolved[4096];
 
-    err = pear_addons_resolve(runtime, path, resolved, &resolved_len);
+    err = bare_addons_resolve(runtime, path, resolved, &resolved_len);
     if (err < 0) {
       js_throw_errorf(runtime->env, NULL, "Could not resolve addon %s", path);
       return NULL;
@@ -202,7 +202,7 @@ pear_addons_load (pear_runtime_t *runtime, const char *path) {
     return NULL;
   }
 
-  if (mod->version != PEAR_MODULE_VERSION) {
+  if (mod->version != BARE_MODULE_VERSION) {
     js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, path);
     return NULL;
   }
@@ -215,8 +215,8 @@ pear_addons_load (pear_runtime_t *runtime, const char *path) {
 }
 
 void
-pear_module_register (pear_module_t *mod) {
-  pear_module_list_t *next = malloc(sizeof(pear_module_list_t));
+bare_module_register (bare_module_t *mod) {
+  bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
 
   next->mod = *mod;
   next->next = *pending_module;
@@ -235,15 +235,15 @@ pear_module_register (pear_module_t *mod) {
 
 void
 napi_module_register (napi_module *mod) {
-  pear_module_register(&(pear_module_t){
+  bare_module_register(&(bare_module_t){
     // As Node-API modules rely on an already stable ABI that does not change
     // with the runtime ABI, we should be able to safely assume that Node-API
     // modules will always be compatible with the current module version.
-    .version = PEAR_MODULE_VERSION,
+    .version = BARE_MODULE_VERSION,
 
     .filename = mod->nm_filename,
     .init = mod->nm_register_func,
   });
 }
 
-#endif // PEAR_ADDONS_H
+#endif // BARE_ADDONS_H

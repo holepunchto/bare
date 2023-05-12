@@ -1,5 +1,5 @@
 import assert from 'assert'
 
-import mod from '../build/pear_addon.pear'
+import mod from '../build/bare_addon.bare'
 
 assert(mod === 'Hello from addon')

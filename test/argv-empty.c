@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <pear.h>
+#include <bare.h>
 #include <uv.h>
 
 int
@@ -11,12 +11,12 @@ main (int argc, char *argv[]) {
 
   int e;
 
-  pear_t *pear;
-  e = pear_setup(uv_default_loop(), argc, argv, &pear);
+  bare_t *bare;
+  e = bare_setup(uv_default_loop(), argc, argv, &bare);
   assert(e == 0);
 
   int exit_code;
-  e = pear_teardown(pear, &exit_code);
+  e = bare_teardown(bare, &exit_code);
   assert(e == 0);
 
   return exit_code;
