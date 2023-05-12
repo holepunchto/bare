@@ -30,13 +30,7 @@ if (argv.v) {
 }
 
 if (argv.h || argc === 0) {
-  console.log(`
-🍐.js
-Small and modular JavaScript runtime for desktop and mobile.
-
-Usage:
-  bare [-m, --import-map <path>] <filename>
-  `.trim())
+  console.log('usage: bare [-m, --import-map <path>] <filename>')
 
   process.exit(argv.h || argc > 0 ? 0 : 1)
 }
