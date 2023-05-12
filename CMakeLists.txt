@@ -115,9 +115,9 @@ else()
   set(engine js_static)
 endif()
 
-include_bare_module(bare_buffer node_modules/@barejs/buffer)
-include_bare_module(bare_module node_modules/@barejs/module)
-include_bare_module(bare_timers node_modules/@barejs/timers)
+include_bare_module(bare_buffer node_modules/bare-buffer)
+include_bare_module(bare_module node_modules/bare-module)
+include_bare_module(bare_timers node_modules/bare-timers)
 
 add_library(bare OBJECT)
 

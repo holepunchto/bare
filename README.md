@@ -171,13 +171,13 @@ Emitted when the current thread exits.
 
 In addition to the core `process` and `thread` modules, Bare provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
 
-- `assert` (<https://github.com/holepunchto/barejs-assert>)
-- `buffer` (<https://github.com/holepunchto/barejs-buffer>)
-- `console` (<https://github.com/holepunchto/barejs-console>)
-- `events` (<https://github.com/holepunchto/barejs-events>)
-- `module` (<https://github.com/holepunchto/barejs-module>)
-- `path` (<https://github.com/holepunchto/barejs-path>)
-- `timers` (<https://github.com/holepunchto/barejs-timers>)
+- `assert` (<https://github.com/holepunchto/bare-assert>)
+- `buffer` (<https://github.com/holepunchto/bare-buffer>)
+- `console` (<https://github.com/holepunchto/bare-console>)
+- `events` (<https://github.com/holepunchto/bare-events>)
+- `module` (<https://github.com/holepunchto/bare-module>)
+- `path` (<https://github.com/holepunchto/bare-path>)
+- `timers` (<https://github.com/holepunchto/bare-timers>)
 
 ### Embedding
 
