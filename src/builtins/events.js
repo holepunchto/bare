@@ -1,3 +1,1 @@
-const EventEmitter = module.exports = exports = require('bare-events')
-
-exports.EventEmitter = EventEmitter
+module.exports = require('bare-events')

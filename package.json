@@ -29,7 +29,7 @@
     "bare-buffer": "^1.2.0",
     "bare-console": "^2.0.0",
     "bare-dev": "^0.2.5",
-    "bare-events": "^1.2.0",
+    "bare-events": "^1.2.1",
     "bare-module": "^1.8.3",
     "bare-path": "^1.0.5",
     "bare-timers": "^1.4.2",
