@@ -29,8 +29,8 @@ if (argv.v) {
   process.exit()
 }
 
-if (argv.h || argc === 0) {
-  console.log('usage: bare [-m, --import-map <path>] <filename>')
+if (argv.h) {
+  console.log('usage: bare [-m, --import-map <path>] [<filename>]')
 
   process.exit(argv.h || argc > 0 ? 0 : 1)
 }
@@ -51,8 +51,14 @@ if (argv.m) {
   }
 }
 
-Module.load(
-  process.argv[1] = Module.resolve(
-    path.resolve(process.cwd(), process.argv[1])
+if (argc === 0) {
+  const REPL = require('bare-repl')
+  const repl = new REPL()
+  repl.start()
+} else {
+  Module.load(
+    process.argv[1] = Module.resolve(
+      path.resolve(process.cwd(), process.argv[1])
+    )
   )
-)
+}

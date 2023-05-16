@@ -5,7 +5,7 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 ## Usage
 
 ```sh
-$ bare [-m, --import-map <path>] <filename>
+$ bare [-m, --import-map <path>] [<filename>]
 ```
 
 ## API
