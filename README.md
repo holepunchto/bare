@@ -187,13 +187,13 @@ Bare can easily be embedded using the C API defined in [`include/bare.h`](includ
 #include <bare.h>
 #include <uv.h>
 
-bare_t bare;
-bare_setup(uv_default_loop(), &bare, argc, argv);
+bare_t *bare;
+bare_setup(uv_default_loop(), argc, argv, &bare);
 
-bare_run(&bare, filename, source);
+bare_run(bare, filename, source);
 
 int exit_code;
-bare_teardown(&bare, &exit_code);
+bare_teardown(bare, &exit_code);
 ```
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime.
