@@ -10,7 +10,7 @@ set(PEAR_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the p
 
 set(PEAR_PREBUILDS_KEY ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y CACHE STRING "Key of the prebuilds drive")
 
-set(PEAR_PREBUILDS_VERSION 1830 CACHE STRING "Version of the prebuilds drive")
+set(PEAR_PREBUILDS_VERSION 2022 CACHE STRING "Version of the prebuilds drive")
 
 include(pear)
 
