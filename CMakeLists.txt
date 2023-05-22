@@ -87,6 +87,10 @@ if(NOT TARGET uv)
   add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
 endif()
 
+if(NOT TARGET utf)
+  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
+endif()
+
 if(NOT TARGET js)
   add_subdirectory(vendor/libjs EXCLUDE_FROM_ALL)
 endif()
@@ -165,6 +169,7 @@ list(APPEND objects
   $<TARGET_OBJECTS:mem>
   $<TARGET_OBJECTS:mimalloc>
   $<TARGET_OBJECTS:path>
+  $<TARGET_OBJECTS:utf>
   $<TARGET_OBJECTS:base64>
   $<TARGET_OBJECTS:hex>
 )

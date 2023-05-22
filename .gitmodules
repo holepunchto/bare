@@ -22,3 +22,7 @@
 	path = vendor/libpath
 	url = ../../holepunchto/libpath.git
 	shallow = true
+[submodule "vendor/libutf"]
+	path = vendor/libutf
+	url = ../../holepunchto/libutf.git
+	shallow = true
