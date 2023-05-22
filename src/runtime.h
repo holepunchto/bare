@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utf.h>
 #include <uv.h>
 
 #include "../include/bare.h"
@@ -28,10 +29,10 @@
     js_value_t *val; \
     js_create_array_with_length(env, 2, &val); \
     js_value_t *name; \
-    js_create_string_utf8(env, #NAME, -1, &name); \
+    js_create_string_utf8(env, (utf8_t *) #NAME, -1, &name); \
     js_set_element(env, val, 0, name); \
     js_value_t *desc; \
-    js_create_string_utf8(env, DESC, -1, &desc); \
+    js_create_string_utf8(env, (utf8_t *) DESC, -1, &desc); \
     js_set_element(env, val, 1, desc); \
     js_value_t *key; \
     js_create_int32(env, UV_##NAME, &key); \
@@ -71,7 +72,7 @@ err : {
   err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
   assert(err == 0);
 
-  char *str = malloc(len + 1);
+  utf8_t *str = malloc(len + 1);
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
@@ -113,7 +114,7 @@ err : {
   err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
   assert(err == 0);
 
-  char *str = malloc(len + 1);
+  utf8_t *str = malloc(len + 1);
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
@@ -288,7 +289,7 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
 
   data_len += 1 /* NULL */;
 
-  char *data = malloc(data_len);
+  utf8_t *data = malloc(data_len);
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
@@ -318,7 +319,7 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 
   data_len += 1 /* NULL */;
 
-  char *data = malloc(data_len);
+  utf8_t *data = malloc(data_len);
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
@@ -344,11 +345,11 @@ bare_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  char specifier[4096];
+  utf8_t specifier[4096];
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  return bare_addons_load(runtime, specifier);
+  return bare_addons_load(runtime, (char *) specifier);
 }
 
 static js_value_t *
@@ -366,12 +367,12 @@ bare_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   size_t specifier_len = 4096;
-  char specifier[4096];
+  utf8_t specifier[4096];
 
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  err = bare_addons_resolve(runtime, specifier, specifier, &specifier_len);
+  err = bare_addons_resolve(runtime, (char *) specifier, (char *) specifier, &specifier_len);
   if (err < 0) {
     js_throw_errorf(env, NULL, "Could not resolve addon %s", specifier);
     return NULL;
@@ -428,7 +429,7 @@ bare_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  err = js_create_string_utf8(env, cwd, cwd_len, &val);
+  err = js_create_string_utf8(env, (utf8_t *) cwd, cwd_len, &val);
   assert(err == 0);
 
   return val;
@@ -450,11 +451,11 @@ bare_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &dir_len);
   assert(err == 0);
 
-  char *dir = malloc(++dir_len);
+  utf8_t *dir = malloc(++dir_len);
   err = js_get_value_string_utf8(env, argv[0], dir, dir_len, &dir_len);
   assert(err == 0);
 
-  err = uv_chdir(dir);
+  err = uv_chdir((char *) dir);
 
   free(dir);
 
@@ -497,7 +498,7 @@ bare_runtime_get_env_keys (js_env_t *env, js_callback_info_t *info) {
     uv_env_item_t *item = &items[i];
 
     js_value_t *val;
-    err = js_create_string_utf8(env, item->name, -1, &val);
+    err = js_create_string_utf8(env, (utf8_t *) item->name, -1, &val);
     assert(err == 0);
 
     err = js_set_element(env, result, i, val);
@@ -527,14 +528,14 @@ bare_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
   assert(err == 0);
 
-  char *name = malloc(++name_len);
+  utf8_t *name = malloc(++name_len);
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
   uv_rwlock_rdlock(&runtime->process->locks.env);
 
   size_t value_len = 1;
-  err = uv_os_getenv(name, "", &value_len);
+  err = uv_os_getenv((char *) name, "", &value_len);
 
   js_value_t *result;
 
@@ -545,10 +546,10 @@ bare_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
     assert(err == UV_ENOBUFS);
 
     char *value = malloc(value_len);
-    err = uv_os_getenv(name, value, &value_len);
+    err = uv_os_getenv((char *) name, value, &value_len);
     assert(err == 0);
 
-    err = js_create_string_utf8(env, value, value_len, &result);
+    err = js_create_string_utf8(env, (utf8_t *) value, value_len, &result);
     assert(err == 0);
 
     free(value);
@@ -579,14 +580,14 @@ bare_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
   assert(err == 0);
 
-  char *name = malloc(++name_len);
+  utf8_t *name = malloc(++name_len);
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
   uv_rwlock_rdlock(&runtime->process->locks.env);
 
   size_t value_len = 1;
-  err = uv_os_getenv(name, "", &value_len);
+  err = uv_os_getenv((char *) name, "", &value_len);
 
   uv_rwlock_rdunlock(&runtime->process->locks.env);
 
@@ -623,7 +624,7 @@ bare_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
   assert(err == 0);
 
-  char *name = malloc(++name_len);
+  utf8_t *name = malloc(++name_len);
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
@@ -631,13 +632,13 @@ bare_runtime_set_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[1], NULL, 0, &value_len);
   assert(err == 0);
 
-  char *value = malloc(++value_len);
+  utf8_t *value = malloc(++value_len);
   err = js_get_value_string_utf8(env, argv[1], value, value_len, &value_len);
   assert(err == 0);
 
   uv_rwlock_wrlock(&runtime->process->locks.env);
 
-  err = uv_os_setenv(name, value);
+  err = uv_os_setenv((char *) name, (char *) value);
 
   uv_rwlock_wrunlock(&runtime->process->locks.env);
 
@@ -672,13 +673,13 @@ bare_runtime_unset_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
   assert(err == 0);
 
-  char *name = malloc(++name_len);
+  utf8_t *name = malloc(++name_len);
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
   uv_rwlock_wrlock(&runtime->process->locks.env);
 
-  err = uv_os_unsetenv(name);
+  err = uv_os_unsetenv((char *) name);
 
   uv_rwlock_wrunlock(&runtime->process->locks.env);
 
@@ -709,11 +710,11 @@ bare_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
   assert(err == 0);
 
-  char *data = malloc(++data_len);
+  utf8_t *data = malloc(++data_len);
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = uv_set_process_title(data);
+  err = uv_set_process_title((char *) data);
   assert(err == 0);
 
   free(data);
@@ -730,7 +731,7 @@ bare_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
   if (err) memcpy(title, "bare", 5);
 
   js_value_t *result;
-  err = js_create_string_utf8(env, title, -1, &result);
+  err = js_create_string_utf8(env, (utf8_t *) title, -1, &result);
   assert(err == 0);
 
   free(title);
@@ -810,7 +811,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &str_len);
   assert(err == 0);
 
-  char *str = malloc(str_len + 1);
+  utf8_t *str = malloc(str_len + 1);
   err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
   assert(err == 0);
 
@@ -852,7 +853,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = uv_sem_init(&thread->ready, 0);
   assert(err == 0);
 
-  thread->filename = str;
+  thread->filename = (char *) str;
 
   thread->source = uv_buf_init(source, source_len);
   thread->has_source = has_source;
@@ -963,21 +964,21 @@ bare_runtime_setup (bare_runtime_t *runtime) {
 
     js_value_t *val;
 
-    js_create_string_utf8(env, BARE_VERSION, -1, &val);
+    js_create_string_utf8(env, (utf8_t *) BARE_VERSION, -1, &val);
     js_set_named_property(env, versions, "bare", val);
 
-    js_create_string_utf8(env, BARE_STRING(BARE_MODULE_VERSION), -1, &val);
+    js_create_string_utf8(env, (utf8_t *) BARE_STRING(BARE_MODULE_VERSION), -1, &val);
     js_set_named_property(env, versions, "modules", val);
 
     if (js_platform_version) {
-      js_create_string_utf8(env, js_platform_version, -1, &val);
+      js_create_string_utf8(env, (utf8_t *) js_platform_version, -1, &val);
     } else {
-      js_create_string_utf8(env, "unknown", -1, &val);
+      js_create_string_utf8(env, (utf8_t *) "unknown", -1, &val);
     }
 
     js_set_named_property(env, versions, js_platform_identifier, val);
 
-    js_create_string_utf8(env, uv_version_string(), -1, &val);
+    js_create_string_utf8(env, (utf8_t *) uv_version_string(), -1, &val);
     js_set_named_property(env, versions, "uv", val);
 
     js_set_named_property(env, exports, "versions", versions);
@@ -989,12 +990,12 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_string_utf8(env, BARE_PLATFORM, -1, &val);
+    js_create_string_utf8(env, (utf8_t *) BARE_PLATFORM, -1, &val);
     js_set_named_property(env, exports, "platform", val);
   }
   {
     js_value_t *val;
-    js_create_string_utf8(env, BARE_ARCH, -1, &val);
+    js_create_string_utf8(env, (utf8_t *) BARE_ARCH, -1, &val);
     js_set_named_property(env, exports, "arch", val);
   }
   js_value_t *exec_path_val;
@@ -1003,7 +1004,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     size_t exec_path_len = 4096;
     uv_exepath(exec_path, &exec_path_len);
 
-    js_create_string_utf8(env, exec_path, exec_path_len, &exec_path_val);
+    js_create_string_utf8(env, (utf8_t *) exec_path, exec_path_len, &exec_path_val);
     js_set_named_property(env, exports, "execPath", exec_path_val);
   }
   {
@@ -1017,7 +1018,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     js_set_element(env, val, idx++, exec_path_val);
 
     for (int i = 1; i < runtime->argc; i++) {
-      js_create_string_utf8(env, runtime->argv[i], -1, &str);
+      js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &str);
       js_set_element(env, val, idx++, str);
     }
 
@@ -1150,7 +1151,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   js_set_named_property(env, global, "global", global);
 
   js_value_t *script;
-  js_create_string_utf8(env, (const char *) bare_bundle, bare_bundle_len, &script);
+  js_create_string_utf8(env, bare_bundle, bare_bundle_len, &script);
 
   js_value_t *entry;
   err = js_run_script(env, "bare:bare.js", -1, 0, script, &entry);
@@ -1171,7 +1172,7 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
   assert(err == 0);
 
   js_value_t *args[2];
-  err = js_create_string_utf8(env, filename, -1, &args[0]);
+  err = js_create_string_utf8(env, (utf8_t *) filename, -1, &args[0]);
   if (err < 0) return err;
 
   if (source) {
