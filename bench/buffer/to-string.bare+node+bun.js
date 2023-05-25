@@ -19,3 +19,7 @@ bench('buffer.toString(\'hex\')', () => {
 bench('buffer.toString(\'base64\')', () => {
   buffer.toString('base64')
 })
+
+bench('buffer.toString(\'ascii\')', () => {
+  buffer.toString('ascii')
+})
