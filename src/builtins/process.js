@@ -11,8 +11,6 @@ global.queueMicrotask = function queueMicrotask (fn) {
 class Process extends EventEmitter {
   constructor () {
     super()
-
-    this.errnos = new Map(bare.errnos)
   }
 
   get platform () {
