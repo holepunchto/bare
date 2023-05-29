@@ -9,10 +9,6 @@ global.queueMicrotask = function queueMicrotask (fn) {
 }
 
 class Process extends EventEmitter {
-  constructor () {
-    super()
-  }
-
   get platform () {
     return bare.platform
   }
