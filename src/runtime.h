@@ -509,36 +509,42 @@ bare_runtime_get_env (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &name_len);
   assert(err == 0);
 
-  utf8_t *name = malloc(++name_len);
+  name_len += 1 /* NULL */;
+
+  utf8_t *name = malloc(name_len);
   err = js_get_value_string_utf8(env, argv[0], name, name_len, &name_len);
   assert(err == 0);
 
   uv_rwlock_rdlock(&runtime->process->locks.env);
 
-  size_t value_len = 1;
-  err = uv_os_getenv((char *) name, "", &value_len);
+  size_t value_len = 256;
+  char *value = malloc(value_len);
+  err = uv_os_getenv((char *) name, value, &value_len);
 
   js_value_t *result;
 
   if (err == UV_ENOENT) {
     err = js_get_undefined(env, &result);
     assert(err == 0);
-  } else {
-    assert(err == UV_ENOBUFS);
+  } else if (err == UV_ENOBUFS) {
+    value = realloc(value, value_len);
 
-    char *value = malloc(value_len);
     err = uv_os_getenv((char *) name, value, &value_len);
     assert(err == 0);
-
-    err = js_create_string_utf8(env, (utf8_t *) value, value_len, &result);
-    assert(err == 0);
-
-    free(value);
+  } else if (err < 0) {
+    uv_rwlock_rdunlock(&runtime->process->locks.env);
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    free(name);
+    return NULL;
   }
+
+  err = js_create_string_utf8(env, (utf8_t *) value, value_len, &result);
+  assert(err == 0);
 
   uv_rwlock_rdunlock(&runtime->process->locks.env);
 
   free(name);
+  free(value);
 
   return result;
 }
@@ -568,7 +574,8 @@ bare_runtime_has_env (js_env_t *env, js_callback_info_t *info) {
   uv_rwlock_rdlock(&runtime->process->locks.env);
 
   size_t value_len = 1;
-  err = uv_os_getenv((char *) name, "", &value_len);
+  char value[1];
+  err = uv_os_getenv((char *) name, value, &value_len);
 
   uv_rwlock_rdunlock(&runtime->process->locks.env);
 
