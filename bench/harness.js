@@ -1,7 +1,7 @@
-const minimumSamplingTime = 50
+const minimumSamplingTime = 500
 const minimumSamplingCount = 30
 
-const maximumSamplingTime = 5000
+const maximumSamplingTime = 60000
 const maximumRelativePrecision = 0.01
 
 const Z = 1.96
