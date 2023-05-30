@@ -33,6 +33,12 @@ int
 pear_run (pear_t *pear, const char *filename, const uv_buf_t *source);
 
 int
+pear_run_begin (pear_t *pear, const char *filename, const uv_buf_t *source);
+
+int
+pear_run_tick (pear_t *pear);
+
+int
 pear_exit (pear_t *pear, int exit_code);
 
 int

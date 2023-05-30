@@ -105,6 +105,18 @@ pear_run (pear_t *pear, const char *filename, const uv_buf_t *source) {
 }
 
 int
+pear_run_begin (pear_t *pear, const char *filename, const uv_buf_t *source) {
+  return pear_runtime_run(&pear->runtime, filename, source);
+}
+
+int
+pear_run_tick (pear_t *pear) {
+  uv_run(pear->runtime.loop, UV_RUN_ONCE);
+
+  return 0;
+}
+
+int
 pear_exit (pear_t *pear, int exit_code) {
   if (pear->exited) return -1;
   pear->exited = true;
