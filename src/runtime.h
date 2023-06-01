@@ -803,28 +803,62 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
   assert(err == 0);
 
-  size_t source_len = 0;
-  void *source = NULL;
+  bare_thread_source_t source = {bare_thread_source_none};
   bool has_source;
 
   err = js_is_typedarray(env, argv[1], &has_source);
   assert(err == 0);
 
   if (has_source) {
-    err = js_get_typedarray_info(env, argv[1], NULL, &source, &source_len, NULL, NULL);
+    size_t len;
+    void *base;
+    err = js_get_typedarray_info(env, argv[1], NULL, &base, &len, NULL, NULL);
     assert(err == 0);
+
+    source.type = bare_thread_source_buffer;
+  } else {
+    err = js_is_arraybuffer(env, argv[1], &has_source);
+    assert(err == 0);
+
+    if (has_source) {
+      err = js_get_arraybuffer_info(env, argv[2], (void **) &source.buffer.base, &source.buffer.len);
+      assert(err == 0);
+
+      source.type = bare_thread_source_buffer;
+    }
   }
 
-  size_t data_len = 0;
-  void *data = NULL;
+  bare_thread_data_t data = {bare_thread_data_none};
   bool has_data;
 
   err = js_is_typedarray(env, argv[2], &has_data);
   assert(err == 0);
 
   if (has_data) {
-    err = js_get_typedarray_info(env, argv[2], NULL, &data, &data_len, NULL, NULL);
+    err = js_get_typedarray_info(env, argv[2], NULL, (void **) &data.buffer.base, &data.buffer.len, NULL, NULL);
     assert(err == 0);
+
+    data.type = bare_thread_data_buffer;
+  } else {
+    err = js_is_arraybuffer(env, argv[2], &has_data);
+    assert(err == 0);
+
+    if (has_data) {
+      err = js_get_arraybuffer_info(env, argv[2], (void **) &data.buffer.base, &data.buffer.len);
+      assert(err == 0);
+
+      data.type = bare_thread_data_buffer;
+    } else {
+      err = js_is_sharedarraybuffer(env, argv[2], &has_data);
+      assert(err == 0);
+
+      if (has_data) {
+        err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
+        assert(err == 0);
+
+        data.type = bare_thread_data_backing_store;
+      }
+    }
   }
 
   uint32_t stack_size;
@@ -843,11 +877,8 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   thread->filename = (char *) str;
 
-  thread->source = uv_buf_init(source, source_len);
-  thread->has_source = has_source;
-
-  thread->data = uv_buf_init(data, data_len);
-  thread->has_data = has_data;
+  thread->source = source;
+  thread->data = data;
 
   thread->runtime.loop = loop;
 
@@ -1188,17 +1219,40 @@ bare_runtime_on_thread (void *data) {
 
   bare_runtime_setup(&thread->runtime);
 
+  uv_buf_t *thread_source;
+
+  switch (thread->source.type) {
+  case bare_thread_source_none:
+    thread_source = NULL;
+    break;
+
+  case bare_thread_source_buffer:
+    thread_source = &thread->source.buffer;
+    break;
+  }
+
   js_value_t *thread_data;
 
-  if (thread->has_data) {
-    void *data;
-    err = js_create_arraybuffer(thread->runtime.env, thread->data.len, &data, &thread_data);
-    assert(err == 0);
-
-    memcpy(data, thread->data.base, thread->data.len);
-  } else {
+  switch (thread->data.type) {
+  case bare_thread_data_none:
+  default:
     err = js_get_null(thread->runtime.env, &thread_data);
     assert(err == 0);
+    break;
+
+  case bare_thread_data_buffer: {
+    void *data;
+    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &thread_data);
+    assert(err == 0);
+
+    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
+    break;
+  }
+
+  case bare_thread_data_backing_store:
+    err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, &thread_data);
+    assert(err == 0);
+    break;
   }
 
   err = js_set_named_property(thread->runtime.env, thread->runtime.exports, "threadData", thread_data);
@@ -1206,7 +1260,7 @@ bare_runtime_on_thread (void *data) {
 
   uv_sem_post(&thread->ready);
 
-  err = bare_runtime_run(&thread->runtime, thread->filename, thread->has_source ? &thread->source : NULL);
+  err = bare_runtime_run(&thread->runtime, thread->filename, thread_source);
   assert(err == 0);
 
   err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);

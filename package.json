@@ -28,7 +28,7 @@
     "bare-assert": "^1.0.0",
     "bare-buffer": "^1.2.4",
     "bare-console": "^2.0.0",
-    "bare-dev": "^0.2.12",
+    "bare-dev": "^0.2.13",
     "bare-events": "^1.2.1",
     "bare-fs": "^1.5.4",
     "bare-module": "^1.8.6",

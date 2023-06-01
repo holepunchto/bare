@@ -10,6 +10,8 @@
 
 typedef struct bare_runtime_s bare_runtime_t;
 typedef struct bare_thread_s bare_thread_t;
+typedef struct bare_thread_source_s bare_thread_source_t;
+typedef struct bare_thread_data_s bare_thread_data_t;
 typedef struct bare_thread_list_s bare_thread_list_t;
 
 struct bare_runtime_s {
@@ -47,6 +49,48 @@ struct bare_s {
   } locks;
 };
 
+struct bare_thread_source_s {
+  enum {
+    /**
+     * No source, read from file system.
+     */
+    bare_thread_source_none,
+
+    /**
+     * Copy of a typed array or an array buffer.
+     */
+    bare_thread_source_buffer,
+  } type;
+
+  union {
+    uv_buf_t buffer;
+  };
+};
+
+struct bare_thread_data_s {
+  enum {
+    /**
+     * No data.
+     */
+    bare_thread_data_none,
+
+    /**
+     * Copy of a typed array or an array buffer.
+     */
+    bare_thread_data_buffer,
+
+    /**
+     * Backing store of a shared array buffer.
+     */
+    bare_thread_data_backing_store,
+  } type;
+
+  union {
+    uv_buf_t buffer;
+    js_arraybuffer_backing_store_t *backing_store;
+  };
+};
+
 struct bare_thread_s {
   uv_thread_t id;
 
@@ -54,11 +98,8 @@ struct bare_thread_s {
 
   char *filename;
 
-  uv_buf_t source;
-  bool has_source;
-
-  uv_buf_t data;
-  bool has_data;
+  bare_thread_source_t source;
+  bare_thread_data_t data;
 
   bare_runtime_t runtime;
 };
