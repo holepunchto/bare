@@ -19,17 +19,25 @@ typedef struct bare_module_list_s bare_module_list_t;
 
 struct bare_module_list_s {
   bare_module_t mod;
+  char *resolved;
+  bool pending;
+  uv_lib_t *lib;
   bare_module_list_t *next;
 };
 
-static bare_module_list_t *static_modules = NULL;
-static bare_module_list_t *dynamic_modules = NULL;
+static bare_module_list_t *static_module_list = NULL;
+static bare_module_list_t *dynamic_module_list = NULL;
 
-static bare_module_list_t **pending_module = &static_modules;
+static bare_module_list_t **pending_module = &static_module_list;
+
+static uv_once_t module_guard = UV_ONCE_INIT;
+
+static uv_rwlock_t module_lock;
 
 static inline void
-bare_addons_init () {
-  pending_module = &dynamic_modules;
+on_module_init () {
+  int err = uv_rwlock_init(&module_lock);
+  assert(err == 0);
 }
 
 static bool
@@ -155,10 +163,14 @@ bare_addons_resolve (bare_runtime_t *runtime, const char *path, char *out, size_
 
 static inline js_value_t *
 bare_addons_load (bare_runtime_t *runtime, const char *path) {
+  uv_once(&module_guard, on_module_init);
+
+  uv_rwlock_rdlock(&module_lock);
+
   int err;
 
   bare_module_t *mod = NULL;
-  bare_module_list_t *next = static_modules;
+  bare_module_list_t *next = static_module_list;
 
   while (next) {
     if (bare_addons_has_extension(path, next->mod.filename)) {
@@ -179,23 +191,50 @@ bare_addons_load (bare_runtime_t *runtime, const char *path) {
       return NULL;
     }
 
-    uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+    bare_module_list_t *next = dynamic_module_list;
 
-    err = uv_dlopen(resolved, lib);
-    if (err < 0) {
-      js_throw_error(runtime->env, NULL, uv_dlerror(lib));
-      free(lib);
-      return NULL;
+    while (next) {
+      if (bare_addons_has_extension(resolved, next->resolved)) {
+        mod = &next->mod;
+        break;
+      }
+
+      next = next->next;
     }
 
-    if (dynamic_modules) {
-      mod = &dynamic_modules->mod;
-      mod->lib = lib;
-    } else {
-      uv_dlclose(lib);
-      free(lib);
+    if (mod == NULL) {
+      pending_module = &dynamic_module_list;
+
+      uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+
+      uv_rwlock_rdunlock(&module_lock);
+
+      err = uv_dlopen(resolved, lib);
+
+      if (err < 0) {
+        js_throw_error(runtime->env, NULL, uv_dlerror(lib));
+        free(lib);
+        return NULL;
+      }
+
+      uv_rwlock_rdlock(&module_lock);
+
+      next = *pending_module;
+
+      if (next && next->pending) {
+        next->pending = false;
+        next->resolved = strdup(resolved);
+        next->lib = lib;
+
+        mod = &next->mod;
+      } else {
+        uv_dlclose(lib);
+        free(lib);
+      }
     }
   }
+
+  uv_rwlock_rdunlock(&module_lock);
 
   if (mod == NULL) {
     js_throw_errorf(runtime->env, NULL, "No module registered for %s", path);
@@ -216,21 +255,25 @@ bare_addons_load (bare_runtime_t *runtime, const char *path) {
 
 void
 bare_module_register (bare_module_t *mod) {
+  uv_once(&module_guard, on_module_init);
+
+  uv_rwlock_wrlock(&module_lock);
+
+  bool is_dynamic = pending_module == &dynamic_module_list;
+
   bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
 
-  next->mod = *mod;
+  next->mod.version = mod->version;
+  next->mod.filename = mod->filename;
+  next->mod.init = mod->init;
+
+  next->resolved = NULL;
+  next->pending = is_dynamic;
   next->next = *pending_module;
 
-  if (mod->filename) {
-    size_t normalized_len = 4096;
-    char normalized[4096];
-
-    path_normalize(mod->filename, normalized, &normalized_len, path_behavior_system);
-
-    next->mod.filename = strdup(normalized);
-  }
-
   *pending_module = next;
+
+  uv_rwlock_wrunlock(&module_lock);
 }
 
 void

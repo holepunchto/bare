@@ -18,8 +18,6 @@ int
 bare_setup (uv_loop_t *loop, int argc, char **argv, bare_t **result) {
   bare_t *bare = malloc(sizeof(bare_t));
 
-  bare_addons_init();
-
   bare->runtime.loop = loop;
 
   int err;

@@ -49,7 +49,6 @@ struct bare_module_s {
   int version;
   const char *filename;
   bare_module_cb init;
-  uv_lib_t *lib;
 };
 
 void
