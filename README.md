@@ -142,8 +142,8 @@ Options include:
 
 ```js
 {
-  source: Buffer, // Optional file source, will be read from `filename` if not provided
-  data: Buffer // Optional thread data
+  source: Buffer | ArrayBuffer, // Optional file source, will be read from `filename` if not provided
+  data: Buffer | ArrayBuffer | SharedArrayBuffer // Optional thread data
 }
 ```
 
@@ -157,7 +157,7 @@ A reference to the current thread. Will be `null` on the main thread.
 
 #### `process.thread.data`
 
-A copy of the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
+A copy of or, if shared, reference to the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
 
 #### `process.thread.stop()`
 
