@@ -1183,7 +1183,7 @@ bare_runtime_on_thread (void *data) {
 
   int err;
 
-  err = js_create_env(thread->runtime.loop, thread->runtime.platform, &thread->runtime.env);
+  err = js_create_env(thread->runtime.loop, thread->runtime.platform, NULL, &thread->runtime.env);
   assert(err == 0);
 
   bare_runtime_setup(&thread->runtime);

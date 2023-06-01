@@ -27,7 +27,7 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, bare_t **result) {
   err = js_create_platform(bare->runtime.loop, NULL, &bare->runtime.platform);
   assert(err == 0);
 
-  err = js_create_env(bare->runtime.loop, bare->runtime.platform, &bare->runtime.env);
+  err = js_create_env(bare->runtime.loop, bare->runtime.platform, NULL, &bare->runtime.env);
   assert(err == 0);
 
   bare->runtime.process = bare;
