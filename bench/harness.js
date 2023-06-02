@@ -6,7 +6,15 @@ const maximumRelativeError = 0.01
 
 const Z = 1.96
 
+console.log('TAP version 13')
+
+let n = 0
+
 globalThis.bench = function bench (name, fn) {
+  const start = now()
+
+  console.log(`\n# ${name}`)
+
   let operations = 0
   let elapsed = 0
   let iterations = 1
@@ -56,7 +64,8 @@ globalThis.bench = function bench (name, fn) {
     }
   }
 
-  console.log(name, mean(samples) | 0, 'ops/s')
+  console.log('    #', mean(samples) | 0, 'ops/s')
+  console.log(`ok ${++n} - ${name} # time = ${now() - start | 0}ms`)
 }
 
 let now
