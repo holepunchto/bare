@@ -36,7 +36,6 @@
       BARE_MODULE_VERSION, \
       BARE_MODULE_FILENAME, \
       fn, \
-      NULL, \
     }; \
     bare_module_register(&module); \
   }
