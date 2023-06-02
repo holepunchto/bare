@@ -2,7 +2,7 @@ const minimumSamplingTime = 500
 const minimumSamplingCount = 30
 
 const maximumSamplingTime = 60000
-const maximumRelativePrecision = 0.01
+const maximumRelativeError = 0.01
 
 const Z = 1.96
 
@@ -52,7 +52,7 @@ globalThis.bench = function bench (name, fn) {
     if (samples.length > 2) {
       const m = mean(samples)
 
-      if (confidence(samples, Z, m) / m < maximumRelativePrecision) break
+      if (confidence(samples, Z, m) / m < maximumRelativeError) break
     }
   }
 
