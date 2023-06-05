@@ -1250,7 +1250,7 @@ bare_runtime_on_thread (void *data) {
   }
 
   case bare_thread_data_backing_store:
-    err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, &thread_data);
+    err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, NULL, &thread_data);
     assert(err == 0);
 
     err = js_release_arraybuffer_backing_store(thread->runtime.env, thread->data.backing_store);
