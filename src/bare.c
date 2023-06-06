@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <js.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -12,7 +13,11 @@
 #include "types.h"
 
 static void
-on_prepare (uv_prepare_t *handle) {}
+on_suspend (uv_async_t *handle) {
+  bare_t *bare = (bare_t *) handle->data;
+
+  bare_runtime_on_suspend(&bare->runtime);
+}
 
 int
 bare_setup (uv_loop_t *loop, int argc, char **argv, bare_t **result) {
@@ -35,9 +40,17 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, bare_t **result) {
   bare_runtime_setup(&bare->runtime);
 
   bare->suspended = false;
+  bare->resumed = false;
   bare->exited = false;
 
-  err = uv_sem_init(&bare->idle, 0);
+  err = uv_async_init(loop, &bare->suspend, on_suspend);
+  assert(err == 0);
+
+  bare->suspend.data = (void *) bare;
+
+  uv_unref((uv_handle_t *) &bare->suspend);
+
+  err = uv_sem_init(&bare->resume, 0);
   assert(err == 0);
 
   bare->threads = NULL;
@@ -71,7 +84,9 @@ bare_teardown (bare_t *bare, int *exit_code) {
   err = js_destroy_platform(bare->runtime.platform);
   assert(err == 0);
 
-  uv_sem_destroy(&bare->idle);
+  uv_close((uv_handle_t *) &bare->suspend, NULL);
+
+  uv_sem_destroy(&bare->resume);
 
   uv_rwlock_destroy(&bare->locks.threads);
 
@@ -84,19 +99,39 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
 int
 bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
-  int err = bare_runtime_run(&bare->runtime, filename, source);
+  int err;
+
+  err = bare_runtime_run(&bare->runtime, filename, source);
   if (err < 0) return err;
 
   do {
     uv_run(bare->runtime.loop, UV_RUN_DEFAULT);
 
+    // The process got suspended; invoke the idle callback, wait for the
+    // process to resume, and then invoke the resume callback.
     if (bare->suspended) {
       bare_runtime_on_idle(&bare->runtime);
 
-      uv_sem_wait(&bare->idle);
-    } else {
+      uv_sem_wait(&bare->resume);
+
+      bare_runtime_on_resume(&bare->runtime);
+    }
+
+    // The process got suspended, but the suspension was cancelled; flush the
+    // semaphore without blocking and invoke the resume callback.
+    else if (bare->resumed) {
+      uv_sem_trywait(&bare->resume);
+
+      bare_runtime_on_resume(&bare->runtime);
+    }
+
+    // The process finished; invoke the before exit callback to give it a
+    // chance to queue additional work.
+    else {
       bare_runtime_on_before_exit(&bare->runtime);
     }
+
+    bare->resumed = false;
   } while (uv_loop_alive(bare->runtime.loop));
 
   return 0;
@@ -116,22 +151,28 @@ bare_exit (bare_t *bare, int exit_code) {
 
 int
 bare_suspend (bare_t *bare) {
-  if (bare->suspended) return -1;
-  bare->suspended = true;
+  bool suspended = false;
 
-  bare_runtime_on_suspend(&bare->runtime);
+  if (!atomic_compare_exchange_strong(&bare->suspended, &suspended, true)) {
+    return -1;
+  }
 
-  return 0;
+  bare->resumed = false;
+
+  return uv_async_send(&bare->suspend);
 }
 
 int
 bare_resume (bare_t *bare) {
-  if (!bare->suspended) return -1;
-  bare->suspended = false;
+  bool suspended = true;
 
-  uv_sem_post(&bare->idle);
+  if (!atomic_compare_exchange_strong(&bare->suspended, &suspended, false)) {
+    return -1;
+  }
 
-  bare_runtime_on_resume(&bare->runtime);
+  bare->resumed = true;
+
+  uv_sem_post(&bare->resume);
 
   return 0;
 }
