@@ -80,15 +80,23 @@ global.process = module.exports = exports = new Process()
 bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
   bare.printError(`Uncaught ${err.stack}\n`)
-  bare.exitCode = 1
-  bare.exit()
+  if (bare.isMainThread) {
+    bare.exitCode = 1
+    bare.exit()
+  } else {
+    bare.stopCurrentThread()
+  }
 }
 
 bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
   bare.printError(`Uncaught (in promise) ${reason.stack}\n`)
-  bare.exitCode = 1
-  bare.exit()
+  if (bare.isMainThread) {
+    bare.exitCode = 1
+    bare.exit()
+  } else {
+    bare.stopCurrentThread()
+  }
 }
 
 bare.onbeforeexit = function onbeforeexit () {
