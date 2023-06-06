@@ -2,6 +2,6 @@ const Thread = require('thread')
 
 process
   .on('idle', () =>
-    new Thread({ source: 'process.resume()' })
+    new Thread(() => process.resume())
   )
   .suspend()
