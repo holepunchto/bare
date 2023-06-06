@@ -2,11 +2,19 @@
 
 module.exports = exports = class Thread {
   constructor (filename, opts = {}) {
-    const {
+    if (typeof filename === 'object') {
+      opts = filename
+      filename = '<thread>'
+    }
+
+    let {
       source = null,
+      encoding = 'utf8',
       data = null,
       stackSize = 0
     } = opts
+
+    if (typeof source === 'string') source = Buffer.from(source, encoding)
 
     this._joined = false
 

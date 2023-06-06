@@ -15,7 +15,9 @@ list(APPEND tests
   process-addon-resolve.js
   process-argv.js
   process-chdir.js
+  suspend-from-thread.js
   suspend-resume.js
+  suspend-resume-from-thread.js
   suspend-resume-immediate.js
   thread.js
   thread-source.js
