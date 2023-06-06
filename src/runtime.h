@@ -814,16 +814,6 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
     assert(err == 0);
 
     source.type = bare_thread_source_buffer;
-  } else {
-    err = js_is_arraybuffer(env, argv[1], &has_source);
-    assert(err == 0);
-
-    if (has_source) {
-      err = js_get_arraybuffer_info(env, argv[1], (void **) &source.buffer.base, &source.buffer.len);
-      assert(err == 0);
-
-      source.type = bare_thread_source_buffer;
-    }
   }
 
   bare_thread_data_t data = {bare_thread_data_none};

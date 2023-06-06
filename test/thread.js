@@ -6,6 +6,6 @@ assert(Thread.isMainThread === true)
 
 const entry = path.join(__dirname, 'fixtures/thread.js')
 
-const thread = new Thread(entry, { data: Buffer.from('hello world') })
+const thread = new Thread(entry, Buffer.from('hello world'))
 
 thread.join()

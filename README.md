@@ -134,16 +134,29 @@ The builtin `thread` module provides support for lightweight threads. Threads ar
 
 `true` if the current thread is the main thread.
 
-#### `const thread = new Thread(filename[, options])`
+#### `const thread = new Thread(filename[, data][, options])`
 
-Start a new thread that will load and run `filename`.
+Start a new thread that will run `filename`. `data` may be a `Buffer`, `ArrayBuffer`, or `SharedArrayBuffer`.
 
 Options include:
 
 ```js
 {
-  source: Buffer | ArrayBuffer, // Optional file source, will be read from `filename` if not provided
-  data: Buffer | ArrayBuffer | SharedArrayBuffer // Optional thread data
+  source: string | Buffer, // Optional file source, will be read from `filename` if not provided
+  encoding: 'utf8', // Optional source encoding if `source` is a string
+  stackSize: 0 // Optional stack size in bytes, pass 0 for default
+}
+```
+
+#### `const thread = new Thread(function[, data][, options])`
+
+Start a new thread that will run `function`. `data` may be a `Buffer`, `ArrayBuffer`, or `SharedArrayBuffer`.
+
+Options include:
+
+```js
+{
+  stackSize: 0 // Optional stack size in bytes, pass 0 for default
 }
 ```
 
