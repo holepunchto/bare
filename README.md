@@ -142,10 +142,14 @@ Options include:
 
 ```js
 {
-  data: Buffer | ArrayBuffer | SharedArrayBuffer | External, // Optional data to pass to the thread
-  source: string | Buffer, // Optional file source, will be read from `filename` if neither `source` nor `callback` are provided
-  encoding: 'utf8', // Optional source encoding if `source` is a string
-  stackSize: 0 // Optional stack size in bytes, pass 0 for default
+  // Optional data to pass to the thread
+  data: Buffer | ArrayBuffer | SharedArrayBuffer | External,
+  // Optional file source, will be read from `filename` if neither `source` nor `callback` are provided
+  source: string | Buffer,
+  // Optional source encoding if `source` is a string
+  encoding: 'utf8',
+  // Optional stack size in bytes, pass 0 for default
+  stackSize: 0
 }
 ```
 
