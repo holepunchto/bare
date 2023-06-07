@@ -1,24 +1,29 @@
 /* global bare */
 
 module.exports = exports = class Thread {
-  constructor (filenameOrFunction, data, opts) {
-    let filename
-
-    if (Buffer.isBuffer(data) || data instanceof ArrayBuffer || data instanceof SharedArrayBuffer) {
-      opts = opts || {}
-    } else {
-      opts = data || {}
-      data = null
+  constructor (filename, opts, callback) {
+    if (typeof filename === 'function') {
+      callback = filename
+      filename = '<thread>'
+      opts = {}
+    } else if (filename === 'object') {
+      opts = filename
+      filename = '<thread>'
     }
 
-    if (typeof filenameOrFunction === 'string') {
-      filename = filenameOrFunction
+    if (typeof opts === 'function') {
+      callback = opts
+      opts = {}
     } else {
-      filename = '<thread>'
-      opts = { ...opts, source: `(${filenameOrFunction.toString()})(process.thread.data)` }
+      opts = opts || {}
+    }
+
+    if (callback) {
+      opts = { ...opts, source: `(${callback.toString()})(process.thread.data)` }
     }
 
     let {
+      data = null,
       source = null,
       encoding = 'utf8',
       stackSize = 0

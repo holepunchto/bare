@@ -4,7 +4,7 @@ const EventEmitter = require('../events')
 
 class Thread extends EventEmitter {
   get data () {
-    return bare.threadData === null ? null : Buffer.from(bare.threadData)
+    return ArrayBuffer.isView(bare.threadData) ? Buffer.coerce(bare.threadData) : bare.threadData
   }
 
   stop () {

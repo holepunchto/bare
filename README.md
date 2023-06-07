@@ -134,28 +134,17 @@ The builtin `thread` module provides support for lightweight threads. Threads ar
 
 `true` if the current thread is the main thread.
 
-#### `const thread = new Thread(filename[, data][, options])`
+#### `const thread = new Thread([filename][, options][, callback])`
 
-Start a new thread that will run `filename`. `data` may be a `Buffer`, `ArrayBuffer`, or `SharedArrayBuffer`.
+Start a new thread that will run the contents of `filename`. If `callback` is provided, its function body will be treated as the contents of `filename` and invoked on the new thread with `process.thread.data` passed as an argument.
 
 Options include:
 
 ```js
 {
-  source: string | Buffer, // Optional file source, will be read from `filename` if not provided
+  data: Buffer | ArrayBuffer | SharedArrayBuffer | External, // Optional data to pass to the thread
+  source: string | Buffer, // Optional file source, will be read from `filename` if neither `source` nor `callback` are provided
   encoding: 'utf8', // Optional source encoding if `source` is a string
-  stackSize: 0 // Optional stack size in bytes, pass 0 for default
-}
-```
-
-#### `const thread = new Thread(function[, data][, options])`
-
-Start a new thread that will run `function`. `data` may be a `Buffer`, `ArrayBuffer`, or `SharedArrayBuffer`.
-
-Options include:
-
-```js
-{
   stackSize: 0 // Optional stack size in bytes, pass 0 for default
 }
 ```

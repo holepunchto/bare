@@ -55,14 +55,7 @@ struct bare_s {
 
 struct bare_thread_source_s {
   enum {
-    /**
-     * No source, read from file system.
-     */
     bare_thread_source_none,
-
-    /**
-     * Copy of a typed array or an array buffer.
-     */
     bare_thread_source_buffer,
   } type;
 
@@ -73,25 +66,17 @@ struct bare_thread_source_s {
 
 struct bare_thread_data_s {
   enum {
-    /**
-     * No data.
-     */
     bare_thread_data_none,
-
-    /**
-     * Copy of a typed array or an array buffer.
-     */
     bare_thread_data_buffer,
-
-    /**
-     * Backing store of a shared array buffer.
-     */
-    bare_thread_data_backing_store,
+    bare_thread_data_arraybuffer,
+    bare_thread_data_sharedarraybuffer,
+    bare_thread_data_external,
   } type;
 
   union {
     uv_buf_t buffer;
     js_arraybuffer_backing_store_t *backing_store;
+    void *external;
   };
 };
 

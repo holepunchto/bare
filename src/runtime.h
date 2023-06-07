@@ -835,7 +835,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
       err = js_get_arraybuffer_info(env, argv[2], (void **) &data.buffer.base, &data.buffer.len);
       assert(err == 0);
 
-      data.type = bare_thread_data_buffer;
+      data.type = bare_thread_data_arraybuffer;
     } else {
       err = js_is_sharedarraybuffer(env, argv[2], &has_data);
       assert(err == 0);
@@ -844,7 +844,17 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
         err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
         assert(err == 0);
 
-        data.type = bare_thread_data_backing_store;
+        data.type = bare_thread_data_sharedarraybuffer;
+      } else {
+        err = js_is_external(env, argv[2], &has_data);
+        assert(err == 0);
+
+        if (has_data) {
+          err = js_get_value_external(env, argv[2], &data.external);
+          assert(err == 0);
+
+          data.type = bare_thread_data_external;
+        }
       }
     }
   }
@@ -1229,6 +1239,20 @@ bare_runtime_on_thread (void *data) {
     break;
 
   case bare_thread_data_buffer: {
+    js_value_t *arraybuffer;
+
+    void *data;
+    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &arraybuffer);
+    assert(err == 0);
+
+    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
+
+    err = js_create_typedarray(thread->runtime.env, js_uint8_array, thread->data.buffer.len, arraybuffer, 0, &thread_data);
+    assert(err == 0);
+    break;
+  }
+
+  case bare_thread_data_arraybuffer: {
     void *data;
     err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &thread_data);
     assert(err == 0);
@@ -1237,11 +1261,16 @@ bare_runtime_on_thread (void *data) {
     break;
   }
 
-  case bare_thread_data_backing_store:
+  case bare_thread_data_sharedarraybuffer:
     err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, NULL, &thread_data);
     assert(err == 0);
 
     err = js_release_arraybuffer_backing_store(thread->runtime.env, thread->data.backing_store);
+    assert(err == 0);
+    break;
+
+  case bare_thread_data_external:
+    err = js_create_external(thread->runtime.env, thread->data.external, NULL, NULL, &thread_data);
     assert(err == 0);
     break;
   }
