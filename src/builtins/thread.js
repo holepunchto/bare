@@ -6,7 +6,8 @@ module.exports = exports = class Thread {
       callback = filename
       filename = '<thread>'
       opts = {}
-    } else if (filename === 'object') {
+    } else if (typeof filename === 'object') {
+      callback = opts
       opts = filename
       filename = '<thread>'
     }
