@@ -34,13 +34,13 @@ static uv_once_t module_guard = UV_ONCE_INIT;
 
 static uv_rwlock_t module_lock;
 
-static inline void
+static void
 on_module_init () {
   int err = uv_rwlock_init(&module_lock);
   assert(err == 0);
 }
 
-static bool
+static inline bool
 bare_addons_has_extension (const char *s, const char *ext) {
   size_t s_len = strlen(s);
   size_t e_len = strlen(ext);
@@ -81,7 +81,7 @@ bare_addons_readdir (bare_runtime_t *runtime, const char *dirname, int entries_l
   return num;
 }
 
-static bool
+static inline bool
 bare_addons_check_dir (bare_runtime_t *runtime, const char *path, char *out, size_t *len) {
   uv_dirent_t entries[BARE_ADDONS_MAX_ENTRIES];
 
