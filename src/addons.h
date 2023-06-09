@@ -228,8 +228,36 @@ bare_addons_load (bare_runtime_t *runtime, const char *path) {
 
         mod = &next->mod;
       } else {
-        uv_dlclose(lib);
-        free(lib);
+        bare_module_cb init = NULL;
+
+        err = uv_dlsym(lib, "bare_register_module_v1", (void **) &init);
+
+        if (err < 0) {
+          uv_dlsym(lib, "napi_register_module_v1", (void **) &init);
+        }
+
+        if (init) {
+          mod = &(bare_module_t){
+            .version = BARE_MODULE_VERSION,
+            .filename = strdup(resolved),
+            .init = init,
+          };
+
+          uv_rwlock_rdunlock(&module_lock);
+
+          bare_module_register(mod);
+
+          uv_rwlock_rdlock(&module_lock);
+
+          next = *pending_module;
+
+          next->pending = false;
+          next->resolved = strdup(resolved);
+          next->lib = lib;
+        } else {
+          uv_dlclose(lib);
+          free(lib);
+        }
       }
     }
   }
