@@ -23,6 +23,10 @@ exports.cache = Object.create(null)
 exports.path = null
 
 const resolve = exports.resolve = function resolve (specifier) {
+  const Module = require('module')
+
+  const protocol = Module._protocols['file:']
+
   const [resolved = null] = resolve(specifier)
 
   if (resolved === null) {
@@ -45,8 +49,6 @@ const resolve = exports.resolve = function resolve (specifier) {
   }
 
   function * resolveDirectory (specifier) {
-    const Module = require('module')
-
     const pkg = path.join(specifier, 'package.json')
 
     let info
@@ -57,6 +59,24 @@ const resolve = exports.resolve = function resolve (specifier) {
     }
 
     if (info) {
+      if (exports.path) {
+        const name = info.name.replace(/\\/g, '+')
+        const version = info.version
+
+        const root = path.join(exports.path, `${process.platform}-${process.arch}`)
+
+        for (const candidate of [
+          `${name}.bare`,
+          `${name}@${version}.bare`,
+          `${name}.node`,
+          `${name}@${version}.node`
+        ]) {
+          const file = path.join(root, candidate)
+
+          if (protocol.exists(file)) yield file
+        }
+      }
+
       try {
         specifier = path.dirname(
           Module.resolve(

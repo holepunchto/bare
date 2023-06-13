@@ -8,12 +8,14 @@ const argv = require('minimist')(process.argv.slice(1), {
     'help'
   ],
   string: [
-    'import-map'
+    'import-map',
+    'addons'
   ],
   alias: {
     version: 'v',
     help: 'h',
-    'import-map': 'm'
+    'import-map': 'm',
+    addons: 'a'
   }
 })
 
@@ -49,6 +51,10 @@ if (argv.m) {
       }
     }
   }
+}
+
+if (argv.a) {
+  process.addon.path = path.resolve(process.cwd(), argv.a)
 }
 
 if (argc === 0) {
