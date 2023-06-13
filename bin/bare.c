@@ -11,7 +11,7 @@ main (int argc, char *argv[]) {
   argv = uv_setup_args(argc, argv);
 
   bare_t *bare;
-  err = bare_setup(uv_default_loop(), argc, argv, &bare);
+  err = bare_setup(uv_default_loop(), argc, argv, NULL, &bare);
   assert(err == 0);
 
   uv_buf_t source = uv_buf_init((char *) bundle, bundle_len);

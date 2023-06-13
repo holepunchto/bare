@@ -16,6 +16,7 @@ extern "C" {
 #include "bare/version.h"
 
 typedef struct bare_s bare_t;
+typedef struct bare_options_s bare_options_t;
 
 typedef void (*bare_before_exit_cb)(bare_t *);
 typedef void (*bare_exit_cb)(bare_t *);
@@ -23,8 +24,16 @@ typedef void (*bare_suspend_cb)(bare_t *);
 typedef void (*bare_idle_cb)(bare_t *);
 typedef void (*bare_resume_cb)(bare_t *);
 
+struct bare_options_s {
+  /**
+   * The directory containing native addons. If not provided, the addon
+   * resolution algorithm will not consider it.
+   */
+  const char *addons;
+};
+
 int
-bare_setup (uv_loop_t *loop, int argc, char **argv, bare_t **result);
+bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *options, bare_t **result);
 
 int
 bare_teardown (bare_t *bare, int *exit_code);

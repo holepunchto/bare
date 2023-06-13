@@ -313,7 +313,7 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
   bare_runtime_t *runtime;
 
   int err;
@@ -330,38 +330,124 @@ bare_runtime_load_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  return bare_addons_load(runtime, (char *) specifier);
-}
+  bare_module_t *mod = bare_addons_load_static(runtime, (char *) specifier);
 
-static js_value_t *
-bare_runtime_resolve_addon (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
-  int err;
-
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  size_t specifier_len = 4096;
-  utf8_t specifier[4096];
-
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
-  assert(err == 0);
-
-  err = bare_addons_resolve(runtime, (char *) specifier, (char *) specifier, &specifier_len);
-  if (err < 0) {
-    js_throw_errorf(env, NULL, "Could not resolve addon %s", specifier);
+  if (mod == NULL) {
+    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
     return NULL;
   }
 
-  js_value_t *result;
-  err = js_create_string_utf8(env, specifier, -1, &result);
+  js_value_t *exports;
+  err = js_create_object(runtime->env, &exports);
   assert(err == 0);
+
+  return mod->init(runtime->env, exports);
+}
+
+static js_value_t *
+bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
+  bare_runtime_t *runtime;
+
+  int err;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t specifier[4096];
+  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+  assert(err == 0);
+
+  bare_module_t *mod = bare_addons_load_dynamic(runtime, (char *) specifier);
+
+  if (mod == NULL) {
+    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
+    return NULL;
+  }
+
+  js_value_t *exports;
+  err = js_create_object(runtime->env, &exports);
+  assert(err == 0);
+
+  return mod->init(runtime->env, exports);
+}
+
+static js_value_t *
+bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t dirname[4096];
+  err = js_get_value_string_utf8(env, argv[0], dirname, 4096, NULL);
+  assert(err == 0);
+
+  uv_loop_t *loop;
+  js_get_env_loop(env, &loop);
+
+  uv_fs_t req;
+
+  err = uv_fs_opendir(loop, &req, (char *) dirname, NULL);
+
+  uv_dir_t *dir = (uv_dir_t *) req.ptr;
+
+  uv_fs_req_cleanup(&req);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    return NULL;
+  }
+
+  uv_dirent_t entries[32];
+
+  dir->dirents = entries;
+  dir->nentries = 32;
+
+  js_value_t *result;
+  err = js_create_array(env, &result);
+  assert(err == 0);
+
+  uint32_t i = 0, len;
+
+  do {
+    err = uv_fs_readdir(loop, &req, dir, NULL);
+
+    if (err < 0) {
+      js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    } else {
+      len = err;
+
+      for (uint32_t j = 0; j < len; j++) {
+        js_value_t *value;
+        err = js_create_string_utf8(env, (utf8_t *) entries[j].name, -1, &value);
+        assert(err == 0);
+
+        err = js_set_element(env, result, i++, value);
+        assert(err == 0);
+      }
+    }
+
+    uv_fs_req_cleanup(&req);
+  } while (err >= 0 && len);
+
+  err = uv_fs_closedir(loop, &req, dir, NULL);
+
+  uv_fs_req_cleanup(&req);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    return NULL;
+  }
 
   return result;
 }
@@ -1108,13 +1194,18 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_function(env, "loadAddon", -1, bare_runtime_load_addon, (void *) runtime, &val);
-    js_set_named_property(env, exports, "loadAddon", val);
+    js_create_function(env, "loadStaticAddon", -1, bare_runtime_load_static_addon, (void *) runtime, &val);
+    js_set_named_property(env, exports, "loadStaticAddon", val);
   }
   {
     js_value_t *val;
-    js_create_function(env, "resolveAddon", -1, bare_runtime_resolve_addon, (void *) runtime, &val);
-    js_set_named_property(env, exports, "resolveAddon", val);
+    js_create_function(env, "loadDyanmicAddon", -1, bare_runtime_load_dynamic_addon, (void *) runtime, &val);
+    js_set_named_property(env, exports, "loadDynamicAddon", val);
+  }
+  {
+    js_value_t *val;
+    js_create_function(env, "readdir", -1, bare_runtime_readdir, (void *) runtime, &val);
+    js_set_named_property(env, exports, "readdir", val);
   }
   {
     js_value_t *val;

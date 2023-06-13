@@ -18,10 +18,6 @@
 	path = vendor/libuv
 	url = ../../libuv/libuv.git
 	shallow = true
-[submodule "vendor/libpath"]
-	path = vendor/libpath
-	url = ../../holepunchto/libpath.git
-	shallow = true
 [submodule "vendor/libutf"]
 	path = vendor/libutf
 	url = ../../holepunchto/libutf.git

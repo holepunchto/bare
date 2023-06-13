@@ -12,7 +12,7 @@ main (int argc, char *argv[]) {
   int e;
 
   bare_t *bare;
-  e = bare_setup(uv_default_loop(), argc, argv, &bare);
+  e = bare_setup(uv_default_loop(), argc, argv, NULL, &bare);
   assert(e == 0);
 
   int exit_code;

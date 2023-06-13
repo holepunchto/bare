@@ -107,10 +107,6 @@ if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT TARGET path)
-  add_subdirectory(vendor/libpath EXCLUDE_FROM_ALL)
-endif()
-
 if(BARE_USE_QUICKJS)
   set(engine qjs_static)
 elseif(BARE_USE_JAVASCRIPTCORE)
@@ -156,7 +152,6 @@ target_include_directories(
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:path,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 list(APPEND objects
@@ -168,7 +163,6 @@ list(APPEND objects
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:mem>
   $<TARGET_OBJECTS:mimalloc>
-  $<TARGET_OBJECTS:path>
   $<TARGET_OBJECTS:utf>
   $<TARGET_OBJECTS:base64>
   $<TARGET_OBJECTS:hex>

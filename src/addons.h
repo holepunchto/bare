@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <js.h>
 #include <napi.h>
-#include <path.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +11,6 @@
 
 #include "../include/bare.h"
 #include "types.h"
-
-#define BARE_ADDONS_MAX_ENTRIES 256
 
 typedef struct bare_module_list_s bare_module_list_t;
 
@@ -32,148 +29,31 @@ static bare_module_list_t **pending_module = &static_module_list;
 
 static uv_once_t module_guard = UV_ONCE_INIT;
 
-static uv_rwlock_t module_lock;
+static uv_mutex_t module_lock;
 
 static void
 on_module_init () {
-  int err = uv_rwlock_init(&module_lock);
+  int err = uv_mutex_init_recursive(&module_lock);
   assert(err == 0);
 }
 
 static inline bool
-bare_addons_has_extension (const char *s, const char *ext) {
-  size_t s_len = strlen(s);
-  size_t e_len = strlen(ext);
+bare_addons_ends_with (const char *string, const char *substring) {
+  size_t s_len = strlen(string);
+  size_t e_len = strlen(substring);
 
-  return e_len <= s_len && strcmp(s + (s_len - e_len), ext) == 0;
+  return e_len <= s_len && strcmp(string + (s_len - e_len), substring) == 0;
 }
 
-static inline int
-bare_addons_readdir (bare_runtime_t *runtime, const char *dirname, int entries_len, uv_dirent_t *entries) {
-  uv_fs_t req;
-
-  int num = 0;
-
-  int err = uv_fs_opendir(runtime->loop, &req, dirname, NULL);
-  if (err < 0) {
-    uv_fs_req_cleanup(&req);
-    return err;
-  }
-
-  uv_dir_t *dir = (uv_dir_t *) req.ptr;
-  uv_fs_req_cleanup(&req);
-
-  dir->dirents = entries;
-  dir->nentries = entries_len;
-
-  num = uv_fs_readdir(runtime->loop, &req, dir, NULL);
-  if (num < 0) {
-    uv_fs_req_cleanup(&req);
-    return num;
-  }
-
-  err = uv_fs_closedir(runtime->loop, &req, dir, NULL);
-  if (err < 0) {
-    uv_fs_req_cleanup(&req);
-    return err;
-  }
-
-  return num;
-}
-
-static inline bool
-bare_addons_check_dir (bare_runtime_t *runtime, const char *path, char *out, size_t *len) {
-  uv_dirent_t entries[BARE_ADDONS_MAX_ENTRIES];
-
-  int entries_len = bare_addons_readdir(runtime, path, BARE_ADDONS_MAX_ENTRIES, (uv_dirent_t *) entries);
-  if (entries_len <= 0) return false;
-
-  const char *result = NULL;
-
-  for (int i = 0; i < entries_len && result == NULL; i++) {
-    const char *name = entries[i].name;
-    if (strcmp(name, "node.napi.bare") == 0) {
-      result = name;
-    }
-  }
-
-  for (int i = 0; i < entries_len && result == NULL; i++) {
-    const char *name = entries[i].name;
-    if (bare_addons_has_extension(name, ".bare")) {
-      result = name;
-    }
-  }
-
-  for (int i = 0; i < entries_len && result == NULL; i++) {
-    const char *name = entries[i].name;
-    if (strcmp(name, "node.napi.node") == 0) {
-      result = name;
-    }
-  }
-
-  for (int i = 0; i < entries_len && result == NULL; i++) {
-    const char *name = entries[i].name;
-    if (bare_addons_has_extension(name, ".node")) {
-      result = name;
-    }
-  }
-
-  if (result != NULL) {
-    path_join((const char *[]){path, result, NULL}, out, len, path_behavior_system);
-    return true;
-  }
-
-  return false;
-}
-
-static inline int
-bare_addons_resolve (bare_runtime_t *runtime, const char *path, char *out, size_t *len) {
-  size_t tmp_len = 4096;
-  char tmp[4096];
-
-  if (bare_addons_has_extension(path, ".bare") || bare_addons_has_extension(path, ".node")) {
-    if (out != path) strcpy(out, path);
-    return 0;
-  }
-
-  path_join((const char *[]){path, "build", NULL}, tmp, &tmp_len, path_behavior_system);
-
-  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
-
-  tmp_len = 4096;
-
-  path_join((const char *[]){path, "build", "Release", NULL}, tmp, &tmp_len, path_behavior_system);
-
-  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
-
-  tmp_len = 4096;
-
-  path_join((const char *[]){path, "build", "Debug", NULL}, tmp, &tmp_len, path_behavior_system);
-
-  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
-
-  tmp_len = 4096;
-
-  path_join((const char *[]){path, "prebuilds", BARE_TARGET, NULL}, tmp, &tmp_len, path_behavior_system);
-
-  if (bare_addons_check_dir(runtime, tmp, out, len)) return 0;
-
-  return UV_ENOENT;
-}
-
-static inline js_value_t *
-bare_addons_load (bare_runtime_t *runtime, const char *path) {
-  uv_once(&module_guard, on_module_init);
-
-  uv_rwlock_rdlock(&module_lock);
-
-  int err;
+static inline bare_module_t *
+bare_addons_load_static (bare_runtime_t *runtime, const char *specifier) {
+  uv_mutex_lock(&module_lock);
 
   bare_module_t *mod = NULL;
   bare_module_list_t *next = static_module_list;
 
   while (next) {
-    if (bare_addons_has_extension(path, next->mod.filename)) {
+    if (bare_addons_ends_with(specifier, next->resolved)) {
       mod = &next->mod;
       break;
     }
@@ -181,127 +61,126 @@ bare_addons_load (bare_runtime_t *runtime, const char *path) {
     next = next->next;
   }
 
-  if (mod == NULL) {
-    size_t resolved_len = 4096;
-    char resolved[4096];
-
-    err = bare_addons_resolve(runtime, path, resolved, &resolved_len);
-    if (err < 0) {
-      js_throw_errorf(runtime->env, NULL, "Could not resolve addon %s", path);
-      return NULL;
-    }
-
-    bare_module_list_t *next = dynamic_module_list;
-
-    while (next) {
-      if (bare_addons_has_extension(resolved, next->resolved)) {
-        mod = &next->mod;
-        break;
-      }
-
-      next = next->next;
-    }
-
-    if (mod == NULL) {
-      pending_module = &dynamic_module_list;
-
-      uv_lib_t *lib = malloc(sizeof(uv_lib_t));
-
-      uv_rwlock_rdunlock(&module_lock);
-
-      err = uv_dlopen(resolved, lib);
-
-      if (err < 0) {
-        js_throw_error(runtime->env, NULL, uv_dlerror(lib));
-        free(lib);
-        return NULL;
-      }
-
-      uv_rwlock_rdlock(&module_lock);
-
-      next = *pending_module;
-
-      if (next && next->pending) {
-        next->pending = false;
-        next->resolved = strdup(resolved);
-        next->lib = lib;
-
-        mod = &next->mod;
-      } else {
-        bare_module_cb init = NULL;
-
-        err = uv_dlsym(lib, "bare_register_module_v1", (void **) &init);
-
-        if (err < 0) {
-          uv_dlsym(lib, "napi_register_module_v1", (void **) &init);
-        }
-
-        if (init) {
-          mod = &(bare_module_t){
-            .version = BARE_MODULE_VERSION,
-            .filename = strdup(resolved),
-            .init = init,
-          };
-
-          uv_rwlock_rdunlock(&module_lock);
-
-          bare_module_register(mod);
-
-          uv_rwlock_rdlock(&module_lock);
-
-          next = *pending_module;
-
-          next->pending = false;
-          next->resolved = strdup(resolved);
-          next->lib = lib;
-        } else {
-          uv_dlclose(lib);
-          free(lib);
-        }
-      }
-    }
-  }
-
-  uv_rwlock_rdunlock(&module_lock);
+  uv_mutex_unlock(&module_lock);
 
   if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No module registered for %s", path);
+    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
     return NULL;
   }
 
   if (mod->version != BARE_MODULE_VERSION) {
-    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, path);
+    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
     return NULL;
   }
 
-  js_value_t *exports;
-  err = js_create_object(runtime->env, &exports);
-  assert(err == 0);
+  return mod;
+}
 
-  return mod->init(runtime->env, exports);
+static inline bare_module_t *
+bare_addons_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
+  uv_mutex_lock(&module_lock);
+
+  bare_module_t *mod = NULL;
+  bare_module_list_t *next = dynamic_module_list;
+
+  while (next) {
+    if (bare_addons_ends_with(specifier, next->resolved)) {
+      mod = &next->mod;
+      break;
+    }
+
+    next = next->next;
+  }
+
+  if (mod) {
+    uv_mutex_unlock(&module_lock);
+
+    return mod;
+  }
+
+  int err;
+
+  pending_module = &dynamic_module_list;
+
+  uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+
+  err = uv_dlopen(specifier, lib);
+
+  bool opened = err >= 0;
+
+  if (err < 0) goto err;
+
+  next = *pending_module;
+
+  if (next && next->pending) goto done;
+
+  bare_module_cb init;
+
+  err = uv_dlsym(lib, "bare_register_module_v1", (void **) &init);
+
+  if (err < 0) {
+    err = uv_dlsym(lib, "napi_register_module_v1", (void **) &init);
+
+    if (err < 0) goto err;
+  }
+
+  bare_module_register(&(bare_module_t){
+    .version = BARE_MODULE_VERSION,
+    .filename = strdup(specifier),
+    .init = init,
+  });
+
+  next = *pending_module;
+
+done:
+  mod = &next->mod;
+
+  if (mod->version != BARE_MODULE_VERSION) {
+    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
+    return NULL;
+  }
+
+  next->pending = false;
+  next->resolved = strdup(specifier);
+  next->lib = lib;
+
+  uv_mutex_unlock(&module_lock);
+
+  return mod;
+
+err:
+  uv_mutex_unlock(&module_lock);
+
+  js_throw_error(runtime->env, NULL, uv_dlerror(lib));
+
+  if (opened) uv_dlclose(lib);
+
+  free(lib);
+
+  return NULL;
 }
 
 void
 bare_module_register (bare_module_t *mod) {
   uv_once(&module_guard, on_module_init);
 
-  uv_rwlock_wrlock(&module_lock);
+  uv_mutex_lock(&module_lock);
 
   bool is_dynamic = pending_module == &dynamic_module_list;
 
   bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
 
   next->mod.version = mod->version;
-  next->mod.filename = mod->filename;
+  next->mod.filename = mod->filename ? strdup(mod->filename) : NULL;
   next->mod.init = mod->init;
 
-  next->resolved = NULL;
+  next->resolved = is_dynamic ? NULL : strdup(mod->filename);
   next->pending = is_dynamic;
   next->next = *pending_module;
 
   *pending_module = next;
 
-  uv_rwlock_wrunlock(&module_lock);
+  uv_mutex_unlock(&module_lock);
 }
 
 void
