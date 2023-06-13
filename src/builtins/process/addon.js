@@ -45,6 +45,27 @@ const resolve = exports.resolve = function resolve (specifier) {
   }
 
   function * resolveDirectory (specifier) {
+    const Module = require('module')
+
+    const pkg = path.join(specifier, 'package.json')
+
+    let info
+    try {
+      info = Module.load(pkg).exports
+    } catch {
+      info = null
+    }
+
+    if (info) {
+      try {
+        specifier = path.dirname(
+          Module.resolve(
+            path.join(info.name, 'package.json')
+          )
+        )
+      } catch {}
+    }
+
     for (const directory of resolveAddonPaths(specifier)) {
       try {
         const files = bare.readdir(directory)
