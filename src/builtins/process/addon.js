@@ -1,6 +1,6 @@
 /* global bare */
 
-const path = require('path')
+const path = require('../path')
 
 module.exports = exports = function addon (specifier) {
   if (exports.cache[specifier]) return exports.cache[specifier]
@@ -23,10 +23,6 @@ exports.cache = Object.create(null)
 exports.path = null
 
 const resolve = exports.resolve = function resolve (specifier) {
-  const Module = require('module')
-
-  const protocol = Module._protocols['file:']
-
   const [resolved = null] = resolve(specifier)
 
   if (resolved === null) {
@@ -53,7 +49,7 @@ const resolve = exports.resolve = function resolve (specifier) {
 
     let info
     try {
-      info = Module.load(pkg).exports
+      info = require('../module').load(pkg).exports
     } catch {
       info = null
     }
@@ -73,13 +69,17 @@ const resolve = exports.resolve = function resolve (specifier) {
         ]) {
           const file = path.join(root, candidate)
 
-          if (protocol.exists(file)) yield file
+          try {
+            const protocol = require('../module')._protocols['file:']
+
+            if (protocol.exists(file)) yield file
+          } catch {}
         }
       }
 
       try {
         specifier = path.dirname(
-          Module.resolve(
+          require('../module').resolve(
             path.join(info.name, 'package.json')
           )
         )
