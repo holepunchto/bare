@@ -1199,7 +1199,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_function(env, "loadDyanmicAddon", -1, bare_runtime_load_dynamic_addon, (void *) runtime, &val);
+    js_create_function(env, "loadDynamicAddon", -1, bare_runtime_load_dynamic_addon, (void *) runtime, &val);
     js_set_named_property(env, exports, "loadDynamicAddon", val);
   }
   {
