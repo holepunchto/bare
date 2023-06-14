@@ -55,7 +55,11 @@ mirror_drive(
 )
 
 if(MSVC)
-  add_compile_options($<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)
+  add_compile_options(
+    $<$<CONFIG:Debug>:/MTd>
+    $<$<CONFIG:Release>:/MT>
+    /experimental:c11atomics
+  )
 endif()
 
 if(NOT TARGET v8)
@@ -124,7 +128,7 @@ add_library(bare OBJECT)
 set_target_properties(
   bare
   PROPERTIES
-  C_STANDARD 99
+  C_STANDARD 11
   CXX_STANDARD 17
   POSITION_INDEPENDENT_CODE ON
 )
