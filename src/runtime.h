@@ -332,10 +332,7 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
 
   bare_module_t *mod = bare_addons_load_static(runtime, (char *) specifier);
 
-  if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
-    return NULL;
-  }
+  if (mod == NULL) return NULL;
 
   js_value_t *exports;
   err = js_create_object(runtime->env, &exports);
@@ -364,10 +361,7 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
 
   bare_module_t *mod = bare_addons_load_dynamic(runtime, (char *) specifier);
 
-  if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
-    return NULL;
-  }
+  if (mod == NULL) return NULL;
 
   js_value_t *exports;
   err = js_create_object(runtime->env, &exports);
