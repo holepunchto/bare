@@ -36,7 +36,7 @@
     "bare-path": "^1.0.5",
     "bare-repl": "^0.0.1",
     "bare-timers": "^1.4.2",
-    "bare-tty": "^1.0.4",
+    "bare-tty": "^1.0.6",
     "minimist": "^1.2.8"
   },
   "devDependencies": {
