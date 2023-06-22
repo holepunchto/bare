@@ -212,7 +212,13 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 
 ## Building
 
-To build Bare, start by installing the dependencies:
+To build Bare, start by globally installing the `bare-dev` tool:
+
+```sh
+npm install -g bare-dev
+```
+
+Then install dependencies:
 
 ```sh
 $ npm install
