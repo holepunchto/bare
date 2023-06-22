@@ -27,16 +27,16 @@
   "dependencies": {
     "bare-assert": "^1.0.0",
     "bare-buffer": "^1.2.5",
-    "bare-console": "^2.0.0",
+    "bare-console": "^3.0.0",
     "bare-dev": "^0.3.0",
     "bare-events": "^1.2.1",
     "bare-fs": "^1.5.4",
-    "bare-module": "^1.10.0",
+    "bare-module": "^1.10.1",
     "bare-os": "^1.1.2",
     "bare-path": "^1.0.5",
-    "bare-repl": "^0.0.1",
+    "bare-repl": "^0.1.0",
     "bare-timers": "^1.4.2",
-    "bare-tty": "^1.0.6",
+    "bare-tty": "^2.0.0",
     "minimist": "^1.2.8"
   },
   "devDependencies": {
