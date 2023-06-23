@@ -134,6 +134,8 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
     bare->resumed = false;
   } while (uv_loop_alive(bare->runtime.loop));
 
+  bare->exited = true;
+
   return 0;
 }
 
