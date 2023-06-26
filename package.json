@@ -30,11 +30,9 @@
     "bare-console": "^3.0.0",
     "bare-dev": "^0.3.0",
     "bare-events": "^1.2.1",
-    "bare-fs": "^1.5.4",
     "bare-module": "^1.10.2",
-    "bare-os": "^1.1.2",
     "bare-path": "^1.0.5",
-    "bare-repl": "^0.1.7",
+    "bare-repl": "^0.2.0",
     "bare-timers": "^1.4.2",
     "bare-tty": "^2.0.0",
     "minimist": "^1.2.8"

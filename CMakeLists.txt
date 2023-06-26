@@ -202,8 +202,6 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
-include_bare_module(bare_fs node_modules/bare-fs)
-include_bare_module(bare_os node_modules/bare-os)
 include_bare_module(bare_repl node_modules/bare-repl)
 include_bare_module(bare_tty node_modules/bare-tty)
 
@@ -211,8 +209,6 @@ add_executable(bare_bin
   bin/bare.c
   bin/bare.bundle.h
 
-  $<TARGET_OBJECTS:bare_fs>
-  $<TARGET_OBJECTS:bare_os>
   $<TARGET_OBJECTS:bare_repl>
   $<TARGET_OBJECTS:bare_tty>
 )
