@@ -132,6 +132,8 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
     else {
       bare_runtime_on_before_exit(&bare->runtime);
     }
+
+    bare->suspended = bare->resumed = false;
   } while (uv_loop_alive(bare->runtime.loop));
 
   bare->exited = true;
