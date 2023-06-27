@@ -6,6 +6,7 @@ process
   .on('suspend', () => {
     console.log('emit suspend')
     suspended = true
+    process.resume()
   })
   .on('idle', () => {
     assert(false, 'Should not idle')
@@ -14,6 +15,4 @@ process
     console.log('emit resume')
     assert(suspended)
   })
-
-process.suspend()
-process.resume()
+  .suspend()

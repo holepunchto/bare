@@ -19,6 +19,7 @@ list(APPEND tests
   suspend-resume.js
   suspend-resume-from-thread.js
   suspend-resume-immediate.js
+  suspend-resume-immediate-from-callback.js
   thread.js
   thread-source.js
   thread-shared-data.js

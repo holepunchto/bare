@@ -17,6 +17,16 @@ on_suspend (uv_async_t *handle) {
   bare_t *bare = (bare_t *) handle->data;
 
   bare_runtime_on_suspend(&bare->runtime);
+
+  // The process got suspended, but the suspension was cancelled; flush the
+  // semaphore without blocking and invoke the resume callback.
+  if (bare->resumed) {
+    uv_sem_trywait(&bare->resume);
+
+    bare_runtime_on_resume(&bare->runtime);
+
+    bare->resumed = false;
+  }
 }
 
 int
@@ -113,14 +123,6 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
       bare_runtime_on_idle(&bare->runtime);
 
       uv_sem_wait(&bare->resume);
-
-      bare_runtime_on_resume(&bare->runtime);
-    }
-
-    // The process got suspended, but the suspension was cancelled; flush the
-    // semaphore without blocking and invoke the resume callback.
-    else if (bare->resumed) {
-      uv_sem_trywait(&bare->resume);
 
       bare_runtime_on_resume(&bare->runtime);
     }
