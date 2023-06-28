@@ -59,15 +59,13 @@ const resolve = exports.resolve = function resolve (specifier) {
         const name = info.name.replace(/\\/g, '+')
         const version = info.version
 
-        const root = path.join(exports.path, `${process.platform}-${process.arch}`)
-
         for (const candidate of [
           `${name}.bare`,
           `${name}@${version}.bare`,
           `${name}.node`,
           `${name}@${version}.node`
         ]) {
-          const file = path.join(root, candidate)
+          const file = path.join(exports.path, candidate)
 
           try {
             const protocol = require('../module')._protocols['file:']
