@@ -56,7 +56,7 @@ const resolve = exports.resolve = function resolve (specifier) {
 
     if (info) {
       if (exports.path) {
-        const name = info.name.replace(/\\/g, '+')
+        const name = info.name.replace(/\//g, '+')
         const version = info.version
 
         for (const candidate of [
