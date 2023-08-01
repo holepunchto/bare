@@ -4,10 +4,7 @@
   "version": "0.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
-    "test": "standard && bare-dev test",
-    "install": "bare-dev vendor sync",
-    "configure": "bare-dev configure",
-    "build": "bare-dev build"
+    "test": "standard"
   },
   "standard": {
     "ignore": [

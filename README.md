@@ -212,22 +212,28 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 
 ## Building
 
-To build Bare, start by installing the dependencies:
+To build Bare, start by installing the npm dependencies:
 
 ```sh
 $ npm install
 ```
 
-Next, configure the build tree before performing the first build:
+One of these dependencies is the `bare-dev` toolkit which we'll be invoking with `npx`. Next, synchronise the vendored dependencies, such as git submodules:
 
 ```sh
-$ npm run configure -- [--debug]
+$ npx bare-dev vendor sync
+```
+
+You should repeat this whenever the vendored dependencies are updated. Then, configure the build tree before performing the first build:
+
+```sh
+$ npx bare-dev configure [--debug]
 ```
 
 Finally, perform the build:
 
 ```sh
-$ npm run build
+$ npx bare-dev build
 ```
 
 When completed, the `bare` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll)` libraries will be available in the root of the `build` directory.
