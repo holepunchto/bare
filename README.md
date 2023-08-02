@@ -212,7 +212,7 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 
 ## Building
 
-To build Bare, start by installing the npm dependencies:
+To build Bare, start by installing the initial npm dependencies:
 
 ```sh
 $ npm install
@@ -224,7 +224,7 @@ One of these dependencies is the `bare-dev` toolkit which we'll be invoking with
 $ npx bare-dev vendor sync
 ```
 
-You should repeat this whenever the vendored dependencies are updated. Then, configure the build tree before performing the first build:
+You should repeat this whenever the vendored dependencies are updated. The vendored dependencies also include npm dependencies of their own, so make sure to `npm install` again as well. Then, configure the build tree before performing the first build:
 
 ```sh
 $ npx bare-dev configure [--debug]
