@@ -23,6 +23,8 @@ module.exports = new Proxy(Object.create(null), {
     value = String(value)
 
     bare.setEnv(property, value)
+
+    return true
   },
 
   deleteProperty (target, property) {
