@@ -1236,6 +1236,11 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     js_get_boolean(env, &runtime->process->runtime == runtime, &val);
     js_set_named_property(env, exports, "isMainThread", val);
   }
+  {
+    js_value_t *val;
+    js_get_boolean(env, uv_guess_handle(1) == UV_TTY, &val);
+    js_set_named_property(env, exports, "isTTY", val);
+  }
 
   js_value_t *global;
   js_get_global(env, &global);
