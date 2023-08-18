@@ -49,7 +49,6 @@ struct bare_s {
 
   struct {
     uv_rwlock_t threads;
-    uv_rwlock_t env;
   } locks;
 };
 

@@ -74,9 +74,6 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *option
   err = uv_rwlock_init(&bare->locks.threads);
   assert(err == 0);
 
-  err = uv_rwlock_init(&bare->locks.env);
-  assert(err == 0);
-
   *result = bare;
 
   return 0;
@@ -99,8 +96,6 @@ bare_teardown (bare_t *bare, int *exit_code) {
   uv_sem_destroy(&bare->resume);
 
   uv_rwlock_destroy(&bare->locks.threads);
-
-  uv_rwlock_destroy(&bare->locks.env);
 
   free(bare);
 
