@@ -123,7 +123,8 @@ bare.onresume = function onresume () {
   exports.emit('resume')
 }
 
-exports.env = require('./process/env')
 exports.addon = require('./process/addon')
 exports.hrtime = require('./process/hrtime')
 exports.thread = require('./process/thread')
+
+exports.env = require('bare-env')

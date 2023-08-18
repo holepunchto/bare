@@ -32,7 +32,6 @@ add_bare_bundle(
     src/builtins/path.js
     src/builtins/process.js
     src/builtins/process/addon.js
-    src/builtins/process/env.js
     src/builtins/process/hrtime.js
     src/builtins/process/thread.js
     src/builtins/thread.js
@@ -120,6 +119,7 @@ else()
 endif()
 
 include_bare_module(bare_buffer node_modules/bare-buffer)
+include_bare_module(bare_env node_modules/bare-env)
 include_bare_module(bare_module node_modules/bare-module)
 include_bare_module(bare_timers node_modules/bare-timers)
 
@@ -161,6 +161,7 @@ target_include_directories(
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
   $<TARGET_OBJECTS:bare_buffer>
+  $<TARGET_OBJECTS:bare_env>
   $<TARGET_OBJECTS:bare_module>
   $<TARGET_OBJECTS:bare_timers>
   $<TARGET_OBJECTS:uv>

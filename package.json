@@ -26,6 +26,7 @@
     "bare-buffer": "^1.2.5",
     "bare-console": "^3.1.0",
     "bare-dev": "^0.3.7",
+    "bare-env": "^1.0.0",
     "bare-events": "^1.2.1",
     "bare-module": "^1.10.2",
     "bare-path": "^1.0.5",
