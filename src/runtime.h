@@ -447,35 +447,6 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_hrtime (js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  js_value_t *argv[2];
-  size_t argc = 2;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  uint32_t *next;
-  err = js_get_typedarray_info(env, argv[0], NULL, (void **) &next, NULL, NULL, NULL);
-  assert(err == 0);
-
-  uint32_t *prev;
-  err = js_get_typedarray_info(env, argv[1], NULL, (void **) &prev, NULL, NULL, NULL);
-  assert(err == 0);
-
-  uint64_t then = prev[0] * 1e9 + prev[1];
-  uint64_t now = uv_hrtime() - then;
-
-  next[0] = now / ((uint32_t) 1e9);
-  next[1] = now % ((uint32_t) 1e9);
-
-  return NULL;
-}
-
-static js_value_t *
 bare_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -921,11 +892,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     js_value_t *val;
     js_create_function(env, "printError", -1, bare_runtime_print_error, NULL, &val);
     js_set_named_property(env, exports, "printError", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "hrtime", -1, bare_runtime_hrtime, NULL, &val);
-    js_set_named_property(env, exports, "hrtime", val);
   }
   {
     js_value_t *val;
