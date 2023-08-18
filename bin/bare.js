@@ -58,9 +58,7 @@ if (argv.a) {
 }
 
 if (argc === 0) {
-  const REPL = require('bare-repl')
-  const repl = new REPL()
-  repl.start()
+  require('bare-repl').start()
 } else {
   Module.load(
     process.argv[1] = Module.resolve(
