@@ -47,3 +47,9 @@ global.clearImmediate = timers.clearImmediate
  */
 
 global.console = require('./console')
+
+/**
+ * Make the URL constructor globally available.
+ */
+
+global.URL = require('./url').URL

@@ -8,6 +8,7 @@
     "os": "./builtins/os.js",
     "path": "./builtins/path.js",
     "process": "./builtins/process.js",
-    "timers": "./builtins/timers.js"
+    "timers": "./builtins/timers.js",
+    "url": "./builtins/url.js"
   }
 }

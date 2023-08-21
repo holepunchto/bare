@@ -185,6 +185,7 @@ In addition to the core `process` and `thread` modules, Bare provides a small se
 - `os` (<https://github.com/holepunchto/bare-os>)
 - `path` (<https://github.com/holepunchto/bare-path>)
 - `timers` (<https://github.com/holepunchto/bare-timers>)
+- `url` (<https://github.com/holepunchto/bare-url>)
 
 ### Embedding
 

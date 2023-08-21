@@ -35,6 +35,7 @@
     "bare-repl": "^0.3.0",
     "bare-timers": "^1.4.2",
     "bare-tty": "^2.0.0",
+    "bare-url": "^0.1.0",
     "minimist": "^1.2.8"
   },
   "devDependencies": {

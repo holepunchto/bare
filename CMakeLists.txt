@@ -37,6 +37,7 @@ add_bare_bundle(
     src/builtins/process/thread.js
     src/builtins/thread.js
     src/builtins/timers.js
+    src/builtins/url.js
 )
 
 add_bare_bundle(
