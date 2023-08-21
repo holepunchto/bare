@@ -5,6 +5,7 @@
     "console": "./builtins/console.js",
     "events": "./builtins/events.js",
     "module": "./builtins/module.js",
+    "os": "./builtins/os.js",
     "path": "./builtins/path.js",
     "process": "./builtins/process.js",
     "timers": "./builtins/timers.js"

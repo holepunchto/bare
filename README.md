@@ -182,6 +182,7 @@ In addition to the core `process` and `thread` modules, Bare provides a small se
 - `console` (<https://github.com/holepunchto/bare-console>)
 - `events` (<https://github.com/holepunchto/bare-events>)
 - `module` (<https://github.com/holepunchto/bare-module>)
+- `os` (<https://github.com/holepunchto/bare-os>)
 - `path` (<https://github.com/holepunchto/bare-path>)
 - `timers` (<https://github.com/holepunchto/bare-timers>)
 

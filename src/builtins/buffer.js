@@ -1,1 +1,1 @@
-global.Buffer = module.exports = require('bare-buffer')
+module.exports = require('bare-buffer')

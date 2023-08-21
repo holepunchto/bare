@@ -99,6 +99,6 @@ const resolve = exports.resolve = function resolve (specifier) {
     yield path.join(specifier, 'build/Debug')
     yield path.join(specifier, 'build/Release')
     yield path.join(specifier, 'build')
-    yield path.join(specifier, 'prebuilds', `${process.platform}-${process.arch}`)
+    yield path.join(specifier, 'prebuilds', `${bare.platform}-${bare.arch}`)
   }
 }

@@ -2,7 +2,7 @@
 
 const Console = require('bare-console')
 
-global.console = module.exports = exports = new Console({
+module.exports = exports = new Console({
   colors: bare.isTTY,
   bind: true,
 

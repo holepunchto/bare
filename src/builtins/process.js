@@ -1,12 +1,26 @@
 /* global bare */
 
+/**
+ * Step 1:
+ * Load the core event emitter, which has no dependencies on the process object
+ * or native code.
+ */
+
 const EventEmitter = require('./events')
 
-const resolved = Promise.resolve()
+/**
+ * Step 2:
+ * Declare any builtin modules that are needed by the process object. These are
+ * allowed to use native code and so we defer loading them until after the
+ * addon API has been initialized.
+ */
 
-global.queueMicrotask = function queueMicrotask (fn) {
-  resolved.then(fn)
-}
+let os
+
+/**
+ * Step 3:
+ * Declare the process object.
+ */
 
 class Process extends EventEmitter {
   get platform () {
@@ -50,11 +64,11 @@ class Process extends EventEmitter {
   }
 
   cwd () {
-    return bare.cwd()
+    return os.cwd()
   }
 
   chdir (directory) {
-    bare.chdir(directory)
+    os.chdir(directory)
   }
 
   exit (code = this.exitCode) {
@@ -75,11 +89,62 @@ class Process extends EventEmitter {
   }
 }
 
+/**
+ * Step 4:
+ * Construct the process object, after which other modules may access it using
+ * the global `process` reference.
+ */
+
 global.process = module.exports = exports = new Process()
+
+/**
+ * Step 5:
+ * Register the native addon API. Modules loaded from this point on may use
+ * native code.
+ */
+
+exports.addon = require('./process/addon')
+
+/**
+ * Step 6:
+ * Now that native code is available, load the builtin modules needed by the
+ * process object.
+ */
+
+os = require('./os')
+
+/**
+ * Step 7:
+ * Register the remaining globals.
+ */
+
+require('./globals')
+
+/**
+ * Step 8:
+ * Register the thread API. Modules loaded from this point on may use threads.
+ */
+
+exports.thread = require('./process/thread')
+
+/**
+ * Step 9:
+ * Register environment variable support and high-resolution timers.
+ */
+
+exports.env = require('bare-env')
+exports.hrtime = require('bare-hrtime')
+
+/**
+ * Step 10:
+ * Register the native hooks, propagating events to the process object.
+ */
 
 bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
+
   bare.printError(`Uncaught ${err.stack}\n`)
+
   if (bare.isMainThread) {
     bare.exitCode = 1
     bare.exit()
@@ -90,7 +155,9 @@ bare.onuncaughtexception = function onuncaughtexception (err) {
 
 bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
+
   bare.printError(`Uncaught (in promise) ${reason.stack}\n`)
+
   if (bare.isMainThread) {
     bare.exitCode = 1
     bare.exit()
@@ -122,9 +189,3 @@ bare.onidle = function onidle () {
 bare.onresume = function onresume () {
   exports.emit('resume')
 }
-
-exports.addon = require('./process/addon')
-exports.thread = require('./process/thread')
-
-exports.env = require('bare-env')
-exports.hrtime = require('bare-hrtime')

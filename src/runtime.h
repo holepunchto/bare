@@ -330,7 +330,7 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addons_load_static(runtime, (char *) specifier);
+  bare_module_t *mod = bare_addons_load_static(runtime->env, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -359,7 +359,7 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addons_load_dynamic(runtime, (char *) specifier);
+  bare_module_t *mod = bare_addons_load_dynamic(runtime->env, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -447,59 +447,6 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_cwd (js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  js_value_t *val;
-
-  size_t cwd_len = 4096;
-  char cwd[4096];
-
-  err = uv_cwd(cwd, &cwd_len);
-  if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
-    return NULL;
-  }
-
-  err = js_create_string_utf8(env, (utf8_t *) cwd, cwd_len, &val);
-  assert(err == 0);
-
-  return val;
-}
-
-static js_value_t *
-bare_runtime_chdir (js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  size_t dir_len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &dir_len);
-  assert(err == 0);
-
-  utf8_t *dir = malloc(++dir_len);
-  err = js_get_value_string_utf8(env, argv[0], dir, dir_len, &dir_len);
-  assert(err == 0);
-
-  err = uv_chdir((char *) dir);
-
-  free(dir);
-
-  if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
-    return NULL;
-  }
-
-  return NULL;
-}
-
-static js_value_t *
 bare_runtime_set_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -531,15 +478,13 @@ static js_value_t *
 bare_runtime_get_title (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  char *title = malloc(256);
+  char title[256];
   err = uv_get_process_title(title, 256);
   if (err) memcpy(title, "bare", 5);
 
   js_value_t *result;
   err = js_create_string_utf8(env, (utf8_t *) title, -1, &result);
   assert(err == 0);
-
-  free(title);
 
   return result;
 }
@@ -872,16 +817,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     js_value_t *val;
     js_create_function(env, "getTitle", -1, bare_runtime_get_title, NULL, &val);
     js_set_named_property(env, exports, "getTitle", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "cwd", -1, bare_runtime_cwd, NULL, &val);
-    js_set_named_property(env, exports, "cwd", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "chdir", -1, bare_runtime_chdir, NULL, &val);
-    js_set_named_property(env, exports, "chdir", val);
   }
   {
     js_value_t *val;

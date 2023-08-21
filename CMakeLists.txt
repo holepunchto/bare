@@ -28,7 +28,9 @@ add_bare_bundle(
     src/builtins/buffer.js
     src/builtins/console.js
     src/builtins/events.js
+    src/builtins/globals.js
     src/builtins/module.js
+    src/builtins/os.js
     src/builtins/path.js
     src/builtins/process.js
     src/builtins/process/addon.js
@@ -121,6 +123,7 @@ include_bare_module(bare_buffer node_modules/bare-buffer)
 include_bare_module(bare_env node_modules/bare-env)
 include_bare_module(bare_hrtime node_modules/bare-hrtime)
 include_bare_module(bare_module node_modules/bare-module)
+include_bare_module(bare_os node_modules/bare-os)
 include_bare_module(bare_timers node_modules/bare-timers)
 
 add_library(bare OBJECT)
@@ -164,6 +167,7 @@ list(APPEND objects
   $<TARGET_OBJECTS:bare_env>
   $<TARGET_OBJECTS:bare_hrtime>
   $<TARGET_OBJECTS:bare_module>
+  $<TARGET_OBJECTS:bare_os>
   $<TARGET_OBJECTS:bare_timers>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>

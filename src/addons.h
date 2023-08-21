@@ -10,7 +10,6 @@
 #include <uv.h>
 
 #include "../include/bare.h"
-#include "types.h"
 
 typedef struct bare_module_list_s bare_module_list_t;
 
@@ -46,7 +45,7 @@ bare_addons_ends_with (const char *string, const char *substring) {
 }
 
 static inline bare_module_t *
-bare_addons_load_static (bare_runtime_t *runtime, const char *specifier) {
+bare_addons_load_static (js_env_t *env, const char *specifier) {
   uv_mutex_lock(&module_lock);
 
   bare_module_t *mod = NULL;
@@ -64,12 +63,12 @@ bare_addons_load_static (bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_unlock(&module_lock);
 
   if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
+    js_throw_errorf(env, NULL, "No module registered for %s", specifier);
     return NULL;
   }
 
   if (mod->version != BARE_MODULE_VERSION) {
-    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
+    js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
     return NULL;
   }
 
@@ -77,7 +76,7 @@ bare_addons_load_static (bare_runtime_t *runtime, const char *specifier) {
 }
 
 static inline bare_module_t *
-bare_addons_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
+bare_addons_load_dynamic (js_env_t *env, const char *specifier) {
   uv_mutex_lock(&module_lock);
 
   bare_module_t *mod = NULL;
@@ -136,7 +135,7 @@ done:
   mod = &next->mod;
 
   if (mod->version != BARE_MODULE_VERSION) {
-    js_throw_errorf(runtime->env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
+    js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
     return NULL;
   }
 
@@ -151,7 +150,7 @@ done:
 err:
   uv_mutex_unlock(&module_lock);
 
-  js_throw_error(runtime->env, NULL, uv_dlerror(lib));
+  js_throw_error(env, NULL, uv_dlerror(lib));
 
   if (opened) uv_dlclose(lib);
 
