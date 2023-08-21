@@ -12,7 +12,11 @@
 const resolved = Promise.resolve()
 
 global.queueMicrotask = function queueMicrotask (fn) {
-  resolved.then(fn)
+  resolved
+    .then(fn)
+    // Make sure that exceptions are reported as normal uncaughts, not promise
+    // rejections.
+    .catch(err => setTimeout(() => { throw err }, 0))
 }
 
 /**
@@ -23,7 +27,8 @@ global.queueMicrotask = function queueMicrotask (fn) {
 global.Buffer = require('./buffer')
 
 /**
- *
+ * Make timers globally available, including the Node.js-specific immediate
+ * API which schedules events to run after each I/O tick.
  */
 
 const timers = require('./timers')
@@ -38,7 +43,7 @@ global.setImmediate = timers.setImmediate
 global.clearImmediate = timers.clearImmediate
 
 /**
- *
+ * Make the debugging console globally available.
  */
 
 global.console = require('./console')
