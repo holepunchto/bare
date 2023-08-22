@@ -34,6 +34,10 @@ The command line arguments passed to the process when launched.
 
 The ID of the current process.
 
+#### `process.ppid`
+
+The ID of the parent process.
+
 #### `process.title`
 
 The title of the current process. Assigning a new value will change the title of the process. On platforms where the process title is backed by a buffer with a fixed size, the new title will be truncated if larger than the previous title. See <http://docs.libuv.org/en/v1.x/misc.html#c.uv_set_process_title> for more information.
