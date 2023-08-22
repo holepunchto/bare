@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
-    "test": "standard"
+    "test": "standard",
+    "rebuildathon": "git pull && rm -rf node_modules && npm install && npx bare-dev vendor sync && npx bare-dev configure && npx bare-dev build"
   },
   "standard": {
     "ignore": [
