@@ -136,7 +136,7 @@ done:
 
   if (mod->version != BARE_MODULE_VERSION) {
     js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
-    return NULL;
+    goto err;
   }
 
   next->pending = false;
