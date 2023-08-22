@@ -770,7 +770,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     err = js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &val);
     assert(err == 0);
 
-    err = js_set_element(env, argv, i++, val);
+    err = js_set_element(env, argv, i, val);
     assert(err == 0);
   }
 
