@@ -786,7 +786,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     js_value_t *val; \
     err = js_create_string_utf8(env, (utf8_t *) (version), -1, &val); \
     assert(err == 0); \
-\
     err = js_set_named_property(env, versions, name, val); \
     assert(err == 0); \
   }
