@@ -805,11 +805,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   }
   {
     js_value_t *val;
-    js_create_uint32(env, uv_os_getpid(), &val);
-    js_set_named_property(env, exports, "pid", val);
-  }
-  {
-    js_value_t *val;
     js_create_function(env, "setTitle", -1, bare_runtime_set_title, NULL, &val);
     js_set_named_property(env, exports, "setTitle", val);
   }

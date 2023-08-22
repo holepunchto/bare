@@ -40,7 +40,11 @@ class Process extends EventEmitter {
   }
 
   get pid () {
-    return bare.pid
+    return os.pid()
+  }
+
+  get ppid () {
+    return os.ppid()
   }
 
   get title () {
@@ -84,6 +88,7 @@ class Process extends EventEmitter {
     bare.resume()
   }
 
+  // For Node.js compatibility
   nextTick (cb, ...args) {
     queueMicrotask(cb.bind(null, ...args))
   }
