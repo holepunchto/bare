@@ -107,6 +107,13 @@ exports.addon = require('./process/addon')
 
 /**
  * Step 6:
+ * Register the thread API. Modules loaded from this point on may use threads.
+ */
+
+exports.thread = require('./process/thread')
+
+/**
+ * Step 7:
  * Now that native code is available, load the builtin modules needed by the
  * process object.
  */
@@ -114,18 +121,11 @@ exports.addon = require('./process/addon')
 os = require('./os')
 
 /**
- * Step 7:
+ * Step 8:
  * Register the remaining globals.
  */
 
 require('./globals')
-
-/**
- * Step 8:
- * Register the thread API. Modules loaded from this point on may use threads.
- */
-
-exports.thread = require('./process/thread')
 
 /**
  * Step 9:
