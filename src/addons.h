@@ -94,6 +94,11 @@ bare_addons_load_dynamic (js_env_t *env, const char *specifier) {
   if (mod) {
     uv_mutex_unlock(&module_lock);
 
+    if (mod->version != BARE_MODULE_VERSION) {
+      js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
+      return NULL;
+    }
+
     return mod;
   }
 
