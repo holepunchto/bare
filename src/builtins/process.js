@@ -39,6 +39,10 @@ class Process extends EventEmitter {
     return bare.versions
   }
 
+  get version () {
+    return 'v' + bare.versions.bare
+  }
+
   get exitCode () {
     return bare.exitCode
   }
