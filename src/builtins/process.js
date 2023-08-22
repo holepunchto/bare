@@ -88,6 +88,10 @@ class Process extends EventEmitter {
     os.chdir(directory)
   }
 
+  kill (pid, signal) {
+    os.kill(pid, signal)
+  }
+
   // For Node.js compatibility
   nextTick (cb, ...args) {
     queueMicrotask(cb.bind(null, ...args))
