@@ -107,7 +107,8 @@ exports.addon = require('./process/addon')
 
 /**
  * Step 6:
- * Register the thread API. Modules loaded from this point on may use threads.
+ * Register the thread API. Modules loaded from this point on may use threads,
+ * including thread events for resource cleanup.
  */
 
 exports.thread = require('./process/thread')
