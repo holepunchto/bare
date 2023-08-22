@@ -737,155 +737,109 @@ bare_runtime_setup (bare_runtime_t *runtime) {
 
   js_value_t *exports = runtime->exports;
 
-  {
-    js_value_t *versions;
-    js_create_object(env, &versions);
+  js_value_t *platform;
+  err = js_create_string_utf8(env, (utf8_t *) BARE_PLATFORM, -1, &platform);
+  assert(err == 0);
 
-    js_value_t *val;
+  err = js_set_named_property(env, exports, "platform", platform);
+  assert(err == 0);
 
-    js_create_string_utf8(env, (utf8_t *) BARE_VERSION, -1, &val);
-    js_set_named_property(env, versions, "bare", val);
+  js_value_t *arch;
+  err = js_create_string_utf8(env, (utf8_t *) BARE_ARCH, -1, &arch);
+  assert(err == 0);
 
-    js_create_string_utf8(env, (utf8_t *) BARE_STRING(BARE_MODULE_VERSION), -1, &val);
-    js_set_named_property(env, versions, "modules", val);
+  err = js_set_named_property(env, exports, "arch", arch);
+  assert(err == 0);
 
-    if (js_platform_version) {
-      js_create_string_utf8(env, (utf8_t *) js_platform_version, -1, &val);
-    } else {
-      js_create_string_utf8(env, (utf8_t *) "unknown", -1, &val);
-    }
+  js_value_t *argv;
+  err = js_create_array_with_length(env, runtime->argc, &argv);
+  assert(err == 0);
 
-    js_set_named_property(env, versions, js_platform_identifier, val);
+  err = js_set_named_property(env, exports, "argv", argv);
+  assert(err == 0);
 
-    js_create_string_utf8(env, (utf8_t *) uv_version_string(), -1, &val);
-    js_set_named_property(env, versions, "uv", val);
+  js_value_t *exit_code;
+  err = js_create_int32(env, 0, &exit_code);
+  assert(err == 0);
 
-    js_set_named_property(env, exports, "versions", versions);
-  }
-  {
-    js_value_t *val;
-    js_create_int32(env, 0, &val);
-    js_set_named_property(env, exports, "exitCode", val);
-  }
-  {
-    js_value_t *val;
-    js_create_string_utf8(env, (utf8_t *) BARE_PLATFORM, -1, &val);
-    js_set_named_property(env, exports, "platform", val);
-  }
-  {
-    js_value_t *val;
-    js_create_string_utf8(env, (utf8_t *) BARE_ARCH, -1, &val);
-    js_set_named_property(env, exports, "arch", val);
-  }
-  js_value_t *exec_path_val;
-  {
-    char exec_path[4096];
-    size_t exec_path_len = 4096;
-    uv_exepath(exec_path, &exec_path_len);
+  err = js_set_named_property(env, exports, "exitCode", exit_code);
+  assert(err == 0);
 
-    js_create_string_utf8(env, (utf8_t *) exec_path, exec_path_len, &exec_path_val);
-    js_set_named_property(env, exports, "execPath", exec_path_val);
-  }
-  {
+  for (int i = 0; i < runtime->argc; i++) {
     js_value_t *val;
-    js_value_t *str;
+    err = js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &val);
+    assert(err == 0);
 
-    js_create_array_with_length(env, runtime->argc, &val);
+    err = js_set_element(env, argv, i++, val);
+    assert(err == 0);
+  }
 
-    int idx = 0;
+  js_value_t *versions;
+  err = js_create_object(env, &versions);
+  assert(err == 0);
 
-    js_set_element(env, val, idx++, exec_path_val);
+  err = js_set_named_property(env, exports, "versions", versions);
+  assert(err == 0);
 
-    for (int i = 1; i < runtime->argc; i++) {
-      js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &str);
-      js_set_element(env, val, idx++, str);
-    }
+#define V(name, version) \
+  { \
+    js_value_t *val; \
+    err = js_create_string_utf8(env, (utf8_t *) (version), -1, &val); \
+    assert(err == 0); \
+\
+    err = js_set_named_property(env, versions, name, val); \
+    assert(err == 0); \
+  }
+  V("bare", BARE_VERSION);
+  V("modules", BARE_STRING(BARE_MODULE_VERSION));
+  V("uv", uv_version_string());
+  V(js_platform_identifier, js_platform_version ? js_platform_version : "unknown");
+#undef V
 
-    js_set_named_property(env, exports, "argv", val);
+#define V(name, fn) \
+  { \
+    js_value_t *val; \
+    err = js_create_function(env, name, -1, fn, (void *) runtime, &val); \
+    assert(err == 0); \
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
   }
-  {
-    js_value_t *val;
-    js_create_function(env, "setTitle", -1, bare_runtime_set_title, NULL, &val);
-    js_set_named_property(env, exports, "setTitle", val);
+  V("setTitle", bare_runtime_set_title);
+  V("getTitle", bare_runtime_get_title);
+  V("printInfo", bare_runtime_print_info);
+  V("printError", bare_runtime_print_error);
+  V("loadStaticAddon", bare_runtime_load_static_addon);
+  V("loadDynamicAddon", bare_runtime_load_dynamic_addon);
+  V("readdir", bare_runtime_readdir);
+  V("exit", bare_runtime_exit);
+  V("suspend", bare_runtime_suspend);
+  V("resume", bare_runtime_resume);
+  V("setupThread", bare_runtime_setup_thread);
+  V("joinThread", bare_runtime_join_thread);
+  V("stopCurrentThread", bare_runtime_stop_current_thread);
+#undef V
+
+#define V(name, bool) \
+  { \
+    js_value_t *val; \
+    err = js_get_boolean(env, bool, &val); \
+    assert(err == 0); \
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
   }
-  {
-    js_value_t *val;
-    js_create_function(env, "getTitle", -1, bare_runtime_get_title, NULL, &val);
-    js_set_named_property(env, exports, "getTitle", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "printInfo", -1, bare_runtime_print_info, NULL, &val);
-    js_set_named_property(env, exports, "printInfo", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "printError", -1, bare_runtime_print_error, NULL, &val);
-    js_set_named_property(env, exports, "printError", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "loadStaticAddon", -1, bare_runtime_load_static_addon, (void *) runtime, &val);
-    js_set_named_property(env, exports, "loadStaticAddon", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "loadDynamicAddon", -1, bare_runtime_load_dynamic_addon, (void *) runtime, &val);
-    js_set_named_property(env, exports, "loadDynamicAddon", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "readdir", -1, bare_runtime_readdir, (void *) runtime, &val);
-    js_set_named_property(env, exports, "readdir", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "exit", -1, bare_runtime_exit, (void *) runtime, &val);
-    js_set_named_property(env, exports, "exit", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "suspend", -1, bare_runtime_suspend, (void *) runtime, &val);
-    js_set_named_property(env, exports, "suspend", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "resume", -1, bare_runtime_resume, (void *) runtime, &val);
-    js_set_named_property(env, exports, "resume", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "setupThread", -1, bare_runtime_setup_thread, (void *) runtime, &val);
-    js_set_named_property(env, exports, "setupThread", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "joinThread", -1, bare_runtime_join_thread, (void *) runtime, &val);
-    js_set_named_property(env, exports, "joinThread", val);
-  }
-  {
-    js_value_t *val;
-    js_create_function(env, "stopCurrentThread", -1, bare_runtime_stop_current_thread, (void *) runtime, &val);
-    js_set_named_property(env, exports, "stopCurrentThread", val);
-  }
-  {
-    js_value_t *val;
-    js_get_boolean(env, &runtime->process->runtime == runtime, &val);
-    js_set_named_property(env, exports, "isMainThread", val);
-  }
-  {
-    js_value_t *val;
-    js_get_boolean(env, uv_guess_handle(1) == UV_TTY, &val);
-    js_set_named_property(env, exports, "isTTY", val);
-  }
+  V("isMainThread", &runtime->process->runtime == runtime);
+  V("isTTY", uv_guess_handle(1) == UV_TTY);
+#undef V
 
   js_value_t *global;
   js_get_global(env, &global);
 
-  js_set_named_property(env, global, "global", global);
+  err = js_set_named_property(env, global, "global", global);
+  assert(err == 0);
 
   js_value_t *script;
-  js_create_string_utf8(env, bare_bundle, bare_bundle_len, &script);
+  err = js_create_string_utf8(env, bare_bundle, bare_bundle_len, &script);
+  assert(err == 0);
 
   js_value_t *entry;
   err = js_run_script(env, "bare:bare.js", -1, 0, script, &entry);

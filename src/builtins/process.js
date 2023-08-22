@@ -31,20 +31,8 @@ class Process extends EventEmitter {
     return bare.arch
   }
 
-  get execPath () {
-    return bare.execPath
-  }
-
   get argv () {
     return bare.argv
-  }
-
-  get pid () {
-    return os.pid()
-  }
-
-  get ppid () {
-    return os.ppid()
   }
 
   get title () {
@@ -67,12 +55,16 @@ class Process extends EventEmitter {
     return bare.versions
   }
 
-  cwd () {
-    return os.cwd()
+  get execPath () {
+    return os.execPath()
   }
 
-  chdir (directory) {
-    os.chdir(directory)
+  get pid () {
+    return os.pid()
+  }
+
+  get ppid () {
+    return os.ppid()
   }
 
   exit (code = this.exitCode) {
@@ -86,6 +78,14 @@ class Process extends EventEmitter {
 
   resume () {
     bare.resume()
+  }
+
+  cwd () {
+    return os.cwd()
+  }
+
+  chdir (directory) {
+    os.chdir(directory)
   }
 
   // For Node.js compatibility
