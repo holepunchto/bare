@@ -758,13 +758,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   err = js_set_named_property(env, exports, "argv", argv);
   assert(err == 0);
 
-  js_value_t *exit_code;
-  err = js_create_int32(env, 0, &exit_code);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "exitCode", exit_code);
-  assert(err == 0);
-
   for (int i = 0; i < runtime->argc; i++) {
     js_value_t *val;
     err = js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &val);
@@ -773,6 +766,13 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     err = js_set_element(env, argv, i, val);
     assert(err == 0);
   }
+
+  js_value_t *exit_code;
+  err = js_create_int32(env, 0, &exit_code);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "exitCode", exit_code);
+  assert(err == 0);
 
   js_value_t *versions;
   err = js_create_object(env, &versions);
