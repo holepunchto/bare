@@ -30,7 +30,7 @@
     "bare-events": "^1.2.1",
     "bare-hrtime": "^1.0.0",
     "bare-module": "^1.11.4",
-    "bare-os": "^1.5.0",
+    "bare-os": "^1.6.0",
     "bare-path": "^1.0.5",
     "bare-repl": "^0.3.0",
     "bare-timers": "^1.4.2",

@@ -35,12 +35,8 @@ class Process extends EventEmitter {
     return bare.argv
   }
 
-  get title () {
-    return bare.getTitle()
-  }
-
-  set title (title) {
-    if (typeof title === 'string') bare.setTitle(title)
+  get versions () {
+    return bare.versions
   }
 
   get exitCode () {
@@ -51,8 +47,12 @@ class Process extends EventEmitter {
     bare.exitCode = (Number(code) || 0) & 0xff
   }
 
-  get versions () {
-    return bare.versions
+  get title () {
+    return bare.getTitle()
+  }
+
+  set title (title) {
+    if (typeof title === 'string') bare.setTitle(title)
   }
 
   get execPath () {

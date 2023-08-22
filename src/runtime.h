@@ -767,13 +767,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     assert(err == 0);
   }
 
-  js_value_t *exit_code;
-  err = js_create_int32(env, 0, &exit_code);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "exitCode", exit_code);
-  assert(err == 0);
-
   js_value_t *versions;
   err = js_create_object(env, &versions);
   assert(err == 0);
@@ -794,6 +787,13 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   V("uv", uv_version_string());
   V(js_platform_identifier, js_platform_version ? js_platform_version : "unknown");
 #undef V
+
+  js_value_t *exit_code;
+  err = js_create_int32(env, 0, &exit_code);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "exitCode", exit_code);
+  assert(err == 0);
 
 #define V(name, fn) \
   { \
