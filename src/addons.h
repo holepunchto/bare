@@ -135,8 +135,15 @@ done:
   mod = &next->mod;
 
   if (mod->version != BARE_MODULE_VERSION) {
+    uv_mutex_unlock(&module_lock);
+
     js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
-    goto err;
+
+    uv_dlclose(lib);
+
+    free(lib);
+
+    return NULL;
   }
 
   next->pending = false;
