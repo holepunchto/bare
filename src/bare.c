@@ -16,6 +16,8 @@ static void
 on_suspend (uv_async_t *handle) {
   bare_t *bare = (bare_t *) handle->data;
 
+  uv_mutex_lock(&bare->locks.lifecycle);
+
   bare_runtime_on_suspend(&bare->runtime);
 
   // The process got suspended, but the suspension was cancelled; flush the
@@ -25,8 +27,10 @@ on_suspend (uv_async_t *handle) {
 
     bare_runtime_on_resume(&bare->runtime);
 
-    bare->resumed = false;
+    bare->suspended = bare->resumed = false;
   }
+
+  uv_mutex_unlock(&bare->locks.lifecycle);
 }
 
 int
@@ -71,6 +75,9 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *option
   bare->on_idle = NULL;
   bare->on_resume = NULL;
 
+  err = uv_mutex_init_recursive(&bare->locks.lifecycle);
+  assert(err == 0);
+
   err = uv_rwlock_init(&bare->locks.threads);
   assert(err == 0);
 
@@ -95,6 +102,8 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
   uv_sem_destroy(&bare->resume);
 
+  uv_mutex_destroy(&bare->locks.lifecycle);
+
   uv_rwlock_destroy(&bare->locks.threads);
 
   free(bare);
@@ -112,12 +121,18 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
   do {
     uv_run(bare->runtime.loop, UV_RUN_DEFAULT);
 
+    uv_mutex_lock(&bare->locks.lifecycle);
+
     // The process got suspended; invoke the idle callback, wait for the
     // process to resume, and then invoke the resume callback.
     if (bare->suspended) {
       bare_runtime_on_idle(&bare->runtime);
 
+      uv_mutex_unlock(&bare->locks.lifecycle);
+
       uv_sem_wait(&bare->resume);
+
+      uv_mutex_lock(&bare->locks.lifecycle);
 
       bare_runtime_on_resume(&bare->runtime);
     }
@@ -129,6 +144,8 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
     }
 
     bare->suspended = bare->resumed = false;
+
+    uv_mutex_unlock(&bare->locks.lifecycle);
   } while (uv_loop_alive(bare->runtime.loop));
 
   bare->exited = true;
@@ -150,26 +167,35 @@ bare_exit (bare_t *bare, int exit_code) {
 
 int
 bare_suspend (bare_t *bare) {
-  bool suspended = false;
+  uv_mutex_lock(&bare->locks.lifecycle);
 
-  if (!atomic_compare_exchange_strong(&bare->suspended, &suspended, true)) {
+  if (bare->suspended) {
+    uv_mutex_unlock(&bare->locks.lifecycle);
+
     return -1;
   }
 
+  bare->suspended = true;
   bare->resumed = false;
+
+  uv_mutex_unlock(&bare->locks.lifecycle);
 
   return uv_async_send(&bare->suspend);
 }
 
 int
 bare_resume (bare_t *bare) {
-  bool suspended = true;
+  uv_mutex_lock(&bare->locks.lifecycle);
 
-  if (!atomic_compare_exchange_strong(&bare->suspended, &suspended, false)) {
+  if (!bare->suspended || bare->resumed) {
+    uv_mutex_unlock(&bare->locks.lifecycle);
+
     return -1;
   }
 
   bare->resumed = true;
+
+  uv_mutex_unlock(&bare->locks.lifecycle);
 
   uv_sem_post(&bare->resume);
 

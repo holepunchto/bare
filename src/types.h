@@ -2,7 +2,6 @@
 #define BARE_TYPES_H
 
 #include <js.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <uv.h>
@@ -37,9 +36,9 @@ struct bare_s {
   uv_async_t suspend;
   uv_sem_t resume;
 
-  atomic_bool suspended;
-  atomic_bool resumed;
-  atomic_bool exited;
+  bool suspended;
+  bool resumed;
+  bool exited;
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
@@ -52,6 +51,7 @@ struct bare_s {
   bare_runtime_t runtime;
 
   struct {
+    uv_mutex_t lifecycle;
     uv_rwlock_t threads;
   } locks;
 };
