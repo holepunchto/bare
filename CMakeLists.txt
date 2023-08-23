@@ -23,7 +23,6 @@ add_bare_bundle(
   DEPENDS
     src/bare.js
     src/bundle.config.js
-    src/import-map.json
     src/builtins/assert.js
     src/builtins/buffer.js
     src/builtins/console.js
