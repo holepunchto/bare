@@ -14,7 +14,7 @@ main (int argc, char *argv[]) {
   err = bare_setup(uv_default_loop(), argc, argv, NULL, &bare);
   assert(err == 0);
 
-  uv_buf_t source = uv_buf_init((char *) bundle, bundle_len);
+  uv_buf_t source = uv_buf_init((char *) bare_bin, bare_bin_len);
 
   err = bare_run(bare, "/bare.bundle", &source);
   assert(err == 0);

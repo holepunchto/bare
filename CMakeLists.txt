@@ -43,9 +43,10 @@ add_bare_bundle(
 add_bare_bundle(
   ENTRY bin/bare.js
   OUT bin/bare.bundle.h
-  TARGET c
+  CONFIG bin/bundle.config.js
   DEPENDS
     bin/bare.js
+    bin/bundle.config.js
 )
 
 mirror_drive(

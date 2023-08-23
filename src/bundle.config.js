@@ -6,5 +6,6 @@ module.exports = {
   builtins: [],
   importMap: require.resolve('./import-map.json'),
   header: '(function (bare) {',
-  footer: '})'
+  footer: '})',
+  compress: ['*']
 }
