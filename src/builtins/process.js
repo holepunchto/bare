@@ -10,15 +10,6 @@ const EventEmitter = require('./events')
 
 /**
  * Step 2:
- * Declare any builtin modules that are needed by the process object. These are
- * allowed to use native code and so we defer loading them until after the
- * addon API has been initialized.
- */
-
-let os
-
-/**
- * Step 3:
  * Declare the process object.
  */
 
@@ -103,7 +94,7 @@ class Process extends EventEmitter {
 }
 
 /**
- * Step 4:
+ * Step 3:
  * Construct the process object, after which other modules may access it using
  * the global `process` reference.
  */
@@ -111,7 +102,7 @@ class Process extends EventEmitter {
 global.process = module.exports = exports = new Process()
 
 /**
- * Step 5:
+ * Step 4:
  * Register the native addon API. Modules loaded from this point on may use
  * native code.
  */
@@ -119,7 +110,7 @@ global.process = module.exports = exports = new Process()
 exports.addon = require('./process/addon')
 
 /**
- * Step 6:
+ * Step 5:
  * Register the thread API. Modules loaded from this point on may use threads,
  * including thread events for resource cleanup.
  */
@@ -127,22 +118,22 @@ exports.addon = require('./process/addon')
 exports.thread = require('./process/thread')
 
 /**
- * Step 7:
+ * Step 6:
  * Now that native code is available, load the builtin modules needed by the
  * process object.
  */
 
-os = require('./os')
+const os = require('./os')
 
 /**
- * Step 8:
+ * Step 7:
  * Register the remaining globals.
  */
 
 require('./globals')
 
 /**
- * Step 9:
+ * Step 8:
  * Register environment variable support and high-resolution timers.
  */
 
@@ -150,7 +141,7 @@ exports.env = require('bare-env')
 exports.hrtime = require('bare-hrtime')
 
 /**
- * Step 10:
+ * Step 9:
  * Register the native hooks, propagating events to the process object.
  */
 
