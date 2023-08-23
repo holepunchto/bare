@@ -15,6 +15,10 @@ typedef struct bare_thread_source_s bare_thread_source_t;
 typedef struct bare_thread_data_s bare_thread_data_t;
 typedef struct bare_thread_list_s bare_thread_list_t;
 
+typedef void (*bare_thread_setup_cb)(bare_thread_t *);
+typedef int (*bare_thread_run_cb)(bare_thread_t *, uv_buf_t *source);
+typedef void (*bare_thread_exit_cb)(bare_thread_t *);
+
 struct bare_runtime_s {
   uv_loop_t *loop;
 
@@ -88,6 +92,10 @@ struct bare_thread_s {
 
   bare_thread_source_t source;
   bare_thread_data_t data;
+
+  bare_thread_setup_cb on_setup;
+  bare_thread_run_cb on_run;
+  bare_thread_exit_cb on_exit;
 
   bare_runtime_t runtime;
 };

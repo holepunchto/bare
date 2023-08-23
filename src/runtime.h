@@ -14,6 +14,7 @@
 #include "../include/bare.h"
 #include "addons.h"
 #include "bare.js.h"
+#include "threads.h"
 #include "types.h"
 
 #ifdef BARE_PLATFORM_ANDROID
@@ -21,6 +22,12 @@
 #else
 #include "runtime/posix.h"
 #endif
+
+static inline void
+bare_runtime_setup (bare_runtime_t *runtime);
+
+static inline int
+bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source);
 
 static void
 bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
@@ -171,25 +178,6 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
-bare_runtime_on_thread_exit (bare_runtime_t *runtime) {
-  js_env_t *env = runtime->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onthreadexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-
-  if (is_set) {
-    js_value_t *global;
-    js_get_global(env, &global);
-
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
-  }
-}
-
-static inline void
 bare_runtime_on_suspend (bare_runtime_t *runtime) {
   js_env_t *env = runtime->env;
 
@@ -250,6 +238,37 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
   }
 
   if (runtime->process->on_resume) runtime->process->on_resume(runtime->process);
+}
+
+static inline void
+bare_runtime_on_thread_setup (bare_thread_t *thread) {
+  bare_runtime_setup(&thread->runtime);
+}
+
+static inline int
+bare_runtime_on_thread_run (bare_thread_t *thread, uv_buf_t *source) {
+  return bare_runtime_run(&thread->runtime, thread->filename, source);
+}
+
+static inline void
+bare_runtime_on_thread_exit (bare_thread_t *thread) {
+  bare_runtime_t *runtime = &thread->runtime;
+
+  js_env_t *env = runtime->env;
+
+  js_value_t *fn;
+  js_get_named_property(env, runtime->exports, "onthreadexit", &fn);
+
+  bool is_set;
+  js_is_function(env, fn, &is_set);
+
+  if (is_set) {
+    js_value_t *global;
+    js_get_global(env, &global);
+
+    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    assert(err == 0);
+  }
 }
 
 static js_value_t *
@@ -531,9 +550,6 @@ bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
-static void
-bare_runtime_on_thread (void *data);
-
 static js_value_t *
 bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -548,21 +564,12 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 4);
 
-  uv_loop_t *loop = malloc(sizeof(uv_loop_t));
-
-  err = uv_loop_init(loop);
-  if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
-    free(loop);
-    return NULL;
-  }
-
-  size_t str_len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &str_len);
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
   assert(err == 0);
 
-  utf8_t *str = malloc(str_len + 1);
-  err = js_get_value_string_utf8(env, argv[0], str, str_len + 1, NULL);
+  utf8_t *filename = malloc(len + 1);
+  err = js_get_value_string_utf8(env, argv[0], filename, len + 1, NULL);
   assert(err == 0);
 
   bare_thread_source_t source = {bare_thread_source_none};
@@ -625,57 +632,18 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  bare_thread_list_t *next = malloc(sizeof(bare_thread_list_t));
+  bare_thread_t *thread = bare_threads_create(
+    runtime,
+    (char *) filename,
+    source,
+    data,
+    stack_size,
+    bare_runtime_on_thread_setup,
+    bare_runtime_on_thread_run,
+    bare_runtime_on_thread_exit
+  );
 
-  next->previous = NULL;
-  next->next = NULL;
-
-  bare_thread_t *thread = &next->thread;
-
-  err = uv_sem_init(&thread->ready, 0);
-  assert(err == 0);
-
-  thread->filename = (char *) str;
-
-  thread->source = source;
-  thread->data = data;
-
-  thread->runtime.loop = loop;
-
-  thread->runtime.process = runtime->process;
-
-  thread->runtime.platform = runtime->platform;
-  thread->runtime.env = NULL;
-
-  thread->runtime.argc = runtime->argc;
-  thread->runtime.argv = runtime->argv;
-
-  uv_rwlock_wrlock(&runtime->process->locks.threads);
-
-  if (runtime->process->threads) {
-    next->next = runtime->process->threads;
-    next->next->previous = next;
-  }
-
-  runtime->process->threads = next;
-
-  uv_rwlock_wrunlock(&runtime->process->locks.threads);
-
-  uv_thread_options_t options = {
-    .flags = UV_THREAD_HAS_STACK_SIZE,
-    .stack_size = stack_size,
-  };
-
-  err = uv_thread_create_ex(&thread->id, &options, bare_runtime_on_thread, (void *) thread);
-
-  if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
-    free(next);
-    free(loop);
-    return NULL;
-  }
-
-  uv_sem_wait(&thread->ready);
+  if (thread == NULL) return NULL;
 
   js_value_t *result;
   err = js_create_external(env, (void *) thread->id, NULL, NULL, &result);
@@ -884,121 +852,6 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
   if (err < 0) return err;
 
   return 0;
-}
-
-static void
-bare_runtime_on_thread (void *data) {
-  bare_thread_t *thread = (bare_thread_t *) data;
-
-  int err;
-
-  err = js_create_env(thread->runtime.loop, thread->runtime.platform, NULL, &thread->runtime.env);
-  assert(err == 0);
-
-  bare_runtime_setup(&thread->runtime);
-
-  uv_buf_t *thread_source;
-
-  switch (thread->source.type) {
-  case bare_thread_source_none:
-    thread_source = NULL;
-    break;
-
-  case bare_thread_source_buffer:
-    thread_source = &thread->source.buffer;
-    break;
-  }
-
-  js_value_t *thread_data;
-
-  switch (thread->data.type) {
-  case bare_thread_data_none:
-  default:
-    err = js_get_null(thread->runtime.env, &thread_data);
-    assert(err == 0);
-    break;
-
-  case bare_thread_data_buffer: {
-    js_value_t *arraybuffer;
-
-    void *data;
-    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &arraybuffer);
-    assert(err == 0);
-
-    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
-
-    err = js_create_typedarray(thread->runtime.env, js_uint8_array, thread->data.buffer.len, arraybuffer, 0, &thread_data);
-    assert(err == 0);
-    break;
-  }
-
-  case bare_thread_data_arraybuffer: {
-    void *data;
-    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &thread_data);
-    assert(err == 0);
-
-    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
-    break;
-  }
-
-  case bare_thread_data_sharedarraybuffer:
-    err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, NULL, &thread_data);
-    assert(err == 0);
-
-    err = js_release_arraybuffer_backing_store(thread->runtime.env, thread->data.backing_store);
-    assert(err == 0);
-    break;
-
-  case bare_thread_data_external:
-    err = js_create_external(thread->runtime.env, thread->data.external, NULL, NULL, &thread_data);
-    assert(err == 0);
-    break;
-  }
-
-  err = js_set_named_property(thread->runtime.env, thread->runtime.exports, "threadData", thread_data);
-  assert(err == 0);
-
-  uv_sem_post(&thread->ready);
-
-  err = bare_runtime_run(&thread->runtime, thread->filename, thread_source);
-  assert(err == 0);
-
-  err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
-  assert(err >= 0);
-
-  bare_runtime_on_thread_exit(&thread->runtime);
-
-  err = js_destroy_env(thread->runtime.env);
-  assert(err == 0);
-
-  do {
-    err = uv_loop_close(thread->runtime.loop);
-
-    if (err == UV_EBUSY) {
-      uv_run(thread->runtime.loop, UV_RUN_ONCE);
-    }
-  } while (err == UV_EBUSY);
-
-  uv_rwlock_wrlock(&thread->runtime.process->locks.threads);
-
-  bare_thread_list_t *node = (bare_thread_list_t *) thread;
-
-  if (node->previous) {
-    node->previous->next = node->next;
-  } else {
-    thread->runtime.process->threads = node->next;
-  }
-
-  if (node->next) {
-    node->next->previous = node->previous;
-  }
-
-  uv_rwlock_wrunlock(&thread->runtime.process->locks.threads);
-
-  uv_sem_destroy(&thread->ready);
-
-  free(thread->runtime.loop);
-  free(thread);
 }
 
 #endif // BARE_RUNTIME_H
