@@ -151,6 +151,7 @@ target_sources(
     src/runtime.h
     src/runtime/android.h
     src/runtime/posix.h
+    src/types.h
     src/threads.h
 )
 
