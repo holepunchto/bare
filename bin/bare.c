@@ -16,7 +16,7 @@ main (int argc, char *argv[]) {
 
   uv_buf_t source = uv_buf_init((char *) bare_bin, bare_bin_len);
 
-  err = bare_run(bare, "/bare.bundle", &source);
+  err = bare_run(bare, "bare:bin.bundle", &source);
   assert(err == 0);
 
   int exit_code;

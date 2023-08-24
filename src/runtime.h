@@ -795,7 +795,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   assert(err == 0);
 
   js_value_t *entry;
-  err = js_run_script(env, "bare:bare.js", -1, 0, script, &entry);
+  err = js_run_script(env, "bare:src", -1, 0, script, &entry);
   assert(err == 0);
 
   err = js_call_function(env, global, entry, 1, &exports, NULL);
