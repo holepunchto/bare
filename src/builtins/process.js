@@ -14,14 +14,6 @@ const EventEmitter = require('./events')
  */
 
 class Process extends EventEmitter {
-  get platform () {
-    return bare.platform
-  }
-
-  get arch () {
-    return bare.arch
-  }
-
   get argv () {
     return bare.argv
   }
@@ -48,6 +40,14 @@ class Process extends EventEmitter {
 
   set title (title) {
     if (typeof title === 'string') bare.setTitle(title)
+  }
+
+  get platform () {
+    return os.platform()
+  }
+
+  get arch () {
+    return os.arch()
   }
 
   get execPath () {

@@ -1,7 +1,5 @@
 /* global bare */
 
-const path = require('../path')
-
 module.exports = exports = function addon (specifier) {
   if (exports.cache[specifier]) return exports.cache[specifier]
 
@@ -12,7 +10,11 @@ module.exports = exports = function addon (specifier) {
   } catch {}
 
   if (addon === null) {
-    addon = bare.loadDynamicAddon(resolve(specifier))
+    specifier = resolve(specifier)
+
+    if (exports.cache[specifier]) return exports.cache[specifier]
+
+    addon = bare.loadDynamicAddon(specifier)
   }
 
   return (exports.cache[specifier] = addon)
@@ -23,6 +25,9 @@ exports.cache = Object.create(null)
 exports.path = null
 
 const resolve = exports.resolve = function resolve (specifier) {
+  const Module = require('../module')
+  const path = require('../path')
+
   const [resolved = null] = resolve(specifier)
 
   if (resolved === null) {
@@ -49,7 +54,7 @@ const resolve = exports.resolve = function resolve (specifier) {
 
     let info
     try {
-      info = require('../module').load(pkg).exports
+      info = Module.load(pkg).exports
     } catch {
       info = null
     }
@@ -68,7 +73,7 @@ const resolve = exports.resolve = function resolve (specifier) {
           const file = path.join(exports.path, candidate)
 
           try {
-            const protocol = require('../module')._protocols['file:']
+            const protocol = Module._protocols['file:']
 
             if (protocol.exists(file)) yield file
           } catch {}
@@ -76,11 +81,7 @@ const resolve = exports.resolve = function resolve (specifier) {
       }
 
       try {
-        specifier = path.dirname(
-          require('../module').resolve(
-            path.join(info.name, 'package.json')
-          )
-        )
+        specifier = path.dirname(Module.resolve(path.join(info.name, 'package.json')))
       } catch {}
     }
 
@@ -99,6 +100,6 @@ const resolve = exports.resolve = function resolve (specifier) {
     yield path.join(specifier, 'build/Debug')
     yield path.join(specifier, 'build/Release')
     yield path.join(specifier, 'build')
-    yield path.join(specifier, 'prebuilds', `${bare.platform}-${bare.arch}`)
+    yield path.join(specifier, 'prebuilds', `${process.platform}-${process.arch}`)
   }
 }

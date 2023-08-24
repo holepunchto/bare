@@ -705,20 +705,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
 
   js_value_t *exports = runtime->exports;
 
-  js_value_t *platform;
-  err = js_create_string_utf8(env, (utf8_t *) BARE_PLATFORM, -1, &platform);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "platform", platform);
-  assert(err == 0);
-
-  js_value_t *arch;
-  err = js_create_string_utf8(env, (utf8_t *) BARE_ARCH, -1, &arch);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "arch", arch);
-  assert(err == 0);
-
   js_value_t *argv;
   err = js_create_array_with_length(env, runtime->argc, &argv);
   assert(err == 0);
