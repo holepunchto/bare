@@ -8,6 +8,7 @@
 
 #include "../include/bare.h"
 
+typedef struct bare_process_s bare_process_t;
 typedef struct bare_runtime_s bare_runtime_t;
 typedef struct bare_thread_s bare_thread_t;
 typedef struct bare_thread_source_s bare_thread_source_t;
@@ -21,24 +22,23 @@ typedef void (*bare_thread_exit_cb)(bare_thread_t *);
 struct bare_runtime_s {
   uv_loop_t *loop;
 
-  bare_t *process;
+  uv_async_t suspend;
+  uv_async_t resume;
 
-  js_platform_t *platform;
+  bool suspended;
+
+  bare_process_t *process;
+
   js_env_t *env;
 
   js_value_t *exports;
+};
+
+struct bare_process_s {
+  js_platform_t *platform;
 
   int argc;
   char **argv;
-};
-
-struct bare_s {
-  uv_async_t suspend;
-  uv_sem_t resume;
-
-  bool suspended;
-  bool resumed;
-  bool exited;
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
@@ -51,7 +51,6 @@ struct bare_s {
   bare_runtime_t runtime;
 
   struct {
-    uv_mutex_t lifecycle;
     uv_rwlock_t threads;
   } locks;
 };

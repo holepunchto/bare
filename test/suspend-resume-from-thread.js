@@ -6,9 +6,22 @@ process
   })
   .on('idle', () => {
     console.log('emit idle')
-    new Thread(() => process.resume()) // eslint-disable-line no-new
   })
   .on('resume', () => {
     console.log('emit resume')
   })
   .suspend()
+
+Thread.create(() => {
+  process
+    .on('suspend', () => {
+      console.log('emit suspend thread')
+    })
+    .on('idle', () => {
+      console.log('emit idle thread')
+      process.resume()
+    })
+    .on('resume', () => {
+      console.log('emit resume thread')
+    })
+})

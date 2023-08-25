@@ -21,6 +21,7 @@ list(APPEND tests
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
   thread.js
+  thread-join.js
   thread-source.js
   thread-shared-data.js
   timeout.js

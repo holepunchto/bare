@@ -157,6 +157,10 @@ Options include:
 }
 ```
 
+#### `const thread = Thread.create([filename][, options][, callback])`
+
+Convenience method for the `new Thread()` constructor
+
 #### `thread.join()`
 
 Block and wait for the thread to exit.

@@ -17,7 +17,7 @@ bare_threads_entry (void *data) {
 
   int err;
 
-  err = js_create_env(thread->runtime.loop, thread->runtime.platform, NULL, &thread->runtime.env);
+  err = js_create_env(thread->runtime.loop, thread->runtime.process->platform, NULL, &thread->runtime.env);
   assert(err == 0);
 
   thread->on_setup(thread);
@@ -88,9 +88,6 @@ bare_threads_entry (void *data) {
   err = thread->on_run(thread, thread_source);
   assert(err == 0);
 
-  err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
-  assert(err >= 0);
-
   thread->on_exit(thread);
 
   err = js_destroy_env(thread->runtime.env);
@@ -151,27 +148,20 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
 
   bare_thread_t *thread = &next->thread;
 
-  err = uv_sem_init(&thread->ready, 0);
-  assert(err == 0);
-
   thread->filename = filename;
-
   thread->source = source;
   thread->data = data;
-
-  thread->runtime.loop = loop;
-
-  thread->runtime.process = runtime->process;
-
-  thread->runtime.platform = runtime->platform;
-  thread->runtime.env = NULL;
-
-  thread->runtime.argc = runtime->argc;
-  thread->runtime.argv = runtime->argv;
 
   thread->on_setup = on_setup;
   thread->on_run = on_run;
   thread->on_exit = on_exit;
+
+  thread->runtime.loop = loop;
+  thread->runtime.env = NULL;
+  thread->runtime.process = runtime->process;
+
+  err = uv_sem_init(&thread->ready, 0);
+  assert(err == 0);
 
   uv_rwlock_wrlock(&runtime->process->locks.threads);
 
@@ -182,8 +172,6 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
 
   runtime->process->threads = next;
 
-  uv_rwlock_wrunlock(&runtime->process->locks.threads);
-
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
     .stack_size = stack_size,
@@ -192,7 +180,13 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
   err = uv_thread_create_ex(&thread->id, &options, bare_threads_entry, (void *) thread);
 
   if (err < 0) {
+    runtime->process->threads = next->next;
+
+    uv_rwlock_wrunlock(&runtime->process->locks.threads);
+
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
+
+    uv_sem_destroy(&thread->ready);
 
     err = uv_loop_close(loop);
     assert(err == 0);
@@ -204,6 +198,10 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
   }
 
   uv_sem_wait(&thread->ready);
+
+  if (runtime->suspended) uv_async_send(&thread->runtime.suspend);
+
+  uv_rwlock_wrunlock(&runtime->process->locks.threads);
 
   return thread;
 }

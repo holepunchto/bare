@@ -37,6 +37,10 @@ module.exports = exports = class Thread {
     this._handle = bare.setupThread(filename, source, data, stackSize)
   }
 
+  static create (filename, opts, callback) {
+    return new Thread(filename, opts, callback)
+  }
+
   join () {
     if (this._joined) return
     this._joined = true

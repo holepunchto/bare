@@ -33,7 +33,7 @@
     "bare-os": "^1.6.1",
     "bare-path": "^1.0.5",
     "bare-repl": "^0.3.0",
-    "bare-timers": "^1.4.2",
+    "bare-timers": "^1.4.6",
     "bare-tty": "^2.0.0",
     "bare-url": "^0.1.1",
     "minimist": "^1.2.8"

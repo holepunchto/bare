@@ -29,6 +29,11 @@ bare_runtime_setup (bare_runtime_t *runtime);
 static inline int
 bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source);
 
+static inline bool
+bare_runtime_is_main_thread (bare_runtime_t *runtime) {
+  return &runtime->process->runtime == runtime;
+}
+
 static void
 bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
   bare_runtime_t *runtime = (bare_runtime_t *) data;
@@ -40,8 +45,8 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
   if (err < 0) goto err;
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) goto err;
+  err = js_is_function(env, fn, &is_set);
+  if (err < 0 || !is_set) goto err;
 
   js_value_t *global;
   js_get_global(env, &global);
@@ -82,8 +87,8 @@ bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value
   if (err < 0) goto err;
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
-  if (!is_set) goto err;
+  err = js_is_function(env, fn, &is_set);
+  if (err < 0 || !is_set) goto err;
 
   js_value_t *global;
   js_get_global(env, &global);
@@ -115,129 +120,220 @@ err : {
 
 static inline void
 bare_runtime_on_before_exit (bare_runtime_t *runtime) {
+  int err;
+
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onbeforeexit", &fn);
+  err = js_get_named_property(env, runtime->exports, "onbeforeexit", &fn);
+  assert(err == 0);
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
 
   if (is_set) {
     js_value_t *global;
     js_get_global(env, &global);
 
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
   }
 
-  if (runtime->process->on_before_exit) runtime->process->on_before_exit(runtime->process);
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_before_exit) {
+      runtime->process->on_before_exit((bare_t *) runtime->process);
+    }
+  }
 }
 
 static inline void
 bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
-  uv_rwlock_rdlock(&runtime->process->locks.threads);
+  if (bare_runtime_is_main_thread(runtime)) {
+    uv_rwlock_rdlock(&runtime->process->locks.threads);
 
-  while (runtime->process->threads) {
-    uv_thread_t id = runtime->process->threads->thread.id;
+    while (runtime->process->threads) {
+      uv_thread_t id = runtime->process->threads->thread.id;
+
+      uv_rwlock_rdunlock(&runtime->process->locks.threads);
+
+      uv_thread_join(&id);
+
+      uv_rwlock_rdlock(&runtime->process->locks.threads);
+    }
 
     uv_rwlock_rdunlock(&runtime->process->locks.threads);
-
-    uv_thread_join(&id);
-
-    uv_rwlock_rdlock(&runtime->process->locks.threads);
   }
 
-  uv_rwlock_rdunlock(&runtime->process->locks.threads);
+  int err;
 
   js_env_t *env = runtime->env;
 
   if (exit_code) *exit_code = 0;
 
   js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onexit", &fn);
+  err = js_get_named_property(env, runtime->exports, "onexit", &fn);
+  assert(err == 0);
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
 
   if (is_set) {
     js_value_t *global;
     js_get_global(env, &global);
 
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
   }
 
-  if (runtime->process->on_exit) runtime->process->on_exit(runtime->process);
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_exit) {
+      runtime->process->on_exit((bare_t *) runtime->process);
+    }
+  }
 
   if (exit_code) {
     js_value_t *val;
-    js_get_named_property(env, runtime->exports, "exitCode", &val);
-    js_get_value_int32(env, val, exit_code);
+    err = js_get_named_property(env, runtime->exports, "exitCode", &val);
+    assert(err == 0);
+
+    err = js_get_value_int32(env, val, exit_code);
+    assert(err == 0);
   }
 }
 
 static inline void
 bare_runtime_on_suspend (bare_runtime_t *runtime) {
+  int err;
+
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onsuspend", &fn);
+  err = js_get_named_property(env, runtime->exports, "onsuspend", &fn);
+  assert(err == 0);
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
 
   if (is_set) {
     js_value_t *global;
     js_get_global(env, &global);
 
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
   }
 
-  if (runtime->process->on_suspend) runtime->process->on_suspend(runtime->process);
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_suspend) {
+      runtime->process->on_suspend((bare_t *) runtime->process);
+    }
+
+    uv_rwlock_rdlock(&runtime->process->locks.threads);
+
+    bare_thread_list_t *next = runtime->process->threads;
+
+    int i = 0;
+
+    while (next) {
+      uv_async_send(&next->thread.runtime.suspend);
+
+      next = next->next;
+    }
+
+    uv_rwlock_rdunlock(&runtime->process->locks.threads);
+  }
+}
+
+static void
+bare_runtime_on_suspend_signal (uv_async_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  runtime->suspended = true;
+
+  bare_runtime_on_suspend(runtime);
 }
 
 static inline void
 bare_runtime_on_idle (bare_runtime_t *runtime) {
+  int err;
+
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onidle", &fn);
+  err = js_get_named_property(env, runtime->exports, "onidle", &fn);
+  assert(err == 0);
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
 
   if (is_set) {
     js_value_t *global;
     js_get_global(env, &global);
 
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
   }
 
-  if (runtime->process->on_idle) runtime->process->on_idle(runtime->process);
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_idle) {
+      runtime->process->on_idle((bare_t *) runtime->process);
+    }
+  }
 }
 
 static inline void
 bare_runtime_on_resume (bare_runtime_t *runtime) {
+  int err;
+
   js_env_t *env = runtime->env;
 
   js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onresume", &fn);
+  err = js_get_named_property(env, runtime->exports, "onresume", &fn);
+  assert(err == 0);
 
   bool is_set;
-  js_is_function(env, fn, &is_set);
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
 
   if (is_set) {
     js_value_t *global;
     js_get_global(env, &global);
 
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
+    err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
   }
 
-  if (runtime->process->on_resume) runtime->process->on_resume(runtime->process);
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_resume) {
+      runtime->process->on_resume((bare_t *) runtime->process);
+    }
+
+    uv_rwlock_rdlock(&runtime->process->locks.threads);
+
+    bare_thread_list_t *next = runtime->process->threads;
+
+    while (next) {
+      uv_async_send(&next->thread.runtime.resume);
+
+      next = next->next;
+    }
+
+    uv_rwlock_rdunlock(&runtime->process->locks.threads);
+  }
+}
+
+static void
+bare_runtime_on_resume_signal (uv_async_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  runtime->suspended = false;
+
+  uv_unref((uv_handle_t *) &runtime->resume);
+
+  bare_runtime_on_resume(runtime);
 }
 
 static inline void
@@ -252,23 +348,7 @@ bare_runtime_on_thread_run (bare_thread_t *thread, uv_buf_t *source) {
 
 static inline void
 bare_runtime_on_thread_exit (bare_thread_t *thread) {
-  bare_runtime_t *runtime = &thread->runtime;
-
-  js_env_t *env = runtime->env;
-
-  js_value_t *fn;
-  js_get_named_property(env, runtime->exports, "onthreadexit", &fn);
-
-  bool is_set;
-  js_is_function(env, fn, &is_set);
-
-  if (is_set) {
-    js_value_t *global;
-    js_get_global(env, &global);
-
-    int err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
-  }
+  bare_runtime_on_exit(&thread->runtime, NULL);
 }
 
 static js_value_t *
@@ -517,7 +597,9 @@ bare_runtime_exit (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  bare_exit(runtime->process, -1);
+  assert(bare_runtime_is_main_thread(runtime));
+
+  bare_exit((bare_t *) runtime->process, -1);
 
   return NULL;
 }
@@ -531,7 +613,7 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  bare_suspend(runtime->process);
+  bare_suspend((bare_t *) runtime->process);
 
   return NULL;
 }
@@ -545,7 +627,7 @@ bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  bare_resume(runtime->process);
+  bare_resume((bare_t *) runtime->process);
 
   return NULL;
 }
@@ -679,6 +761,13 @@ static js_value_t *
 bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(!bare_runtime_is_main_thread(runtime));
+
   uv_loop_t *loop;
   err = js_get_env_loop(env, &loop);
   assert(err == 0);
@@ -691,6 +780,20 @@ bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
 static inline void
 bare_runtime_setup (bare_runtime_t *runtime) {
   int err;
+
+  err = uv_async_init(runtime->loop, &runtime->suspend, bare_runtime_on_suspend_signal);
+  assert(err == 0);
+
+  runtime->suspend.data = (void *) runtime;
+
+  uv_unref((uv_handle_t *) &runtime->suspend);
+
+  err = uv_async_init(runtime->loop, &runtime->resume, bare_runtime_on_resume_signal);
+  assert(err == 0);
+
+  runtime->resume.data = (void *) runtime;
+
+  uv_unref((uv_handle_t *) &runtime->resume);
 
   js_env_t *env = runtime->env;
 
@@ -706,15 +809,15 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   js_value_t *exports = runtime->exports;
 
   js_value_t *argv;
-  err = js_create_array_with_length(env, runtime->argc, &argv);
+  err = js_create_array_with_length(env, runtime->process->argc, &argv);
   assert(err == 0);
 
   err = js_set_named_property(env, exports, "argv", argv);
   assert(err == 0);
 
-  for (int i = 0; i < runtime->argc; i++) {
+  for (int i = 0, n = runtime->process->argc; i < n; i++) {
     js_value_t *val;
-    err = js_create_string_utf8(env, (utf8_t *) runtime->argv[i], -1, &val);
+    err = js_create_string_utf8(env, (utf8_t *) runtime->process->argv[i], -1, &val);
     assert(err == 0);
 
     err = js_set_element(env, argv, i, val);
@@ -780,7 +883,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
-  V("isMainThread", &runtime->process->runtime == runtime);
+  V("isMainThread", bare_runtime_is_main_thread(runtime));
   V("isTTY", uv_guess_handle(1) == UV_TTY);
 #undef V
 
@@ -836,6 +939,28 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
 
   err = js_call_function(env, global, run, 2, args, NULL);
   if (err < 0) return err;
+
+  do {
+    err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+    assert(err == 0);
+
+    if (runtime->suspended) {
+      bare_runtime_on_idle(runtime);
+
+      assert(!uv_loop_alive(runtime->loop));
+
+      uv_ref((uv_handle_t *) &runtime->resume);
+
+      err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+      assert(err == 0);
+    } else {
+      bare_runtime_on_before_exit(runtime);
+    }
+  } while (uv_loop_alive(runtime->loop));
+
+  uv_close((uv_handle_t *) &runtime->suspend, NULL);
+
+  uv_close((uv_handle_t *) &runtime->resume, NULL);
 
   return 0;
 }

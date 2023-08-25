@@ -13,6 +13,20 @@ process
     console.log('emit resume')
   })
 
-const thread = new Thread(() => process.suspend())
+Thread.create(() => {
+  process
+    .on('suspend', () => {
+      console.log('emit suspend thread')
+    })
+    .on('idle', () => {
+      assert(false, 'Should not idle thread')
+    })
+    .on('resume', () => {
+      console.log('emit resume thread')
+    })
+    .suspend()
 
-thread.join()
+  setTimeout(() => {}, 100) // Keep the thread alive
+})
+
+setTimeout(() => {}, 100) // Keep the process alive

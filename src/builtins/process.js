@@ -63,8 +63,10 @@ class Process extends EventEmitter {
   }
 
   exit (code = this.exitCode) {
-    this.exitCode = code
-    bare.exit()
+    if (bare.isMainThread) {
+      this.exitCode = code
+      bare.exit()
+    }
   }
 
   suspend () {
@@ -172,15 +174,17 @@ bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
 }
 
 bare.onbeforeexit = function onbeforeexit () {
-  exports.emit('beforeExit', bare.exitCode)
+  if (bare.isMainThread) {
+    exports.emit('beforeExit', bare.exitCode)
+  }
 }
 
 bare.onexit = function onexit () {
-  exports.emit('exit', bare.exitCode)
-}
-
-bare.onthreadexit = function onthreadexit () {
-  exports.thread.emit('exit')
+  if (bare.isMainThread) {
+    exports.emit('exit', bare.exitCode)
+  } else {
+    exports.thread.emit('exit')
+  }
 }
 
 bare.onsuspend = function onsuspend () {
