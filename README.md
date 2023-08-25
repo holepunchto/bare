@@ -72,7 +72,7 @@ Synchronously exit the current process with an exit status of `code` which defau
 
 #### `process.suspend()`
 
-Suspend the current process. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block and allow no further work until the process is resumed.
+Suspend the current process. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener and no additional work is scheduled, the loop will block until the process is resumed. If additional work is scheduled from an `idle` event, the `idle` event will be emitted again once all work has stopped unless the process was resumed.
 
 #### `process.resume()`
 
@@ -124,7 +124,7 @@ Emitted when the process is suspended. Any in-progress or outstanding work, such
 
 #### `process.on('idle')`
 
-Emitted when the process becomes idle after suspension. After this, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `process.resume()` to cancel the suspension.
+Emitted when the process becomes idle after suspension. If no additional work is scheduled from this event, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `process.resume()` to cancel the suspension.
 
 #### `process.on('resume')`
 
