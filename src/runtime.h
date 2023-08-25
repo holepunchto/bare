@@ -947,20 +947,24 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
     if (runtime->suspended) {
       bare_runtime_on_idle(runtime);
 
-      assert(!uv_loop_alive(runtime->loop));
+      if (uv_loop_alive(runtime->loop)) continue;
 
       uv_ref((uv_handle_t *) &runtime->resume);
-
-      err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-      assert(err == 0);
     } else {
       bare_runtime_on_before_exit(runtime);
     }
   } while (uv_loop_alive(runtime->loop));
 
+  uv_ref((uv_handle_t *) &runtime->suspend);
+
   uv_close((uv_handle_t *) &runtime->suspend, NULL);
 
+  uv_ref((uv_handle_t *) &runtime->resume);
+
   uv_close((uv_handle_t *) &runtime->resume, NULL);
+
+  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+  assert(err == 0);
 
   return 0;
 }

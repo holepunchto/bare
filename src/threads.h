@@ -97,7 +97,10 @@ bare_threads_entry (void *data) {
     err = uv_loop_close(thread->runtime.loop);
 
     if (err == UV_EBUSY) {
-      uv_run(thread->runtime.loop, UV_RUN_ONCE);
+      int err;
+
+      err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
+      assert(err == 0);
     }
   } while (err == UV_EBUSY);
 
