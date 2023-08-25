@@ -21,18 +21,19 @@ struct bare_module_list_s {
   bare_module_list_t *next;
 };
 
-static bare_module_list_t *static_module_list = NULL;
-static bare_module_list_t *dynamic_module_list = NULL;
+static bare_module_list_t *bare_addon_static = NULL;
 
-static bare_module_list_t **pending_module = &static_module_list;
+static bare_module_list_t *bare_addon_dynamic = NULL;
 
-static uv_once_t module_guard = UV_ONCE_INIT;
+static bare_module_list_t **bare_addon_pending = &bare_addon_static;
 
-static uv_mutex_t module_lock;
+static uv_mutex_t bare_addon_lock;
+
+static uv_once_t bare_addon_lock_guard = UV_ONCE_INIT;
 
 static void
-on_module_init () {
-  int err = uv_mutex_init_recursive(&module_lock);
+bare_addon_on_lock_init () {
+  int err = uv_mutex_init_recursive(&bare_addon_lock);
   assert(err == 0);
 }
 
@@ -46,10 +47,10 @@ bare_addon_ends_with (const char *string, const char *substring) {
 
 static inline bare_module_t *
 bare_addon_load_static (js_env_t *env, const char *specifier) {
-  uv_mutex_lock(&module_lock);
+  uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
-  bare_module_list_t *next = static_module_list;
+  bare_module_list_t *next = bare_addon_static;
 
   while (next) {
     if (bare_addon_ends_with(specifier, next->resolved)) {
@@ -60,7 +61,7 @@ bare_addon_load_static (js_env_t *env, const char *specifier) {
     next = next->next;
   }
 
-  uv_mutex_unlock(&module_lock);
+  uv_mutex_unlock(&bare_addon_lock);
 
   if (mod == NULL) {
     js_throw_errorf(env, NULL, "No module registered for %s", specifier);
@@ -77,10 +78,10 @@ bare_addon_load_static (js_env_t *env, const char *specifier) {
 
 static inline bare_module_t *
 bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
-  uv_mutex_lock(&module_lock);
+  uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
-  bare_module_list_t *next = dynamic_module_list;
+  bare_module_list_t *next = bare_addon_dynamic;
 
   while (next) {
     if (bare_addon_ends_with(specifier, next->resolved)) {
@@ -92,7 +93,7 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
   }
 
   if (mod) {
-    uv_mutex_unlock(&module_lock);
+    uv_mutex_unlock(&bare_addon_lock);
 
     if (mod->version != BARE_MODULE_VERSION) {
       js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
@@ -104,7 +105,7 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
 
   int err;
 
-  pending_module = &dynamic_module_list;
+  bare_addon_pending = &bare_addon_dynamic;
 
   uv_lib_t *lib = malloc(sizeof(uv_lib_t));
 
@@ -114,7 +115,7 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
 
   if (err < 0) goto err;
 
-  next = *pending_module;
+  next = *bare_addon_pending;
 
   if (next && next->pending) goto done;
 
@@ -134,7 +135,7 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
     .init = init,
   });
 
-  next = *pending_module;
+  next = *bare_addon_pending;
 
 done:
   mod = &next->mod;
@@ -143,7 +144,7 @@ done:
   next->resolved = strdup(specifier);
   next->lib = lib;
 
-  uv_mutex_unlock(&module_lock);
+  uv_mutex_unlock(&bare_addon_lock);
 
   if (mod->version != BARE_MODULE_VERSION) {
     js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
@@ -153,7 +154,7 @@ done:
   return mod;
 
 err:
-  uv_mutex_unlock(&module_lock);
+  uv_mutex_unlock(&bare_addon_lock);
 
   js_throw_error(env, NULL, uv_dlerror(lib));
 
@@ -166,11 +167,11 @@ err:
 
 void
 bare_module_register (bare_module_t *mod) {
-  uv_once(&module_guard, on_module_init);
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
-  uv_mutex_lock(&module_lock);
+  uv_mutex_lock(&bare_addon_lock);
 
-  bool is_dynamic = pending_module == &dynamic_module_list;
+  bool is_dynamic = bare_addon_pending == &bare_addon_dynamic;
 
   bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
 
@@ -180,11 +181,11 @@ bare_module_register (bare_module_t *mod) {
 
   next->resolved = is_dynamic ? NULL : strdup(mod->filename);
   next->pending = is_dynamic;
-  next->next = *pending_module;
+  next->next = *bare_addon_pending;
 
-  *pending_module = next;
+  *bare_addon_pending = next;
 
-  uv_mutex_unlock(&module_lock);
+  uv_mutex_unlock(&bare_addon_lock);
 }
 
 void
