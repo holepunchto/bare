@@ -11,9 +11,9 @@
 #include <uv.h>
 
 #include "../include/bare.h"
-#include "addons.h"
+#include "addon.h"
 #include "bare.js.h"
-#include "threads.h"
+#include "thread.h"
 #include "types.h"
 
 #ifdef BARE_PLATFORM_ANDROID
@@ -428,7 +428,7 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addons_load_static(runtime->env, (char *) specifier);
+  bare_module_t *mod = bare_addon_load_static(runtime->env, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -457,7 +457,7 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addons_load_dynamic(runtime->env, (char *) specifier);
+  bare_module_t *mod = bare_addon_load_dynamic(runtime->env, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -713,7 +713,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  bare_thread_t *thread = bare_threads_create(
+  bare_thread_t *thread = bare_thread_create(
     runtime,
     (char *) filename,
     source,

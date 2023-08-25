@@ -1,5 +1,5 @@
-#ifndef BARE_ADDONS_H
-#define BARE_ADDONS_H
+#ifndef BARE_ADDON_H
+#define BARE_ADDON_H
 
 #include <assert.h>
 #include <js.h>
@@ -37,7 +37,7 @@ on_module_init () {
 }
 
 static inline bool
-bare_addons_ends_with (const char *string, const char *substring) {
+bare_addon_ends_with (const char *string, const char *substring) {
   size_t s_len = strlen(string);
   size_t e_len = strlen(substring);
 
@@ -45,14 +45,14 @@ bare_addons_ends_with (const char *string, const char *substring) {
 }
 
 static inline bare_module_t *
-bare_addons_load_static (js_env_t *env, const char *specifier) {
+bare_addon_load_static (js_env_t *env, const char *specifier) {
   uv_mutex_lock(&module_lock);
 
   bare_module_t *mod = NULL;
   bare_module_list_t *next = static_module_list;
 
   while (next) {
-    if (bare_addons_ends_with(specifier, next->resolved)) {
+    if (bare_addon_ends_with(specifier, next->resolved)) {
       mod = &next->mod;
       break;
     }
@@ -76,14 +76,14 @@ bare_addons_load_static (js_env_t *env, const char *specifier) {
 }
 
 static inline bare_module_t *
-bare_addons_load_dynamic (js_env_t *env, const char *specifier) {
+bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
   uv_mutex_lock(&module_lock);
 
   bare_module_t *mod = NULL;
   bare_module_list_t *next = dynamic_module_list;
 
   while (next) {
-    if (bare_addons_ends_with(specifier, next->resolved)) {
+    if (bare_addon_ends_with(specifier, next->resolved)) {
       mod = &next->mod;
       break;
     }
@@ -200,4 +200,4 @@ napi_module_register (napi_module *mod) {
   });
 }
 
-#endif // BARE_ADDONS_H
+#endif // BARE_ADDON_H

@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <js.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -8,7 +7,6 @@
 #include <uv.h>
 
 #include "../include/bare.h"
-#include "addons.h"
 #include "runtime.h"
 #include "types.h"
 

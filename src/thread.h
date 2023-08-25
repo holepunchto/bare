@@ -1,5 +1,5 @@
-#ifndef BARE_THREADS_H
-#define BARE_THREADS_H
+#ifndef BARE_THREAD_H
+#define BARE_THREAD_H
 
 #include <assert.h>
 #include <js.h>
@@ -12,7 +12,7 @@
 #include "types.h"
 
 static void
-bare_threads_entry (void *data) {
+bare_thread_entry (void *data) {
   bare_thread_t *thread = (bare_thread_t *) data;
 
   int err;
@@ -127,7 +127,7 @@ bare_threads_entry (void *data) {
 }
 
 static inline bare_thread_t *
-bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, bare_thread_setup_cb on_setup, bare_thread_run_cb on_run, bare_thread_exit_cb on_exit) {
+bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, bare_thread_setup_cb on_setup, bare_thread_run_cb on_run, bare_thread_exit_cb on_exit) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -180,7 +180,7 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
     .stack_size = stack_size,
   };
 
-  err = uv_thread_create_ex(&thread->id, &options, bare_threads_entry, (void *) thread);
+  err = uv_thread_create_ex(&thread->id, &options, bare_thread_entry, (void *) thread);
 
   if (err < 0) {
     runtime->process->threads = next->next;
@@ -209,4 +209,4 @@ bare_threads_create (bare_runtime_t *runtime, char *filename, bare_thread_source
   return thread;
 }
 
-#endif // BARE_THREADS_H
+#endif // BARE_THREAD_H
