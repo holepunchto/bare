@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <js.h>
-#include <js/ffi.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
