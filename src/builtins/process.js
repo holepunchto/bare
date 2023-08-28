@@ -10,10 +10,12 @@ const EventEmitter = require('./events')
 
 /**
  * Step 2:
- * Declare the process object.
+ * Declare the process object, including the compatibility extensions mixin.
+ * This mixin defines additional APIs that aren't part of the core process
+ * object, but have been included for compatibility and convenience purposes.
  */
 
-class Process extends EventEmitter {
+class Process extends WithCompatibilityExtensions(EventEmitter) {
   get argv () {
     return bare.argv
   }
@@ -34,38 +36,12 @@ class Process extends EventEmitter {
     bare.exitCode = (Number(code) || 0) & 0xff
   }
 
-  get title () {
-    return bare.getTitle()
-  }
-
-  set title (title) {
-    if (typeof title === 'string') bare.setTitle(title)
-  }
-
-  get platform () {
-    return os.platform()
-  }
-
-  get arch () {
-    return os.arch()
-  }
-
-  get execPath () {
-    return os.execPath()
-  }
-
-  get pid () {
-    return os.pid()
-  }
-
-  get ppid () {
-    return os.ppid()
-  }
-
   exit (code = this.exitCode) {
     if (bare.isMainThread) {
       this.exitCode = code
       bare.exit()
+    } else {
+      bare.stopCurrentThread()
     }
   }
 
@@ -76,22 +52,54 @@ class Process extends EventEmitter {
   resume () {
     bare.resume()
   }
+}
 
-  cwd () {
-    return os.cwd()
-  }
+function WithCompatibilityExtensions (Base) {
+  return class extends Base {
+    get platform () {
+      return os.platform()
+    }
 
-  chdir (directory) {
-    os.chdir(directory)
-  }
+    get arch () {
+      return os.arch()
+    }
 
-  kill (pid, signal) {
-    os.kill(pid, signal)
-  }
+    get execPath () {
+      return os.execPath()
+    }
 
-  // For Node.js compatibility
-  nextTick (cb, ...args) {
-    queueMicrotask(cb.bind(null, ...args))
+    get pid () {
+      return os.pid()
+    }
+
+    get ppid () {
+      return os.ppid()
+    }
+
+    get title () {
+      return os.getProcessTitle()
+    }
+
+    set title (title) {
+      os.setProcessTitle(title)
+    }
+
+    cwd () {
+      return os.cwd()
+    }
+
+    chdir (directory) {
+      os.chdir(directory)
+    }
+
+    kill (pid, signal) {
+      os.kill(pid, signal)
+    }
+
+    // For Node.js compatibility
+    nextTick (cb, ...args) {
+      queueMicrotask(cb.bind(null, ...args))
+    }
   }
 }
 
@@ -152,12 +160,7 @@ bare.onuncaughtexception = function onuncaughtexception (err) {
 
   bare.printError(`Uncaught ${err.stack}\n`)
 
-  if (bare.isMainThread) {
-    bare.exitCode = 1
-    bare.exit()
-  } else {
-    bare.stopCurrentThread()
-  }
+  exports.exit(1)
 }
 
 bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
@@ -165,12 +168,7 @@ bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
 
   bare.printError(`Uncaught (in promise) ${reason.stack}\n`)
 
-  if (bare.isMainThread) {
-    bare.exitCode = 1
-    bare.exit()
-  } else {
-    bare.stopCurrentThread()
-  }
+  exports.exit(1)
 }
 
 bare.onbeforeexit = function onbeforeexit () {

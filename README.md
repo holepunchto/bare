@@ -14,57 +14,29 @@ $ bare [-m, --import-map <path>] [<filename>]
 
 The core JavaScript API of Bare is available through the global `process` object, which is also available by importing the builtin `process` module. The `process` object provides information about, and control over, the Bare process and also provides access to core functionality like loading native addons.
 
-#### `process.platform`
-
-The identifier of the operating system for which Bare was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
-
-#### `process.arch`
-
-The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
-
-#### `process.execPath`
-
-The absolute path, with any symbolic links resolved, to the binary that started the current process.
-
 #### `process.argv`
 
 The command line arguments passed to the process when launched.
-
-#### `process.pid`
-
-The ID of the current process.
-
-#### `process.ppid`
-
-The ID of the parent process.
-
-#### `process.title`
-
-The title of the current process. Assigning a new value will change the title of the process. On platforms where the process title is backed by a buffer with a fixed size, the new title will be truncated if larger than the previous title. See <http://docs.libuv.org/en/v1.x/misc.html#c.uv_set_process_title> for more information.
-
-#### `process.exitCode`
-
-The code that will be returned once the process exits. If the process is exited using `process.exit()` without specifying a code, `process.exitCode` is used.
-
-#### `process.env`
-
-The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
 
 #### `process.versions`
 
 An object containing the version strings of Bare and its dependencies.
 
+#### `process.version`
+
+The Bare version string.
+
+#### `process.exitCode`
+
+The code that will be returned once the process exits. If the process is exited using `process.exit()` without specifying a code, `process.exitCode` is used.
+
 #### `process.thread`
 
 A reference to the current thread. Will be `null` on the main thread. See [Threads](#threads) for more information.
 
-#### `process.cwd()`
+#### `process.env`
 
-Get the current working directory of the process.
-
-#### `process.chdir(directory)`
-
-Change the current working directory of the process.
+The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
 
 #### `process.exit([code])`
 
@@ -93,10 +65,6 @@ Get the current high-resolution real time as a `[seconds, nanoseconds]` 32-bit u
 #### `process.hrtime.bigint()`
 
 Get the current high-resolution real time in nanoseconds as a `bigint`.
-
-#### `process.nextTick(callback[, ...args])`
-
-A wrapper around `queueMicrotask()` for compatibility purposes.
 
 #### `process.on('uncaughtException', err)`
 

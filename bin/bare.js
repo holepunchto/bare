@@ -24,9 +24,7 @@ const argc = argv._.length
 process.argv.splice(1, argc, ...argv._)
 
 if (argv.v) {
-  const pkg = require('../package.json')
-
-  console.log(`v${pkg.version}`)
+  console.log(process.version)
 
   process.exit()
 }
