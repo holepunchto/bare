@@ -16,38 +16,6 @@ include(bare)
 
 bare_target(target)
 
-add_bare_bundle(
-  ENTRY src/bare.js
-  OUT src/bare.js.h
-  CONFIG src/bundle.config.js
-  DEPENDS
-    src/bare.js
-    src/bundle.config.js
-    src/builtins/assert.js
-    src/builtins/buffer.js
-    src/builtins/console.js
-    src/builtins/events.js
-    src/builtins/globals.js
-    src/builtins/module.js
-    src/builtins/os.js
-    src/builtins/path.js
-    src/builtins/process.js
-    src/builtins/process/addon.js
-    src/builtins/process/thread.js
-    src/builtins/thread.js
-    src/builtins/timers.js
-    src/builtins/url.js
-)
-
-add_bare_bundle(
-  ENTRY bin/bare.js
-  OUT bin/bare.bundle.h
-  CONFIG bin/bundle.config.js
-  DEPENDS
-    bin/bare.js
-    bin/bundle.config.js
-)
-
 mirror_drive(
   SOURCE ${BARE_PREBUILDS_KEY}
   DESTINATION ${BARE_PREBUILDS_DIR}
@@ -59,7 +27,6 @@ if(MSVC)
   add_compile_options(
     $<$<CONFIG:Debug>:/MTd>
     $<$<CONFIG:Release>:/MT>
-    /experimental:c11atomics
   )
 endif()
 
@@ -120,12 +87,37 @@ else()
   set(engine js_static)
 endif()
 
-include_bare_module(bare_buffer node_modules/bare-buffer)
-include_bare_module(bare_env node_modules/bare-env)
-include_bare_module(bare_hrtime node_modules/bare-hrtime)
-include_bare_module(bare_module node_modules/bare-module)
-include_bare_module(bare_os node_modules/bare-os)
-include_bare_module(bare_timers node_modules/bare-timers)
+add_bare_bundle(
+  ENTRY src/bare.js
+  OUT src/bare.js.h
+  CONFIG src/bundle.config.js
+  DEPENDS
+    src/bare.js
+    src/bundle.config.js
+    src/builtins/assert.js
+    src/builtins/buffer.js
+    src/builtins/console.js
+    src/builtins/events.js
+    src/builtins/globals.js
+    src/builtins/module.js
+    src/builtins/os.js
+    src/builtins/path.js
+    src/builtins/process.js
+    src/builtins/process/addon.js
+    src/builtins/process/thread.js
+    src/builtins/thread.js
+    src/builtins/timers.js
+    src/builtins/url.js
+)
+
+add_bare_bundle(
+  ENTRY bin/bare.js
+  OUT bin/bare.bundle.h
+  CONFIG bin/bundle.config.js
+  DEPENDS
+    bin/bare.js
+    bin/bundle.config.js
+)
 
 add_library(bare OBJECT)
 
@@ -163,6 +155,13 @@ target_include_directories(
     $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
+
+include_bare_module(bare_buffer node_modules/bare-buffer)
+include_bare_module(bare_env node_modules/bare-env)
+include_bare_module(bare_hrtime node_modules/bare-hrtime)
+include_bare_module(bare_module node_modules/bare-module)
+include_bare_module(bare_os node_modules/bare-os)
+include_bare_module(bare_timers node_modules/bare-timers)
 
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
