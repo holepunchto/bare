@@ -36,6 +36,10 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
     bare.exitCode = (Number(code) || 0) & 0xff
   }
 
+  get suspended () {
+    return bare.suspended
+  }
+
   exit (code = this.exitCode) {
     if (bare.isMainThread) {
       this.exitCode = code
@@ -186,6 +190,8 @@ bare.onexit = function onexit () {
 }
 
 bare.onsuspend = function onsuspend () {
+  bare.suspended = true
+
   exports.emit('suspend')
 }
 
@@ -194,5 +200,7 @@ bare.onidle = function onidle () {
 }
 
 bare.onresume = function onresume () {
+  bare.suspended = false
+
   exports.emit('resume')
 }

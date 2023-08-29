@@ -30,6 +30,10 @@ The Bare version string.
 
 The code that will be returned once the process exits. If the process is exited using `process.exit()` without specifying a code, `process.exitCode` is used.
 
+#### `process.suspended`
+
+Whether or not the process is currently suspended.
+
 #### `process.thread`
 
 A reference to the current thread. Will be `null` on the main thread. See [Threads](#threads) for more information.

@@ -808,6 +808,13 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   err = js_set_named_property(env, exports, "exitCode", exit_code);
   assert(err == 0);
 
+  js_value_t *suspended;
+  err = js_get_boolean(env, false, &suspended);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "suspended", suspended);
+  assert(err == 0);
+
 #define V(name, fn) \
   { \
     js_value_t *val; \
