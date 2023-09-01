@@ -111,10 +111,10 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
 
   bare_module_cb init;
 
-  err = uv_dlsym(lib, "bare_register_module_v1", (void **) &init);
+  err = uv_dlsym(lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &init);
 
   if (err < 0) {
-    err = uv_dlsym(lib, "napi_register_module_v1", (void **) &init);
+    err = uv_dlsym(lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &init);
 
     if (err < 0) goto err;
   }

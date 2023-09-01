@@ -133,7 +133,8 @@ target_sources(
   bare
   INTERFACE
     include/bare.h
-    include/bare/modules.h
+    include/bare/helper.h
+    include/bare/module.h
     include/bare/target.h
     include/bare/version.h
   PRIVATE
