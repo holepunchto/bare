@@ -119,6 +119,11 @@ add_bare_bundle(
     bin/bundle.config.js
 )
 
+add_compile_definitions(
+  BARE_MODULE_REGISTER_CONSTRUCTOR
+  NAPI_MODULE_REGISTER_CONSTRUCTOR
+)
+
 add_library(bare OBJECT)
 
 set_target_properties(
