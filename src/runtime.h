@@ -251,6 +251,8 @@ bare_runtime_on_suspend_signal (uv_async_t *handle) {
 
   runtime->suspended = true;
 
+  uv_unref((uv_handle_t *) &runtime->suspend);
+
   bare_runtime_on_suspend(runtime);
 }
 
@@ -568,6 +570,8 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
+
+  uv_ref((uv_handle_t *) &runtime->suspend);
 
   bare_suspend((bare_t *) runtime->process);
 
