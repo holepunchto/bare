@@ -68,11 +68,6 @@ bare_addon_load_static (js_env_t *env, const char *specifier) {
     return NULL;
   }
 
-  if (mod->version != BARE_MODULE_VERSION) {
-    js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
-    return NULL;
-  }
-
   return mod;
 }
 
@@ -94,11 +89,6 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
 
   if (mod) {
     uv_mutex_unlock(&bare_addon_lock);
-
-    if (mod->version != BARE_MODULE_VERSION) {
-      js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
-      return NULL;
-    }
 
     return mod;
   }
@@ -146,11 +136,6 @@ done:
 
   uv_mutex_unlock(&bare_addon_lock);
 
-  if (mod->version != BARE_MODULE_VERSION) {
-    js_throw_errorf(env, NULL, "Unsupported ABI version %d for module %s", mod->version, specifier);
-    return NULL;
-  }
-
   return mod;
 
 err:
@@ -190,12 +175,10 @@ bare_module_register (bare_module_t *mod) {
 
 void
 napi_module_register (napi_module *mod) {
-  bare_module_register(&(bare_module_t){
-    // As Node-API modules rely on an already stable ABI that does not change
-    // with the runtime ABI, we should be able to safely assume that Node-API
-    // modules will always be compatible with the current module version.
-    .version = BARE_MODULE_VERSION,
+  assert(mod->nm_version == NAPI_MODULE_VERSION);
 
+  bare_module_register(&(bare_module_t){
+    .version = BARE_MODULE_VERSION,
     .filename = mod->nm_filename,
     .init = mod->nm_register_func,
   });

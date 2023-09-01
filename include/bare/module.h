@@ -3,10 +3,16 @@
 
 #include <js.h>
 
+#define BARE_MODULE_VERSION 1
+
+#ifndef BARE_MODULE_FILENAME
+#define BARE_MODULE_FILENAME ""
+#endif
+
 // https://stackoverflow.com/a/2390626
 
 #if defined(__cplusplus)
-#define BARE_INITIALIZER(f) \
+#define BARE_MODULE_INITIALIZER(f) \
   static void f(void); \
   struct f##_ { \
     f##_(void) { f(); } \
@@ -14,24 +20,18 @@
   static void f(void)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU", read)
-#define BARE_INITIALIZER(f) \
+#define BARE_MODULE_INITIALIZER(f) \
   static void f(void); \
   __declspec(dllexport, allocate(".CRT$XCU")) void (*f##_)(void) = f; \
   static void f(void)
 #else
-#define BARE_INITIALIZER(f) \
+#define BARE_MODULE_INITIALIZER(f) \
   static void f(void) __attribute__((constructor)); \
   static void f(void)
 #endif
 
-#define BARE_MODULE_VERSION 1
-
-#ifndef BARE_MODULE_FILENAME
-#define BARE_MODULE_FILENAME ""
-#endif
-
 #define BARE_MODULE(id, fn) \
-  BARE_INITIALIZER(module_initializer_##id) { \
+  BARE_MODULE_INITIALIZER(module_initializer_##id) { \
     bare_module_t module = { \
       BARE_MODULE_VERSION, \
       BARE_MODULE_FILENAME, \

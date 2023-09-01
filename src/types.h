@@ -20,39 +20,38 @@ typedef int (*bare_thread_run_cb)(bare_thread_t *, uv_buf_t *source);
 typedef void (*bare_thread_exit_cb)(bare_thread_t *);
 
 struct bare_runtime_s {
+  bare_process_t *process;
+
   uv_loop_t *loop;
+
+  js_env_t *env;
+  js_value_t *exports;
 
   uv_async_t suspend;
   uv_async_t resume;
 
   bool suspended;
-
-  bare_process_t *process;
-
-  js_env_t *env;
-
-  js_value_t *exports;
 };
 
 struct bare_process_s {
+  bare_runtime_t runtime;
+
   js_platform_t *platform;
 
   int argc;
   char **argv;
+
+  bare_thread_list_t *threads;
+
+  struct {
+    uv_rwlock_t threads;
+  } locks;
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
   bare_suspend_cb on_suspend;
   bare_idle_cb on_idle;
   bare_resume_cb on_resume;
-
-  bare_thread_list_t *threads;
-
-  bare_runtime_t runtime;
-
-  struct {
-    uv_rwlock_t threads;
-  } locks;
 };
 
 struct bare_thread_source_s {
@@ -83,8 +82,9 @@ struct bare_thread_data_s {
 };
 
 struct bare_thread_s {
-  uv_thread_t id;
+  bare_runtime_t runtime;
 
+  uv_thread_t id;
   uv_sem_t ready;
 
   char *filename;
@@ -95,8 +95,6 @@ struct bare_thread_s {
   bare_thread_setup_cb on_setup;
   bare_thread_run_cb on_run;
   bare_thread_exit_cb on_exit;
-
-  bare_runtime_t runtime;
 };
 
 struct bare_thread_list_s {
