@@ -800,7 +800,6 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     assert(err == 0); \
   }
   V("bare", BARE_VERSION);
-  V("modules", BARE_STRING(BARE_MODULE_VERSION));
   V("uv", uv_version_string());
   V(js_platform_identifier, js_platform_version ? js_platform_version : "unknown");
 #undef V
