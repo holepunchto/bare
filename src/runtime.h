@@ -784,6 +784,14 @@ bare_runtime_setup (bare_runtime_t *runtime) {
     assert(err == 0);
   }
 
+  const char *platform_identifier;
+  err = js_get_platform_identifier(runtime->process->platform, &platform_identifier);
+  assert(err == 0);
+
+  const char *platform_version;
+  err = js_get_platform_version(runtime->process->platform, &platform_version);
+  assert(err == 0);
+
   js_value_t *versions;
   err = js_create_object(env, &versions);
   assert(err == 0);
@@ -801,7 +809,7 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   }
   V("bare", BARE_VERSION);
   V("uv", uv_version_string());
-  V(js_platform_identifier, js_platform_version ? js_platform_version : "unknown");
+  V(platform_identifier, platform_version);
 #undef V
 
   js_value_t *exit_code;

@@ -89,7 +89,6 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
 
   if (mod) {
     uv_mutex_unlock(&bare_addon_lock);
-
     return mod;
   }
 
