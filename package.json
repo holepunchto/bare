@@ -32,7 +32,7 @@
     "bare-module": "^1.12.0",
     "bare-os": "^1.7.0",
     "bare-path": "^1.0.5",
-    "bare-repl": "^0.3.0",
+    "bare-repl": "^0.3.2",
     "bare-timers": "^1.4.6",
     "bare-tty": "^2.0.0",
     "bare-url": "^0.1.1",
