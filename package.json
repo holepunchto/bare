@@ -29,7 +29,7 @@
     "bare-env": "^1.0.0",
     "bare-events": "^1.2.1",
     "bare-hrtime": "^1.0.0",
-    "bare-module": "^1.11.4",
+    "bare-module": "^1.12.0",
     "bare-os": "^1.7.0",
     "bare-path": "^1.0.5",
     "bare-repl": "^0.3.0",
