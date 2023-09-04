@@ -741,6 +741,8 @@ static inline void
 bare_runtime_setup (bare_runtime_t *runtime) {
   int err;
 
+  runtime->suspended = false;
+
   err = uv_async_init(runtime->loop, &runtime->suspend, bare_runtime_on_suspend_signal);
   assert(err == 0);
 
