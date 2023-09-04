@@ -6,11 +6,6 @@
   "scripts": {
     "test": "standard"
   },
-  "standard": {
-    "ignore": [
-      "vendor/**"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/bare.git"
