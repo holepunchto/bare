@@ -187,6 +187,14 @@ bare.onexit = function onexit () {
   } else {
     exports.thread.emit('exit')
   }
+
+  for (const specifier in exports.addon.cache) {
+    const addon = exports.addon.cache[specifier]
+
+    if (addon.unload()) {
+      delete exports.addon.cache[specifier]
+    }
+  }
 }
 
 bare.onsuspend = function onsuspend () {

@@ -1,26 +1,46 @@
 /* global bare */
 
-module.exports = exports = function addon (specifier) {
-  if (exports.cache[specifier]) return exports.cache[specifier]
+class Addon {
+  constructor () {
+    this.filename = null
+    this.exports = {}
 
-  let addon = null
-
-  try {
-    addon = bare.loadStaticAddon(specifier)
-  } catch {}
-
-  if (addon === null) {
-    specifier = resolve(specifier)
-
-    if (exports.cache[specifier]) return exports.cache[specifier]
-
-    addon = bare.loadDynamicAddon(specifier)
+    this._type = null
+    this._handle = null
   }
 
-  return (exports.cache[specifier] = addon)
+  unload () {
+    return bare.unloadAddon(this._handle)
+  }
 }
 
-exports.cache = Object.create(null)
+module.exports = exports = function addon (specifier) {
+  if (cache[specifier]) return cache[specifier].exports
+
+  const addon = new Addon()
+
+  try {
+    addon._handle = bare.loadStaticAddon(specifier)
+    addon._type = 'static'
+  } catch {
+    specifier = resolve(specifier)
+
+    if (cache[specifier]) return cache[specifier].exports
+
+    addon.filename = specifier
+
+    addon._handle = bare.loadDynamicAddon(specifier)
+    addon._type = 'dynamic'
+  }
+
+  addon.exports = bare.initAddon(addon._handle, addon.exports)
+
+  cache[specifier] = addon
+
+  return addon.exports
+}
+
+const cache = exports.cache = Object.create(null)
 
 exports.path = null
 
@@ -102,4 +122,18 @@ const resolve = exports.resolve = function resolve (specifier) {
     yield path.join(specifier, 'build')
     yield path.join(specifier, 'prebuilds', `${process.platform}-${process.arch}`)
   }
+}
+
+exports.unload = function unload (specifier) {
+  const addon = cache[specifier] || null
+
+  if (addon === null) {
+    throw new Error(`No loaded addon '${specifier}'`)
+  }
+
+  const unloaded = addon.unload()
+
+  if (unloaded) delete cache[specifier]
+
+  return unloaded
 }

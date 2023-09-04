@@ -168,8 +168,9 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
 
   uv_rwlock_wrlock(&runtime->process->locks.threads);
 
-  if (runtime->process->threads) {
-    next->next = runtime->process->threads;
+  next->next = runtime->process->threads;
+
+  if (next->next) {
     next->next->previous = next;
   }
 

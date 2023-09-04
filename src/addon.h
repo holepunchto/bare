@@ -10,16 +10,7 @@
 #include <uv.h>
 
 #include "../include/bare.h"
-
-typedef struct bare_module_list_s bare_module_list_t;
-
-struct bare_module_list_s {
-  bare_module_t mod;
-  char *resolved;
-  bool pending;
-  uv_lib_t *lib;
-  bare_module_list_t *next;
-};
+#include "types.h"
 
 static bare_module_list_t *bare_addon_static = NULL;
 
@@ -88,7 +79,10 @@ bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
   }
 
   if (mod) {
+    next->refs++;
+
     uv_mutex_unlock(&bare_addon_lock);
+
     return mod;
   }
 
@@ -149,6 +143,38 @@ err:
   return NULL;
 }
 
+static inline bool
+bare_addon_unload (js_env_t *env, bare_module_t *mod) {
+  bare_module_list_t *node = (bare_module_list_t *) mod;
+
+  if (node->lib == NULL) return false;
+
+  uv_mutex_lock(&bare_addon_lock);
+
+  bool unloaded = --node->refs == 0;
+
+  if (unloaded) {
+    uv_dlclose(node->lib);
+
+    if (node->previous) {
+      node->previous->next = node->next;
+    } else {
+      bare_addon_dynamic = node->next;
+    }
+
+    if (node->next) {
+      node->next->previous = node->previous;
+    }
+
+    free(node->resolved);
+    free(node);
+  }
+
+  uv_mutex_unlock(&bare_addon_lock);
+
+  return unloaded;
+}
+
 void
 bare_module_register (bare_module_t *mod) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
@@ -159,13 +185,23 @@ bare_module_register (bare_module_t *mod) {
 
   bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
 
+  next->next = NULL;
+  next->previous = NULL;
+
   next->mod.version = mod->version;
-  next->mod.filename = mod->filename ? strdup(mod->filename) : NULL;
+  next->mod.filename = NULL;
   next->mod.init = mod->init;
 
   next->resolved = is_dynamic ? NULL : strdup(mod->filename);
   next->pending = is_dynamic;
+  next->refs = 1;
+  next->lib = NULL;
+
   next->next = *bare_addon_pending;
+
+  if (next->next) {
+    next->next->previous = next;
+  }
 
   *bare_addon_pending = next;
 

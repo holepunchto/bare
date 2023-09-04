@@ -434,11 +434,11 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
 
   if (mod == NULL) return NULL;
 
-  js_value_t *exports;
-  err = js_create_object(runtime->env, &exports);
+  js_value_t *handle;
+  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
   assert(err == 0);
 
-  return mod->init(runtime->env, exports);
+  return handle;
 }
 
 static js_value_t *
@@ -463,11 +463,57 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
 
   if (mod == NULL) return NULL;
 
-  js_value_t *exports;
-  err = js_create_object(runtime->env, &exports);
+  js_value_t *handle;
+  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
   assert(err == 0);
 
-  return mod->init(runtime->env, exports);
+  return handle;
+}
+
+static js_value_t *
+bare_runtime_init_addon (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_module_t *mod;
+  err = js_get_value_external(env, argv[0], (void **) &mod);
+  assert(err == 0);
+
+  js_value_t *exports = argv[1];
+
+  return mod->init(env, exports);
+}
+
+static js_value_t *
+bare_runtime_unload_addon (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_module_t *mod;
+  err = js_get_value_external(env, argv[0], (void **) &mod);
+  assert(err == 0);
+
+  bool unloaded = bare_addon_unload(env, mod);
+
+  js_value_t *result;
+  err = js_get_boolean(env, unloaded, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -840,6 +886,8 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   V("printError", bare_runtime_print_error);
   V("loadStaticAddon", bare_runtime_load_static_addon);
   V("loadDynamicAddon", bare_runtime_load_dynamic_addon);
+  V("initAddon", bare_runtime_init_addon);
+  V("unloadAddon", bare_runtime_unload_addon);
   V("readdir", bare_runtime_readdir);
   V("exit", bare_runtime_exit);
   V("suspend", bare_runtime_suspend);

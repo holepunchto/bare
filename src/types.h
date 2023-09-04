@@ -14,6 +14,7 @@ typedef struct bare_thread_s bare_thread_t;
 typedef struct bare_thread_source_s bare_thread_source_t;
 typedef struct bare_thread_data_s bare_thread_data_t;
 typedef struct bare_thread_list_s bare_thread_list_t;
+typedef struct bare_module_list_s bare_module_list_t;
 
 typedef void (*bare_thread_setup_cb)(bare_thread_t *);
 typedef int (*bare_thread_run_cb)(bare_thread_t *, uv_buf_t *source);
@@ -102,6 +103,17 @@ struct bare_thread_list_s {
 
   bare_thread_list_t *previous;
   bare_thread_list_t *next;
+};
+
+struct bare_module_list_s {
+  bare_module_t mod;
+  char *resolved;
+  bool pending;
+  int refs;
+  uv_lib_t *lib;
+
+  bare_module_list_t *previous;
+  bare_module_list_t *next;
 };
 
 #endif // BARE_TYPES_H

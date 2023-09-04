@@ -62,6 +62,10 @@ Load a static or dynamic native addon identified by `specifier`. If `specifier` 
 
 Resolve a dynamic native addon specifier by searching for a dynamic object library matching `specifier`.
 
+#### `const unloaded = process.addon.unload(specifier)`
+
+Unload a dynamic native addon identified by `specifier`, which must be fully resolved. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
+
 #### `process.hrtime([previous])`
 
 Get the current high-resolution real time as a `[seconds, nanoseconds]` 32-bit unsigned integer tuple. If `previous` is specified, the returned tuple will contain the delta from the `previous` time.
