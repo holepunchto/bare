@@ -106,7 +106,7 @@ The builtin `addon` module provides support for loading native addons, which are
 
 Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, Bare will instead look for a matching dynamic object library using `Addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = Addon.load(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
 
-#### `Addon.resolve(specifier)`
+#### `specifier = Addon.resolve(specifier)`
 
 Resolve a dynamic native addon specifier by searching for a dynamic object library matching `specifier`.
 
