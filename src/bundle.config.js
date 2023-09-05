@@ -5,6 +5,7 @@ module.exports = {
   name: 'bare_bundle',
   builtins: [],
   imports: {
+    addon: '/src/builtins/addon.js',
     assert: '/src/builtins/assert.js',
     buffer: '/src/builtins/buffer.js',
     console: '/src/builtins/console.js',

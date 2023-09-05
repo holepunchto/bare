@@ -36,7 +36,7 @@ Whether or not the process is currently suspended.
 
 #### `process.thread`
 
-A reference to the current thread. Will be `null` on the main thread. See [Threads](#threads) for more information.
+A reference to the current thread, `Thread.self`. Will be `null` on the main thread. See [Threads](#threads) for more information.
 
 #### `process.env`
 
@@ -56,15 +56,7 @@ Resume the process after suspension. This can be used to cancel process suspensi
 
 #### `process.addon(specifier)`
 
-Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, Bare will instead look for a matching dynamic object library using `process.addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = process.addon(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
-
-#### `process.addon.resolve(specifier)`
-
-Resolve a dynamic native addon specifier by searching for a dynamic object library matching `specifier`.
-
-#### `const unloaded = process.addon.unload(specifier)`
-
-Unload a dynamic native addon identified by `specifier`, which must be fully resolved. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
+Load a static or dynamic native addon identified by `specifier` using `Addon.load()`. See [Addons](#addons) for more information.
 
 #### `process.hrtime([previous])`
 
@@ -106,6 +98,22 @@ Emitted when the process becomes idle after suspension. If no additional work is
 
 Emitted when the process resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
 
+### Addons
+
+The builtin `addon` module provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
+
+#### `const exports = Addon.load(specifier)`
+
+Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, Bare will instead look for a matching dynamic object library using `Addon.resolve()`. Modules with native addons can use this mechanism to export their bindings, such as by doing `module.exports = Addon.load(__dirname)` from the root of the module. This will allow them to be used in both static and dynamic contexts.
+
+#### `Addon.resolve(specifier)`
+
+Resolve a dynamic native addon specifier by searching for a dynamic object library matching `specifier`.
+
+#### `const unloaded = Addon.unload(specifier)`
+
+Unload a dynamic native addon identified by `specifier`, which must be fully resolved. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
+
 ### Threads
 
 The builtin `thread` module provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
@@ -113,6 +121,22 @@ The builtin `thread` module provides support for lightweight threads. Threads ar
 #### `Thread.isMainThread`
 
 `true` if the current thread is the main thread.
+
+#### `Thread.self`
+
+A reference to the current thread as a `ThreadProxy` object. Will be `null` on the main thread.
+
+#### `Thread.self.data`
+
+A copy of or, if shared, reference to the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
+
+#### `Thread.self.stop()`
+
+Stop and exit the current thread as soon as possible.
+
+#### `Thread.self.on('exit')`
+
+Emitted when the current thread exits.
 
 #### `const thread = new Thread([filename][, options][, callback])`
 
@@ -141,25 +165,9 @@ Convenience method for the `new Thread()` constructor
 
 Block and wait for the thread to exit.
 
-#### `process.thread`
-
-A reference to the current thread. Will be `null` on the main thread.
-
-#### `process.thread.data`
-
-A copy of or, if shared, reference to the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
-
-#### `process.thread.stop()`
-
-Stop and exit the current thread as soon as possible.
-
-#### `process.thread.on('exit')`
-
-Emitted when the current thread exits.
-
 ### Modules
 
-In addition to the core `process` and `thread` modules, Bare provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
+In addition to the core `process`, `addon`, and `thread` modules, Bare provides a small selection of builtin modules to cover the most basic use cases, primarily those of the runtime itself:
 
 - `assert` (<https://github.com/holepunchto/bare-assert>)
 - `buffer` (<https://github.com/holepunchto/bare-buffer>)

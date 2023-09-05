@@ -1,5 +1,7 @@
 /* global bare */
 
+const EventEmitter = require('./events')
+
 module.exports = exports = class Thread {
   constructor (filename, opts, callback) {
     if (typeof filename === 'function') {
@@ -47,6 +49,20 @@ module.exports = exports = class Thread {
 
     bare.joinThread(this._handle)
   }
+
+  static get isMainThread () {
+    return bare.isMainThread
+  }
 }
 
-exports.isMainThread = bare.isMainThread
+class ThreadProxy extends EventEmitter {
+  get data () {
+    return ArrayBuffer.isView(bare.threadData) ? Buffer.coerce(bare.threadData) : bare.threadData
+  }
+
+  stop () {
+    bare.stopCurrentThread()
+  }
+}
+
+exports.self = exports.isMainThread ? null : new ThreadProxy()

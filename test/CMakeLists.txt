@@ -1,4 +1,6 @@
 list(APPEND tests
+  addon-load.js
+  addon-resolve.js
   argv-empty.c
   import-addon.cjs
   import-addon.mjs
@@ -12,7 +14,6 @@ list(APPEND tests
   import-mjs.cjs
   import-mjs.mjs
   process-addon.js
-  process-addon-resolve.js
   process-argv.js
   process-chdir.js
   suspend-from-thread.js

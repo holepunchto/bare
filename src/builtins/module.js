@@ -1,5 +1,6 @@
 const Module = module.exports = require('bare-module')
 
+Module._builtins.addon = require('./addon')
 Module._builtins.assert = require('./assert')
 Module._builtins.buffer = require('./buffer')
 Module._builtins.console = require('./console')

@@ -121,7 +121,9 @@ global.process = module.exports = exports = new Process()
  * native code.
  */
 
-exports.addon = require('./process/addon')
+const Addon = require('./addon')
+
+exports.addon = Addon.load.bind(Addon)
 
 /**
  * Step 5:
@@ -129,7 +131,9 @@ exports.addon = require('./process/addon')
  * including thread events for resource cleanup.
  */
 
-exports.thread = require('./process/thread')
+const Thread = require('./thread')
+
+exports.thread = Thread.self
 
 /**
  * Step 6:

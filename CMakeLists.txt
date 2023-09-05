@@ -94,6 +94,7 @@ add_bare_bundle(
   DEPENDS
     src/bare.js
     src/bundle.config.js
+    src/builtins/addon.js
     src/builtins/assert.js
     src/builtins/buffer.js
     src/builtins/console.js
@@ -103,8 +104,6 @@ add_bare_bundle(
     src/builtins/os.js
     src/builtins/path.js
     src/builtins/process.js
-    src/builtins/process/addon.js
-    src/builtins/process/thread.js
     src/builtins/thread.js
     src/builtins/timers.js
     src/builtins/url.js
