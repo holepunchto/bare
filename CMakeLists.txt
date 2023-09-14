@@ -179,16 +179,16 @@ list(APPEND objects
 
 if(BARE_USE_QUICKJS)
   list(APPEND objects $<TARGET_OBJECTS:qjs>)
-
   list(APPEND link_libraries quickjs)
+
 elseif(BARE_USE_JAVASCRIPTCORE)
   list(APPEND objects $<TARGET_OBJECTS:jsc>)
-
   list(APPEND link_libraries "-framework CoreFoundation" "-framework JavaScriptCore")
+
 else()
   list(APPEND objects $<TARGET_OBJECTS:js>)
-
   list(APPEND link_libraries v8)
+
 endif()
 
 add_library(bare_shared SHARED ${objects})
