@@ -79,14 +79,6 @@ if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
-if(BARE_USE_QUICKJS)
-  set(engine qjs_static)
-elseif(BARE_USE_JAVASCRIPTCORE)
-  set(engine jsc_static)
-else()
-  set(engine js_static)
-endif()
-
 add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
@@ -185,6 +177,20 @@ list(APPEND objects
   $<TARGET_OBJECTS:hex>
 )
 
+if(BARE_USE_QUICKJS)
+  list(APPEND objects $<TARGET_OBJECTS:qjs>)
+
+  list(APPEND link_libraries quickjs)
+elseif(BARE_USE_JAVASCRIPTCORE)
+  list(APPEND objects $<TARGET_OBJECTS:jsc>)
+
+  list(APPEND link_libraries "-framework CoreFoundation" "-framework JavaScriptCore")
+else()
+  list(APPEND objects $<TARGET_OBJECTS:js>)
+
+  list(APPEND link_libraries v8)
+endif()
+
 add_library(bare_shared SHARED ${objects})
 
 set_target_properties(
@@ -197,7 +203,7 @@ set_target_properties(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+    ${link_libraries}
 )
 
 add_library(bare_static STATIC ${objects})
@@ -212,7 +218,7 @@ set_target_properties(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+    ${link_libraries}
 )
 
 include_bare_module(bare_repl node_modules/bare-repl)
