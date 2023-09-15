@@ -17,7 +17,7 @@ struct bare_s {
 };
 
 int
-bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *options, bare_t **result) {
+bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, const bare_options_t *options, bare_t **result) {
   int err;
 
   bare_t *bare = malloc(sizeof(bare_t));
@@ -26,6 +26,7 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *option
 
   bare_process_t *process = &bare->process;
 
+  process->platform = platform;
   process->argc = argc;
   process->argv = argv;
 
@@ -41,9 +42,6 @@ bare_setup (uv_loop_t *loop, int argc, char **argv, const bare_options_t *option
 
   runtime->loop = loop;
   runtime->process = process;
-
-  err = js_create_platform(runtime->loop, NULL, &process->platform);
-  assert(err == 0);
 
   err = js_create_env(runtime->loop, process->platform, NULL, &runtime->env);
   assert(err == 0);
@@ -67,9 +65,6 @@ bare_teardown (bare_t *bare, int *exit_code) {
   bare_runtime_on_exit(&process->runtime, exit_code);
 
   err = js_destroy_env(process->runtime.env);
-  assert(err == 0);
-
-  err = js_destroy_platform(process->platform);
   assert(err == 0);
 
   uv_rwlock_destroy(&process->locks.threads);

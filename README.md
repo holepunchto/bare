@@ -188,7 +188,7 @@ Bare can easily be embedded using the C API defined in [`include/bare.h`](includ
 #include <uv.h>
 
 bare_t *bare;
-bare_setup(uv_default_loop(), argc, argv, &bare);
+bare_setup(uv_default_loop(), platform, argc, argv, &bare);
 
 bare_run(bare, filename, source);
 
