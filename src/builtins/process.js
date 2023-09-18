@@ -166,7 +166,10 @@ exports.hrtime = require('bare-hrtime')
 bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
 
-  bare.printError(`Uncaught ${err.stack}\n`)
+  let message = 'Unsaught'
+  if (err) message += ` ${err.stack}`
+
+  bare.printError(`${message}\n`)
 
   exports.exit(1)
 }
@@ -174,7 +177,10 @@ bare.onuncaughtexception = function onuncaughtexception (err) {
 bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
 
-  bare.printError(`Uncaught (in promise) ${reason.stack}\n`)
+  let message = 'Uncaught (in promise)'
+  if (reason) message += ` ${reason.stack}`
+
+  bare.printError(`${message}\n`)
 
   exports.exit(1)
 }
