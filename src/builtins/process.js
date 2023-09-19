@@ -163,13 +163,12 @@ exports.hrtime = require('bare-hrtime')
  * Register the native hooks, propagating events to the process object.
  */
 
+const inspect = require('bare-inspect')
+
 bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
 
-  let message = 'Unsaught'
-  if (err) message += ` ${err.stack}`
-
-  bare.printError(`${message}\n`)
+  bare.printError(`${`Uncaught ${inspect(err, { colors: bare.isTTY })}`}\n`)
 
   exports.exit(1)
 }
@@ -177,10 +176,7 @@ bare.onuncaughtexception = function onuncaughtexception (err) {
 bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
   if (exports.emit('unhandledRejection', reason, promise)) return
 
-  let message = 'Uncaught (in promise)'
-  if (reason) message += ` ${reason.stack}`
-
-  bare.printError(`${message}\n`)
+  bare.printError(`${`Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}`}\n`)
 
   exports.exit(1)
 }
