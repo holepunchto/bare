@@ -56,6 +56,21 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   resume () {
     bare.resume()
   }
+
+  [Symbol.for('bare.inspect')] () {
+    return {
+      __proto__: { constructor: Process },
+
+      platform: this.platform,
+      arch: this.arch,
+      title: this.title,
+      argv: this.argv,
+      pid: this.pid,
+      ppid: this.ppid,
+      suspended: this.suspended,
+      versions: this.versions
+    }
+  }
 }
 
 function WithCompatibilityExtensions (Base) {

@@ -161,6 +161,10 @@ Options include:
 
 Convenience method for the `new Thread()` constructor
 
+#### `thread.joined`
+
+Whether or not the thread has been joined with the current thread.
+
 #### `thread.join()`
 
 Block and wait for the thread to exit.
