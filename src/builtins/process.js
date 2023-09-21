@@ -20,14 +20,6 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
     return bare.argv
   }
 
-  get versions () {
-    return bare.versions
-  }
-
-  get version () {
-    return 'v' + bare.versions.bare
-  }
-
   get exitCode () {
     return bare.exitCode
   }
@@ -38,6 +30,14 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
 
   get suspended () {
     return bare.suspended
+  }
+
+  get version () {
+    return 'v' + bare.versions.bare
+  }
+
+  get versions () {
+    return bare.versions
   }
 
   exit (code = this.exitCode) {
@@ -64,10 +64,13 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
       platform: this.platform,
       arch: this.arch,
       title: this.title,
-      argv: this.argv,
       pid: this.pid,
       ppid: this.ppid,
+
+      argv: this.argv,
+      exitCode: this.exitCode,
       suspended: this.suspended,
+      version: this.version,
       versions: this.versions
     }
   }
