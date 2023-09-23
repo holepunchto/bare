@@ -41,10 +41,7 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, con
 
   bare_runtime_t *runtime = &process->runtime;
 
-  runtime->loop = loop;
-  runtime->process = process;
-
-  err = bare_runtime_setup(runtime);
+  err = bare_runtime_setup(loop, process, runtime);
   assert(err == 0);
 
   err = uv_rwlock_init(&process->locks.threads);

@@ -768,8 +768,11 @@ bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 int
-bare_runtime_setup (bare_runtime_t *runtime) {
+bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime) {
   int err;
+
+  runtime->loop = loop;
+  runtime->process = process;
 
   err = js_create_env(runtime->loop, runtime->process->platform, NULL, &runtime->env);
   assert(err == 0);

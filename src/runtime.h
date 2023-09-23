@@ -8,7 +8,7 @@
 #include "types.h"
 
 int
-bare_runtime_setup (bare_runtime_t *runtime);
+bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime);
 
 int
 bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code);

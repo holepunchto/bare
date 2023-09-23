@@ -17,9 +17,9 @@ typedef struct bare_thread_list_s bare_thread_list_t;
 typedef struct bare_module_list_s bare_module_list_t;
 
 struct bare_runtime_s {
-  bare_process_t *process;
-
   uv_loop_t *loop;
+
+  bare_process_t *process;
 
   js_env_t *env;
   js_value_t *exports;

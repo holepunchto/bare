@@ -18,7 +18,9 @@ bare_thread_entry (void *data) {
 
   bare_thread_t *thread = (bare_thread_t *) data;
 
-  err = bare_runtime_setup(&thread->runtime);
+  bare_runtime_t *runtime = &thread->runtime;
+
+  err = bare_runtime_setup(runtime->loop, runtime->process, runtime);
   assert(err == 0);
 
   uv_buf_t *thread_source;
@@ -154,8 +156,8 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
   thread->data = data;
 
   thread->runtime.loop = loop;
-  thread->runtime.env = NULL;
   thread->runtime.process = runtime->process;
+  thread->runtime.env = NULL;
 
   err = uv_sem_init(&thread->ready, 0);
   assert(err == 0);
