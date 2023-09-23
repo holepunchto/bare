@@ -13,12 +13,9 @@
 
 static void
 bare_thread_entry (void *data) {
-  bare_thread_t *thread = (bare_thread_t *) data;
-
   int err;
 
-  err = js_create_env(thread->runtime.loop, thread->runtime.process->platform, NULL, &thread->runtime.env);
-  assert(err == 0);
+  bare_thread_t *thread = (bare_thread_t *) data;
 
   thread->on_setup(thread);
 
@@ -88,42 +85,40 @@ bare_thread_entry (void *data) {
   err = thread->on_run(thread, thread_source);
   assert(err == 0);
 
-  thread->on_exit(thread);
+  bare_process_t *process = thread->runtime.process;
 
-  err = js_destroy_env(thread->runtime.env);
-  assert(err == 0);
-
-  do {
-    err = uv_loop_close(thread->runtime.loop);
-
-    if (err == UV_EBUSY) {
-      int err;
-
-      err = uv_run(thread->runtime.loop, UV_RUN_DEFAULT);
-      assert(err == 0);
-    }
-  } while (err == UV_EBUSY);
-
-  uv_rwlock_wrlock(&thread->runtime.process->locks.threads);
+  uv_rwlock_wrlock(&process->locks.threads);
 
   bare_thread_list_t *node = (bare_thread_list_t *) thread;
 
   if (node->previous) {
     node->previous->next = node->next;
   } else {
-    thread->runtime.process->threads = node->next;
+    process->threads = node->next;
   }
 
   if (node->next) {
     node->next->previous = node->previous;
   }
 
-  uv_rwlock_wrunlock(&thread->runtime.process->locks.threads);
+  uv_rwlock_wrunlock(&process->locks.threads);
 
-  uv_sem_destroy(&thread->ready);
+  uv_loop_t *loop = thread->runtime.loop;
 
-  free(thread->runtime.loop);
-  free(thread);
+  thread->on_exit(thread);
+
+  do {
+    err = uv_loop_close(loop);
+
+    if (err == UV_EBUSY) {
+      int err;
+
+      err = uv_run(loop, UV_RUN_DEFAULT);
+      assert(err == 0);
+    }
+  } while (err == UV_EBUSY);
+
+  free(loop);
 }
 
 static inline bare_thread_t *
@@ -202,6 +197,8 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
   }
 
   uv_sem_wait(&thread->ready);
+
+  uv_sem_destroy(&thread->ready);
 
   if (runtime->suspended) uv_async_send(&thread->runtime.suspend);
 

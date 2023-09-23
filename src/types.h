@@ -31,6 +31,8 @@ struct bare_runtime_s {
   uv_async_t suspend;
   uv_async_t resume;
 
+  int active_handles;
+
   bool suspended;
 };
 

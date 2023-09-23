@@ -22,11 +22,14 @@
 #include "runtime/posix.h"
 #endif
 
-static inline void
+static inline int
 bare_runtime_setup (bare_runtime_t *runtime);
 
 static inline int
 bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source);
+
+static inline int
+bare_runtime_teardown (bare_runtime_t *runtime);
 
 static inline bool
 bare_runtime_is_main_thread (bare_runtime_t *runtime) {
@@ -337,9 +340,21 @@ bare_runtime_on_resume_signal (uv_async_t *handle) {
   bare_runtime_on_resume(runtime);
 }
 
+static void
+bare_runtime_on_handle_close (uv_handle_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  if (--runtime->active_handles == 0) {
+    free(runtime);
+  }
+}
+
 static inline void
 bare_runtime_on_thread_setup (bare_thread_t *thread) {
-  bare_runtime_setup(&thread->runtime);
+  int err;
+
+  err = bare_runtime_setup(&thread->runtime);
+  assert(err == 0);
 }
 
 static inline int
@@ -349,7 +364,12 @@ bare_runtime_on_thread_run (bare_thread_t *thread, uv_buf_t *source) {
 
 static inline void
 bare_runtime_on_thread_exit (bare_thread_t *thread) {
+  int err;
+
   bare_runtime_on_exit(&thread->runtime, NULL);
+
+  err = bare_runtime_teardown(&thread->runtime);
+  assert(err == 0);
 }
 
 static js_value_t *
@@ -783,9 +803,12 @@ bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
-static inline void
+static inline int
 bare_runtime_setup (bare_runtime_t *runtime) {
   int err;
+
+  err = js_create_env(runtime->loop, runtime->process->platform, NULL, &runtime->env);
+  assert(err == 0);
 
   runtime->suspended = false;
 
@@ -802,6 +825,8 @@ bare_runtime_setup (bare_runtime_t *runtime) {
   runtime->resume.data = (void *) runtime;
 
   uv_unref((uv_handle_t *) &runtime->resume);
+
+  runtime->active_handles = 2;
 
   js_env_t *env = runtime->env;
 
@@ -925,6 +950,8 @@ bare_runtime_setup (bare_runtime_t *runtime) {
 
   err = js_call_function(env, global, entry, 1, &exports, NULL);
   assert(err == 0);
+
+  return 0;
 }
 
 static inline int
@@ -977,9 +1004,19 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
     }
   } while (uv_loop_alive(runtime->loop));
 
-  uv_close((uv_handle_t *) &runtime->suspend, NULL);
+  return 0;
+}
 
-  uv_close((uv_handle_t *) &runtime->resume, NULL);
+static inline int
+bare_runtime_teardown (bare_runtime_t *runtime) {
+  int err;
+
+  err = js_destroy_env(runtime->env);
+  assert(err == 0);
+
+  uv_close((uv_handle_t *) &runtime->suspend, bare_runtime_on_handle_close);
+
+  uv_close((uv_handle_t *) &runtime->resume, bare_runtime_on_handle_close);
 
   return 0;
 }

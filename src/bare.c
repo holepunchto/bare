@@ -43,13 +43,11 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, con
   runtime->loop = loop;
   runtime->process = process;
 
-  err = js_create_env(runtime->loop, process->platform, NULL, &runtime->env);
+  err = bare_runtime_setup(runtime);
   assert(err == 0);
 
   err = uv_rwlock_init(&process->locks.threads);
   assert(err == 0);
-
-  bare_runtime_setup(runtime);
 
   *result = bare;
 
@@ -64,12 +62,10 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
   bare_runtime_on_exit(&process->runtime, exit_code);
 
-  err = js_destroy_env(process->runtime.env);
+  err = bare_runtime_teardown(&process->runtime);
   assert(err == 0);
 
   uv_rwlock_destroy(&process->locks.threads);
-
-  free(bare);
 
   return 0;
 }
