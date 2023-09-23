@@ -53,7 +53,7 @@ bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_unlock(&bare_addon_lock);
 
   if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
+    js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
 
     return NULL;
   }
@@ -63,6 +63,8 @@ bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
 
 bare_module_t *
 bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
+  int err;
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
@@ -84,8 +86,6 @@ bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
 
     return mod;
   }
-
-  int err;
 
   bare_addon_pending = &bare_addon_dynamic;
 

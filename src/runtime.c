@@ -28,9 +28,9 @@ bare_runtime_is_main_thread (bare_runtime_t *runtime) {
 
 static void
 bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
-  bare_runtime_t *runtime = (bare_runtime_t *) data;
-
   int err;
+
+  bare_runtime_t *runtime = (bare_runtime_t *) data;
 
   js_value_t *fn;
   err = js_get_named_property(env, runtime->exports, "onuncaughtexception", &fn);
@@ -41,7 +41,8 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
   if (err < 0 || !is_set) goto err;
 
   js_value_t *global;
-  js_get_global(env, &global);
+  err = js_get_global(env, &global);
+  assert(err == 0);
 
   err = js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
   if (err < 0) goto err;
@@ -70,9 +71,9 @@ err : {
 
 static void
 bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
-  bare_runtime_t *runtime = (bare_runtime_t *) data;
-
   int err;
+
+  bare_runtime_t *runtime = (bare_runtime_t *) data;
 
   js_value_t *fn;
   err = js_get_named_property(env, runtime->exports, "onunhandledrejection", &fn);
@@ -83,7 +84,8 @@ bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value
   if (err < 0 || !is_set) goto err;
 
   js_value_t *global;
-  js_get_global(env, &global);
+  err = js_get_global(env, &global);
+  assert(err == 0);
 
   err = js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
   if (err < 0) goto err;
@@ -126,7 +128,8 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
 
   if (is_set) {
     js_value_t *global;
-    js_get_global(env, &global);
+    err = js_get_global(env, &global);
+    assert(err == 0);
 
     err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
@@ -141,6 +144,8 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
 
 static inline void
 bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
+  int err;
+
   if (bare_runtime_is_main_thread(runtime)) {
     uv_rwlock_rdlock(&runtime->process->locks.threads);
 
@@ -149,15 +154,14 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
 
       uv_rwlock_rdunlock(&runtime->process->locks.threads);
 
-      uv_thread_join(&id);
+      err = uv_thread_join(&id);
+      assert(err == 0);
 
       uv_rwlock_rdlock(&runtime->process->locks.threads);
     }
 
     uv_rwlock_rdunlock(&runtime->process->locks.threads);
   }
-
-  int err;
 
   js_env_t *env = runtime->env;
 
@@ -173,7 +177,8 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
 
   if (is_set) {
     js_value_t *global;
-    js_get_global(env, &global);
+    err = js_get_global(env, &global);
+    assert(err == 0);
 
     err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
@@ -211,7 +216,8 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
 
   if (is_set) {
     js_value_t *global;
-    js_get_global(env, &global);
+    err = js_get_global(env, &global);
+    assert(err == 0);
 
     err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
@@ -265,7 +271,8 @@ bare_runtime_on_idle (bare_runtime_t *runtime) {
 
   if (is_set) {
     js_value_t *global;
-    js_get_global(env, &global);
+    err = js_get_global(env, &global);
+    assert(err == 0);
 
     err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
@@ -294,7 +301,8 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
 
   if (is_set) {
     js_value_t *global;
-    js_get_global(env, &global);
+    err = js_get_global(env, &global);
+    assert(err == 0);
 
     err = js_call_function(env, global, fn, 0, NULL, NULL);
     assert(err == 0);
@@ -310,7 +318,8 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
     bare_thread_list_t *next = runtime->process->threads;
 
     while (next) {
-      uv_async_send(&next->thread.runtime.resume);
+      err = uv_async_send(&next->thread.runtime.resume);
+      assert(err == 0);
 
       next = next->next;
     }
@@ -509,10 +518,12 @@ static js_value_t *
 bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 1);
@@ -521,12 +532,9 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
   assert(err == 0);
 
-  uv_loop_t *loop;
-  js_get_env_loop(env, &loop);
-
   uv_fs_t req;
 
-  err = uv_fs_opendir(loop, &req, (char *) path, NULL);
+  err = uv_fs_opendir(runtime->loop, &req, (char *) path, NULL);
 
   uv_dir_t *dir = (uv_dir_t *) req.ptr;
 
@@ -550,7 +558,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
   uint32_t i = 0, len;
 
   do {
-    err = uv_fs_readdir(loop, &req, dir, NULL);
+    err = uv_fs_readdir(runtime->loop, &req, dir, NULL);
 
     if (err < 0) {
       js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -570,7 +578,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
     uv_fs_req_cleanup(&req);
   } while (err >= 0 && len);
 
-  err = uv_fs_closedir(loop, &req, dir, NULL);
+  err = uv_fs_closedir(runtime->loop, &req, dir, NULL);
 
   uv_fs_req_cleanup(&req);
 
@@ -626,7 +634,8 @@ bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  bare_resume((bare_t *) runtime->process);
+  err = bare_resume((bare_t *) runtime->process);
+  assert(err == 0);
 
   return NULL;
 }
@@ -853,6 +862,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
     err = js_set_named_property(env, versions, name, val); \
     assert(err == 0); \
   }
+
   V("bare", BARE_VERSION);
   V("uv", uv_version_string());
   V(platform_identifier, platform_version);
@@ -880,6 +890,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
+
   V("printInfo", bare_runtime_print_info);
   V("printError", bare_runtime_print_error);
 
@@ -907,12 +918,14 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
+
   V("isMainThread", bare_runtime_is_main_thread(runtime));
   V("isTTY", uv_guess_handle(1) == UV_TTY);
 #undef V
 
   js_value_t *global;
-  js_get_global(env, &global);
+  err = js_get_global(env, &global);
+  assert(err == 0);
 
   err = js_set_named_property(env, global, "global", global);
   assert(err == 0);
@@ -973,11 +986,13 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
     err = js_create_typedarray(env, js_uint8_array, source->len, arraybuffer, 0, &args[1]);
     if (err < 0) return err;
   } else {
-    js_get_undefined(env, &args[1]);
+    err = js_get_undefined(env, &args[1]);
+    assert(err == 0);
   }
 
   js_value_t *global;
-  js_get_global(env, &global);
+  err = js_get_global(env, &global);
+  assert(err == 0);
 
   err = js_call_function(env, global, run, 2, args, NULL);
   if (err < 0) return err;

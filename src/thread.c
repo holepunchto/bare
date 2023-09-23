@@ -201,7 +201,10 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
 
   uv_sem_destroy(&thread->ready);
 
-  if (runtime->suspended) uv_async_send(&thread->runtime.suspend);
+  if (runtime->suspended) {
+    err = uv_async_send(&thread->runtime.suspend);
+    assert(err == 0);
+  }
 
   uv_rwlock_wrunlock(&runtime->process->locks.threads);
 

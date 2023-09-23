@@ -85,15 +85,15 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
 int
 bare_exit (bare_t *bare, int exit_code) {
   if (bare->exited) return -1;
+
+  int err;
+
   bare->exited = true;
 
-  bare_runtime_t *runtime = &bare->process.runtime;
-
-  bare_runtime_teardown(runtime, exit_code == -1 ? &exit_code : NULL);
+  err = bare_teardown(bare, exit_code == -1 ? &exit_code : NULL);
+  assert(err == 0);
 
   exit(exit_code);
-
-  return 0;
 }
 
 int
