@@ -139,9 +139,9 @@ module.exports = exports = class Addon {
           `${name}.node`,
           `${name}@${version}.node`
         ]) {
-          const file = path.join(this._path, candidate)
-
-          try { yield Module.resolve(file) } catch {}
+          try {
+            yield Module.resolve(path.join(this._path, candidate))
+          } catch {}
         }
       }
 
