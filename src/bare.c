@@ -7,6 +7,7 @@
 #include <uv.h>
 
 #include "../include/bare.h"
+
 #include "runtime.h"
 #include "types.h"
 
@@ -60,9 +61,7 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
   bare_process_t *process = &bare->process;
 
-  bare_runtime_on_exit(&process->runtime, exit_code);
-
-  err = bare_runtime_teardown(&process->runtime);
+  err = bare_runtime_teardown(&process->runtime, exit_code);
   assert(err == 0);
 
   uv_rwlock_destroy(&process->locks.threads);
@@ -91,7 +90,7 @@ bare_exit (bare_t *bare, int exit_code) {
 
   bare_runtime_t *runtime = &bare->process.runtime;
 
-  bare_runtime_on_exit(runtime, exit_code == -1 ? &exit_code : NULL);
+  bare_runtime_teardown(runtime, exit_code == -1 ? &exit_code : NULL);
 
   exit(exit_code);
 

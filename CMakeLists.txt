@@ -142,12 +142,15 @@ target_sources(
     include/bare/target.h
     include/bare/version.h
   PRIVATE
+    src/addon.c
     src/addon.h
     src/bare.c
     src/bare.js.h
+    src/runtime.c
     src/runtime.h
     src/runtime/android.h
     src/runtime/posix.h
+    src/thread.c
     src/thread.h
     src/types.h
 )
