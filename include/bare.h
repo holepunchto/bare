@@ -33,7 +33,7 @@ struct bare_options_s {
 };
 
 int
-bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, const bare_options_t *options, bare_t **result);
+bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, char **argv, const bare_options_t *options, bare_t **result);
 
 int
 bare_teardown (bare_t *bare, int *exit_code);
@@ -64,9 +64,6 @@ bare_on_idle (bare_t *bare, bare_idle_cb cb);
 
 int
 bare_on_resume (bare_t *bare, bare_resume_cb cb);
-
-int
-bare_get_env (bare_t *bare, js_env_t **result);
 
 #ifdef __cplusplus
 }

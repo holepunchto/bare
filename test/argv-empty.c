@@ -17,7 +17,7 @@ main (int argc, char *argv[]) {
   assert(e == 0);
 
   bare_t *bare;
-  e = bare_setup(uv_default_loop(), platform, argc, argv, NULL, &bare);
+  e = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
   assert(e == 0);
 
   int exit_code;

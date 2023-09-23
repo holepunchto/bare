@@ -18,7 +18,7 @@ struct bare_s {
 };
 
 int
-bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, const bare_options_t *options, bare_t **result) {
+bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, char **argv, const bare_options_t *options, bare_t **result) {
   int err;
 
   bare_t *bare = malloc(sizeof(bare_t));
@@ -46,6 +46,8 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, int argc, char **argv, con
 
   err = uv_rwlock_init(&process->locks.threads);
   assert(err == 0);
+
+  if (env) *env = runtime->env;
 
   *result = bare;
 
@@ -135,13 +137,6 @@ bare_on_idle (bare_t *bare, bare_idle_cb cb) {
 int
 bare_on_resume (bare_t *bare, bare_resume_cb cb) {
   bare->process.on_resume = cb;
-
-  return 0;
-}
-
-int
-bare_get_env (bare_t *bare, js_env_t **result) {
-  *result = bare->process.runtime.env;
 
   return 0;
 }
