@@ -2,17 +2,38 @@
 
 const { AddonError } = require('./errors')
 
-module.exports = class Addon {
+module.exports = exports = class Addon {
   constructor () {
-    this.filename = null
-    this.exports = {}
-
     this._type = null
+    this._filename = null
+    this._exports = {}
     this._handle = null
+  }
+
+  get type () {
+    return this._type
+  }
+
+  get filename () {
+    return this._filename
+  }
+
+  get exports () {
+    return this._exports
   }
 
   unload () {
     return bare.unloadAddon(this._handle)
+  }
+
+  [Symbol.for('bare.inspect')] () {
+    return {
+      __proto__: { constructor: Addon },
+
+      type: this.type,
+      filename: this.filename,
+      exports: this.exports
+    }
   }
 
   static _path = null
@@ -31,29 +52,28 @@ module.exports = class Addon {
   }
 
   static load (specifier) {
-    if (this._cache[specifier]) return this._cache[specifier].exports
+    if (this._cache[specifier]) return this._cache[specifier]._exports
 
     const addon = new Addon()
 
     try {
+      addon._type = constants.types.STATIC
       addon._handle = bare.loadStaticAddon(specifier)
-      addon._type = 'static'
     } catch {
       specifier = this.resolve(specifier)
 
-      if (this._cache[specifier]) return this._cache[specifier].exports
+      if (this._cache[specifier]) return this._cache[specifier]._exports
 
-      addon.filename = specifier
-
+      addon._type = constants.types.DYNAMIC
+      addon._filename = specifier
       addon._handle = bare.loadDynamicAddon(specifier)
-      addon._type = 'dynamic'
     }
 
-    addon.exports = bare.initAddon(addon._handle, addon.exports)
+    addon._exports = bare.initAddon(addon._handle, addon._exports)
 
     this._cache[specifier] = addon
 
-    return addon.exports
+    return addon._exports
   }
 
   static unload (specifier) {
@@ -96,10 +116,8 @@ module.exports = class Addon {
   }
 
   static * _resolveDirectory (specifier) {
-    const Module = require('./module')
     const path = require('./path')
-
-    const protocol = Module._protocols['file:']
+    const Module = require('./module')
 
     const pkg = path.join(specifier, 'package.json')
 
@@ -123,9 +141,7 @@ module.exports = class Addon {
         ]) {
           const file = path.join(this._path, candidate)
 
-          try {
-            if (protocol.exists(file)) yield file
-          } catch {}
+          try { yield Module.resolve(file) } catch {}
         }
       }
 
@@ -152,5 +168,12 @@ module.exports = class Addon {
     yield path.join(specifier, 'build/Release')
     yield path.join(specifier, 'build')
     yield path.join(specifier, 'prebuilds', `${process.platform}-${process.arch}`)
+  }
+}
+
+const constants = exports.constants = {
+  types: {
+    STATIC: 1,
+    DYNAMIC: 2
   }
 }

@@ -35,7 +35,7 @@ bare_addon_ends_with (const char *string, const char *substring) {
 }
 
 bare_module_t *
-bare_addon_load_static (js_env_t *env, const char *specifier) {
+bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
@@ -53,7 +53,8 @@ bare_addon_load_static (js_env_t *env, const char *specifier) {
   uv_mutex_unlock(&bare_addon_lock);
 
   if (mod == NULL) {
-    js_throw_errorf(env, NULL, "No module registered for %s", specifier);
+    js_throw_errorf(runtime->env, NULL, "No module registered for %s", specifier);
+
     return NULL;
   }
 
@@ -61,7 +62,7 @@ bare_addon_load_static (js_env_t *env, const char *specifier) {
 }
 
 bare_module_t *
-bare_addon_load_dynamic (js_env_t *env, const char *specifier) {
+bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
@@ -132,7 +133,7 @@ done:
 err:
   uv_mutex_unlock(&bare_addon_lock);
 
-  js_throw_error(env, NULL, uv_dlerror(lib));
+  js_throw_error(runtime->env, NULL, uv_dlerror(lib));
 
   if (opened) uv_dlclose(lib);
 
@@ -142,7 +143,7 @@ err:
 }
 
 bool
-bare_addon_unload (js_env_t *env, bare_module_t *mod) {
+bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
   bare_module_list_t *node = (bare_module_list_t *) mod;
 
   if (node->lib == NULL) return false;

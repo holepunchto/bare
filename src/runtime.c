@@ -401,9 +401,9 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
   int err;
+
+  bare_runtime_t *runtime;
 
   js_value_t *argv[1];
   size_t argc = 1;
@@ -417,7 +417,7 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_static(runtime->env, (char *) specifier);
+  bare_module_t *mod = bare_addon_load_static(runtime, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -430,9 +430,9 @@ bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
   int err;
+
+  bare_runtime_t *runtime;
 
   js_value_t *argv[1];
   size_t argc = 1;
@@ -446,7 +446,7 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_dynamic(runtime->env, (char *) specifier);
+  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier);
 
   if (mod == NULL) return NULL;
 
@@ -482,10 +482,12 @@ static js_value_t *
 bare_runtime_unload_addon (js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
   js_value_t *argv[1];
   size_t argc = 1;
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 1);
@@ -494,7 +496,7 @@ bare_runtime_unload_addon (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_external(env, argv[0], (void **) &mod);
   assert(err == 0);
 
-  bool unloaded = bare_addon_unload(env, mod);
+  bool unloaded = bare_addon_unload(runtime, mod);
 
   js_value_t *result;
   err = js_get_boolean(env, unloaded, &result);
@@ -515,8 +517,8 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t dirname[4096];
-  err = js_get_value_string_utf8(env, argv[0], dirname, 4096, NULL);
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
   assert(err == 0);
 
   uv_loop_t *loop;
@@ -524,7 +526,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 
   uv_fs_t req;
 
-  err = uv_fs_opendir(loop, &req, (char *) dirname, NULL);
+  err = uv_fs_opendir(loop, &req, (char *) path, NULL);
 
   uv_dir_t *dir = (uv_dir_t *) req.ptr;
 
@@ -532,6 +534,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
+
     return NULL;
   }
 
@@ -573,6 +576,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
+
     return NULL;
   }
 
@@ -581,41 +585,43 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime_exit (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
   int err;
+
+  bare_runtime_t *runtime;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(bare_runtime_is_main_thread(runtime));
 
-  bare_exit((bare_t *) runtime->process, -1);
+  err = bare_exit((bare_t *) runtime->process, -1);
+  assert(err == 0);
 
   return NULL;
 }
 
 static js_value_t *
 bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
   int err;
+
+  bare_runtime_t *runtime;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
   uv_ref((uv_handle_t *) &runtime->suspend);
 
-  bare_suspend((bare_t *) runtime->process);
+  err = bare_suspend((bare_t *) runtime->process);
+  assert(err == 0);
 
   return NULL;
 }
 
 static js_value_t *
 bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
-  bare_runtime_t *runtime;
-
   int err;
+
+  bare_runtime_t *runtime;
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
@@ -876,14 +882,18 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   }
   V("printInfo", bare_runtime_print_info);
   V("printError", bare_runtime_print_error);
+
   V("loadStaticAddon", bare_runtime_load_static_addon);
   V("loadDynamicAddon", bare_runtime_load_dynamic_addon);
   V("initAddon", bare_runtime_init_addon);
   V("unloadAddon", bare_runtime_unload_addon);
+
   V("readdir", bare_runtime_readdir);
+
   V("exit", bare_runtime_exit);
   V("suspend", bare_runtime_suspend);
   V("resume", bare_runtime_resume);
+
   V("setupThread", bare_runtime_setup_thread);
   V("joinThread", bare_runtime_join_thread);
   V("stopCurrentThread", bare_runtime_stop_current_thread);
@@ -939,9 +949,9 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 
 int
 bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source) {
-  js_env_t *env = runtime->env;
-
   int err;
+
+  js_env_t *env = runtime->env;
 
   js_value_t *run;
   err = js_get_named_property(env, runtime->exports, "run", &run);
