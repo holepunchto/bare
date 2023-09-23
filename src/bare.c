@@ -140,13 +140,6 @@ bare_on_resume (bare_t *bare, bare_resume_cb cb) {
 }
 
 int
-bare_get_platform (bare_t *bare, js_platform_t **result) {
-  *result = bare->process.platform;
-
-  return 0;
-}
-
-int
 bare_get_env (bare_t *bare, js_env_t **result) {
   *result = bare->process.runtime.env;
 

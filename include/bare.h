@@ -66,9 +66,6 @@ int
 bare_on_resume (bare_t *bare, bare_resume_cb cb);
 
 int
-bare_get_platform (bare_t *bare, js_platform_t **result);
-
-int
 bare_get_env (bare_t *bare, js_env_t **result);
 
 #ifdef __cplusplus
