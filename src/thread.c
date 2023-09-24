@@ -23,6 +23,10 @@ bare_thread_entry (void *data) {
   err = bare_runtime_setup(runtime->loop, runtime->process, runtime);
   assert(err == 0);
 
+  if (runtime->process->on_thread) {
+    runtime->process->on_thread((bare_t *) runtime->process, runtime->env);
+  }
+
   uv_buf_t *thread_source;
 
   switch (thread->source.type) {

@@ -6,9 +6,7 @@ extern "C" {
 #endif
 
 #include <js.h>
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <uv.h>
 
 #include "bare/module.h"
@@ -23,6 +21,7 @@ typedef void (*bare_exit_cb)(bare_t *);
 typedef void (*bare_suspend_cb)(bare_t *);
 typedef void (*bare_idle_cb)(bare_t *);
 typedef void (*bare_resume_cb)(bare_t *);
+typedef void (*bare_thread_cb)(bare_t *, js_env_t *);
 
 struct bare_options_s {
   /**
@@ -64,6 +63,9 @@ bare_on_idle (bare_t *bare, bare_idle_cb cb);
 
 int
 bare_on_resume (bare_t *bare, bare_resume_cb cb);
+
+int
+bare_on_thread (bare_t *bare, bare_thread_cb cb);
 
 #ifdef __cplusplus
 }

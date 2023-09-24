@@ -51,6 +51,7 @@ struct bare_process_s {
   bare_suspend_cb on_suspend;
   bare_idle_cb on_idle;
   bare_resume_cb on_resume;
+  bare_thread_cb on_thread;
 };
 
 struct bare_thread_source_s {
