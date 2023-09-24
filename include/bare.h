@@ -23,10 +23,15 @@ typedef void (*bare_idle_cb)(bare_t *);
 typedef void (*bare_resume_cb)(bare_t *);
 typedef void (*bare_thread_cb)(bare_t *, js_env_t *);
 
+/** @version 0 */
 struct bare_options_s {
+  int version;
+
   /**
    * The directory containing native addons. If not provided, the addon
    * resolution algorithm will not consider it.
+   *
+   * @since 0
    */
   const char *addons;
 };
