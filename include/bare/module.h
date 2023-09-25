@@ -72,9 +72,14 @@ typedef struct bare_module_s bare_module_t;
 
 typedef js_value_t *(*bare_module_cb)(js_env_t *env, js_value_t *exports);
 
+/** @version 0 */
 struct bare_module_s {
   int version;
+
+  /** @since 0 */
   const char *filename;
+
+  /** @since 0 */
   bare_module_cb init;
 };
 
