@@ -36,21 +36,50 @@ struct bare_options_s {
   const char *addons;
 };
 
+/**
+ * Set up the Bare process. To get a reference to the JavaScript environment of
+ * the process, pass the `env` pointer.
+ */
 int
 bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, char **argv, const bare_options_t *options, bare_t **result);
 
+/**
+ * Tear down the Bare process. The exit code will be stored in `exit_code` if
+ * provided. The JavaScript environment of the process must not be used after
+ * this function returns.
+ */
 int
 bare_teardown (bare_t *bare, int *exit_code);
 
+/**
+ * Run the module identified by `filename`, which may be any of the formats
+ * supported by the module system. Unless `source` is provided, the contents
+ * of `filename` will be read from disk.
+ */
 int
 bare_run (bare_t *bare, const char *filename, const uv_buf_t *source);
 
+/**
+ * Exit the process immediately with the provided exit code. If `-1` is passed
+ * the process will exit with `process.exitCode` instead. This function will
+ * not return on success.
+ */
 int
 bare_exit (bare_t *bare, int exit_code);
 
+/**
+ * Suspend the process as soon as possible. Once the process has suspended
+ * successfully, `bare_run()` will not return until another thread resumes the
+ * process. It's safe to call this function from any thread.
+ */
 int
 bare_suspend (bare_t *bare);
 
+/**
+ * Resume the process as soon as possible. If the process is not yet idle after
+ * being suspended the suspension will be cancelled. It's safe to call this
+ * function from any thread.
+ */
 int
 bare_resume (bare_t *bare);
 
