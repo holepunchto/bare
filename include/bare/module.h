@@ -5,7 +5,7 @@
 
 #include "helper.h"
 
-#define BARE_MODULE_VERSION 1
+#define BARE_MODULE_VERSION 0
 
 #ifndef BARE_MODULE_FILENAME
 #define BARE_MODULE_FILENAME ""
