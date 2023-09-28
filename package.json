@@ -18,7 +18,7 @@
   "homepage": "https://github.com/holepunchto/bare#readme",
   "dependencies": {
     "bare-assert": "^1.0.0",
-    "bare-buffer": "^1.2.5",
+    "bare-buffer": "^1.2.7",
     "bare-console": "^3.1.0",
     "bare-dev": "^0.3.11",
     "bare-env": "^1.0.0",
