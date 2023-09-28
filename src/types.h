@@ -24,8 +24,10 @@ struct bare_runtime_s {
   js_env_t *env;
   js_value_t *exports;
 
-  uv_async_t suspend;
-  uv_async_t resume;
+  struct {
+    uv_async_t suspend;
+    uv_async_t resume;
+  } signals;
 
   int active_handles;
 

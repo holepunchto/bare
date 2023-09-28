@@ -99,12 +99,12 @@ bare_exit (bare_t *bare, int exit_code) {
 
 int
 bare_suspend (bare_t *bare) {
-  return uv_async_send(&bare->process.runtime.suspend);
+  return uv_async_send(&bare->process.runtime.signals.suspend);
 }
 
 int
 bare_resume (bare_t *bare) {
-  return uv_async_send(&bare->process.runtime.resume);
+  return uv_async_send(&bare->process.runtime.signals.resume);
 }
 
 int

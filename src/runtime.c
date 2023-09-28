@@ -235,7 +235,7 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
     int i = 0;
 
     while (next) {
-      uv_async_send(&next->thread.runtime.suspend);
+      uv_async_send(&next->thread.runtime.signals.suspend);
 
       next = next->next;
     }
@@ -250,7 +250,7 @@ bare_runtime_on_suspend_signal (uv_async_t *handle) {
 
   runtime->suspended = true;
 
-  uv_unref((uv_handle_t *) &runtime->suspend);
+  uv_unref((uv_handle_t *) &runtime->signals.suspend);
 
   bare_runtime_on_suspend(runtime);
 }
@@ -318,7 +318,7 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
     bare_thread_list_t *next = runtime->process->threads;
 
     while (next) {
-      err = uv_async_send(&next->thread.runtime.resume);
+      err = uv_async_send(&next->thread.runtime.signals.resume);
       assert(err == 0);
 
       next = next->next;
@@ -334,7 +334,7 @@ bare_runtime_on_resume_signal (uv_async_t *handle) {
 
   runtime->suspended = false;
 
-  uv_unref((uv_handle_t *) &runtime->resume);
+  uv_unref((uv_handle_t *) &runtime->signals.resume);
 
   bare_runtime_on_resume(runtime);
 }
@@ -617,7 +617,7 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  uv_ref((uv_handle_t *) &runtime->suspend);
+  uv_ref((uv_handle_t *) &runtime->signals.suspend);
 
   err = bare_suspend((bare_t *) runtime->process);
   assert(err == 0);
@@ -794,19 +794,19 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   runtime->suspended = false;
 
-  err = uv_async_init(runtime->loop, &runtime->suspend, bare_runtime_on_suspend_signal);
+  err = uv_async_init(runtime->loop, &runtime->signals.suspend, bare_runtime_on_suspend_signal);
   assert(err == 0);
 
-  runtime->suspend.data = (void *) runtime;
+  runtime->signals.suspend.data = (void *) runtime;
 
-  uv_unref((uv_handle_t *) &runtime->suspend);
+  uv_unref((uv_handle_t *) &runtime->signals.suspend);
 
-  err = uv_async_init(runtime->loop, &runtime->resume, bare_runtime_on_resume_signal);
+  err = uv_async_init(runtime->loop, &runtime->signals.resume, bare_runtime_on_resume_signal);
   assert(err == 0);
 
-  runtime->resume.data = (void *) runtime;
+  runtime->signals.resume.data = (void *) runtime;
 
-  uv_unref((uv_handle_t *) &runtime->resume);
+  uv_unref((uv_handle_t *) &runtime->signals.resume);
 
   runtime->active_handles = 2;
 
@@ -953,9 +953,13 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
-  uv_close((uv_handle_t *) &runtime->suspend, bare_runtime_on_handle_close);
+  uv_ref((uv_handle_t *) &runtime->signals.suspend);
 
-  uv_close((uv_handle_t *) &runtime->resume, bare_runtime_on_handle_close);
+  uv_ref((uv_handle_t *) &runtime->signals.resume);
+
+  uv_close((uv_handle_t *) &runtime->signals.suspend, bare_runtime_on_handle_close);
+
+  uv_close((uv_handle_t *) &runtime->signals.resume, bare_runtime_on_handle_close);
 
   return 0;
 }
@@ -1006,7 +1010,7 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
 
       if (uv_loop_alive(runtime->loop)) continue;
 
-      uv_ref((uv_handle_t *) &runtime->resume);
+      uv_ref((uv_handle_t *) &runtime->signals.resume);
     } else {
       bare_runtime_on_before_exit(runtime);
     }

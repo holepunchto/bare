@@ -116,16 +116,11 @@ bare_thread_entry (void *data) {
   err = bare_runtime_teardown(&thread->runtime, NULL);
   assert(err == 0);
 
-  do {
-    err = uv_loop_close(loop);
+  err = uv_run(loop, UV_RUN_DEFAULT);
+  assert(err == 0);
 
-    if (err == UV_EBUSY) {
-      int err;
-
-      err = uv_run(loop, UV_RUN_DEFAULT);
-      assert(err == 0);
-    }
-  } while (err == UV_EBUSY);
+  err = uv_loop_close(loop);
+  assert(err == 0);
 
   free(loop);
 }
@@ -206,7 +201,7 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
   uv_sem_destroy(&thread->ready);
 
   if (runtime->suspended) {
-    err = uv_async_send(&thread->runtime.suspend);
+    err = uv_async_send(&thread->runtime.signals.suspend);
     assert(err == 0);
   }
 
