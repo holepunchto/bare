@@ -94,6 +94,8 @@ bare_thread_entry (void *data) {
   err = bare_runtime_run(&thread->runtime, thread->filename, thread_source);
   assert(err == 0);
 
+  free(thread->filename);
+
   bare_process_t *process = thread->runtime.process;
 
   uv_rwlock_wrlock(&process->locks.threads);

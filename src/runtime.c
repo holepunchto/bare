@@ -658,8 +658,10 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
   assert(err == 0);
 
-  utf8_t *filename = malloc(len + 1);
-  err = js_get_value_string_utf8(env, argv[0], filename, len + 1, NULL);
+  len += 1 /* NULL */;
+
+  utf8_t *filename = malloc(len);
+  err = js_get_value_string_utf8(env, argv[0], filename, len, NULL);
   assert(err == 0);
 
   bare_thread_source_t source = {bare_thread_source_none};
