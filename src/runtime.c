@@ -736,15 +736,17 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  uv_thread_t thread = bare_thread_create(
+  uv_thread_t thread;
+  err = bare_thread_create(
     runtime,
     (char *) filename,
     source,
     data,
-    stack_size
+    stack_size,
+    &thread
   );
 
-  if (thread == NULL) return NULL;
+  if (err < 0) return NULL;
 
   js_value_t *result;
   err = js_create_external(env, (void *) thread, NULL, NULL, &result);

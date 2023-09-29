@@ -139,8 +139,8 @@ bare_thread_entry (void *data) {
   free(loop);
 }
 
-uv_thread_t
-bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size) {
+int
+bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, uv_thread_t *result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -154,7 +154,7 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
 
     free(loop);
 
-    return NULL;
+    return -1;
   }
 
   bare_thread_list_t *next = malloc(sizeof(bare_thread_list_t));
@@ -212,7 +212,7 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
     free(next);
     free(loop);
 
-    return NULL;
+    return -1;
   }
 
   uv_sem_wait(&ready);
@@ -221,7 +221,9 @@ bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_
 
   uv_rwlock_wrunlock(&runtime->process->locks.threads);
 
-  return id;
+  *result = id;
+
+  return 0;
 }
 
 #endif // BARE_THREAD_H
