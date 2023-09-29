@@ -224,6 +224,12 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
+    uv_rwlock_wrlock(&runtime->process->locks.suspension);
+
+    runtime->process->suspended = true;
+
+    uv_rwlock_wrunlock(&runtime->process->locks.suspension);
+
     if (runtime->process->on_suspend) {
       runtime->process->on_suspend((bare_t *) runtime->process);
     }
@@ -309,6 +315,12 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
+    uv_rwlock_wrlock(&runtime->process->locks.suspension);
+
+    runtime->process->suspended = false;
+
+    uv_rwlock_wrunlock(&runtime->process->locks.suspension);
+
     if (runtime->process->on_resume) {
       runtime->process->on_resume((bare_t *) runtime->process);
     }
@@ -724,7 +736,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  bare_thread_t *thread = bare_thread_create(
+  uv_thread_t thread = bare_thread_create(
     runtime,
     (char *) filename,
     source,
@@ -735,7 +747,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   if (thread == NULL) return NULL;
 
   js_value_t *result;
-  err = js_create_external(env, (void *) thread->id, NULL, NULL, &result);
+  err = js_create_external(env, (void *) thread, NULL, NULL, &result);
   assert(err == 0);
 
   return result;

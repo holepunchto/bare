@@ -42,9 +42,12 @@ struct bare_process_s {
   int argc;
   char **argv;
 
+  bool suspended;
+
   bare_thread_list_t *threads;
 
   struct {
+    uv_rwlock_t suspension;
     uv_rwlock_t threads;
   } locks;
 
@@ -87,7 +90,7 @@ struct bare_thread_s {
   bare_runtime_t runtime;
 
   uv_thread_t id;
-  uv_sem_t ready;
+  uv_sem_t *ready;
 
   char *filename;
 
