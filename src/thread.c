@@ -19,6 +19,8 @@ bare_thread_entry (void *data) {
 
   bare_thread_t *thread = (bare_thread_t *) data;
 
+  thread->id = uv_thread_self();
+
   bare_runtime_t *runtime = &thread->runtime;
 
   err = bare_runtime_setup(runtime->loop, runtime->process, runtime);
