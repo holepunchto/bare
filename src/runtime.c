@@ -737,15 +737,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   uv_thread_t thread;
-  err = bare_thread_create(
-    runtime,
-    (char *) filename,
-    source,
-    data,
-    stack_size,
-    &thread
-  );
-
+  err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
   js_value_t *result;
