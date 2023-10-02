@@ -165,6 +165,7 @@ bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
       node->next->previous = node->previous;
     }
 
+    free(node->lib);
     free(node->resolved);
     free(node);
   }
