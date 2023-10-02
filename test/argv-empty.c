@@ -27,5 +27,8 @@ main (int argc, char *argv[]) {
   e = js_destroy_platform(platform);
   assert(e == 0);
 
+  e = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+  assert(e == 0);
+
   return exit_code;
 }
