@@ -1,8 +1,8 @@
 /* global bare */
 
-const EventEmitter = require('./events')
-
 module.exports = exports = class Thread {
+  static _threads = new Set()
+
   constructor (filename, opts, callback) {
     if (typeof filename === 'function') {
       callback = filename
@@ -34,13 +34,13 @@ module.exports = exports = class Thread {
 
     if (typeof source === 'string') source = Buffer.from(source, encoding)
 
-    this._joined = false
-
     this._handle = bare.setupThread(filename, source, data, stackSize)
+
+    Thread._threads.add(this)
   }
 
   get joined () {
-    return this._joined
+    return this._handle !== null
   }
 
   static create (filename, opts, callback) {
@@ -48,10 +48,20 @@ module.exports = exports = class Thread {
   }
 
   join () {
-    if (this._joined) return
-    this._joined = true
+    if (this._handle) {
+      bare.joinThread(this._handle)
+      this._handle = null
+    }
 
-    bare.joinThread(this._handle)
+    Thread._threads.delete(this)
+  }
+
+  suspend () {
+    if (this._handle) bare.suspendThread(this._handle)
+  }
+
+  resume () {
+    if (this._handle) bare.resumeThread(this._handle)
   }
 
   static get isMainThread () {
@@ -67,7 +77,7 @@ module.exports = exports = class Thread {
   }
 }
 
-class ThreadProxy extends EventEmitter {
+class ThreadProxy {
   get data () {
     return ArrayBuffer.isView(bare.threadData) ? Buffer.coerce(bare.threadData) : bare.threadData
   }
@@ -86,3 +96,20 @@ class ThreadProxy extends EventEmitter {
 }
 
 exports.self = exports.isMainThread ? null : new ThreadProxy()
+
+process
+  .on('exit', () => {
+    for (const thread of exports._threads) {
+      thread.join()
+    }
+  })
+  .on('suspend', () => {
+    for (const thread of exports._threads) {
+      thread.suspend()
+    }
+  })
+  .on('resume', () => {
+    for (const thread of exports._threads) {
+      thread.resume()
+    }
+  })

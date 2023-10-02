@@ -18,9 +18,6 @@ Thread.create(() => {
     .on('suspend', () => {
       console.log('emit suspend thread')
     })
-    .on('idle', () => {
-      assert(false, 'Should not idle thread')
-    })
     .on('resume', () => {
       console.log('emit resume thread')
     })

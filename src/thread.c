@@ -19,9 +19,13 @@ bare_thread_entry (void *data) {
 
   bare_thread_t *thread = (bare_thread_t *) data;
 
-  thread->id = uv_thread_self();
+  bare_runtime_t *runtime = thread->runtime;
 
-  bare_runtime_t *runtime = &thread->runtime;
+  uv_loop_t loop;
+  err = uv_loop_init(&loop);
+  assert(err == 0);
+
+  runtime->loop = &loop;
 
   err = bare_runtime_setup(runtime->loop, runtime->process, runtime);
   assert(err == 0);
@@ -29,15 +33,6 @@ bare_thread_entry (void *data) {
   if (runtime->process->on_thread) {
     runtime->process->on_thread((bare_t *) runtime->process, runtime->env);
   }
-
-  uv_rwlock_rdlock(&runtime->process->locks.suspension);
-
-  if (runtime->process->suspended) {
-    err = uv_async_send(&thread->runtime.signals.suspend);
-    assert(err == 0);
-  }
-
-  uv_rwlock_rdunlock(&runtime->process->locks.suspension);
 
   uv_buf_t *thread_source;
 
@@ -56,7 +51,7 @@ bare_thread_entry (void *data) {
   switch (thread->data.type) {
   case bare_thread_data_none:
   default:
-    err = js_get_null(thread->runtime.env, &thread_data);
+    err = js_get_null(runtime->env, &thread_data);
     assert(err == 0);
     break;
 
@@ -64,19 +59,19 @@ bare_thread_entry (void *data) {
     js_value_t *arraybuffer;
 
     void *data;
-    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &arraybuffer);
+    err = js_create_arraybuffer(runtime->env, thread->data.buffer.len, &data, &arraybuffer);
     assert(err == 0);
 
     memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
 
-    err = js_create_typedarray(thread->runtime.env, js_uint8_array, thread->data.buffer.len, arraybuffer, 0, &thread_data);
+    err = js_create_typedarray(runtime->env, js_uint8_array, thread->data.buffer.len, arraybuffer, 0, &thread_data);
     assert(err == 0);
     break;
   }
 
   case bare_thread_data_arraybuffer: {
     void *data;
-    err = js_create_arraybuffer(thread->runtime.env, thread->data.buffer.len, &data, &thread_data);
+    err = js_create_arraybuffer(runtime->env, thread->data.buffer.len, &data, &thread_data);
     assert(err == 0);
 
     memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
@@ -84,146 +79,141 @@ bare_thread_entry (void *data) {
   }
 
   case bare_thread_data_sharedarraybuffer:
-    err = js_create_sharedarraybuffer_with_backing_store(thread->runtime.env, thread->data.backing_store, NULL, NULL, &thread_data);
+    err = js_create_sharedarraybuffer_with_backing_store(runtime->env, thread->data.backing_store, NULL, NULL, &thread_data);
     assert(err == 0);
 
-    err = js_release_arraybuffer_backing_store(thread->runtime.env, thread->data.backing_store);
+    err = js_release_arraybuffer_backing_store(runtime->env, thread->data.backing_store);
     assert(err == 0);
     break;
 
   case bare_thread_data_external:
-    err = js_create_external(thread->runtime.env, thread->data.external, NULL, NULL, &thread_data);
+    err = js_create_external(runtime->env, thread->data.external, NULL, NULL, &thread_data);
     assert(err == 0);
     break;
   }
 
-  err = js_set_named_property(thread->runtime.env, thread->runtime.exports, "threadData", thread_data);
+  err = js_set_named_property(runtime->env, runtime->exports, "threadData", thread_data);
   assert(err == 0);
 
-  uv_sem_post(thread->ready);
+  uv_sem_post(&thread->lock);
 
-  thread->ready = NULL;
-
-  err = bare_runtime_run(&thread->runtime, thread->filename, thread_source);
+  err = bare_runtime_run(runtime, thread->filename, thread_source);
   assert(err == 0);
 
   free(thread->filename);
 
-  bare_process_t *process = thread->runtime.process;
+  uv_sem_wait(&thread->lock);
 
-  uv_rwlock_wrlock(&process->locks.threads);
+  thread->exited = true;
 
-  bare_thread_list_t *node = (bare_thread_list_t *) thread;
+  uv_sem_post(&thread->lock);
 
-  if (node->previous) {
-    node->previous->next = node->next;
-  } else {
-    process->threads = node->next;
-  }
-
-  if (node->next) {
-    node->next->previous = node->previous;
-  }
-
-  uv_rwlock_wrunlock(&process->locks.threads);
-
-  uv_loop_t *loop = thread->runtime.loop;
-
-  err = bare_runtime_teardown(&thread->runtime, NULL);
+  err = bare_runtime_teardown(thread->runtime, NULL);
   assert(err == 0);
 
-  err = uv_run(loop, UV_RUN_DEFAULT);
+  err = uv_run(&loop, UV_RUN_DEFAULT);
   assert(err == 0);
 
-  err = uv_loop_close(loop);
+  err = uv_loop_close(&loop);
   assert(err == 0);
-
-  free(loop);
 }
 
 int
-bare_thread_create (bare_runtime_t *runtime, char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, uv_thread_t *result) {
+bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, bare_thread_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
 
-  uv_loop_t *loop = malloc(sizeof(uv_loop_t));
+  bare_thread_t *thread = malloc(sizeof(bare_thread_t));
 
-  err = uv_loop_init(loop);
-
-  if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
-
-    free(loop);
-
-    return -1;
-  }
-
-  bare_thread_list_t *next = malloc(sizeof(bare_thread_list_t));
-
-  next->previous = NULL;
-  next->next = NULL;
-
-  bare_thread_t *thread = &next->thread;
-
-  thread->filename = filename;
+  thread->filename = strdup(filename);
   thread->source = source;
   thread->data = data;
 
-  thread->runtime.loop = loop;
-  thread->runtime.process = runtime->process;
-  thread->runtime.env = NULL;
+  thread->runtime = malloc(sizeof(bare_runtime_t));
 
-  uv_rwlock_wrlock(&runtime->process->locks.threads);
+  thread->runtime->process = runtime->process;
+  thread->runtime->env = NULL;
 
-  next->next = runtime->process->threads;
-
-  if (next->next) {
-    next->next->previous = next;
-  }
-
-  runtime->process->threads = next;
-
-  uv_sem_t ready;
-  err = uv_sem_init(&ready, 0);
+  err = uv_sem_init(&thread->lock, 0);
   assert(err == 0);
-
-  thread->ready = &ready;
-
-  uv_thread_t id;
 
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
     .stack_size = stack_size,
   };
 
-  err = uv_thread_create_ex(&id, &options, bare_thread_entry, (void *) thread);
+  err = uv_thread_create_ex(&thread->id, &options, bare_thread_entry, (void *) thread);
 
   if (err < 0) {
-    runtime->process->threads = next->next;
-
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
 
-    uv_sem_destroy(&ready);
+    uv_sem_destroy(&thread->lock);
 
-    uv_rwlock_wrunlock(&runtime->process->locks.threads);
-
-    err = uv_loop_close(loop);
-    assert(err == 0);
-
-    free(next);
-    free(loop);
+    free(thread->runtime);
+    free(thread);
 
     return -1;
   }
 
-  uv_sem_wait(&ready);
+  uv_sem_wait(&thread->lock);
 
-  uv_sem_destroy(&ready);
+  uv_sem_post(&thread->lock);
 
-  uv_rwlock_wrunlock(&runtime->process->locks.threads);
+  *result = thread;
 
-  *result = id;
+  return 0;
+}
+
+int
+bare_thread_join (bare_thread_t *thread) {
+  int err;
+
+  js_env_t *env = thread->runtime->env;
+
+  err = uv_thread_join(&thread->id);
+
+  free(thread);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+
+    return -1;
+  }
+
+  return 0;
+}
+
+int
+bare_thread_suspend (bare_thread_t *thread) {
+  int err;
+
+  uv_sem_wait(&thread->lock);
+
+  if (thread->exited) goto done;
+
+  err = uv_async_send(&thread->runtime->signals.suspend);
+  assert(err == 0);
+
+done:
+  uv_sem_post(&thread->lock);
+
+  return 0;
+}
+
+int
+bare_thread_resume (bare_thread_t *thread) {
+  int err;
+
+  uv_sem_wait(&thread->lock);
+
+  if (thread->exited) goto done;
+
+  err = uv_async_send(&thread->runtime->signals.resume);
+  assert(err == 0);
+
+done:
+  uv_sem_post(&thread->lock);
 
   return 0;
 }

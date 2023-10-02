@@ -23,7 +23,7 @@
 
 static inline bool
 bare_runtime_is_main_thread (bare_runtime_t *runtime) {
-  return &runtime->process->runtime == runtime;
+  return runtime->process->runtime == runtime;
 }
 
 static void
@@ -146,23 +146,6 @@ static inline void
 bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
   int err;
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    uv_rwlock_rdlock(&runtime->process->locks.threads);
-
-    while (runtime->process->threads) {
-      uv_thread_t id = runtime->process->threads->thread.id;
-
-      uv_rwlock_rdunlock(&runtime->process->locks.threads);
-
-      err = uv_thread_join(&id);
-      assert(err == 0);
-
-      uv_rwlock_rdlock(&runtime->process->locks.threads);
-    }
-
-    uv_rwlock_rdunlock(&runtime->process->locks.threads);
-  }
-
   js_env_t *env = runtime->env;
 
   if (exit_code) *exit_code = 0;
@@ -224,29 +207,9 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
-    uv_rwlock_wrlock(&runtime->process->locks.suspension);
-
-    runtime->process->suspended = true;
-
-    uv_rwlock_wrunlock(&runtime->process->locks.suspension);
-
     if (runtime->process->on_suspend) {
       runtime->process->on_suspend((bare_t *) runtime->process);
     }
-
-    uv_rwlock_rdlock(&runtime->process->locks.threads);
-
-    bare_thread_list_t *next = runtime->process->threads;
-
-    int i = 0;
-
-    while (next) {
-      uv_async_send(&next->thread.runtime.signals.suspend);
-
-      next = next->next;
-    }
-
-    uv_rwlock_rdunlock(&runtime->process->locks.threads);
   }
 }
 
@@ -315,28 +278,9 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
-    uv_rwlock_wrlock(&runtime->process->locks.suspension);
-
-    runtime->process->suspended = false;
-
-    uv_rwlock_wrunlock(&runtime->process->locks.suspension);
-
     if (runtime->process->on_resume) {
       runtime->process->on_resume((bare_t *) runtime->process);
     }
-
-    uv_rwlock_rdlock(&runtime->process->locks.threads);
-
-    bare_thread_list_t *next = runtime->process->threads;
-
-    while (next) {
-      err = uv_async_send(&next->thread.runtime.signals.resume);
-      assert(err == 0);
-
-      next = next->next;
-    }
-
-    uv_rwlock_rdunlock(&runtime->process->locks.threads);
   }
 }
 
@@ -666,14 +610,8 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 4);
 
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
-  assert(err == 0);
-
-  len += 1 /* NULL */;
-
-  utf8_t *filename = malloc(len);
-  err = js_get_value_string_utf8(env, argv[0], filename, len, NULL);
+  utf8_t filename[4096];
+  err = js_get_value_string_utf8(env, argv[0], filename, 4096, NULL);
   assert(err == 0);
 
   bare_thread_source_t source = {bare_thread_source_none};
@@ -736,7 +674,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[3], &stack_size);
   assert(err == 0);
 
-  uv_thread_t thread;
+  bare_thread_t *thread;
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
@@ -761,11 +699,59 @@ bare_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  uv_thread_t thread;
+  bare_thread_t *thread;
   err = js_get_value_external(env, argv[0], (void **) &thread);
   assert(err == 0);
 
-  uv_thread_join(&thread);
+  bare_thread_join(thread);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime_suspend_thread (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_thread_t *thread;
+  err = js_get_value_external(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  err = bare_thread_suspend(thread);
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime_resume_thread (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_thread_t *thread;
+  err = js_get_value_external(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  err = bare_thread_resume(thread);
+  assert(err == 0);
 
   return NULL;
 }
@@ -915,6 +901,8 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   V("setupThread", bare_runtime_setup_thread);
   V("joinThread", bare_runtime_join_thread);
+  V("suspendThread", bare_runtime_suspend_thread);
+  V("resumeThread", bare_runtime_resume_thread);
   V("stopCurrentThread", bare_runtime_stop_current_thread);
 #undef V
 

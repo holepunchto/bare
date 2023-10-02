@@ -76,27 +76,27 @@ Emitted when a JavaScript promise is rejected within an execution context withou
 
 #### `process.on('beforeExit', code)`
 
-Emitted when the loop runs out of work and before the process exits. This provides a chance to schedule additional work and keep the process from exiting. If additional work is scheduled, `beforeExit` will be emitted again once the loop runs out of work.
+Emitted when the loop runs out of work and before the process or current thread exits. This provides a chance to schedule additional work and keep the process from exiting. If additional work is scheduled, `beforeExit` will be emitted again once the loop runs out of work.
 
 If the process is exited explicitly, such as by calling `process.exit()` or as the result of an uncaught exception, the `beforeExit` event will not be emitted.
 
 #### `process.on('exit', code)`
 
-Emitted just before the process terminates. Any additional work scheduled after `exit` has been emitted will not be performed and so event listeners can only perform synchronous operations.
+Emitted just before the process or current thread terminates. Any additional work scheduled after `exit` has been emitted will not be performed and so event listeners can only perform synchronous operations.
 
 All registered `exit` event listeners will be called before the process terminates. An event listener may override the final exit code by setting `process.exitCode` or by calling `process.exit(code)`. Calling `process.exit()` from an `exit` event listener will not prevent the remaining event listeners from running.
 
 #### `process.on('suspend')`
 
-Emitted when the process is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work may be scheduled.
+Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work may be scheduled.
 
 #### `process.on('idle')`
 
-Emitted when the process becomes idle after suspension. If no additional work is scheduled from this event, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `process.resume()` to cancel the suspension.
+Emitted when the process or current thread becomes idle after suspension. If no additional work is scheduled from this event, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `process.resume()` to cancel the suspension.
 
 #### `process.on('resume')`
 
-Emitted when the process resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
+Emitted when the process or current thread resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
 
 ### Addons
 
@@ -133,10 +133,6 @@ A copy of or, if shared, reference to the `data` buffer that was passed to the c
 #### `Thread.self.stop()`
 
 Stop and exit the current thread as soon as possible.
-
-#### `Thread.self.on('exit')`
-
-Emitted when the current thread exits.
 
 #### `const thread = new Thread([filename][, options][, callback])`
 

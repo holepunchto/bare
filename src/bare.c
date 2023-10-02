@@ -27,13 +27,11 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   bare_process_t *process = &bare->process;
 
+  process->runtime = malloc(sizeof(bare_runtime_t));
+
   process->platform = platform;
   process->argc = argc;
   process->argv = argv;
-
-  process->suspended = false;
-
-  process->threads = NULL;
 
   process->on_before_exit = NULL;
   process->on_exit = NULL;
@@ -42,15 +40,9 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
   process->on_resume = NULL;
   process->on_thread = NULL;
 
-  bare_runtime_t *runtime = &process->runtime;
+  bare_runtime_t *runtime = process->runtime;
 
   err = bare_runtime_setup(loop, process, runtime);
-  assert(err == 0);
-
-  err = uv_rwlock_init(&process->locks.suspension);
-  assert(err == 0);
-
-  err = uv_rwlock_init(&process->locks.threads);
   assert(err == 0);
 
   if (env) *env = runtime->env;
@@ -66,12 +58,10 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
   bare_process_t *process = &bare->process;
 
-  err = bare_runtime_teardown(&process->runtime, exit_code);
+  err = bare_runtime_teardown(process->runtime, exit_code);
   assert(err == 0);
 
-  uv_rwlock_destroy(&process->locks.suspension);
-
-  uv_rwlock_destroy(&process->locks.threads);
+  free(bare);
 
   return 0;
 }
@@ -80,7 +70,7 @@ int
 bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
   int err;
 
-  bare_runtime_t *runtime = &bare->process.runtime;
+  bare_runtime_t *runtime = bare->process.runtime;
 
   err = bare_runtime_run(runtime, filename, source);
   if (err < 0) return err;
@@ -106,12 +96,12 @@ bare_exit (bare_t *bare, int exit_code) {
 
 int
 bare_suspend (bare_t *bare) {
-  return uv_async_send(&bare->process.runtime.signals.suspend);
+  return uv_async_send(&bare->process.runtime->signals.suspend);
 }
 
 int
 bare_resume (bare_t *bare) {
-  return uv_async_send(&bare->process.runtime.signals.resume);
+  return uv_async_send(&bare->process.runtime->signals.resume);
 }
 
 int

@@ -35,21 +35,12 @@ struct bare_runtime_s {
 };
 
 struct bare_process_s {
-  bare_runtime_t runtime;
+  bare_runtime_t *runtime;
 
   js_platform_t *platform;
 
   int argc;
   char **argv;
-
-  bool suspended;
-
-  bare_thread_list_t *threads;
-
-  struct {
-    uv_rwlock_t suspension;
-    uv_rwlock_t threads;
-  } locks;
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
@@ -87,15 +78,17 @@ struct bare_thread_data_s {
 };
 
 struct bare_thread_s {
-  bare_runtime_t runtime;
+  bare_runtime_t *runtime;
 
   uv_thread_t id;
-  uv_sem_t *ready;
+  uv_sem_t lock;
 
   char *filename;
 
   bare_thread_source_t source;
   bare_thread_data_t data;
+
+  bool exited;
 };
 
 struct bare_thread_list_s {

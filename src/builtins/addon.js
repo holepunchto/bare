@@ -8,6 +8,8 @@ module.exports = exports = class Addon {
     this._filename = null
     this._exports = {}
     this._handle = null
+
+    Addon._addons.add(this)
   }
 
   get type () {
@@ -23,7 +25,12 @@ module.exports = exports = class Addon {
   }
 
   unload () {
-    return bare.unloadAddon(this._handle)
+    if (this._handle) {
+      bare.unloadAddon(this._handle)
+      this._handle = null
+    }
+
+    Addon._addons.delete(this)
   }
 
   [Symbol.for('bare.inspect')] () {
@@ -38,6 +45,7 @@ module.exports = exports = class Addon {
 
   static _path = null
   static _cache = Object.create(null)
+  static _addons = new Set()
 
   static get path () {
     return this._path
@@ -177,3 +185,10 @@ const constants = exports.constants = {
     DYNAMIC: 2
   }
 }
+
+process
+  .on('exit', () => {
+    for (const addon of exports._addons) {
+      addon.unload()
+    }
+  })

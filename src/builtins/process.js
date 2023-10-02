@@ -200,25 +200,11 @@ bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
 }
 
 bare.onbeforeexit = function onbeforeexit () {
-  if (bare.isMainThread) {
-    exports.emit('beforeExit', bare.exitCode)
-  }
+  exports.emit('beforeExit', bare.exitCode)
 }
 
 bare.onexit = function onexit () {
-  if (bare.isMainThread) {
-    exports.emit('exit', bare.exitCode)
-  } else {
-    exports.thread.emit('exit')
-  }
-
-  for (const specifier in exports.addon.cache) {
-    const addon = exports.addon.cache[specifier]
-
-    if (addon.unload()) {
-      delete exports.addon.cache[specifier]
-    }
-  }
+  exports.emit('exit', bare.exitCode)
 }
 
 bare.onsuspend = function onsuspend () {
