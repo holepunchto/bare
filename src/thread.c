@@ -129,6 +129,7 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_s
   thread->filename = strdup(filename);
   thread->source = source;
   thread->data = data;
+  thread->exited = false;
 
   thread->runtime = malloc(sizeof(bare_runtime_t));
 
