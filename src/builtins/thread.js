@@ -1,8 +1,6 @@
 /* global bare */
 
 module.exports = exports = class Thread {
-  static _threads = new Set()
-
   constructor (filename, opts, callback) {
     if (typeof filename === 'function') {
       callback = filename
@@ -43,10 +41,6 @@ module.exports = exports = class Thread {
     return this._handle !== null
   }
 
-  static create (filename, opts, callback) {
-    return new Thread(filename, opts, callback)
-  }
-
   join () {
     if (this._handle) {
       bare.joinThread(this._handle)
@@ -64,16 +58,22 @@ module.exports = exports = class Thread {
     if (this._handle) bare.resumeThread(this._handle)
   }
 
-  static get isMainThread () {
-    return bare.isMainThread
-  }
-
   [Symbol.for('bare.inspect')] () {
     return {
       __proto__: { constructor: Thread },
 
       joined: this.joined
     }
+  }
+
+  static _threads = new Set()
+
+  static create (filename, opts, callback) {
+    return new Thread(filename, opts, callback)
+  }
+
+  static get isMainThread () {
+    return bare.isMainThread
   }
 }
 
