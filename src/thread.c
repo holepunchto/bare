@@ -25,24 +25,28 @@ bare_thread_entry (void *data) {
   err = uv_loop_init(&loop);
   assert(err == 0);
 
-  runtime->loop = &loop;
-
-  err = bare_runtime_setup(runtime->loop, runtime->process, runtime);
+  err = bare_runtime_setup(&loop, runtime->process, runtime);
   assert(err == 0);
 
   if (runtime->process->on_thread) {
     runtime->process->on_thread((bare_t *) runtime->process, runtime->env);
   }
 
-  uv_buf_t *thread_source;
+  bare_source_t thread_source;
 
   switch (thread->source.type) {
   case bare_thread_source_none:
-    thread_source = NULL;
+    thread_source.type = bare_source_none;
     break;
 
   case bare_thread_source_buffer:
-    thread_source = &thread->source.buffer;
+    thread_source.type = bare_source_arraybuffer;
+
+    void *data;
+    err = js_create_arraybuffer(runtime->env, thread->source.buffer.len, &data, &thread_source.arraybuffer);
+    assert(err == 0);
+
+    memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
     break;
   }
 
@@ -134,7 +138,6 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_s
   thread->runtime = malloc(sizeof(bare_runtime_t));
 
   thread->runtime->process = runtime->process;
-  thread->runtime->env = NULL;
 
   err = uv_sem_init(&thread->lock, 0);
   assert(err == 0);
@@ -158,7 +161,6 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_s
   }
 
   uv_sem_wait(&thread->lock);
-
   uv_sem_post(&thread->lock);
 
   *result = thread;

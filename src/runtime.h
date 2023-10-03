@@ -14,6 +14,6 @@ int
 bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code);
 
 int
-bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source);
+bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t source);
 
 #endif // BARE_RUNTIME_H

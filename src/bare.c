@@ -72,7 +72,18 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
 
   bare_runtime_t *runtime = bare->process.runtime;
 
-  err = bare_runtime_run(runtime, filename, source);
+  err = bare_runtime_run(
+    runtime,
+    filename,
+    (bare_source_t){
+      .type = source ? bare_source_buffer : bare_source_none,
+      .buffer = uv_buf_init(
+        source ? source->base : NULL,
+        source ? source->len : 0
+      ),
+    }
+  );
+
   if (err < 0) return err;
 
   bare->exited = true;

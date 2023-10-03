@@ -946,6 +946,9 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 
   bare_runtime_on_exit(runtime, exit_code);
 
+  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+  assert(err == 0);
+
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
@@ -961,7 +964,7 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 }
 
 int
-bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t *source) {
+bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t source) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -971,23 +974,39 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, const uv_buf_t 
   assert(err == 0);
 
   js_value_t *args[2];
+
   err = js_create_string_utf8(env, (utf8_t *) filename, -1, &args[0]);
   if (err < 0) return err;
 
-  if (source) {
-    js_value_t *arraybuffer;
-    void *data;
-
-    err = js_create_arraybuffer(env, source->len, &data, &arraybuffer);
-    if (err < 0) return err;
-
-    memcpy(data, source->base, source->len);
-
-    err = js_create_typedarray(env, js_uint8_array, source->len, arraybuffer, 0, &args[1]);
-    if (err < 0) return err;
-  } else {
+  switch (source.type) {
+  case bare_source_none:
     err = js_get_undefined(env, &args[1]);
     assert(err == 0);
+    break;
+
+  case bare_source_buffer: {
+    js_value_t *arraybuffer;
+
+    void *data;
+    err = js_create_arraybuffer(env, source.buffer.len, &data, &arraybuffer);
+    assert(err == 0);
+
+    memcpy(data, source.buffer.base, source.buffer.len);
+
+    err = js_create_typedarray(env, js_uint8_array, source.buffer.len, arraybuffer, 0, &args[1]);
+    if (err < 0) return err;
+    break;
+  }
+
+  case bare_source_arraybuffer: {
+    size_t len;
+    err = js_get_arraybuffer_info(env, source.arraybuffer, NULL, &len);
+    assert(err == 0);
+
+    err = js_create_typedarray(env, js_uint8_array, len, source.arraybuffer, 0, &args[1]);
+    if (err < 0) return err;
+    break;
+  }
   }
 
   js_value_t *global;

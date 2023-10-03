@@ -82,7 +82,7 @@ If the process is exited explicitly, such as by calling `process.exit()` or as t
 
 #### `process.on('exit', code)`
 
-Emitted just before the process or current thread terminates. Any additional work scheduled after `exit` has been emitted will not be performed and so event listeners can only perform synchronous operations.
+Emitted just before the process or current thread terminates. Additional work scheduled in `exit` will be given a chance to run, but the process will terminate immediately after.
 
 All registered `exit` event listeners will be called before the process terminates. An event listener may override the final exit code by setting `process.exitCode` or by calling `process.exit(code)`. Calling `process.exit()` from an `exit` event listener will not prevent the remaining event listeners from running.
 
@@ -188,7 +188,7 @@ Bare can easily be embedded using the C API defined in [`include/bare.h`](includ
 #include <uv.h>
 
 bare_t *bare;
-bare_setup(uv_default_loop(), platform, argc, argv, &bare);
+bare_setup(uv_default_loop(), platform, &env, argc, argv, &bare);
 
 bare_run(bare, filename, source);
 

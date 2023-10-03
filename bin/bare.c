@@ -33,5 +33,8 @@ main (int argc, char *argv[]) {
   err = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   assert(err == 0);
 
+  err = uv_loop_close(uv_default_loop());
+  assert(err == 0);
+
   return exit_code;
 }
