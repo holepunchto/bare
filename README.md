@@ -34,10 +34,6 @@ The code that will be returned once the process exits. If the process is exited 
 
 Whether or not the process is currently suspended.
 
-#### `process.thread`
-
-A reference to the current thread, `Thread.self`. Will be `null` on the main thread. See [Threads](#threads) for more information.
-
 #### `process.env`
 
 The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
@@ -136,7 +132,7 @@ Stop and exit the current thread as soon as possible.
 
 #### `const thread = new Thread([filename][, options][, callback])`
 
-Start a new thread that will run the contents of `filename`. If `callback` is provided, its function body will be treated as the contents of `filename` and invoked on the new thread with `process.thread.data` passed as an argument.
+Start a new thread that will run the contents of `filename`. If `callback` is provided, its function body will be treated as the contents of `filename` and invoked on the new thread with `Thread.self.data` passed as an argument.
 
 Options include:
 

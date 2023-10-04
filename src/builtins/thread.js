@@ -20,7 +20,7 @@ module.exports = exports = class Thread {
     }
 
     if (callback) {
-      opts = { ...opts, source: `(${callback.toString()})(process.thread.data)` }
+      opts = { ...opts, source: `(${callback.toString()})(require('thread').self.data)` }
     }
 
     let {

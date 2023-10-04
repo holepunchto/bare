@@ -145,16 +145,6 @@ exports.addon = Addon.load.bind(Addon)
 
 /**
  * Step 5:
- * Register the thread API. Modules loaded from this point on may use threads,
- * including thread events for resource cleanup.
- */
-
-const Thread = require('./thread')
-
-exports.thread = Thread.self
-
-/**
- * Step 6:
  * Now that native code is available, load the builtin modules needed by the
  * process object.
  */
@@ -162,14 +152,14 @@ exports.thread = Thread.self
 const os = require('./os')
 
 /**
- * Step 7:
+ * Step 6:
  * Register the remaining globals.
  */
 
 require('./globals')
 
 /**
- * Step 8:
+ * Step 7:
  * Register environment variable support and high-resolution timers.
  */
 
@@ -177,7 +167,7 @@ exports.env = require('bare-env')
 exports.hrtime = require('bare-hrtime')
 
 /**
- * Step 9:
+ * Step 8:
  * Register the native hooks, propagating events to the process object.
  */
 
