@@ -34,10 +34,6 @@ The code that will be returned once the process exits. If the process is exited 
 
 Whether or not the process is currently suspended.
 
-#### `process.env`
-
-The current user environment. If modified, the changes will be visible to JavaScript and native code running in the current process, including threads, but will not be reflected outside of it.
-
 #### `process.exit([code])`
 
 Synchronously exit the current process with an exit status of `code` which defaults to `process.exitCode`. The process will not terminate until all `exit` event listeners have been called.
@@ -53,14 +49,6 @@ Resume the process after suspension. This can be used to cancel process suspensi
 #### `process.addon(specifier)`
 
 Load a static or dynamic native addon identified by `specifier` using `Addon.load()`. See [Addons](#addons) for more information.
-
-#### `process.hrtime([previous])`
-
-Get the current high-resolution real time as a `[seconds, nanoseconds]` 32-bit unsigned integer tuple. If `previous` is specified, the returned tuple will contain the delta from the `previous` time.
-
-#### `process.hrtime.bigint()`
-
-Get the current high-resolution real time in nanoseconds as a `bigint`.
 
 #### `process.on('uncaughtException', err)`
 

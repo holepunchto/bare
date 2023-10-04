@@ -106,6 +106,14 @@ function WithCompatibilityExtensions (Base) {
       os.setProcessTitle(title)
     }
 
+    get env () {
+      return env
+    }
+
+    get hrtime () {
+      return hrtime
+    }
+
     cwd () {
       return os.cwd()
     }
@@ -149,7 +157,9 @@ exports.addon = Addon.load.bind(Addon)
  * process object.
  */
 
-const os = require('./os')
+const os = require('bare-os')
+const env = require('bare-env')
+const hrtime = require('bare-hrtime')
 
 /**
  * Step 6:
@@ -160,14 +170,6 @@ require('./globals')
 
 /**
  * Step 7:
- * Register environment variable support and high-resolution timers.
- */
-
-exports.env = require('bare-env')
-exports.hrtime = require('bare-hrtime')
-
-/**
- * Step 8:
  * Register the native hooks, propagating events to the process object.
  */
 
