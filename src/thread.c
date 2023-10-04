@@ -101,8 +101,7 @@ bare_thread_entry (void *data) {
 
   uv_sem_post(&thread->lock);
 
-  err = bare_runtime_run(runtime, thread->filename, thread_source);
-  assert(err == 0);
+  bare_runtime_run(runtime, thread->filename, thread_source);
 
   free(thread->filename);
 
