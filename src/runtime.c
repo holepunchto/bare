@@ -44,8 +44,7 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  err = js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
-  if (err < 0) goto err;
+  js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
 
   return;
 
@@ -87,8 +86,7 @@ bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  err = js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
-  if (err < 0) goto err;
+  js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
 
   return;
 
