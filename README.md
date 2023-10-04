@@ -36,15 +36,15 @@ Whether or not the process is currently suspended.
 
 #### `process.exit([code])`
 
-Synchronously exit the current process with an exit status of `code` which defaults to `process.exitCode`. The process will not terminate until all `exit` event listeners have been called.
+Terminate the process or current thread with an exit status of `code` which defaults to `process.exitCode`. The process will not terminate until all `exit` event listeners have been called.
 
 #### `process.suspend()`
 
-Suspend the current process. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener and no additional work is scheduled, the loop will block until the process is resumed. If additional work is scheduled from an `idle` event, the `idle` event will be emitted again once all work has stopped unless the process was resumed.
+Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener and no additional work is scheduled, the loop will block until the process is resumed. If additional work is scheduled from an `idle` event, the `idle` event will be emitted again once all work has stopped unless the process was resumed.
 
 #### `process.resume()`
 
-Resume the process after suspension. This can be used to cancel process suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
+Resume the process and all threads after suspension. This can be used to cancel suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
 
 #### `process.addon(specifier)`
 
@@ -66,7 +66,7 @@ If the process is exited explicitly, such as by calling `process.exit()` or as t
 
 #### `process.on('exit', code)`
 
-Emitted just before the process or current thread terminates. Additional work scheduled in `exit` will be given a chance to run, but the process will terminate immediately after.
+Emitted just before the process or current thread terminates. Additional work scheduled in `exit` will be given a chance to run, but the process or current thread will terminate immediately after.
 
 All registered `exit` event listeners will be called before the process terminates. An event listener may override the final exit code by setting `process.exitCode` or by calling `process.exit(code)`. Calling `process.exit()` from an `exit` event listener will not prevent the remaining event listeners from running.
 
@@ -113,10 +113,6 @@ A reference to the current thread as a `ThreadProxy` object. Will be `null` on t
 #### `Thread.self.data`
 
 A copy of or, if shared, reference to the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
-
-#### `Thread.self.stop()`
-
-Stop and exit the current thread as soon as possible.
 
 #### `const thread = new Thread([filename][, options][, callback])`
 

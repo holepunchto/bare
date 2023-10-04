@@ -548,7 +548,7 @@ bare_runtime_readdir (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_exit (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -556,9 +556,7 @@ bare_runtime_exit (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(bare_runtime_is_main_thread(runtime));
-
-  err = bare_exit((bare_t *) runtime->process, -1);
+  err = js_terminate_execution(env);
   assert(err == 0);
 
   return NULL;
@@ -575,7 +573,7 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
 
   uv_ref((uv_handle_t *) &runtime->signals.suspend);
 
-  err = bare_suspend((bare_t *) runtime->process);
+  err = uv_async_send(&runtime->process->runtime->signals.suspend);
   assert(err == 0);
 
   return NULL;
@@ -590,7 +588,7 @@ bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  err = bare_resume((bare_t *) runtime->process);
+  err = uv_async_send(&runtime->process->runtime->signals.resume);
   assert(err == 0);
 
   return NULL;
@@ -756,26 +754,6 @@ bare_runtime_resume_thread (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
-static js_value_t *
-bare_runtime_stop_current_thread (js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  bare_runtime_t *runtime;
-
-  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
-  assert(err == 0);
-
-  assert(!bare_runtime_is_main_thread(runtime));
-
-  uv_loop_t *loop;
-  err = js_get_env_loop(env, &loop);
-  assert(err == 0);
-
-  uv_stop(loop);
-
-  return NULL;
-}
-
 int
 bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime) {
   int err;
@@ -895,7 +873,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   V("readdir", bare_runtime_readdir);
 
-  V("exit", bare_runtime_exit);
+  V("terminate", bare_runtime_terminate);
   V("suspend", bare_runtime_suspend);
   V("resume", bare_runtime_resume);
 
@@ -903,7 +881,6 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   V("joinThread", bare_runtime_join_thread);
   V("suspendThread", bare_runtime_suspend_thread);
   V("resumeThread", bare_runtime_resume_thread);
-  V("stopCurrentThread", bare_runtime_stop_current_thread);
 #undef V
 
 #define V(name, bool) \

@@ -84,11 +84,9 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
     }
   );
 
-  if (err < 0) return err;
-
   bare->exited = true;
 
-  return 0;
+  return err;
 }
 
 int

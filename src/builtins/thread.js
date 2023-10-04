@@ -82,10 +82,6 @@ class ThreadProxy {
     return ArrayBuffer.isView(bare.threadData) ? Buffer.coerce(bare.threadData) : bare.threadData
   }
 
-  stop () {
-    bare.stopCurrentThread()
-  }
-
   [Symbol.for('bare.inspect')] () {
     return {
       __proto__: { constructor: ThreadProxy },

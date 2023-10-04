@@ -41,12 +41,13 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   exit (code = this.exitCode) {
-    if (bare.isMainThread) {
-      this.exitCode = code
-      bare.exit()
-    } else {
-      bare.stopCurrentThread()
-    }
+    this.exitCode = code
+
+    bare.terminate()
+
+    noop() // Trigger a stack check
+
+    function noop () {}
   }
 
   suspend () {
