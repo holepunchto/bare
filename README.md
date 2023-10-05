@@ -70,7 +70,11 @@ If the process is exited explicitly, such as by calling `process.exit()` or as t
 
 #### `process.on('exit', code)`
 
-Emitted just before the process or current thread terminates. Additional work must not be scheduled from an `exit` event listener. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
+Emitted just before the process or current thread terminates. Additional work scheduled from an `exit` event listener will be given a chance to run after which the process will terminate. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
+
+#### `process.on('teardown')`
+
+Emitted after the process or current thread has terminated and just before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener. Bare itself will register `teardown` event listeners to join dangling threads and unload native addons.
 
 #### `process.on('suspend')`
 

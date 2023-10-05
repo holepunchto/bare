@@ -187,7 +187,7 @@ const constants = exports.constants = {
 }
 
 process
-  .on('exit', () => {
+  .prependListener('teardown', () => {
     for (const addon of exports._addons) {
       addon.unload()
     }

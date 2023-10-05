@@ -86,14 +86,16 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   _onexit () {
-    if (this.exiting) return
     this.exiting = true
 
     this.emit('exit', bare.exitCode)
   }
 
+  _onteardown () {
+    this.emit('teardown')
+  }
+
   _onsuspend () {
-    if (this.suspended) return
     this.suspended = true
 
     this.emit('suspend')
@@ -104,7 +106,6 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   _onresume () {
-    if (!this.suspended) return
     this.suspended = false
 
     this.emit('resume')
@@ -232,6 +233,7 @@ bare.onuncaughtexception = process._onuncaughtexception.bind(process)
 bare.onunhandledrejection = process._onunhandledrejection.bind(process)
 bare.onbeforeexit = process._onbeforeexit.bind(process)
 bare.onexit = process._onexit.bind(process)
+bare.onteardown = process._onteardown.bind(process)
 bare.onsuspend = process._onsuspend.bind(process)
 bare.onidle = process._onidle.bind(process)
 bare.onresume = process._onresume.bind(process)

@@ -94,7 +94,7 @@ class ThreadProxy {
 exports.self = exports.isMainThread ? null : new ThreadProxy()
 
 process
-  .on('exit', () => {
+  .prependListener('teardown', () => {
     for (const thread of exports._threads) {
       thread.join()
     }

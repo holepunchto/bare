@@ -180,6 +180,29 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
+bare_runtime_on_teardown (bare_runtime_t *runtime) {
+  int err;
+
+  js_env_t *env = runtime->env;
+
+  js_value_t *fn;
+  err = js_get_named_property(env, runtime->exports, "onteardown", &fn);
+  assert(err == 0);
+
+  bool is_set;
+  err = js_is_function(env, fn, &is_set);
+  assert(err == 0);
+
+  if (is_set) {
+    js_value_t *global;
+    err = js_get_global(env, &global);
+    assert(err == 0);
+
+    js_call_function(env, global, fn, 0, NULL, NULL);
+  }
+}
+
+static inline void
 bare_runtime_on_suspend (bare_runtime_t *runtime) {
   int err;
 
@@ -552,6 +575,8 @@ bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
   err = js_terminate_execution(env);
   assert(err == 0);
 
+  uv_stop(runtime->loop);
+
   return NULL;
 }
 
@@ -909,6 +934,11 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 
   bare_runtime_on_exit(runtime, exit_code);
 
+  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+  assert(err == 0);
+
+  bare_runtime_on_teardown(runtime);
+
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
@@ -978,7 +1008,7 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   do {
     err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-    assert(err == 0);
+    if (err != 0) break;
 
     if (runtime->suspended) {
       bare_runtime_on_idle(runtime);
