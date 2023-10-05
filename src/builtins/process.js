@@ -87,8 +87,12 @@ function WithCompatibilityExtensions (Base) {
       return os.arch()
     }
 
-    get execPath () {
-      return os.execPath()
+    get title () {
+      return os.getProcessTitle()
+    }
+
+    set title (title) {
+      os.setProcessTitle(title)
     }
 
     get pid () {
@@ -99,12 +103,8 @@ function WithCompatibilityExtensions (Base) {
       return os.ppid()
     }
 
-    get title () {
-      return os.getProcessTitle()
-    }
-
-    set title (title) {
-      os.setProcessTitle(title)
+    get execPath () {
+      return os.execPath()
     }
 
     get env () {
@@ -161,6 +161,7 @@ exports.addon = Addon.load.bind(Addon)
 const os = require('bare-os')
 const env = require('bare-env')
 const hrtime = require('bare-hrtime')
+const inspect = require('bare-inspect')
 
 /**
  * Step 6:
@@ -173,8 +174,6 @@ require('./globals')
  * Step 7:
  * Register the native hooks, propagating events to the process object.
  */
-
-const inspect = require('bare-inspect')
 
 bare.onuncaughtexception = function onuncaughtexception (err) {
   if (exports.emit('uncaughtException', err)) return
