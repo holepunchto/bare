@@ -33,6 +33,7 @@ struct bare_runtime_s {
   int active_handles;
 
   bool suspended;
+  bool exiting;
 };
 
 struct bare_process_s {

@@ -145,6 +145,8 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
 
   js_env_t *env = runtime->env;
 
+  runtime->exiting = true;
+
   if (exit_code) *exit_code = 0;
 
   js_value_t *fn;
@@ -575,7 +577,7 @@ bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
   err = js_terminate_execution(env);
   assert(err == 0);
 
-  uv_stop(runtime->loop);
+  if (!runtime->exiting) uv_stop(runtime->loop);
 
   return NULL;
 }
@@ -783,6 +785,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   assert(err == 0);
 
   runtime->suspended = false;
+  runtime->exiting = false;
 
   err = uv_async_init(runtime->loop, &runtime->signals.suspend, bare_runtime_on_suspend_signal);
   assert(err == 0);
