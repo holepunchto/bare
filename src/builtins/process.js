@@ -16,6 +16,13 @@ const EventEmitter = require('./events')
  */
 
 class Process extends WithCompatibilityExtensions(EventEmitter) {
+  constructor () {
+    super()
+
+    this.suspended = false
+    this.exiting = false
+  }
+
   get argv () {
     return bare.argv
   }
@@ -25,11 +32,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   set exitCode (code) {
-    bare.exitCode = (Number(code) || 0) & 0xff
-  }
-
-  get suspended () {
-    return bare.suspended
+    bare.exitCode = code & 0xff
   }
 
   get version () {
@@ -58,6 +61,55 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
     bare.resume()
   }
 
+  _onuncaughtexception (err) {
+    if (this.emit('uncaughtException', err)) return
+
+    bare.printError(
+      `Uncaught ${inspect(err, { colors: bare.isTTY })}\n`
+    )
+
+    this.exit(1)
+  }
+
+  _onunhandledrejection (reason, promise) {
+    if (this.emit('unhandledRejection', reason, promise)) return
+
+    bare.printError(
+      `Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}\n`
+    )
+
+    this.exit(1)
+  }
+
+  _onbeforeexit () {
+    this.emit('beforeExit', bare.exitCode)
+  }
+
+  _onexit () {
+    if (this.exiting) return
+    this.exiting = true
+
+    this.emit('exit', bare.exitCode)
+  }
+
+  _onsuspend () {
+    if (this.suspended) return
+    this.suspended = true
+
+    this.emit('suspend')
+  }
+
+  _onidle () {
+    this.emit('idle')
+  }
+
+  _onresume () {
+    if (!this.suspended) return
+    this.suspended = false
+
+    this.emit('resume')
+  }
+
   [Symbol.for('bare.inspect')] () {
     return {
       __proto__: { constructor: Process },
@@ -71,6 +123,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
       argv: this.argv,
       exitCode: this.exitCode,
       suspended: this.suspended,
+      exited: this.exited,
       version: this.version,
       versions: this.versions
     }
@@ -172,45 +225,13 @@ require('./globals')
 
 /**
  * Step 7:
- * Register the native hooks, propagating events to the process object.
+ * Register the native lifecycle hooks.
  */
 
-bare.onuncaughtexception = function onuncaughtexception (err) {
-  if (exports.emit('uncaughtException', err)) return
-
-  bare.printError(`${`Uncaught ${inspect(err, { colors: bare.isTTY })}`}\n`)
-
-  exports.exit(1)
-}
-
-bare.onunhandledrejection = function onunhandledrejection (reason, promise) {
-  if (exports.emit('unhandledRejection', reason, promise)) return
-
-  bare.printError(`${`Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}`}\n`)
-
-  exports.exit(1)
-}
-
-bare.onbeforeexit = function onbeforeexit () {
-  exports.emit('beforeExit', bare.exitCode)
-}
-
-bare.onexit = function onexit () {
-  exports.emit('exit', bare.exitCode)
-}
-
-bare.onsuspend = function onsuspend () {
-  bare.suspended = true
-
-  exports.emit('suspend')
-}
-
-bare.onidle = function onidle () {
-  exports.emit('idle')
-}
-
-bare.onresume = function onresume () {
-  bare.suspended = false
-
-  exports.emit('resume')
-}
+bare.onuncaughtexception = process._onuncaughtexception.bind(process)
+bare.onunhandledrejection = process._onunhandledrejection.bind(process)
+bare.onbeforeexit = process._onbeforeexit.bind(process)
+bare.onexit = process._onexit.bind(process)
+bare.onsuspend = process._onsuspend.bind(process)
+bare.onidle = process._onidle.bind(process)
+bare.onresume = process._onresume.bind(process)

@@ -34,9 +34,13 @@ The code that will be returned once the process exits. If the process is exited 
 
 Whether or not the process is currently suspended.
 
+#### `process.exiting`
+
+Whether or not the process is currently exiting.
+
 #### `process.exit([code])`
 
-Terminate the process or current thread with an exit status of `code` which defaults to `process.exitCode`. The process will not terminate until all `exit` event listeners have been called.
+Forcefully terminate the process or current thread with an exit status of `code` which defaults to `process.exitCode`.
 
 #### `process.suspend()`
 
@@ -66,9 +70,7 @@ If the process is exited explicitly, such as by calling `process.exit()` or as t
 
 #### `process.on('exit', code)`
 
-Emitted just before the process or current thread terminates. Additional work scheduled in `exit` will be given a chance to run, but the process or current thread will terminate immediately after.
-
-All registered `exit` event listeners will be called before the process terminates. An event listener may override the final exit code by setting `process.exitCode` or by calling `process.exit(code)`. Calling `process.exit()` from an `exit` event listener will not prevent the remaining event listeners from running.
+Emitted just before the process or current thread terminates. Additional work must not be scheduled from an `exit` event listener. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
 
 #### `process.on('suspend')`
 

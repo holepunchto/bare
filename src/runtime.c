@@ -129,8 +129,7 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
     err = js_get_global(env, &global);
     assert(err == 0);
 
-    err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
+    js_call_function(env, global, fn, 0, NULL, NULL);
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
@@ -161,8 +160,7 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
     err = js_get_global(env, &global);
     assert(err == 0);
 
-    err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
+    js_call_function(env, global, fn, 0, NULL, NULL);
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
@@ -200,8 +198,7 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
     err = js_get_global(env, &global);
     assert(err == 0);
 
-    err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
+    js_call_function(env, global, fn, 0, NULL, NULL);
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
@@ -241,8 +238,7 @@ bare_runtime_on_idle (bare_runtime_t *runtime) {
     err = js_get_global(env, &global);
     assert(err == 0);
 
-    err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
+    js_call_function(env, global, fn, 0, NULL, NULL);
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
@@ -271,8 +267,7 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
     err = js_get_global(env, &global);
     assert(err == 0);
 
-    err = js_call_function(env, global, fn, 0, NULL, NULL);
-    assert(err == 0);
+    js_call_function(env, global, fn, 0, NULL, NULL);
   }
 
   if (bare_runtime_is_main_thread(runtime)) {
@@ -845,13 +840,6 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   err = js_set_named_property(env, exports, "exitCode", exit_code);
   assert(err == 0);
 
-  js_value_t *suspended;
-  err = js_get_boolean(env, false, &suspended);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "suspended", suspended);
-  assert(err == 0);
-
 #define V(name, fn) \
   { \
     js_value_t *val; \
@@ -920,9 +908,6 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   int err;
 
   bare_runtime_on_exit(runtime, exit_code);
-
-  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-  assert(err == 0);
 
   err = js_destroy_env(runtime->env);
   assert(err == 0);
