@@ -175,6 +175,8 @@ bare_thread_join (bare_thread_t *thread) {
 
   err = uv_thread_join(&thread->id);
 
+  uv_sem_destroy(&thread->lock);
+
   free(thread);
 
   if (err < 0) {
