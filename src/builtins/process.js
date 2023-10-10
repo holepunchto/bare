@@ -44,6 +44,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   exit (code = this.exitCode) {
+    this.exiting = true
     this.exitCode = code
 
     bare.terminate()
@@ -62,7 +63,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   _onuncaughtexception (err) {
-    if (this.emit('uncaughtException', err)) return
+    if (this.exiting || this.emit('uncaughtException', err)) return
 
     bare.printError(
       `Uncaught ${inspect(err, { colors: bare.isTTY })}\n`
@@ -72,7 +73,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
   }
 
   _onunhandledrejection (reason, promise) {
-    if (this.emit('unhandledRejection', reason, promise)) return
+    if (this.exiting || this.emit('unhandledRejection', reason, promise)) return
 
     bare.printError(
       `Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}\n`
