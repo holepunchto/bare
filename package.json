@@ -30,7 +30,7 @@
     "bare-path": "^1.0.5",
     "bare-repl": "^0.4.0",
     "bare-timers": "^1.5.0",
-    "bare-tty": "^2.0.0",
+    "bare-tty": "^2.1.1",
     "bare-url": "^0.1.1",
     "minimist": "^1.2.8"
   },

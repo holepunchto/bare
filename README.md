@@ -40,7 +40,7 @@ Whether or not the process is currently exiting.
 
 #### `process.exit([code])`
 
-Forcefully terminate the process or current thread with an exit status of `code` which defaults to `process.exitCode`.
+Immediately terminate the process or current thread with an exit status of `code` which defaults to `process.exitCode`.
 
 #### `process.suspend()`
 
