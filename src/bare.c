@@ -13,8 +13,6 @@
 
 struct bare_s {
   bare_process_t process;
-
-  bool exited;
 };
 
 int
@@ -22,8 +20,6 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
   int err;
 
   bare_t *bare = malloc(sizeof(bare_t));
-
-  bare->exited = false;
 
   bare_process_t *process = &bare->process;
 
@@ -84,23 +80,7 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
     }
   );
 
-  bare->exited = true;
-
   return err;
-}
-
-int
-bare_exit (bare_t *bare, int exit_code) {
-  if (bare->exited) return -1;
-
-  int err;
-
-  bare->exited = true;
-
-  err = bare_teardown(bare, exit_code == -1 ? &exit_code : NULL);
-  assert(err == 0);
-
-  exit(exit_code);
 }
 
 int

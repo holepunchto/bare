@@ -60,14 +60,6 @@ int
 bare_run (bare_t *bare, const char *filename, const uv_buf_t *source);
 
 /**
- * Exit the process immediately with the provided exit code. If `-1` is passed
- * the process will exit with `process.exitCode` instead. This function will
- * not return on success.
- */
-int
-bare_exit (bare_t *bare, int exit_code);
-
-/**
  * Suspend the process as soon as possible. Once the process has suspended
  * successfully, `bare_run()` will not return until another thread resumes the
  * process. It's safe to call this function from any thread.
