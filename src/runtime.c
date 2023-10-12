@@ -48,7 +48,7 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
 
   return;
 
-err : {
+err: {
   js_value_t *stack;
   err = js_get_named_property(env, error, "stack", &stack);
   assert(err == 0);
@@ -90,7 +90,7 @@ bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value
 
   return;
 
-err : {
+err: {
   js_value_t *stack;
   err = js_get_named_property(env, reason, "stack", &stack);
   assert(err == 0);
