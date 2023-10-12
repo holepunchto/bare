@@ -1,4 +1,4 @@
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: BlockIndent
 AlignConsecutiveMacros: Consecutive
 AlignEscapedNewlines: DontAlign
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
