@@ -1011,6 +1011,9 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   do {
     err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+
+    // Break immediately if `uv_stop()` was called. In this case, before exit
+    // hooks should NOT run.
     if (err != 0) break;
 
     if (runtime->suspended) {
