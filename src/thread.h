@@ -4,8 +4,6 @@
 #include <stddef.h>
 #include <uv.h>
 
-#include "../include/bare.h"
-
 #include "types.h"
 
 int

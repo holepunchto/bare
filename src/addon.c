@@ -6,8 +6,6 @@
 #include <string.h>
 #include <uv.h>
 
-#include "../include/bare.h"
-
 #include "types.h"
 
 static bare_module_list_t *bare_addon_static = NULL;
@@ -21,7 +19,7 @@ static uv_mutex_t bare_addon_lock;
 static uv_once_t bare_addon_lock_guard = UV_ONCE_INIT;
 
 static void
-bare_addon_on_lock_init () {
+bare_addon_on_lock_init (void) {
   int err = uv_mutex_init_recursive(&bare_addon_lock);
   assert(err == 0);
 }

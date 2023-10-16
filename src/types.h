@@ -3,7 +3,6 @@
 
 #include <js.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <uv.h>
 
 #include "../include/bare.h"

@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <uv.h>
 
-#include "../include/bare.h"
-
 #include "types.h"
 
 bare_module_t *
