@@ -195,6 +195,8 @@ set_target_properties(
   bare_shared
   PROPERTIES
   OUTPUT_NAME bare
+
+  # Automatically export all available symbols on Windows.
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
@@ -234,7 +236,12 @@ set_target_properties(
   bare_bin
   PROPERTIES
   OUTPUT_NAME bare
+
+  # Export symbols from the executable to allow native addons to link against
+  # them.
   ENABLE_EXPORTS ON
+
+  # Automatically export all available symbols on Windows.
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 
   # Make sure none of the executable artefacts collide with the static and
