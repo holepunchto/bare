@@ -246,13 +246,13 @@ set_target_properties(
 
 target_include_directories(
   bare_bin
-  PRIVATE
+  PUBLIC
     $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
   bare_bin
-  PRIVATE
+  PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
 
