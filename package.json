@@ -20,7 +20,7 @@
     "bare-assert": "^1.0.0",
     "bare-buffer": "^1.2.7",
     "bare-console": "^3.1.0",
-    "bare-dev": "^0.3.11",
+    "bare-dev": "^0.3.26",
     "bare-env": "^1.0.0",
     "bare-events": "^1.2.1",
     "bare-hrtime": "^1.0.0",

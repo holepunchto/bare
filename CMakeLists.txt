@@ -235,6 +235,7 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME bare
   ENABLE_EXPORTS ON
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
   RUNTIME_OUTPUT_DIRECTORY bin
 )
 
@@ -252,12 +253,9 @@ target_link_libraries(
 
 install(
   TARGETS bare_bin
-  RUNTIME
-    DESTINATION bin
-    COMPONENT core
-  BUNDLE
-    DESTINATION bin
-    COMPONENT core
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  BUNDLE DESTINATION bin
 )
 
 if(PROJECT_IS_TOP_LEVEL)

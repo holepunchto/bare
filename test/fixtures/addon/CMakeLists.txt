@@ -4,7 +4,7 @@ project(bare_addon C)
 
 include(bare)
 
-add_bare_module(bare_addon)
+add_bare_module(bare_addon INSTALL OFF)
 
 target_sources(
   bare_addon
