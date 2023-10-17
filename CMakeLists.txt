@@ -236,6 +236,11 @@ set_target_properties(
   OUTPUT_NAME bare
   ENABLE_EXPORTS ON
   WINDOWS_EXPORT_ALL_SYMBOLS ON
+
+  # Make sure none of the executable artefacts collide with the static and
+  # shared library artefacts. This is particularly important on Windows.
+  ARCHIVE_OUTPUT_DIRECTORY bin
+  LIBRARY_OUTPUT_DIRECTORY bin
   RUNTIME_OUTPUT_DIRECTORY bin
 )
 
@@ -253,6 +258,7 @@ target_link_libraries(
 
 install(
   TARGETS bare_bin
+  ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   BUNDLE DESTINATION bin
