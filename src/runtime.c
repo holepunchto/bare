@@ -64,7 +64,7 @@ err: {
   err = bare_runtime__print_error("Uncaught %s\n", str);
   assert(err >= 0);
 
-  exit(1);
+  abort();
 }
 }
 
@@ -106,7 +106,7 @@ err: {
   err = bare_runtime__print_error("Uncaught (in promise) %s\n", str);
   assert(err >= 0);
 
-  exit(1);
+  abort();
 }
 }
 
@@ -583,6 +583,11 @@ bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime_abort (js_env_t *env, js_callback_info_t *info) {
+  abort();
+}
+
+static js_value_t *
 bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -888,6 +893,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   V("readdir", bare_runtime_readdir);
 
   V("terminate", bare_runtime_terminate);
+  V("abort", bare_runtime_abort);
   V("suspend", bare_runtime_suspend);
   V("resume", bare_runtime_resume);
 

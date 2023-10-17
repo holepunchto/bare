@@ -69,7 +69,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
       `Uncaught ${inspect(err, { colors: bare.isTTY })}\n`
     )
 
-    this.exit(1)
+    bare.abort()
   }
 
   _onunhandledrejection (reason, promise) {
@@ -79,7 +79,7 @@ class Process extends WithCompatibilityExtensions(EventEmitter) {
       `Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}\n`
     )
 
-    this.exit(1)
+    bare.abort()
   }
 
   _onbeforeexit () {
