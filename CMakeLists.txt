@@ -222,7 +222,7 @@ target_link_libraries(
 include_bare_module(bare_repl node_modules/bare-repl)
 include_bare_module(bare_tty node_modules/bare-tty)
 
-add_executable(bare_bin
+add_executable(bare_bin ${objects}
   bin/bare.c
   bin/bare.bundle.h
 
@@ -253,7 +253,7 @@ target_include_directories(
 target_link_libraries(
   bare_bin
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
+    $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
 )
 
 install(
