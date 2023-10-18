@@ -44,6 +44,8 @@ module.exports = exports = class Addon {
   }
 
   static _path = null
+  static _base = ''
+
   static _cache = Object.create(null)
   static _addons = new Set()
 
@@ -53,6 +55,14 @@ module.exports = exports = class Addon {
 
   static set path (value) {
     this._path = value
+  }
+
+  static get base () {
+    return this._base
+  }
+
+  static set base (value) {
+    this._base = value
   }
 
   static get cache () {
@@ -99,7 +109,7 @@ module.exports = exports = class Addon {
   }
 
   static resolve (specifier) {
-    const [resolved = null] = this._resolve(specifier)
+    const [resolved = null] = [...this._resolve(specifier)]
 
     if (resolved === null) {
       throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${specifier}'`)
@@ -126,16 +136,14 @@ module.exports = exports = class Addon {
   static * _resolveDirectory (specifier) {
     const path = require('./path')
     const Module = require('./module')
-
+    specifier = path.join(this._base, specifier)
     const pkg = path.join(specifier, 'package.json')
-
     let info
     try {
       info = Module.load(pkg).exports
     } catch {
       info = null
     }
-
     if (info) {
       if (this._path) {
         const name = info.name.replace(/\//g, '+')
