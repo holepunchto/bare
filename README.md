@@ -110,6 +110,14 @@ Resolve a dynamic native addon specifier by searching for a dynamic object libra
 
 Unload a dynamic native addon identified by `specifier`, which must be fully resolved. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
 
+#### `Addon.path = path`
+
+If set, the `prebuilds` lookup path per `specifier` is prefixed with the value of `Addon.path`.
+
+#### `Addon.base = path`
+
+If set, the `package.json` lookup path per `specifier` is prefixed with the value of `Addon.base`.
+
 ### Threads
 
 The builtin `thread` module provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
