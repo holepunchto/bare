@@ -127,13 +127,21 @@ module.exports = exports = class Addon {
     const path = require('./path')
     const Module = require('./module')
 
-    const pkg = path.join(specifier, 'package.json')
-
-    let info
+    let info = null
     try {
-      info = Module.load(pkg).exports
+      info = Module.load(path.join(specifier, 'package.json')).exports
     } catch {
-      info = null
+      const nodeModules = path.normalize('/node_modules/')
+
+      const i = specifier.indexOf(nodeModules)
+
+      if (i !== -1) {
+        specifier = specifier.substring(i + nodeModules.length)
+
+        try {
+          info = Module.load(Module.resolve(path.join(specifier, 'package.json'))).exports
+        } catch {}
+      }
     }
 
     if (info) {
