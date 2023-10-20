@@ -45,6 +45,7 @@ struct bare_process_s {
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
+  bare_teardown_cb on_teardown;
   bare_suspend_cb on_suspend;
   bare_idle_cb on_idle;
   bare_resume_cb on_resume;

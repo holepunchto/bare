@@ -140,14 +140,12 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
 }
 
 static inline void
-bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
+bare_runtime_on_exit (bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
 
   runtime->exiting = true;
-
-  if (exit_code) *exit_code = 0;
 
   js_value_t *fn;
   err = js_get_named_property(env, runtime->exports, "onexit", &fn);
@@ -170,22 +168,15 @@ bare_runtime_on_exit (bare_runtime_t *runtime, int *exit_code) {
       runtime->process->on_exit((bare_t *) runtime->process);
     }
   }
-
-  if (exit_code) {
-    js_value_t *val;
-    err = js_get_named_property(env, runtime->exports, "exitCode", &val);
-    assert(err == 0);
-
-    err = js_get_value_int32(env, val, exit_code);
-    assert(err == 0);
-  }
 }
 
 static inline void
-bare_runtime_on_teardown (bare_runtime_t *runtime) {
+bare_runtime_on_teardown (bare_runtime_t *runtime, int *exit_code) {
   int err;
 
   js_env_t *env = runtime->env;
+
+  if (exit_code) *exit_code = 0;
 
   js_value_t *fn;
   err = js_get_named_property(env, runtime->exports, "onteardown", &fn);
@@ -201,6 +192,21 @@ bare_runtime_on_teardown (bare_runtime_t *runtime) {
     assert(err == 0);
 
     js_call_function(env, global, fn, 0, NULL, NULL);
+  }
+
+  if (bare_runtime_is_main_thread(runtime)) {
+    if (runtime->process->on_teardown) {
+      runtime->process->on_teardown((bare_t *) runtime->process);
+    }
+  }
+
+  if (exit_code) {
+    js_value_t *val;
+    err = js_get_named_property(env, runtime->exports, "exitCode", &val);
+    assert(err == 0);
+
+    err = js_get_value_int32(env, val, exit_code);
+    assert(err == 0);
   }
 }
 
@@ -941,12 +947,7 @@ int
 bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   int err;
 
-  bare_runtime_on_exit(runtime, exit_code);
-
-  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-  assert(err == 0);
-
-  bare_runtime_on_teardown(runtime);
+  bare_runtime_on_teardown(runtime, exit_code);
 
   err = js_destroy_env(runtime->env);
   assert(err == 0);
@@ -1032,6 +1033,11 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
       bare_runtime_on_before_exit(runtime);
     }
   } while (uv_loop_alive(runtime->loop));
+
+  bare_runtime_on_exit(runtime);
+
+  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+  assert(err == 0);
 
   return 0;
 }

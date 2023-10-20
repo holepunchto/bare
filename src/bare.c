@@ -2,7 +2,6 @@
 #include <js.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <uv.h>
 
@@ -31,6 +30,7 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   process->on_before_exit = NULL;
   process->on_exit = NULL;
+  process->on_teardown = NULL;
   process->on_suspend = NULL;
   process->on_idle = NULL;
   process->on_resume = NULL;
@@ -103,6 +103,13 @@ bare_on_before_exit (bare_t *bare, bare_before_exit_cb cb) {
 int
 bare_on_exit (bare_t *bare, bare_exit_cb cb) {
   bare->process.on_exit = cb;
+
+  return 0;
+}
+
+int
+bare_on_teardown (bare_t *bare, bare_teardown_cb cb) {
+  bare->process.on_teardown = cb;
 
   return 0;
 }

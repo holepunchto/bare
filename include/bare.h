@@ -17,6 +17,7 @@ typedef struct bare_options_s bare_options_t;
 
 typedef void (*bare_before_exit_cb)(bare_t *);
 typedef void (*bare_exit_cb)(bare_t *);
+typedef void (*bare_teardown_cb)(bare_t *);
 typedef void (*bare_suspend_cb)(bare_t *);
 typedef void (*bare_idle_cb)(bare_t *);
 typedef void (*bare_resume_cb)(bare_t *);
@@ -79,6 +80,9 @@ bare_on_before_exit (bare_t *bare, bare_before_exit_cb cb);
 
 int
 bare_on_exit (bare_t *bare, bare_exit_cb cb);
+
+int
+bare_on_teardown (bare_t *bare, bare_teardown_cb cb);
 
 int
 bare_on_suspend (bare_t *bare, bare_suspend_cb cb);
