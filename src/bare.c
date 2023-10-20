@@ -3,12 +3,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <uv.h>
 
 #include "../include/bare.h"
 
 #include "runtime.h"
 #include "types.h"
+
+#define bare_option(options, min_version, field, default) \
+  (options && options->version >= min_version ? options->field : default)
 
 struct bare_s {
   bare_process_t process;
@@ -23,6 +27,12 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
   bare_process_t *process = &bare->process;
 
   process->runtime = malloc(sizeof(bare_runtime_t));
+
+  const char *addons = bare_option(options, 0, addons, NULL);
+
+  process->options = (bare_options_t){
+    .addons = addons ? strdup(addons) : NULL
+  };
 
   process->platform = platform;
   process->argc = argc;

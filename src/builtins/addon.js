@@ -43,7 +43,7 @@ module.exports = exports = class Addon {
     }
   }
 
-  static _path = null
+  static _path = bare.addons
   static _cache = Object.create(null)
   static _addons = new Set()
 

@@ -38,6 +38,8 @@ struct bare_runtime_s {
 struct bare_process_s {
   bare_runtime_t *runtime;
 
+  bare_options_t options;
+
   js_platform_t *platform;
 
   int argc;

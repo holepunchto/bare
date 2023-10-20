@@ -827,6 +827,19 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   js_value_t *exports = runtime->exports;
 
+  js_value_t *addons;
+
+  if (process->options.addons) {
+    err = js_create_string_utf8(env, (const utf8_t *) process->options.addons, -1, &addons);
+    assert(err == 0);
+  } else {
+    err = js_get_null(env, &addons);
+    assert(err == 0);
+  }
+
+  err = js_set_named_property(env, exports, "addons", addons);
+  assert(err == 0);
+
   js_value_t *argv;
   err = js_create_array_with_length(env, runtime->process->argc, &argv);
   assert(err == 0);
