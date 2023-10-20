@@ -67,6 +67,10 @@ bare_teardown (bare_t *bare, int *exit_code) {
   err = bare_runtime_teardown(process->runtime, exit_code);
   assert(err == 0);
 
+  bare_options_t *options = &process->options;
+
+  if (options->addons) free((char *) options->addons);
+
   free(bare);
 
   return 0;
