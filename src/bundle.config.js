@@ -2,7 +2,7 @@ module.exports = {
   protocol: 'bare',
   format: 'js',
   target: 'c',
-  name: 'bare_bundle',
+  name: 'bare_js',
   builtins: [],
   imports: {
     addon: '/src/builtins/addon.js',

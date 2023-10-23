@@ -943,7 +943,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   assert(err == 0);
 
   js_value_t *script;
-  err = js_create_string_utf8(env, bare_bundle, bare_bundle_len, &script);
+  err = js_create_string_utf8(env, bare_js, bare_js_len, &script);
   assert(err == 0);
 
   js_value_t *entry;
