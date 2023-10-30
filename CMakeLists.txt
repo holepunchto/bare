@@ -263,6 +263,16 @@ target_link_libraries(
     $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
 )
 
+if(ANDROID)
+  find_library(log log)
+
+  target_link_libraries(
+    bare_bin
+    PUBLIC
+      ${log}
+  )
+endif()
+
 install(
   TARGETS bare_bin
   ARCHIVE DESTINATION lib
