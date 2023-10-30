@@ -8,9 +8,9 @@ set(BARE_USE_JAVASCRIPTCORE OFF CACHE BOOL "Use JavaScriptCore instead of V8")
 
 set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
 
-set(BARE_PREBUILDS_KEY ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y CACHE STRING "Key of the prebuilds drive")
+set(BARE_PREBUILDS_KEY jpf19qjy6b7rtqs8dg4d6cecu13u3m1ukej1kk4y873exh89wcxy CACHE STRING "Key of the prebuilds drive")
 
-set(BARE_PREBUILDS_VERSION 2130 CACHE STRING "Version of the prebuilds drive")
+set(BARE_PREBUILDS_VERSION 27 CACHE STRING "Version of the prebuilds drive")
 
 include(bare)
 
@@ -30,13 +30,25 @@ if(MSVC)
   )
 endif()
 
+if(NOT TARGET uv)
+  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET utf)
+  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET mem)
+  add_subdirectory(vendor/libmem EXCLUDE_FROM_ALL)
+endif()
+
 if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED)
 
   find_library(
     v8
     NAMES v8 libv8
-    PATHS ${BARE_PREBUILDS_DIR}/${target}/lib
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -47,24 +59,39 @@ if(NOT TARGET v8)
     PROPERTIES
     IMPORTED_LOCATION ${v8}
   )
-
-  target_include_directories(
-    v8
-    INTERFACE
-      ${BARE_PREBUILDS_DIR}/${target}/include
-  )
-endif()
-
-if(NOT TARGET uv)
-  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
-endif()
-
-if(NOT TARGET utf)
-  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
 endif()
 
 if(NOT TARGET js)
-  add_subdirectory(vendor/libjs EXCLUDE_FROM_ALL)
+  add_library(js STATIC IMPORTED)
+
+  find_library(
+    js
+    NAMES js libjs
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    REQUIRED
+    NO_DEFAULT_PATH
+    NO_CMAKE_FIND_ROOT_PATH
+  )
+
+  set_target_properties(
+    js
+    PROPERTIES
+    IMPORTED_LOCATION ${js}
+  )
+
+  target_include_directories(
+    js
+    INTERFACE
+      vendor/libjs/include
+  )
+
+  target_link_libraries(
+    js
+    INTERFACE
+      v8
+      uv
+      utf
+  )
 endif()
 
 if(NOT TARGET qjs AND BARE_USE_QUICKJS)
@@ -91,22 +118,6 @@ add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
   CONFIG src/bundle.config.js
-  DEPENDS
-    src/bare.js
-    src/bundle.config.js
-    src/builtins/addon.js
-    src/builtins/assert.js
-    src/builtins/buffer.js
-    src/builtins/console.js
-    src/builtins/events.js
-    src/builtins/globals.js
-    src/builtins/module.js
-    src/builtins/os.js
-    src/builtins/path.js
-    src/builtins/process.js
-    src/builtins/thread.js
-    src/builtins/timers.js
-    src/builtins/url.js
 )
 
 add_bare_bundle(
@@ -186,7 +197,6 @@ list(APPEND objects
   $<TARGET_OBJECTS:utf>
   $<TARGET_OBJECTS:base64>
   $<TARGET_OBJECTS:hex>
-  $<TARGET_OBJECTS:${engine}>
 )
 
 add_library(bare_shared SHARED ${objects})
@@ -203,7 +213,7 @@ set_target_properties(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_shared,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
 add_library(bare_static STATIC ${objects})
@@ -218,7 +228,7 @@ set_target_properties(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
 include_bare_module(bare_repl node_modules/bare-repl)
@@ -260,10 +270,10 @@ target_include_directories(
 target_link_libraries(
   bare_bin
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
 )
 
-if(ANDROID)
+if(target MATCHES "android")
   find_library(log log)
 
   target_link_libraries(
