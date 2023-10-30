@@ -947,7 +947,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   assert(err == 0);
 
   js_value_t *entry;
-  err = js_run_script(env, "bare:src", -1, 0, script, &entry);
+  err = js_run_script(env, "/src", -1, 0, script, &entry);
   assert(err == 0);
 
   err = js_call_function(env, global, entry, 1, &exports, NULL);

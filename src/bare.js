@@ -4,4 +4,8 @@ require('./builtins/process')
 
 const Module = require('./builtins/module')
 
-bare.run = Module.load.bind(Module)
+const path = require('./builtins/path')
+
+bare.run = function run (filename, source) {
+  Module.load(path.normalize(filename), source)
+}
