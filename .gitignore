@@ -7,3 +7,4 @@ corestore
 *.js.h
 *.bundle
 *.bundle.h
+*.d
