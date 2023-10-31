@@ -10,7 +10,7 @@ set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the p
 
 set(BARE_PREBUILDS_KEY jpf19qjy6b7rtqs8dg4d6cecu13u3m1ukej1kk4y873exh89wcxy CACHE STRING "Key of the prebuilds drive")
 
-set(BARE_PREBUILDS_VERSION 27 CACHE STRING "Version of the prebuilds drive")
+set(BARE_PREBUILDS_VERSION 41 CACHE STRING "Version of the prebuilds drive")
 
 include(bare)
 
@@ -24,10 +24,7 @@ mirror_drive(
 )
 
 if(MSVC)
-  add_compile_options(
-    $<$<CONFIG:Debug>:/MTd>
-    $<$<CONFIG:Release>:/MT>
-  )
+  add_compile_options($<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)
 endif()
 
 if(NOT TARGET uv)
@@ -40,6 +37,25 @@ endif()
 
 if(NOT TARGET mem)
   add_subdirectory(vendor/libmem EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET c++)
+  add_library(c++ STATIC IMPORTED)
+
+  find_library(
+    c++
+    NAMES c++ libc++
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    REQUIRED
+    NO_DEFAULT_PATH
+    NO_CMAKE_FIND_ROOT_PATH
+  )
+
+  set_target_properties(
+    c++
+    PROPERTIES
+    IMPORTED_LOCATION ${c++}
+  )
 endif()
 
 if(NOT TARGET v8)
@@ -58,6 +74,12 @@ if(NOT TARGET v8)
     v8
     PROPERTIES
     IMPORTED_LOCATION ${v8}
+  )
+
+  target_link_libraries(
+    v8
+    INTERFACE
+      c++
   )
 endif()
 
