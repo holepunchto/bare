@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(bare C CXX)
+project(bare C)
 
 set(BARE_USE_QUICKJS OFF CACHE BOOL "Use QuickJS instead of V8")
 
@@ -8,9 +8,9 @@ set(BARE_USE_JAVASCRIPTCORE OFF CACHE BOOL "Use JavaScriptCore instead of V8")
 
 set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
 
-set(BARE_PREBUILDS_KEY ewr4dj5xxpec65ps915i7ckgzbugpssuw5xdtdaxgpxa9ixhbp8y CACHE STRING "Key of the prebuilds drive")
+set(BARE_PREBUILDS_KEY qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso CACHE STRING "Key of the prebuilds drive")
 
-set(BARE_PREBUILDS_VERSION 2130 CACHE STRING "Version of the prebuilds drive")
+set(BARE_PREBUILDS_VERSION 41 CACHE STRING "Version of the prebuilds drive")
 
 include(bare)
 
@@ -24,9 +24,39 @@ mirror_drive(
 )
 
 if(MSVC)
-  add_compile_options(
-    $<$<CONFIG:Debug>:/MTd>
-    $<$<CONFIG:Release>:/MT>
+  add_compile_options(/MT$<$<CONFIG:Debug>:d>)
+
+  add_link_options(/DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>.lib)
+endif()
+
+if(NOT TARGET uv)
+  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET utf)
+  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET mem)
+  add_subdirectory(vendor/libmem EXCLUDE_FROM_ALL)
+endif()
+
+if(NOT TARGET c++)
+  add_library(c++ STATIC IMPORTED)
+
+  find_library(
+    c++
+    NAMES c++ libc++
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    REQUIRED
+    NO_DEFAULT_PATH
+    NO_CMAKE_FIND_ROOT_PATH
+  )
+
+  set_target_properties(
+    c++
+    PROPERTIES
+    IMPORTED_LOCATION ${c++}
   )
 endif()
 
@@ -36,7 +66,7 @@ if(NOT TARGET v8)
   find_library(
     v8
     NAMES v8 libv8
-    PATHS ${BARE_PREBUILDS_DIR}/${target}/lib
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -48,23 +78,58 @@ if(NOT TARGET v8)
     IMPORTED_LOCATION ${v8}
   )
 
-  target_include_directories(
+  target_link_libraries(
     v8
     INTERFACE
-      ${BARE_PREBUILDS_DIR}/${target}/include
+      c++
   )
-endif()
 
-if(NOT TARGET uv)
-  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
-endif()
-
-if(NOT TARGET utf)
-  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
+  if(target MATCHES "linux")
+    target_link_libraries(
+      v8
+      INTERFACE
+        m
+    )
+  elseif(target MATCHES "win32")
+    target_link_libraries(
+      v8
+      INTERFACE
+        winmm.lib
+    )
+  endif()
 endif()
 
 if(NOT TARGET js)
-  add_subdirectory(vendor/libjs EXCLUDE_FROM_ALL)
+  add_library(js STATIC IMPORTED)
+
+  find_library(
+    js
+    NAMES js libjs
+    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    REQUIRED
+    NO_DEFAULT_PATH
+    NO_CMAKE_FIND_ROOT_PATH
+  )
+
+  set_target_properties(
+    js
+    PROPERTIES
+    IMPORTED_LOCATION ${js}
+  )
+
+  target_include_directories(
+    js
+    INTERFACE
+      vendor/libjs/include
+      vendor/libuv/include
+      vendor/libutf/include
+  )
+
+  target_link_libraries(
+    js
+    INTERFACE
+      v8
+  )
 endif()
 
 if(NOT TARGET qjs AND BARE_USE_QUICKJS)
@@ -91,22 +156,6 @@ add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
   CONFIG src/bundle.config.js
-  DEPENDS
-    src/bare.js
-    src/bundle.config.js
-    src/builtins/addon.js
-    src/builtins/assert.js
-    src/builtins/buffer.js
-    src/builtins/console.js
-    src/builtins/events.js
-    src/builtins/globals.js
-    src/builtins/module.js
-    src/builtins/os.js
-    src/builtins/path.js
-    src/builtins/process.js
-    src/builtins/thread.js
-    src/builtins/timers.js
-    src/builtins/url.js
 )
 
 add_bare_bundle(
@@ -129,7 +178,6 @@ set_target_properties(
   bare
   PROPERTIES
   C_STANDARD 11
-  CXX_STANDARD 20
   POSITION_INDEPENDENT_CODE ON
 )
 
@@ -186,7 +234,6 @@ list(APPEND objects
   $<TARGET_OBJECTS:utf>
   $<TARGET_OBJECTS:base64>
   $<TARGET_OBJECTS:hex>
-  $<TARGET_OBJECTS:${engine}>
 )
 
 add_library(bare_shared SHARED ${objects})
@@ -203,7 +250,9 @@ set_target_properties(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_shared,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
 add_library(bare_static STATIC ${objects})
@@ -218,7 +267,9 @@ set_target_properties(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
 include_bare_module(bare_repl node_modules/bare-repl)
@@ -260,10 +311,12 @@ target_include_directories(
 target_link_libraries(
   bare_bin
   PUBLIC
-    $<TARGET_PROPERTY:${engine}_static,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
-if(ANDROID)
+if(target MATCHES "android")
   find_library(log log)
 
   target_link_libraries(
