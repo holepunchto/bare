@@ -90,6 +90,12 @@ if(NOT TARGET v8)
       INTERFACE
         winmm.lib
     )
+  elseif(target MATCHES "linux")
+    target_link_libraries(
+      v8
+      INTERFACE
+        m
+    )
   endif()
 endif()
 
