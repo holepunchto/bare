@@ -24,7 +24,9 @@ mirror_drive(
 )
 
 if(MSVC)
-  add_compile_options($<$<CONFIG:Debug>:/MTd> $<$<CONFIG:Release>:/MT>)
+  add_compile_options(/MT$<$<CONFIG:Debug>:d>)
+
+  add_link_options(/DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>.lib)
 endif()
 
 if(NOT TARGET uv)
@@ -81,6 +83,14 @@ if(NOT TARGET v8)
     INTERFACE
       c++
   )
+
+  if(target MATCHES "win32")
+    target_link_libraries(
+      v8
+      INTERFACE
+        winmm.lib
+    )
+  endif()
 endif()
 
 if(NOT TARGET js)
@@ -235,6 +245,8 @@ target_link_libraries(
   bare_shared
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
 add_library(bare_static STATIC ${objects})
@@ -250,6 +262,8 @@ target_link_libraries(
   bare_static
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
 include_bare_module(bare_repl node_modules/bare-repl)
@@ -292,6 +306,8 @@ target_link_libraries(
   bare_bin
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+  PRIVATE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
 if(target MATCHES "android")
