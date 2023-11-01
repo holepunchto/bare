@@ -8,9 +8,9 @@ set(BARE_USE_JAVASCRIPTCORE OFF CACHE BOOL "Use JavaScriptCore instead of V8")
 
 set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
 
-set(BARE_PREBUILDS_KEY jpf19qjy6b7rtqs8dg4d6cecu13u3m1ukej1kk4y873exh89wcxy CACHE STRING "Key of the prebuilds drive")
+set(BARE_PREBUILDS_KEY qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso CACHE STRING "Key of the prebuilds drive")
 
-set(BARE_PREBUILDS_VERSION 77 CACHE STRING "Version of the prebuilds drive")
+set(BARE_PREBUILDS_VERSION 41 CACHE STRING "Version of the prebuilds drive")
 
 include(bare)
 
