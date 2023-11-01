@@ -84,17 +84,17 @@ if(NOT TARGET v8)
       c++
   )
 
-  if(target MATCHES "win32")
-    target_link_libraries(
-      v8
-      INTERFACE
-        winmm.lib
-    )
-  elseif(target MATCHES "linux")
+  if(target MATCHES "linux")
     target_link_libraries(
       v8
       INTERFACE
         m
+    )
+  elseif(target MATCHES "win32")
+    target_link_libraries(
+      v8
+      INTERFACE
+        winmm.lib
     )
   endif()
 endif()
