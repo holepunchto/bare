@@ -10,7 +10,7 @@ set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the p
 
 set(BARE_PREBUILDS_KEY jpf19qjy6b7rtqs8dg4d6cecu13u3m1ukej1kk4y873exh89wcxy CACHE STRING "Key of the prebuilds drive")
 
-set(BARE_PREBUILDS_VERSION 73 CACHE STRING "Version of the prebuilds drive")
+set(BARE_PREBUILDS_VERSION 77 CACHE STRING "Version of the prebuilds drive")
 
 include(bare)
 
