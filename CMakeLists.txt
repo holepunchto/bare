@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(bare C CXX)
+project(bare C)
 
 set(BARE_USE_QUICKJS OFF CACHE BOOL "Use QuickJS instead of V8")
 
@@ -105,14 +105,14 @@ if(NOT TARGET js)
     js
     INTERFACE
       vendor/libjs/include
+      vendor/libuv/include
+      vendor/libutf/include
   )
 
   target_link_libraries(
     js
     INTERFACE
       v8
-      uv
-      utf
   )
 endif()
 
@@ -162,7 +162,6 @@ set_target_properties(
   bare
   PROPERTIES
   C_STANDARD 11
-  CXX_STANDARD 20
   POSITION_INDEPENDENT_CODE ON
 )
 
