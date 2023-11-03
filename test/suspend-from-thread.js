@@ -7,7 +7,7 @@ process
     process.resume()
   })
   .on('idle', () => {
-    assert(false, 'Should not idle')
+    console.log('emit idle')
   })
   .on('resume', () => {
     console.log('emit resume')

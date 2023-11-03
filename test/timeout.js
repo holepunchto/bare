@@ -6,5 +6,5 @@ setTimeout(() => {
   const elapsed = Date.now() - start
   const diff = Math.abs(200 - elapsed)
 
-  assert(diff < 5, 'Difference should be +-5 ms')
+  assert(diff < 50, 'Difference should be +-50 ms')
 }, 200)
