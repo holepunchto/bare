@@ -650,7 +650,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   if (has_source) {
-    err = js_get_typedarray_info(env, argv[1], NULL, (void **) &source.buffer.base, &source.buffer.len, NULL, NULL);
+    err = js_get_typedarray_info(env, argv[1], NULL, (void **) &source.buffer.base, (size_t *) &source.buffer.len, NULL, NULL);
     assert(err == 0);
 
     source.type = bare_thread_source_buffer;
@@ -663,7 +663,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   if (has_data) {
-    err = js_get_typedarray_info(env, argv[2], NULL, (void **) &data.buffer.base, &data.buffer.len, NULL, NULL);
+    err = js_get_typedarray_info(env, argv[2], NULL, (void **) &data.buffer.base, (size_t *) &data.buffer.len, NULL, NULL);
     assert(err == 0);
 
     data.type = bare_thread_data_buffer;
@@ -672,7 +672,7 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
     assert(err == 0);
 
     if (has_data) {
-      err = js_get_arraybuffer_info(env, argv[2], (void **) &data.buffer.base, &data.buffer.len);
+      err = js_get_arraybuffer_info(env, argv[2], (void **) &data.buffer.base, (size_t *) &data.buffer.len);
       assert(err == 0);
 
       data.type = bare_thread_data_arraybuffer;
