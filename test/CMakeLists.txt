@@ -52,6 +52,12 @@ if(BARE_USE_QUICKJS)
   )
 endif()
 
+file(
+  GENERATE
+  OUTPUT ${CMAKE_CURRENT_LIST_DIR}/helpers/build.json
+  INPUT helpers/build.json.in
+)
+
 add_subdirectory(fixtures)
 
 foreach(file IN LISTS tests)

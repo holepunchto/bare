@@ -1,5 +1,6 @@
 import assert from 'assert'
+import build from './helpers/build.json'
 
-import mod from '../build/bare_addon.bare'
+const { default: mod } = await import(build.output.bare_addon)
 
 assert(mod === 'Hello from addon')

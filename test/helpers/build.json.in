@@ -1,0 +1,6 @@
+{
+  "output": {
+    "bare": "$<TARGET_FILE:bare_bin>",
+    "bare_addon": "$<TARGET_FILE:bare_addon_module>"
+  }
+}
