@@ -7,5 +7,5 @@ const [
   file
 ] = process.argv
 
-assert(bare === build.output.bare)
+assert(path.normalize(bare) === path.normalize(build.output.bare))
 assert(file === path.resolve(process.cwd(), 'test/process-argv.js'))
