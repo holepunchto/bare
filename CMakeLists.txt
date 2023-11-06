@@ -215,6 +215,29 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
+# Define the executable target before importing any native addons are their
+# module targets depend on this target.
+add_executable(bare_bin)
+
+set_target_properties(
+  bare_bin
+  PROPERTIES
+  OUTPUT_NAME bare
+
+  # Export symbols from the executable to allow native addons to link against
+  # them.
+  ENABLE_EXPORTS ON
+
+  # Automatically export all available symbols on Windows.
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
+
+  # Make sure none of the executable artefacts collide with the static and
+  # shared library artefacts. This is particularly important on Windows.
+  ARCHIVE_OUTPUT_DIRECTORY bin
+  LIBRARY_OUTPUT_DIRECTORY bin
+  RUNTIME_OUTPUT_DIRECTORY bin
+)
+
 include_bare_module(bare_buffer node_modules/bare-buffer)
 include_bare_module(bare_env node_modules/bare-env)
 include_bare_module(bare_hrtime node_modules/bare-hrtime)
@@ -278,31 +301,16 @@ target_link_libraries(
 include_bare_module(bare_repl node_modules/bare-repl)
 include_bare_module(bare_tty node_modules/bare-tty)
 
-add_executable(bare_bin ${objects}
-  bin/bare.c
-  bin/bare.bundle.h
-
-  $<TARGET_OBJECTS:bare_repl>
-  $<TARGET_OBJECTS:bare_tty>
-)
-
-set_target_properties(
+target_sources(
   bare_bin
-  PROPERTIES
-  OUTPUT_NAME bare
+  PRIVATE
+    ${objects}
 
-  # Export symbols from the executable to allow native addons to link against
-  # them.
-  ENABLE_EXPORTS ON
+    bin/bare.c
+    bin/bare.bundle.h
 
-  # Automatically export all available symbols on Windows.
-  WINDOWS_EXPORT_ALL_SYMBOLS ON
-
-  # Make sure none of the executable artefacts collide with the static and
-  # shared library artefacts. This is particularly important on Windows.
-  ARCHIVE_OUTPUT_DIRECTORY bin
-  LIBRARY_OUTPUT_DIRECTORY bin
-  RUNTIME_OUTPUT_DIRECTORY bin
+    $<TARGET_OBJECTS:bare_repl>
+    $<TARGET_OBJECTS:bare_tty>
 )
 
 target_include_directories(
