@@ -1,3 +1,4 @@
+/* eslint-disable no-eval */
 const Module = require('module')
 const path = require('path')
 
@@ -9,13 +10,17 @@ const argv = require('minimist')(process.argv.slice(1), {
   ],
   string: [
     'import-map',
-    'addons'
+    'addons',
+    'eval',
+    'print'
   ],
   alias: {
     version: 'v',
     help: 'h',
     'import-map': 'm',
-    addons: 'a'
+    addons: 'a',
+    eval: 'e',
+    print: 'p'
   }
 })
 
@@ -53,6 +58,18 @@ if (argv.m) {
 
 if (argv.a) {
   process.addon.path = path.resolve(process.cwd(), argv.a)
+}
+
+if (argv.e) {
+  eval(argv.e)
+
+  process.exit()
+}
+
+if (argv.p) {
+  console.log(eval(argv.p))
+
+  process.exit()
 }
 
 if (argc === 0) {
