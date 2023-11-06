@@ -1,4 +1,3 @@
-const assert = require('assert')
 const Thread = require('thread')
 
 process
