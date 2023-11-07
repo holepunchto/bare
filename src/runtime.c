@@ -732,7 +732,7 @@ bare_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_external(env, argv[0], (void **) &thread);
   assert(err == 0);
 
-  bare_thread_join(thread);
+  bare_thread_join(runtime, thread);
 
   return NULL;
 }

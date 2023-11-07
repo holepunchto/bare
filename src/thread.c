@@ -168,10 +168,10 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_s
 }
 
 int
-bare_thread_join (bare_thread_t *thread) {
+bare_thread_join (bare_runtime_t *runtime, bare_thread_t *thread) {
   int err;
 
-  js_env_t *env = thread->runtime->env;
+  js_env_t *env = runtime->env;
 
   err = uv_thread_join(&thread->id);
 

@@ -10,7 +10,7 @@ int
 bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, bare_thread_t **result);
 
 int
-bare_thread_join (bare_thread_t *thread);
+bare_thread_join (bare_runtime_t *runtime, bare_thread_t *thread);
 
 int
 bare_thread_suspend (bare_thread_t *thread);
