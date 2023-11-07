@@ -133,26 +133,24 @@ if(NOT TARGET js)
     INTERFACE
       v8
   )
+
+  set(engine js)
 endif()
 
 if(NOT TARGET qjs AND BARE_USE_QUICKJS)
   add_subdirectory(vendor/libqjs EXCLUDE_FROM_ALL)
+
+  set(engine qjs_static)
 endif()
 
 if(NOT TARGET jsc AND BARE_USE_JAVASCRIPTCORE)
   add_subdirectory(vendor/libjsc EXCLUDE_FROM_ALL)
+
+  set(engine jsc_static)
 endif()
 
 if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
-endif()
-
-if(BARE_USE_QUICKJS)
-  set(engine qjs)
-elseif(BARE_USE_JAVASCRIPTCORE)
-  set(engine jsc)
-else()
-  set(engine js)
 endif()
 
 add_bare_bundle(
