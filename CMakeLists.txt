@@ -285,7 +285,7 @@ add_executable(bare_bin ${objects}
 )
 
 if(target MATCHES "win32")
-  target_source(
+  target_sources(
     bare_bin
     PRIVATE
       src/js.def
