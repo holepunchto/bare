@@ -284,6 +284,14 @@ add_executable(bare_bin ${objects}
   $<TARGET_OBJECTS:bare_tty>
 )
 
+if(target MATCHES "win32")
+  target_source(
+    bare_bin
+    PRIVATE
+      src/js.def
+  )
+endif()
+
 set_target_properties(
   bare_bin
   PROPERTIES
