@@ -328,11 +328,11 @@ target_link_libraries(
 if(target MATCHES "android")
   find_library(log log)
 
-  target_link_libraries(
-    bare_bin
-    PUBLIC
-      ${log}
-  )
+  target_link_libraries(bare_static PUBLIC ${log})
+
+  target_link_libraries(bare_shared PUBLIC ${log})
+
+  target_link_libraries(bare_bin PUBLIC ${log})
 endif()
 
 install(
