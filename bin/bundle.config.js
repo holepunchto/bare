@@ -1,5 +1,8 @@
 module.exports = {
   target: 'c',
   name: 'bare_bundle',
-  compress: ['*']
+  imports: {
+    events: 'bare-events'
+  }
+  // compress: ['*']
 }

@@ -28,11 +28,7 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   process->runtime = malloc(sizeof(bare_runtime_t));
 
-  const char *addons = bare_option(options, 0, addons, NULL);
-
-  process->options = (bare_options_t){
-    .addons = addons ? strdup(addons) : NULL
-  };
+  process->options = (bare_options_t){};
 
   process->platform = platform;
   process->argc = argc;
@@ -66,10 +62,6 @@ bare_teardown (bare_t *bare, int *exit_code) {
 
   err = bare_runtime_teardown(process->runtime, exit_code);
   assert(err == 0);
-
-  bare_options_t *options = &process->options;
-
-  if (options->addons) free((char *) options->addons);
 
   free(bare);
 

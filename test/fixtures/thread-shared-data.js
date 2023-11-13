@@ -1,5 +1,6 @@
-const assert = require('assert')
-const Thread = require('thread')
+/* global Bare */
+const assert = require('bare-assert')
+const { Thread } = Bare
 
 assert(Thread.isMainThread === false)
 

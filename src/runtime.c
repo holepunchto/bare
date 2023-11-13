@@ -16,9 +16,9 @@
 #include "types.h"
 
 #ifdef BARE_PLATFORM_ANDROID
-#include "runtime/android.h"
+#include "android.h"
 #else
-#include "runtime/posix.h"
+#include "posix.h"
 #endif
 
 static inline bool
@@ -61,7 +61,7 @@ err: {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = bare_runtime__print_error("Uncaught %s\n", str);
+  err = bare__print_error("Uncaught %s\n", str);
   assert(err >= 0);
 
   abort();
@@ -103,7 +103,7 @@ err: {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = bare_runtime__print_error("Uncaught (in promise) %s\n", str);
+  err = bare__print_error("Uncaught (in promise) %s\n", str);
   assert(err >= 0);
 
   abort();
@@ -350,7 +350,7 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = bare_runtime__print_info("%s", data);
+  err = bare__print_info("%s", data);
   assert(err >= 0);
 
   free(data);
@@ -380,7 +380,7 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = bare_runtime__print_error("%s", data);
+  err = bare__print_error("%s", data);
   assert(err >= 0);
 
   free(data);
@@ -827,19 +827,6 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   js_value_t *exports = runtime->exports;
 
-  js_value_t *addons;
-
-  if (process->options.addons) {
-    err = js_create_string_utf8(env, (const utf8_t *) process->options.addons, -1, &addons);
-    assert(err == 0);
-  } else {
-    err = js_get_null(env, &addons);
-    assert(err == 0);
-  }
-
-  err = js_set_named_property(env, exports, "addons", addons);
-  assert(err == 0);
-
   js_value_t *argv;
   err = js_create_array_with_length(env, runtime->process->argc, &argv);
   assert(err == 0);
@@ -1026,8 +1013,7 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  err = js_call_function(env, global, run, 2, args, NULL);
-  if (err < 0) return err;
+  js_call_function(env, global, run, 2, args, NULL);
 
   do {
     err = uv_run(runtime->loop, UV_RUN_DEFAULT);

@@ -1,4 +1,5 @@
-const assert = require('assert')
+/* global Bare */
+const assert = require('bare-assert')
 
 const id = setTimeout(() => {
   assert(false, 'Should have been cancelled')

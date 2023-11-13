@@ -1,6 +1,7 @@
-const Thread = require('thread')
+/* global Bare */
+const { Thread } = Bare
 
-process
+Bare
   .on('suspend', () => {
     console.log('emit suspend')
   })
@@ -13,13 +14,13 @@ process
   .suspend()
 
 Thread.create(() => {
-  process
+  Bare
     .on('suspend', () => {
       console.log('emit suspend thread')
     })
     .on('idle', () => {
       console.log('emit idle thread')
-      process.resume()
+      Bare.resume()
     })
     .on('resume', () => {
       console.log('emit resume thread')

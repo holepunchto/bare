@@ -13,9 +13,6 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
-  process-addon.js
-  process-argv.js
-  process-chdir.js
   suspend-from-thread.js
   suspend-resume.js
   suspend-resume-from-thread.js

@@ -1,6 +1,8 @@
-const assert = require('assert')
-const Addon = require('addon')
-const path = require('path')
+/* global Bare */
+const assert = require('bare-assert')
+const path = require('bare-path')
+const os = require('bare-os')
 const build = require('./helpers/build.json')
+const { Addon } = Bare
 
-assert(Addon.resolve(process.cwd()) === path.normalize(build.output.bare_addon))
+assert(Addon.resolve(os.cwd()) === path.normalize(build.output.bare_addon))

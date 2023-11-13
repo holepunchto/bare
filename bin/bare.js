@@ -1,8 +1,10 @@
+/* global Bare */
 /* eslint-disable no-eval */
-const Module = require('module')
-const path = require('path')
+const Module = require('bare-module')
+const path = require('bare-path')
+const os = require('bare-os')
 
-const argv = require('minimist')(process.argv.slice(1), {
+const argv = require('minimist')(Bare.argv.slice(1), {
   stopEarly: true,
   boolean: [
     'version',
@@ -10,7 +12,6 @@ const argv = require('minimist')(process.argv.slice(1), {
   ],
   string: [
     'import-map',
-    'addons',
     'eval',
     'print'
   ],
@@ -18,7 +19,6 @@ const argv = require('minimist')(process.argv.slice(1), {
     version: 'v',
     help: 'h',
     'import-map': 'm',
-    addons: 'a',
     eval: 'e',
     print: 'p'
   }
@@ -26,29 +26,29 @@ const argv = require('minimist')(process.argv.slice(1), {
 
 const argc = argv._.length
 
-process.argv.splice(1, argc, ...argv._)
+Bare.argv.splice(1, argc, ...argv._)
 
 if (argv.v) {
-  console.log(process.version)
+  console.log(Bare.version)
 
-  process.exit()
+  Bare.exit()
 }
 
 if (argv.h) {
   console.log('usage: bare [-m, --import-map <path>] [<filename>]')
 
-  process.exit(argv.h || argc > 0 ? 0 : 1)
+  Bare.exit(argv.h || argc > 0 ? 0 : 1)
 }
 
 if (argv.m) {
   const { exports: map } = Module.load(
-    Module.resolve(path.resolve(process.cwd(), argv.m))
+    Module.resolve(path.resolve(os.cwd(), argv.m))
   )
 
   if (map && map.imports) {
     for (const [from, to] of Object.entries(map.imports)) {
       if (/^([a-z]:)?([/\\]|\.{1,2}[/\\]?)/.test(to)) {
-        Module._imports[from] = path.resolve(process.cwd(), path.dirname(argv.m), to)
+        Module._imports[from] = path.resolve(os.cwd(), path.dirname(argv.m), to)
       } else {
         Module._imports[from] = to
       }
@@ -56,28 +56,24 @@ if (argv.m) {
   }
 }
 
-if (argv.a) {
-  process.addon.path = path.resolve(process.cwd(), argv.a)
-}
-
 if (argv.e) {
   eval(argv.e)
 
-  process.exit()
+  Bare.exit()
 }
 
 if (argv.p) {
   console.log(eval(argv.p))
 
-  process.exit()
+  Bare.exit()
 }
 
 if (argc === 0) {
   require('bare-repl').start()
 } else {
   Module.load(
-    process.argv[1] = Module.resolve(
-      path.resolve(process.cwd(), process.argv[1])
+    Bare.argv[1] = Module.resolve(
+      path.resolve(os.cwd(), Bare.argv[1])
     )
   )
 }

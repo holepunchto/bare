@@ -1,4 +1,4 @@
-const assert = require('assert')
+const assert = require('bare-assert')
 const build = require('./helpers/build.json')
 
 const mod = require(build.output.bare_addon)

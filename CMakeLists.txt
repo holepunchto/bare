@@ -16,6 +16,10 @@ include(bare)
 
 bare_target(target)
 
+# Prepend the core CMake module directory to ensure that `include(bare)`
+# resolves to our overrides when including native addons.
+list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 mirror_drive(
   SOURCE ${BARE_PREBUILDS_KEY}
   DESTINATION ${BARE_PREBUILDS_DIR}
@@ -193,12 +197,12 @@ target_sources(
   PRIVATE
     src/addon.c
     src/addon.h
+    src/android.h
     src/bare.c
     src/bare.js.h
     src/runtime.c
     src/runtime.h
-    src/runtime/android.h
-    src/runtime/posix.h
+    src/posix.h
     src/thread.c
     src/thread.h
     src/types.h

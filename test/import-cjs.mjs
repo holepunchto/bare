@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'bare-assert'
 
 import mod from './fixtures/cjs'
 

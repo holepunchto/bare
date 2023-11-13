@@ -1,4 +1,4 @@
-/* global bare */
+/* global bare, Bare */
 
 const { AddonError } = require('./errors')
 
@@ -25,12 +25,16 @@ module.exports = exports = class Addon {
   }
 
   unload () {
+    let unloaded = false
+
     if (this._handle) {
-      bare.unloadAddon(this._handle)
+      unloaded = bare.unloadAddon(this._handle)
       this._handle = null
     }
 
     Addon._addons.delete(this)
+
+    return unloaded
   }
 
   [Symbol.for('bare.inspect')] () {
@@ -43,17 +47,8 @@ module.exports = exports = class Addon {
     }
   }
 
-  static _path = bare.addons
   static _cache = Object.create(null)
   static _addons = new Set()
-
-  static get path () {
-    return this._path
-  }
-
-  static set path (value) {
-    this._path = value
-  }
 
   static get cache () {
     return this._cache
@@ -114,7 +109,7 @@ module.exports = exports = class Addon {
   }
 
   static * _resolveFile (specifier) {
-    const path = require('./path')
+    const path = require('bare-path')
 
     switch (path.extname(specifier)) {
       case '.bare':
@@ -124,8 +119,8 @@ module.exports = exports = class Addon {
   }
 
   static * _resolveDirectory (specifier) {
-    const path = require('./path')
-    const Module = require('./module')
+    const path = require('bare-path')
+    const Module = require('bare-module')
 
     let info = null
     try {
@@ -145,22 +140,6 @@ module.exports = exports = class Addon {
     }
 
     if (info) {
-      if (this._path) {
-        const name = info.name.replace(/\//g, '+')
-        const version = info.version
-
-        for (const candidate of [
-          `${name}.bare`,
-          `${name}@${version}.bare`,
-          `${name}.node`,
-          `${name}@${version}.node`
-        ]) {
-          try {
-            yield Module.resolve(path.join(this._path, candidate))
-          } catch {}
-        }
-      }
-
       try {
         specifier = path.dirname(Module.resolve(path.join(info.name, 'package.json')))
       } catch {}
@@ -178,12 +157,13 @@ module.exports = exports = class Addon {
   }
 
   static * _resolveAddonPaths (specifier) {
-    const path = require('./path')
+    const path = require('bare-path')
+    const os = require('bare-os')
 
     yield path.join(specifier, 'build/Debug')
     yield path.join(specifier, 'build/Release')
     yield path.join(specifier, 'build')
-    yield path.join(specifier, 'prebuilds', `${process.platform}-${process.arch}`)
+    yield path.join(specifier, 'prebuilds', `${os.platform()}-${os.arch()}`)
   }
 }
 
@@ -194,7 +174,7 @@ const constants = exports.constants = {
   }
 }
 
-process
+Bare
   .prependListener('teardown', () => {
     for (const addon of exports._addons) {
       addon.unload()

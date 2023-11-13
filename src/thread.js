@@ -1,4 +1,4 @@
-/* global bare */
+/* global bare, Bare */
 
 module.exports = exports = class Thread {
   constructor (filename, opts, callback) {
@@ -20,7 +20,7 @@ module.exports = exports = class Thread {
     }
 
     if (callback) {
-      opts = { ...opts, source: `(${callback.toString()})(require('thread').self.data)` }
+      opts = { ...opts, source: `(${callback.toString()})(Bare.Thread.self.data)` }
     }
 
     let {
@@ -93,7 +93,7 @@ class ThreadProxy {
 
 exports.self = exports.isMainThread ? null : new ThreadProxy()
 
-process
+Bare
   .prependListener('teardown', () => {
     for (const thread of exports._threads) {
       thread.join()

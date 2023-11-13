@@ -1,4 +1,4 @@
-const assert = require('assert')
+const assert = require('bare-assert')
 
 const start = Date.now()
 

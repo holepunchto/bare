@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'bare-assert'
 import build from './helpers/build.json'
 
 const { default: mod } = await import(build.output.bare_addon)

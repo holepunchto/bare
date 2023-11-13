@@ -1,12 +1,13 @@
-const assert = require('assert')
+/* global Bare */
+const assert = require('bare-assert')
 
 let suspended = false
 
-process
+Bare
   .on('suspend', () => {
     console.log('emit suspend')
     suspended = true
-    process.resume()
+    Bare.resume()
   })
   .on('idle', () => {
     console.log('emit idle')

@@ -1,3 +1,5 @@
+/* global bare */
+
 /**
  * This module defines the global APIs available in Bare. In general, we prefer
  * modules over making APIs available in the global scope and mostly to the
@@ -24,14 +26,14 @@ global.queueMicrotask = function queueMicrotask (fn) {
  * globally and many of the core modules in Bare also assume this.
  */
 
-global.Buffer = require('./buffer')
+global.Buffer = require('bare-buffer')
 
 /**
  * Make timers globally available, including the Node.js-specific immediate
  * API which schedules events to run after each I/O tick.
  */
 
-const timers = require('./timers')
+const timers = require('bare-timers')
 
 global.setTimeout = timers.setTimeout
 global.clearTimeout = timers.clearTimeout
@@ -46,10 +48,23 @@ global.clearImmediate = timers.clearImmediate
  * Make the debugging console globally available.
  */
 
-global.console = require('./console')
+const Console = require('bare-console')
+
+global.console = new Console({
+  colors: bare.isTTY,
+  bind: true,
+
+  stdout (data) {
+    bare.printInfo(data.replace(/\u0000/g, '\\x00')) // eslint-disable-line no-control-regex
+  },
+
+  stderr (data) {
+    bare.printError(data.replace(/\u0000/g, '\\x00')) // eslint-disable-line no-control-regex
+  }
+})
 
 /**
  * Make the URL constructor globally available.
  */
 
-global.URL = require('./url').URL
+global.URL = require('bare-url').URL

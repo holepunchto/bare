@@ -1,4 +1,4 @@
-const assert = require('assert')
+const assert = require('bare-assert')
 
 const mod = require('./fixtures/cjs')
 

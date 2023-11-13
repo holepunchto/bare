@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 static inline int
-bare_runtime__print_info (const char *format, ...) {
+bare__print_info (const char *format, ...) {
   va_list args;
   va_start(args, format);
 
@@ -17,7 +17,7 @@ bare_runtime__print_info (const char *format, ...) {
 }
 
 static inline int
-bare_runtime__print_error (const char *format, ...) {
+bare__print_error (const char *format, ...) {
   va_list args;
   va_start(args, format);
 
