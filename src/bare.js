@@ -130,7 +130,14 @@ class Bare extends EventEmitter {
  * the global `Bare` reference.
  */
 
-global.Bare = module.exports = exports = new Bare()
+module.exports = exports = new Bare()
+
+Object.defineProperty(global, 'Bare', {
+  value: exports,
+  enumerable: true,
+  writable: false,
+  configurable: true
+})
 
 /**
  * Step 4:
