@@ -2,7 +2,7 @@
 
 const { AddonError } = require('./errors')
 
-module.exports = exports = class Addon {
+const Addon = module.exports = exports = class Addon {
   constructor () {
     this._type = null
     this._filename = null
@@ -176,7 +176,9 @@ const constants = exports.constants = {
 
 Bare
   .prependListener('teardown', () => {
-    for (const addon of exports._addons) {
+    for (const addon of Addon._addons) {
       addon.unload()
     }
   })
+
+bare.addon = Addon.load.bind(Addon)

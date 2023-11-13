@@ -145,9 +145,7 @@ Object.defineProperty(global, 'Bare', {
  * native code.
  */
 
-const Addon = exports.Addon = require('./addon')
-
-bare.addon = Addon.load.bind(Addon)
+exports.Addon = require('./addon')
 
 /**
  * Step 5:
