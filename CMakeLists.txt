@@ -218,7 +218,6 @@ target_include_directories(
 )
 
 include_bare_module(bare_buffer node_modules/bare-buffer)
-include_bare_module(bare_env node_modules/bare-env)
 include_bare_module(bare_hrtime node_modules/bare-hrtime)
 include_bare_module(bare_module node_modules/bare-module)
 include_bare_module(bare_os node_modules/bare-os)
@@ -227,7 +226,6 @@ include_bare_module(bare_timers node_modules/bare-timers)
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
   $<TARGET_OBJECTS:bare_buffer>
-  $<TARGET_OBJECTS:bare_env>
   $<TARGET_OBJECTS:bare_hrtime>
   $<TARGET_OBJECTS:bare_module>
   $<TARGET_OBJECTS:bare_os>
