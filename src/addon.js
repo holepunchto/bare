@@ -1,5 +1,4 @@
 /* global bare, Bare */
-
 const { AddonError } = require('./errors')
 
 const Addon = module.exports = exports = class Addon {
@@ -119,8 +118,8 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static * _resolveDirectory (specifier) {
-    const path = require('bare-path')
     const Module = require('bare-module')
+    const path = require('bare-path')
 
     let info = null
     try {

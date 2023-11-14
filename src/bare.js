@@ -61,6 +61,8 @@ class Bare extends EventEmitter {
   }
 
   _onuncaughtexception (err) {
+    const inspect = require('bare-inspect')
+
     if (this.exiting || this.emit('uncaughtException', err)) return
 
     bare.printError(
@@ -71,6 +73,8 @@ class Bare extends EventEmitter {
   }
 
   _onunhandledrejection (reason, promise) {
+    const inspect = require('bare-inspect')
+
     if (this.exiting || this.emit('unhandledRejection', reason, promise)) return
 
     bare.printError(
@@ -149,29 +153,20 @@ exports.Addon = require('./addon')
 
 /**
  * Step 5:
- * Now that native code is available, load the remaining core dependencies.
- */
-
-const inspect = require('bare-inspect')
-const Module = require('bare-module')
-const path = require('bare-path')
-
-/**
- * Step 6:
  * Register the thread API.
  */
 
 exports.Thread = require('./thread')
 
 /**
- * Step 7:
+ * Step 6:
  * Register the remaining globals.
  */
 
 require('./globals')
 
 /**
- * Step 8:
+ * Step 7:
  * Register the native lifecycle hooks.
  */
 
@@ -185,10 +180,13 @@ bare.onidle = exports._onidle.bind(exports)
 bare.onresume = exports._onresume.bind(exports)
 
 /**
- * Step 9:
+ * Step 8:
  * Register the main entry function used by `bare_run()`.
  */
 
 bare.run = function run (filename, source) {
+  const Module = require('bare-module')
+  const path = require('bare-path')
+
   Module.load(path.normalize(filename), source)
 }
