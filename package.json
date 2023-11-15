@@ -17,10 +17,8 @@
   },
   "homepage": "https://github.com/holepunchto/bare#readme",
   "dependencies": {
-    "bare-assert": "^1.0.0",
     "bare-buffer": "^2.0.0",
     "bare-console": "^4.0.0",
-    "bare-dev": "^0.3.26",
     "bare-events": "^2.0.0",
     "bare-hrtime": "^2.0.0",
     "bare-inspect": "^1.3.1",
@@ -34,6 +32,9 @@
     "minimist": "^1.2.8"
   },
   "devDependencies": {
+    "bare-assert": "^1.0.0",
+    "bare-dev": "^0.3.26",
+    "bare-http1": "^2.0.0",
     "standard": "^17.0.0"
   }
 }
