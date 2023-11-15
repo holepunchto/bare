@@ -197,12 +197,10 @@ target_sources(
   PRIVATE
     src/addon.c
     src/addon.h
-    src/android.h
     src/bare.c
     src/bare.js.h
     src/runtime.c
     src/runtime.h
-    src/posix.h
     src/thread.c
     src/thread.h
     src/types.h
@@ -326,16 +324,6 @@ target_link_libraries(
   PRIVATE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
-
-if(target MATCHES "android")
-  find_library(log log)
-
-  target_link_libraries(bare_static PUBLIC ${log})
-
-  target_link_libraries(bare_shared PUBLIC ${log})
-
-  target_link_libraries(bare_bin PUBLIC ${log})
-endif()
 
 install(
   TARGETS bare_bin

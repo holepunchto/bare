@@ -2,6 +2,7 @@
 #include <js.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <utf.h>
@@ -14,12 +15,6 @@
 #include "runtime.h"
 #include "thread.h"
 #include "types.h"
-
-#ifdef BARE_PLATFORM_ANDROID
-#include "android.h"
-#else
-#include "posix.h"
-#endif
 
 static inline bool
 bare_runtime_is_main_thread (bare_runtime_t *runtime) {
@@ -61,7 +56,7 @@ err: {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = bare__print_error("Uncaught %s\n", str);
+  err = fprintf(stderr, "Uncaught %s\n", str);
   assert(err >= 0);
 
   abort();
@@ -103,7 +98,7 @@ err: {
   err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
   assert(err == 0);
 
-  err = bare__print_error("Uncaught (in promise) %s\n", str);
+  err = fprintf(stderr, "Uncaught (in promise) %s\n", str);
   assert(err >= 0);
 
   abort();
@@ -350,7 +345,7 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = bare__print_info("%s", data);
+  err = fprintf(stdout, "%s", data);
   assert(err >= 0);
 
   free(data);
@@ -380,7 +375,7 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
   assert(err == 0);
 
-  err = bare__print_error("%s", data);
+  err = fprintf(stderr, "%s", data);
   assert(err >= 0);
 
   free(data);
