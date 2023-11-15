@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "bare-assert": "^1.0.0",
-    "bare-dev": "^0.4.0",
+    "bare-dev": "^0.4.1",
     "bare-http1": "^2.0.0",
     "standard": "^17.0.0"
   }
