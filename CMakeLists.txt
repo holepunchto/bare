@@ -97,6 +97,14 @@ if(NOT TARGET v8)
       INTERFACE
         m
     )
+  elseif(target MATCHES "android")
+    find_library(log log)
+
+    target_link_libraries(
+      v8
+      INTERFACE
+        ${log}
+    )
   elseif(target MATCHES "win32")
     target_link_libraries(
       v8
