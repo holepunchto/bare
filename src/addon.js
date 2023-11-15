@@ -103,66 +103,54 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static * _resolve (specifier) {
-    yield * this._resolveFile(specifier)
-    yield * this._resolveDirectory(specifier)
-  }
-
-  static * _resolveFile (specifier) {
-    const path = require('bare-path')
-
-    switch (path.extname(specifier)) {
-      case '.bare':
-      case '.node':
-        yield specifier
-    }
-  }
-
-  static * _resolveDirectory (specifier) {
     const Module = require('bare-module')
     const path = require('bare-path')
 
-    let info = null
+    let info
     try {
       info = Module.load(path.join(specifier, 'package.json')).exports
     } catch {
-      const nodeModules = path.normalize('/node_modules/')
-
-      const i = specifier.indexOf(nodeModules)
-
-      if (i !== -1) {
-        specifier = specifier.substring(i + nodeModules.length)
-
-        try {
-          info = Module.load(Module.resolve(path.join(specifier, 'package.json'))).exports
-        } catch {}
-      }
+      return
     }
 
-    if (info) {
-      try {
-        specifier = path.dirname(Module.resolve(path.join(info.name, 'package.json')))
-      } catch {}
-    }
+    const name = info.name.replace(/\//g, '+')
+    const version = info.version
+
+    const candidates = [
+      `${name}.bare`,
+      `${name}@${version}.bare`,
+      `${name}.node`,
+      `${name}@${version}.node`
+    ]
 
     for (const directory of this._resolveAddonPaths(specifier)) {
-      try {
-        const files = bare.readdir(directory)
-
-        for (const file of files) {
-          yield * this._resolveFile(path.join(directory, file))
-        }
-      } catch {}
+      for (const candidate of candidates) {
+        yield * this._resolveFile(path.join(directory, candidate))
+      }
     }
   }
 
-  static * _resolveAddonPaths (specifier) {
+  static * _resolveFile (specifier) {
+    const Module = require('bare-module')
+
+    try {
+      yield Module.resolve(specifier)
+    } catch {}
+  }
+
+  static * _resolveAddonPaths (start) {
     const path = require('bare-path')
     const os = require('bare-os')
 
-    yield path.join(specifier, 'build/Debug')
-    yield path.join(specifier, 'build/Release')
-    yield path.join(specifier, 'build')
-    yield path.join(specifier, 'prebuilds', `${os.platform()}-${os.arch()}`)
+    const target = path.join('prebuilds', `${os.platform()}-${os.arch()}`)
+
+    if (start === path.sep) return yield path.join(start, target)
+
+    const parts = start.split(path.sep)
+
+    for (let i = parts.length - 1; i >= 0; i--) {
+      yield path.join(parts.slice(0, i + 1).join(path.sep), target)
+    }
   }
 }
 
