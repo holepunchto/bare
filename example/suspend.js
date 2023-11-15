@@ -1,3 +1,4 @@
+/* global Bare */
 Bare
   .on('suspend', () => {
     console.log('process suspended')
