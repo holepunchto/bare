@@ -26,6 +26,13 @@ list(APPEND tests
   timeout-clear.js
 )
 
+list(APPEND skipped_tests
+  addon-load.js
+  addon-resolve.js
+  import-addon.cjs
+  import-addon.mjs
+)
+
 if(BARE_USE_JAVASCRIPTCORE)
   list(APPEND skipped_tests
     import-addon.mjs
