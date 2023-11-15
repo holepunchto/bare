@@ -2,7 +2,7 @@
 
 /**
  * This module defines the global APIs available in Bare. In general, we prefer
- * modules over making APIs available in the global scope and mostly to the
+ * modules over making APIs available in the global scope and mostly do the
  * latter to stay somewhat compatible with other environments, such as Web and
  * Node.js.
  */
