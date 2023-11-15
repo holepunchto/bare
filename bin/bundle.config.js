@@ -3,6 +3,6 @@ module.exports = {
   name: 'bare_bundle',
   imports: {
     events: 'bare-events'
-  }
-  // compress: ['*']
+  },
+  compress: ['*']
 }
