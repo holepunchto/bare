@@ -97,10 +97,11 @@ const Addon = module.exports = exports = class Addon {
     }
 
     const {
-      referrer = null
+      referrer = null,
+      protocol = referrer ? referrer.protocol : null
     } = opts
 
-    const [resolved = null] = this._resolve(specifier, dirname)
+    const [resolved = null] = this._resolve(specifier, dirname, protocol)
 
     if (resolved === null) {
       let msg = `Cannot find addon '${specifier}'`
@@ -113,14 +114,14 @@ const Addon = module.exports = exports = class Addon {
     return resolved
   }
 
-  static * _resolve (specifier, dirname) {
+  static * _resolve (specifier, dirname, protocol) {
     const path = require('bare-path')
 
     if (specifier[0] === '.') specifier = path.join(dirname, specifier)
     else if (path.isAbsolute(specifier)) specifier = path.normalize(specifier)
 
     yield * this._resolveStatic(specifier)
-    yield * this._resolveDirectory(specifier)
+    yield * this._resolveDirectory(specifier, protocol)
   }
 
   static * _resolveStatic (specifier) {
@@ -133,17 +134,19 @@ const Addon = module.exports = exports = class Addon {
     const Module = require('bare-module')
 
     try {
+      // We're looking specifically for a file on disk so don't pass the
+      // protocol.
       yield Module.resolve(specifier)
     } catch {}
   }
 
-  static * _resolveDirectory (specifier) {
+  static * _resolveDirectory (specifier, protocol) {
     const Module = require('bare-module')
     const path = require('bare-path')
 
     let info
     try {
-      info = Module.load(path.join(specifier, 'package.json')).exports
+      info = Module.load(path.join(specifier, 'package.json'), { protocol }).exports
     } catch {
       return
     }
