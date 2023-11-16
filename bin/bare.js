@@ -40,22 +40,6 @@ if (argv.h) {
   Bare.exit(argv.h || argc > 0 ? 0 : 1)
 }
 
-if (argv.m) {
-  const { exports: map } = Module.load(
-    Module.resolve(path.resolve(os.cwd(), argv.m))
-  )
-
-  if (map && map.imports) {
-    for (const [from, to] of Object.entries(map.imports)) {
-      if (/^([a-z]:)?([/\\]|\.{1,2}[/\\]?)/.test(to)) {
-        Module._imports[from] = path.resolve(os.cwd(), path.dirname(argv.m), to)
-      } else {
-        Module._imports[from] = to
-      }
-    }
-  }
-}
-
 if (argv.e) {
   eval(argv.e)
 
@@ -71,9 +55,29 @@ if (argv.p) {
 if (argc === 0) {
   require('bare-repl').start()
 } else {
+  const imports = Object.create(null)
+
+  if (argv.m) {
+    const { exports: map } = Module.load(
+      Module.resolve(path.resolve(os.cwd(), argv.m))
+    )
+
+    if (map && map.imports) {
+      for (const [from, to] of Object.entries(map.imports)) {
+        if (/^([a-z]:)?([/\\]|\.{1,2}[/\\]?)/.test(to)) {
+          imports[from] = path.resolve(os.cwd(), path.dirname(argv.m), to)
+        } else {
+          imports[from] = to
+        }
+      }
+    }
+  }
+
   Module.load(
     Bare.argv[1] = Module.resolve(
-      path.resolve(os.cwd(), Bare.argv[1])
-    )
+      path.resolve(os.cwd(), Bare.argv[1]),
+      { imports }
+    ),
+    { imports }
   )
 }
