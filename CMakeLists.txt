@@ -20,9 +20,11 @@ bare_target(target)
 # resolves to our overrides when including native addons.
 list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Propagate the new module path upwards so embedders don't have to override
-# it themselves.
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+if(NOT PROJECT_IS_TOP_LEVEL)
+  # Propagate the new module path upwards so embedders don't have to override
+  # it themselves.
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+endif()
 
 mirror_drive(
   SOURCE ${BARE_PREBUILDS_KEY}
