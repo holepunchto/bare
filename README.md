@@ -8,6 +8,16 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 $ bare [-m, --import-map <path>] [<filename>]
 ```
 
+## Architecture
+
+Bare is built on top of <https://github.com/holepunchto/libjs>, which provides low-level bindings to V8, and <https://github.com/libuv/libuv>, which provides an asynchronous I/O event loop. Bare itself only adds a few missing pieces on top to support a wider ecosystem of modules:
+
+1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
+2. A native addon system supporting both statically and dynamically linked addons.
+3. Light-weight thread support with synchronous joins and shared array buffer support.
+
+Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succint and _bare_.
+
 ## API
 
 ### `Bare`
