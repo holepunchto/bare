@@ -62,10 +62,6 @@ const Addon = module.exports = exports = class Addon {
       addon._type = constants.types.STATIC
       addon._handle = bare.loadStaticAddon(specifier)
     } catch {
-      specifier = this.resolve(specifier)
-
-      if (this._cache[specifier]) return this._cache[specifier]._exports
-
       addon._type = constants.types.DYNAMIC
       addon._filename = specifier
       addon._handle = bare.loadDynamicAddon(specifier)
@@ -92,17 +88,56 @@ const Addon = module.exports = exports = class Addon {
     return unloaded
   }
 
-  static resolve (specifier) {
-    const [resolved = null] = this._resolve(specifier)
+  static resolve (specifier, dirname, opts = {}) {
+    const os = require('bare-os')
+
+    if (typeof dirname !== 'string') {
+      opts = dirname
+      dirname = os.cwd()
+    }
+
+    const {
+      referrer = null
+    } = opts
+
+    const [resolved = null] = this._resolve(specifier, dirname)
 
     if (resolved === null) {
-      throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${specifier}'`)
+      let msg = `Cannot find addon '${specifier}'`
+
+      if (referrer) msg += ` imported from '${referrer._filename}'`
+
+      throw AddonError.ADDON_NOT_FOUND(msg)
     }
 
     return resolved
   }
 
-  static * _resolve (specifier) {
+  static * _resolve (specifier, dirname) {
+    const path = require('bare-path')
+
+    if (specifier[0] === '.') specifier = path.join(dirname, specifier)
+    else if (path.isAbsolute(specifier)) specifier = path.normalize(specifier)
+
+    yield * this._resolveStatic(specifier)
+    yield * this._resolveDirectory(specifier)
+  }
+
+  static * _resolveStatic (specifier) {
+    try {
+      yield bare.resolveStaticAddon(specifier)
+    } catch {}
+  }
+
+  static * _resolveFile (specifier) {
+    const Module = require('bare-module')
+
+    try {
+      yield Module.resolve(specifier)
+    } catch {}
+  }
+
+  static * _resolveDirectory (specifier) {
     const Module = require('bare-module')
     const path = require('bare-path')
 
@@ -128,14 +163,6 @@ const Addon = module.exports = exports = class Addon {
         yield * this._resolveFile(path.join(directory, candidate))
       }
     }
-  }
-
-  static * _resolveFile (specifier) {
-    const Module = require('bare-module')
-
-    try {
-      yield Module.resolve(specifier)
-    } catch {}
   }
 
   static * _resolveAddonPaths (start) {

@@ -32,6 +32,31 @@ bare_addon_ends_with (const char *string, const char *substring) {
   return e_len <= s_len && strcmp(string + (s_len - e_len), substring) == 0;
 }
 
+const char *
+bare_addon_resolve_static (bare_runtime_t *runtime, const char *specifier) {
+  uv_mutex_lock(&bare_addon_lock);
+
+  bare_module_list_t *next = bare_addon_static;
+
+  while (next) {
+    if (bare_addon_ends_with(specifier, next->resolved)) {
+      break;
+    }
+
+    next = next->next;
+  }
+
+  uv_mutex_unlock(&bare_addon_lock);
+
+  if (next == NULL) {
+    js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
+
+    return NULL;
+  }
+
+  return next->resolved;
+}
+
 bare_module_t *
 bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_lock(&bare_addon_lock);
