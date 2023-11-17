@@ -168,31 +168,33 @@ Block and wait for the thread to exit.
 
 Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare:
 
-- <https://github.com/holepunchto/bare-abort>
-- <https://github.com/holepunchto/bare-assert>
-- <https://github.com/holepunchto/bare-atomics>
-- <https://github.com/holepunchto/bare-buffer>
-- <https://github.com/holepunchto/bare-bundle>
-- <https://github.com/holepunchto/bare-channel>
-- <https://github.com/holepunchto/bare-console>
-- <https://github.com/holepunchto/bare-env>
-- <https://github.com/holepunchto/bare-events>
-- <https://github.com/holepunchto/bare-fs>
-- <https://github.com/holepunchto/bare-hrtime>
-- <https://github.com/holepunchto/bare-http1>
-- <https://github.com/holepunchto/bare-inspect>
-- <https://github.com/holepunchto/bare-module>
-- <https://github.com/holepunchto/bare-os>
-- <https://github.com/holepunchto/bare-path>
-- <https://github.com/holepunchto/bare-pipe>
-- <https://github.com/holepunchto/bare-process>
-- <https://github.com/holepunchto/bare-readline>
-- <https://github.com/holepunchto/bare-repl>
-- <https://github.com/holepunchto/bare-signals>
-- <https://github.com/holepunchto/bare-subprocess>
-- <https://github.com/holepunchto/bare-timers>
-- <https://github.com/holepunchto/bare-tty>
-- <https://github.com/holepunchto/bare-url>
+Module |
+:--- |
+<https://github.com/holepunchto/bare-abort>
+<https://github.com/holepunchto/bare-assert>
+<https://github.com/holepunchto/bare-atomics>
+<https://github.com/holepunchto/bare-buffer>
+<https://github.com/holepunchto/bare-bundle>
+<https://github.com/holepunchto/bare-channel>
+<https://github.com/holepunchto/bare-console>
+<https://github.com/holepunchto/bare-env>
+<https://github.com/holepunchto/bare-events>
+<https://github.com/holepunchto/bare-fs>
+<https://github.com/holepunchto/bare-hrtime>
+<https://github.com/holepunchto/bare-http1>
+<https://github.com/holepunchto/bare-inspect>
+<https://github.com/holepunchto/bare-module>
+<https://github.com/holepunchto/bare-os>
+<https://github.com/holepunchto/bare-path>
+<https://github.com/holepunchto/bare-pipe>
+<https://github.com/holepunchto/bare-process>
+<https://github.com/holepunchto/bare-readline>
+<https://github.com/holepunchto/bare-repl>
+<https://github.com/holepunchto/bare-signals>
+<https://github.com/holepunchto/bare-subprocess>
+<https://github.com/holepunchto/bare-timers>
+<https://github.com/holepunchto/bare-tty>
+<https://github.com/holepunchto/bare-url>
 
 ### Embedding
 
