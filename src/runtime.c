@@ -899,12 +899,15 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   assert(err == 0);
 
   uv_ref((uv_handle_t *) &runtime->signals.suspend);
-
   uv_ref((uv_handle_t *) &runtime->signals.resume);
 
   uv_close((uv_handle_t *) &runtime->signals.suspend, bare_runtime_on_handle_close);
-
   uv_close((uv_handle_t *) &runtime->signals.resume, bare_runtime_on_handle_close);
+
+  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+  assert(err == 0);
+
+  bare_addon_teardown();
 
   return 0;
 }

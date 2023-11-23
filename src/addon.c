@@ -175,7 +175,24 @@ bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
 
   bool unloaded = --node->refs == 0;
 
-  if (unloaded) {
+  uv_mutex_unlock(&bare_addon_lock);
+
+  return unloaded;
+}
+
+void
+bare_addon_teardown (void) {
+  uv_mutex_lock(&bare_addon_lock);
+
+  bare_module_list_t *next = bare_addon_dynamic;
+
+  while (next) {
+    bare_module_list_t *node = next;
+
+    next = next->next;
+
+    if (node->refs) continue;
+
     uv_dlclose(node->lib);
 
     if (node->previous) {
@@ -194,8 +211,6 @@ bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
   }
 
   uv_mutex_unlock(&bare_addon_lock);
-
-  return unloaded;
 }
 
 void

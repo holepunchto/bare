@@ -114,9 +114,6 @@ bare_thread_entry (void *data) {
   err = bare_runtime_teardown(thread->runtime, NULL);
   assert(err == 0);
 
-  err = uv_run(&loop, UV_RUN_DEFAULT);
-  assert(err == 0);
-
   err = uv_loop_close(&loop);
   assert(err == 0);
 }

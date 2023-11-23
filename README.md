@@ -83,7 +83,7 @@ Emitted just before the process or current thread terminates. Additional work sc
 Emitted after the process or current thread has terminated and just before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener. Bare itself will register `teardown` event listeners to join dangling threads and unload native addons.
 
 > [!IMPORTANT]
-> To register a `teardown` event listener that needs to access native code, make sure to prepend it so it runs _before_ native addons are unloaded:
+> `teardown` listeners should generally be prepended to have the listeners run in last in, first out order:
 >
 > ```js
 > Bare.prependListener('teardown', () => { ... })
