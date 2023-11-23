@@ -28,7 +28,7 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   process->runtime = malloc(sizeof(bare_runtime_t));
 
-  process->options = (bare_options_t){};
+  process->options = (bare_options_t){0};
 
   process->platform = platform;
   process->argc = argc;
