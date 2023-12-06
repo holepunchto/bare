@@ -11,6 +11,7 @@ EXPORTS
 	js_coerce_to_number
 	js_coerce_to_object
 	js_coerce_to_string
+	js_connect_inspector
 	js_create_array
 	js_create_array_with_length
 	js_create_arraybuffer
@@ -28,6 +29,7 @@ EXPORTS
 	js_create_function
 	js_create_function_with_ffi
 	js_create_function_with_source
+	js_create_inspector
 	js_create_int32
 	js_create_int64
 	js_create_module
@@ -56,6 +58,7 @@ EXPORTS
 	js_delete_property
 	js_delete_reference
 	js_destroy_env
+	js_destroy_inspector
 	js_destroy_platform
 	js_detach_arraybuffer
 	js_escape_handle
@@ -132,6 +135,8 @@ EXPORTS
 	js_is_wrapped
 	js_new_instance
 	js_on_dynamic_import
+	js_on_inspector_paused
+	js_on_inspector_response
 	js_on_uncaught_exception
 	js_on_unhandled_rejection
 	js_open_escapable_handle_scope
@@ -145,6 +150,7 @@ EXPORTS
 	js_resolve_deferred
 	js_run_module
 	js_run_script
+	js_send_inspector_request
 	js_set_arraybuffer_zero_fill_enabled
 	js_set_element
 	js_set_module_export
