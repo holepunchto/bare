@@ -936,11 +936,8 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
   case bare_source_buffer: {
     js_value_t *arraybuffer;
 
-    void *data;
-    err = js_create_arraybuffer(env, source.buffer.len, &data, &arraybuffer);
+    err = js_create_external_arraybuffer(env, source.buffer.base, source.buffer.len, NULL, NULL, &arraybuffer);
     assert(err == 0);
-
-    memcpy(data, source.buffer.base, source.buffer.len);
 
     err = js_create_typedarray(env, js_uint8_array, source.buffer.len, arraybuffer, 0, &args[1]);
     if (err < 0) return err;
