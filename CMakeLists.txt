@@ -224,11 +224,11 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-include_bare_module(bare_buffer node_modules/bare-buffer)
-include_bare_module(bare_hrtime node_modules/bare-hrtime)
-include_bare_module(bare_module node_modules/bare-module)
-include_bare_module(bare_os node_modules/bare-os)
-include_bare_module(bare_timers node_modules/bare-timers)
+include_bare_module(bare_buffer bare-buffer)
+include_bare_module(bare_hrtime bare-hrtime)
+include_bare_module(bare_module bare-module)
+include_bare_module(bare_os bare-os)
+include_bare_module(bare_timers bare-timers)
 
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
@@ -282,8 +282,8 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
-include_bare_module(bare_repl node_modules/bare-repl)
-include_bare_module(bare_tty node_modules/bare-tty)
+include_bare_module(bare_repl bare-repl)
+include_bare_module(bare_tty bare-tty)
 
 add_executable(bare_bin ${objects}
   bin/bare.c
