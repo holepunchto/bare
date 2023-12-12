@@ -223,19 +223,19 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 
 ## Building
 
-To build Bare, start by installing the initial npm dependencies:
-
-```sh
-$ npm install
-```
-
-One of these dependencies is the `bare-dev` toolkit which we'll be invoking with `npx`. Next, synchronise the vendored dependencies, such as git submodules:
+The `bare-dev` toolkit, which we'll be invoking with `npx`, is used for building Bare and acts as a convenient wrapper around CMake and other tools. After cloning the repository, start by synchronising the vendored dependencies such as git submodules:
 
 ```sh
 $ npx bare-dev vendor sync
 ```
 
-You should repeat this whenever the vendored dependencies are updated. The vendored dependencies also include npm dependencies of their own, so make sure to `npm install` again as well. Then, configure the build tree before performing the first build:
+You should repeat this whenever the vendored dependencies are updated. Next, install the JavaScript dependencies:
+
+```sh
+$ npm install
+```
+
+The vendored dependencies also include JavaScript dependencies of their own, so make sure to `npm install` again whenever you synchronise the vendored dependencies. Then, configure the build tree before performing the first build:
 
 ```sh
 $ npx bare-dev configure [--debug]
