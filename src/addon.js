@@ -53,6 +53,10 @@ const Addon = module.exports = exports = class Addon {
     return this._cache
   }
 
+  static get host () {
+    return `${bare.platform}-${bare.arch}`
+  }
+
   static load (specifier) {
     if (this._cache[specifier]) return this._cache[specifier]._exports
 
@@ -170,9 +174,8 @@ const Addon = module.exports = exports = class Addon {
 
   static * _resolveAddonPaths (start) {
     const path = require('bare-path')
-    const os = require('bare-os')
 
-    const target = path.join('prebuilds', `${os.platform()}-${os.arch()}`)
+    const target = path.join('prebuilds', Addon.host)
 
     if (start === path.sep) return yield path.join(start, target)
 

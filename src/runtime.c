@@ -790,6 +790,18 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
     assert(err == 0);
   }
 
+#define V(name, str) \
+  { \
+    js_value_t *val; \
+    err = js_create_string_utf8(env, (utf8_t *) str, -1, &val); \
+    assert(err == 0); \
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
+  }
+  V("platform", BARE_PLATFORM);
+  V("arch", BARE_ARCH);
+#undef V
+
   const char *platform_identifier;
   err = js_get_platform_identifier(runtime->process->platform, &platform_identifier);
   assert(err == 0);
