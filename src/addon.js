@@ -93,7 +93,7 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static resolve (specifier, dirname = null, opts = {}) {
-    const path = require('bare-os')
+    const path = require('bare-path')
     const os = require('bare-os')
 
     if (typeof dirname !== 'string') {
