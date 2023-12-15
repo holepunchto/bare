@@ -92,18 +92,22 @@ const Addon = module.exports = exports = class Addon {
     return unloaded
   }
 
-  static resolve (specifier, dirname, opts = {}) {
+  static resolve (specifier, dirname = null, opts = {}) {
+    const path = require('bare-os')
     const os = require('bare-os')
 
     if (typeof dirname !== 'string') {
       opts = dirname
-      dirname = os.cwd()
+      dirname = null
     }
 
     const {
       referrer = null,
       protocol = referrer ? referrer.protocol : null
     } = opts
+
+    if (referrer) dirname = path.dirname(referrer.filename)
+    else if (typeof dirname !== 'string') dirname = os.cwd()
 
     const [resolved = null] = this._resolve(specifier, dirname, protocol)
 
