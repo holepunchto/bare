@@ -34,6 +34,8 @@ bare_addon_ends_with (const char *string, const char *substring) {
 
 const char *
 bare_addon_resolve_static (bare_runtime_t *runtime, const char *specifier) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_list_t *next = bare_addon_static;
@@ -59,6 +61,8 @@ bare_addon_resolve_static (bare_runtime_t *runtime, const char *specifier) {
 
 bare_module_t *
 bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
@@ -86,6 +90,8 @@ bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
 
 bare_module_t *
 bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
   int err;
 
   uv_mutex_lock(&bare_addon_lock);
@@ -167,6 +173,8 @@ err:
 
 bool
 bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
   bare_module_list_t *node = (bare_module_list_t *) mod;
 
   if (node->lib == NULL) return false;
@@ -182,6 +190,8 @@ bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
 
 void
 bare_addon_teardown (void) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_list_t *next = bare_addon_dynamic;
