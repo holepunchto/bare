@@ -21,22 +21,22 @@
 // https://stackoverflow.com/a/2390626
 
 #if defined(__cplusplus)
-#define BARE_MODULE_CONSTRUCTOR(f) \
-  static void f(void); \
-  struct f##_ { \
-    f##_(void) { f(); } \
-  } f##_; \
-  static void f(void)
+#define BARE_MODULE_CONSTRUCTOR(id) \
+  static void bare_register_module_##id(void); \
+  struct bare_register_module_##id##_ { \
+    bare_register_module_##id##_(void) { f(); } \
+  } bare_register_module_##id##_; \
+  static void bare_register_module_##id(void)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU", read)
-#define BARE_MODULE_CONSTRUCTOR(f) \
-  static void f(void); \
-  __declspec(dllexport, allocate(".CRT$XCU")) void (*f##_)(void) = f; \
-  __pragma(comment(linker, "/include:" #f "_")) static void f(void)
+#define BARE_MODULE_CONSTRUCTOR(id) \
+  static void bare_register_module_##id(void); \
+  __declspec(dllexport, allocate(".CRT$XCU")) void (*bare_register_module_##id##_)(void) = bare_register_module_##id; \
+  __pragma(comment(linker, "/include:bare_register_module_" #id "_")) static void bare_register_module_##id(void)
 #else
-#define BARE_MODULE_CONSTRUCTOR(f) \
-  static void f(void) __attribute__((constructor)); \
-  static void f(void)
+#define BARE_MODULE_CONSTRUCTOR(id) \
+  static void bare_register_module_##id(void) __attribute__((constructor)); \
+  static void bare_register_module_##id(void)
 #endif
 
 #ifdef BARE_MODULE_REGISTER_CONSTRUCTOR
@@ -46,7 +46,7 @@
 // function. This method is suited for both dynamic and static modules.
 
 #define BARE_MODULE(id, fn) \
-  BARE_MODULE_CONSTRUCTOR(bare_register_module_##id) { \
+  BARE_MODULE_CONSTRUCTOR(id) { \
     bare_module_t module = { \
       BARE_MODULE_VERSION, \
       BARE_MODULE_FILENAME, \
