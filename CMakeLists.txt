@@ -260,7 +260,7 @@ target_link_libraries(
 include_bare_module(bare_repl bare-repl)
 include_bare_module(bare_tty bare-tty)
 
-add_executable(bare_bin ${objects}
+add_executable(bare_bin
   bin/bare.c
   bin/bare.bundle.h
 
@@ -295,18 +295,10 @@ set_target_properties(
   RUNTIME_OUTPUT_DIRECTORY bin
 )
 
-target_include_directories(
-  bare_bin
-  PUBLIC
-    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
-)
-
 target_link_libraries(
   bare_bin
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
-  PRIVATE
-    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
 
 install(
