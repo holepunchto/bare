@@ -6,14 +6,6 @@
 	path = vendor/libnapi
 	url = ../../holepunchto/libnapi.git
 	shallow = true
-[submodule "vendor/libqjs"]
-	path = vendor/libqjs
-	url = ../../holepunchto/libqjs.git
-	shallow = true
-[submodule "vendor/libjsc"]
-	path = vendor/libjsc
-	url = ../../holepunchto/libjsc.git
-	shallow = true
 [submodule "vendor/libuv"]
 	path = vendor/libuv
 	url = ../../libuv/libuv.git

@@ -33,29 +33,6 @@ list(APPEND skipped_tests
   import-addon.mjs
 )
 
-if(BARE_USE_JAVASCRIPTCORE)
-  list(APPEND skipped_tests
-    import-addon.mjs
-    import-cjs.mjs
-    import-dynamic-cjs.cjs
-    import-dynamic-cjs.mjs
-    import-dynamic-mjs.cjs
-    import-dynamic-mjs.mjs
-    import-mjs.cjs
-    import-mjs.mjs
-    thread-shared-data.js
-  )
-endif()
-
-if(BARE_USE_QUICKJS)
-  list(APPEND skipped_tests
-    import-dynamic-cjs.cjs
-    import-dynamic-cjs.mjs
-    import-dynamic-mjs.cjs
-    import-dynamic-mjs.mjs
-  )
-endif()
-
 file(
   GENERATE
   OUTPUT ${CMAKE_CURRENT_LIST_DIR}/helpers/build.json

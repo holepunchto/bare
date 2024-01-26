@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.25)
 
 project(bare C)
 
-set(BARE_USE_QUICKJS OFF CACHE BOOL "Use QuickJS instead of V8")
-
-set(BARE_USE_JAVASCRIPTCORE OFF CACHE BOOL "Use JavaScriptCore instead of V8")
-
 set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
 
 set(BARE_PREBUILDS_KEY qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso CACHE STRING "Key of the prebuilds drive")
@@ -151,20 +147,6 @@ if(NOT TARGET js)
     INTERFACE
       v8
   )
-
-  set(engine js)
-endif()
-
-if(NOT TARGET qjs AND BARE_USE_QUICKJS)
-  add_subdirectory(vendor/libqjs EXCLUDE_FROM_ALL)
-
-  set(engine qjs_static)
-endif()
-
-if(NOT TARGET jsc AND BARE_USE_JAVASCRIPTCORE)
-  add_subdirectory(vendor/libjsc EXCLUDE_FROM_ALL)
-
-  set(engine jsc_static)
 endif()
 
 if(NOT TARGET napi)
@@ -260,7 +242,7 @@ set_target_properties(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
   PRIVATE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
@@ -277,7 +259,7 @@ set_target_properties(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
   PRIVATE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
@@ -329,7 +311,7 @@ target_include_directories(
 target_link_libraries(
   bare_bin
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,${engine}>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
   PRIVATE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
@@ -344,5 +326,6 @@ install(
 
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
+
   add_subdirectory(test)
 endif()
