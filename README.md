@@ -229,13 +229,7 @@ The `bare-dev` toolkit, which we'll be invoking with `npx`, is used for building
 $ npx bare-dev vendor sync
 ```
 
-You should repeat this whenever the vendored dependencies are updated. Next, install the JavaScript dependencies:
-
-```sh
-$ npm install
-```
-
-The vendored dependencies also include JavaScript dependencies of their own, so make sure to `npm install` again whenever you synchronise the vendored dependencies. Then, configure the build tree before performing the first build:
+Then, configure the build tree before performing the first build:
 
 ```sh
 $ npx bare-dev configure [--debug]
