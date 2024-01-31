@@ -107,12 +107,10 @@ const Addon = module.exports = exports = class Addon {
     }, readPackage)) {
       switch (resolution.protocol) {
         case 'builtin:': return resolution
-
-        case 'file:': {
+        default:
           if (protocol.exists(resolution)) {
             return protocol.postresolve(resolution, parentURL)
           }
-        }
       }
     }
 
@@ -124,7 +122,7 @@ const Addon = module.exports = exports = class Addon {
 
     function readPackage (packageURL) {
       if (protocol.exists(packageURL)) {
-        return Module.load(packageURL, { protocol }).exports
+        return Module.load(packageURL, { protocol })._exports
       }
 
       return null
