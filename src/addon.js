@@ -3,20 +3,10 @@ const { AddonError } = require('./errors')
 
 const Addon = module.exports = exports = class Addon {
   constructor () {
-    this._type = null
-    this._filename = null
     this._exports = {}
     this._handle = null
 
     Addon._addons.add(this)
-  }
-
-  get type () {
-    return this._type
-  }
-
-  get filename () {
-    return this._filename
   }
 
   get exports () {
@@ -40,8 +30,6 @@ const Addon = module.exports = exports = class Addon {
     return {
       __proto__: { constructor: Addon },
 
-      type: this.type,
-      filename: this.filename,
       exports: this.exports
     }
   }
@@ -57,144 +45,90 @@ const Addon = module.exports = exports = class Addon {
     return `${bare.platform}-${bare.arch}`
   }
 
-  static load (specifier) {
-    if (this._cache[specifier]) return this._cache[specifier]._exports
+  static load (url) {
+    const self = Addon
 
-    const addon = new Addon()
+    if (self._cache[url.href]) return self._cache[url.href]
 
-    try {
-      addon._type = constants.types.STATIC
-      addon._handle = bare.loadStaticAddon(specifier)
-    } catch {
-      addon._type = constants.types.DYNAMIC
-      addon._filename = specifier
-      addon._handle = bare.loadDynamicAddon(specifier)
+    const addon = self._cache[url.href] = new Addon()
+
+    switch (url.protocol) {
+      case 'builtin:':
+        addon._handle = bare.loadStaticAddon(url.pathname)
+        break
+
+      default:
+        addon._handle = bare.loadDynamicAddon(url.href)
     }
 
     addon._exports = bare.initAddon(addon._handle, addon._exports)
 
-    this._cache[specifier] = addon
-
-    return addon._exports
+    return addon
   }
 
-  static unload (specifier) {
-    const addon = this._cache[specifier] || null
+  static unload (url) {
+    const addon = this._cache[url.href] || null
 
     if (addon === null) {
-      throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${specifier}'`)
+      throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${url.href}'`)
     }
 
     const unloaded = addon.unload()
 
-    if (unloaded) delete this._cache[specifier]
+    if (unloaded) delete this._cache[url.href]
 
     return unloaded
   }
 
-  static resolve (specifier, dirname = null, opts = {}) {
-    const path = require('bare-path')
-    const os = require('bare-os')
+  static resolve (specifier, parentURL, opts = {}) {
+    const Module = require('bare-module')
+    const resolve = require('bare-addon-resolve')
 
-    if (typeof dirname !== 'string') {
-      opts = dirname
-      dirname = null
-    }
+    const self = Addon
 
     const {
+      name = null,
+      version = null,
       referrer = null,
       protocol = referrer ? referrer.protocol : null
     } = opts
 
-    if (referrer) dirname = path.dirname(referrer.filename)
-    else if (typeof dirname !== 'string') dirname = os.cwd()
+    const builtins = bare.getStaticAddons()
 
-    const [resolved = null] = this._resolve(specifier, dirname, protocol)
+    for (const resolution of resolve(specifier, parentURL, {
+      host: self.host,
+      name,
+      version,
+      builtins,
+      extensions: [
+        '.bare',
+        '.node'
+      ]
+    }, readPackage)) {
+      switch (resolution.protocol) {
+        case 'builtin:': return resolution
 
-    if (resolved === null) {
-      let msg = `Cannot find addon '${specifier}'`
-
-      if (referrer) msg += ` imported from '${referrer._filename}'`
-
-      throw AddonError.ADDON_NOT_FOUND(msg)
-    }
-
-    return resolved
-  }
-
-  static * _resolve (specifier, dirname, protocol) {
-    const path = require('bare-path')
-
-    if (specifier[0] === '.') specifier = path.join(dirname, specifier)
-    else if (path.isAbsolute(specifier)) specifier = path.normalize(specifier)
-
-    yield * this._resolveStatic(specifier)
-    yield * this._resolveDirectory(specifier, protocol)
-  }
-
-  static * _resolveStatic (specifier) {
-    try {
-      yield bare.resolveStaticAddon(specifier)
-    } catch {}
-  }
-
-  static * _resolveFile (specifier) {
-    const Module = require('bare-module')
-
-    try {
-      // We're looking specifically for a file on disk so don't pass the
-      // protocol.
-      yield Module.resolve(specifier)
-    } catch {}
-  }
-
-  static * _resolveDirectory (specifier, protocol) {
-    const Module = require('bare-module')
-    const path = require('bare-path')
-
-    let info
-    try {
-      info = Module.load(path.join(specifier, 'package.json'), { protocol }).exports
-    } catch {
-      return
-    }
-
-    const name = info.name.replace(/\//g, '+')
-    const version = info.version
-
-    const candidates = [
-      `${name}.bare`,
-      `${name}@${version}.bare`,
-      `${name}.node`,
-      `${name}@${version}.node`
-    ]
-
-    for (const directory of this._resolveAddonPaths(specifier)) {
-      for (const candidate of candidates) {
-        yield * this._resolveFile(path.join(directory, candidate))
+        case 'file:': {
+          if (protocol.exists(resolution)) {
+            return protocol.postresolve(resolution, parentURL)
+          }
+        }
       }
     }
-  }
 
-  static * _resolveAddonPaths (start) {
-    const path = require('bare-path')
+    let msg = `Cannot find addon '${specifier}'`
 
-    const target = path.join('prebuilds', Addon.host)
+    if (referrer) msg += ` imported from '${referrer._url.href}'`
 
-    if (start === path.sep) return yield path.join(start, target)
+    throw AddonError.ADDON_NOT_FOUND(msg)
 
-    const parts = start.split(path.sep)
+    function readPackage (packageURL) {
+      if (protocol.exists(packageURL)) {
+        return Module.load(packageURL, { protocol }).exports
+      }
 
-    for (let i = parts.length - 1; i >= 0; i--) {
-      yield path.join(parts.slice(0, i + 1).join(path.sep), target)
+      return null
     }
-  }
-}
-
-const constants = exports.constants = {
-  types: {
-    STATIC: 1,
-    DYNAMIC: 2
   }
 }
 
@@ -205,4 +139,18 @@ Bare
     }
   })
 
-bare.addon = Addon.load.bind(Addon)
+bare.addon = function addon (specifier) {
+  const name = specifier.substring(specifier.lastIndexOf('/') + 1)
+
+  const href = 'builtin:' + name
+
+  if (Addon._cache[href]) return Addon._cache[href]._exports
+
+  const addon = Addon._cache[href] = new Addon()
+
+  addon._handle = bare.loadStaticAddon(name)
+
+  addon._exports = bare.initAddon(addon._handle, addon._exports)
+
+  return addon._exports
+}

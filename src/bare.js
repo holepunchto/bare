@@ -186,7 +186,7 @@ bare.onresume = exports._onresume.bind(exports)
 
 bare.run = function run (filename, source) {
   const Module = require('bare-module')
-  const path = require('bare-path')
+  const url = require('bare-url')
 
-  Module.load(path.normalize(filename), source)
+  Module.load(url.pathToFileURL(filename), source)
 }

@@ -5,7 +5,7 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 ## Usage
 
 ```sh
-$ bare [-m, --import-map <path>] [<filename>]
+$ bare [<filename>]
 ```
 
 ## Architecture
@@ -105,17 +105,30 @@ Emitted when the process or current thread resumes after suspension. Deferred an
 
 The `Bare.Addon` namespace provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
 
-#### `const exports = Addon.load(specifier)`
+#### `const addon = Addon.load(url)`
 
-Load a static or dynamic native addon identified by `specifier`. If `specifier` is not a static native addon, Bare will instead look for a matching dynamic object library.
+Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
 
-#### `specifier = Addon.resolve(specifier)`
+#### `const unloaded = Addon.unload(url)`
 
-Resolve a native addon specifier by searching for a static native addon or dynamic object library matching `specifier`.
+Unload a dynamic native addon identified by `url`. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
 
-#### `const unloaded = Addon.unload(specifier)`
+#### `const url = Addon.resolve(specifier, parentURL[, options])`
 
-Unload a dynamic native addon identified by `specifier`, which must be fully resolved. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
+Resolve a native addon specifier by searching for a static native addon or dynamic object library matching `specifier` imported from `parentURL`.
+
+Options include:
+
+```js
+{
+  // The name of the addon. If `null`, it will instead be read from the
+  // resolved `package.json`.
+  name: null,
+  // The version of the addon. If `null`, it will instead be read from the
+  // resolved `package.json`.
+  version: null
+}
+```
 
 ### `Bare.Thread`
 

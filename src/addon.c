@@ -2,8 +2,10 @@
 #include <js.h>
 #include <napi.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utf.h>
 #include <uv.h>
 
 #include "types.h"
@@ -24,39 +26,68 @@ bare_addon_on_lock_init (void) {
   assert(err == 0);
 }
 
-static inline bool
-bare_addon_ends_with (const char *string, const char *substring) {
-  size_t s_len = strlen(string);
-  size_t e_len = strlen(substring);
-
-  return e_len <= s_len && strcmp(string + (s_len - e_len), substring) == 0;
-}
-
-const char *
-bare_addon_resolve_static (bare_runtime_t *runtime, const char *specifier) {
+js_value_t *
+bare_addon_get_static (bare_runtime_t *runtime) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
+  int err;
 
   uv_mutex_lock(&bare_addon_lock);
 
+  js_value_t *result;
+  err = js_create_array(runtime->env, &result);
+  assert(err == 0);
+
   bare_module_list_t *next = bare_addon_static;
 
+  uint32_t i = 0;
+
   while (next) {
-    if (bare_addon_ends_with(specifier, next->resolved)) {
-      break;
-    }
+    js_value_t *specifier;
+    err = js_create_string_utf8(runtime->env, (utf8_t *) next->resolved, -1, &specifier);
+    assert(err == 0);
+
+    err = js_set_element(runtime->env, result, i++, specifier);
+    assert(err == 0);
 
     next = next->next;
   }
 
   uv_mutex_unlock(&bare_addon_lock);
 
-  if (next == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
+  return result;
+}
 
-    return NULL;
+js_value_t *
+bare_addon_get_dynamic (bare_runtime_t *runtime) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
+  int err;
+
+  uv_mutex_lock(&bare_addon_lock);
+
+  js_value_t *result;
+  err = js_create_array(runtime->env, &result);
+  assert(err == 0);
+
+  bare_module_list_t *next = bare_addon_dynamic;
+
+  uint32_t i = 0;
+
+  while (next) {
+    js_value_t *specifier;
+    err = js_create_string_utf8(runtime->env, (utf8_t *) next->resolved, -1, &specifier);
+    assert(err == 0);
+
+    err = js_set_element(runtime->env, result, i++, specifier);
+    assert(err == 0);
+
+    next = next->next;
   }
 
-  return next->resolved;
+  uv_mutex_unlock(&bare_addon_lock);
+
+  return result;
 }
 
 bare_module_t *
@@ -69,7 +100,7 @@ bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
   bare_module_list_t *next = bare_addon_static;
 
   while (next) {
-    if (bare_addon_ends_with(specifier, next->resolved)) {
+    if (strcmp(specifier, next->resolved) == 0) {
       mod = &next->mod;
       break;
     }
@@ -100,7 +131,7 @@ bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
   bare_module_list_t *next = bare_addon_dynamic;
 
   while (next) {
-    if (bare_addon_ends_with(specifier, next->resolved)) {
+    if (strcmp(specifier, next->resolved) == 0) {
       mod = &next->mod;
       break;
     }

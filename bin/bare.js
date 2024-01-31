@@ -3,6 +3,7 @@
 const Module = require('bare-module')
 const path = require('bare-path')
 const os = require('bare-os')
+const url = require('bare-url')
 
 const argv = require('minimist')(Bare.argv.slice(1), {
   stopEarly: true,
@@ -11,14 +12,12 @@ const argv = require('minimist')(Bare.argv.slice(1), {
     'help'
   ],
   string: [
-    'import-map',
     'eval',
     'print'
   ],
   alias: {
     version: 'v',
     help: 'h',
-    'import-map': 'm',
     eval: 'e',
     print: 'p'
   }
@@ -35,7 +34,7 @@ if (argv.v) {
 }
 
 if (argv.h) {
-  console.log('usage: bare [-m, --import-map <path>] [<filename>]')
+  console.log('usage: bare [<filename>]')
 
   Bare.exit(argv.h || argc > 0 ? 0 : 1)
 }
@@ -55,29 +54,9 @@ if (argv.p) {
 if (argc === 0) {
   require('bare-repl').start()
 } else {
-  const imports = Object.create(null)
+  const resolved = new URL(Bare.argv[1], url.pathToFileURL(os.cwd() + path.sep))
 
-  if (argv.m) {
-    const { exports: map } = Module.load(
-      Module.resolve(path.resolve(os.cwd(), argv.m))
-    )
+  Bare.argv[1] = url.fileURLToPath(resolved)
 
-    if (map && map.imports) {
-      for (const [from, to] of Object.entries(map.imports)) {
-        if (/^([a-z]:)?([/\\]|\.{1,2}[/\\]?)/.test(to)) {
-          imports[from] = path.resolve(os.cwd(), path.dirname(argv.m), to)
-        } else {
-          imports[from] = to
-        }
-      }
-    }
-  }
-
-  Module.load(
-    Bare.argv[1] = Module.resolve(
-      path.resolve(os.cwd(), Bare.argv[1]),
-      { imports }
-    ),
-    { imports }
-  )
+  Module.load(resolved)
 }

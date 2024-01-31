@@ -384,32 +384,27 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_resolve_static_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_get_static_addons (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  return bare_addon_get_static(runtime);
+}
 
-  utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+static js_value_t *
+bare_runtime_get_dynamic_addons (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  const char *resolved = bare_addon_resolve_static(runtime, (char *) specifier);
-
-  if (resolved == NULL) return NULL;
-
-  js_value_t *value;
-  err = js_create_string_utf8(env, (utf8_t *) resolved, -1, &value);
-  assert(err == 0);
-
-  return value;
+  return bare_addon_get_dynamic(runtime);
 }
 
 static js_value_t *
@@ -855,7 +850,8 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   V("printInfo", bare_runtime_print_info);
   V("printError", bare_runtime_print_error);
 
-  V("resolveStaticAddon", bare_runtime_resolve_static_addon);
+  V("getStaticAddons", bare_runtime_get_static_addons);
+  V("getDynamicAddons", bare_runtime_get_dynamic_addons);
   V("loadStaticAddon", bare_runtime_load_static_addon);
   V("loadDynamicAddon", bare_runtime_load_dynamic_addon);
   V("initAddon", bare_runtime_init_addon);
