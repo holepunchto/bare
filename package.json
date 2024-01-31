@@ -26,7 +26,7 @@
     "bare-module": "^3.0.2",
     "bare-os": "^2.0.0",
     "bare-path": "^2.0.0",
-    "bare-repl": "^0.5.0",
+    "bare-repl": "^0.6.0",
     "bare-timers": "^2.0.0",
     "bare-tty": "^3.0.0",
     "bare-url": "^0.3.0",
