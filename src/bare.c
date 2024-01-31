@@ -11,11 +11,16 @@
 #include "runtime.h"
 #include "types.h"
 
-#define bare_option(options, min_version, field, default) \
-  (options && options->version >= min_version ? options->field : default)
+#define bare_option(options, min_version, field) \
+  (options && options->version >= min_version ? options->field : bare_default_options.field)
 
 struct bare_s {
   bare_process_t process;
+};
+
+static const bare_options_t bare_default_options = {
+  .version = 0,
+  .memory_limit = 0,
 };
 
 int
@@ -28,7 +33,9 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   process->runtime = malloc(sizeof(bare_runtime_t));
 
-  process->options = (bare_options_t){0};
+  process->options = bare_default_options;
+
+  process->options.memory_limit = bare_option(options, 0, memory_limit);
 
   process->platform = platform;
   process->argc = argc;

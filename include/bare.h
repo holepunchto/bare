@@ -26,6 +26,17 @@ typedef void (*bare_thread_cb)(bare_t *, js_env_t *);
 /** @version 0 */
 struct bare_options_s {
   int version;
+
+  /**
+   * The memory limit of each JavaScript heap. By default, the limit will be
+   * inferred based on the amount of physical memory of the device.
+   *
+   * Note that the limit applies individually to each thread, including the
+   * main thread.
+   *
+   * @since 0
+   */
+  size_t memory_limit;
 };
 
 /**

@@ -739,7 +739,12 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   runtime->loop = loop;
   runtime->process = process;
 
-  err = js_create_env(runtime->loop, runtime->process->platform, NULL, &runtime->env);
+  js_env_options_t options = {
+    .version = 0,
+    .memory_limit = process->options.memory_limit,
+  };
+
+  err = js_create_env(runtime->loop, runtime->process->platform, &options, &runtime->env);
   assert(err == 0);
 
   runtime->suspended = false;
