@@ -54,7 +54,13 @@ if (argv.p) {
 if (argc === 0) {
   require('bare-repl').start()
 } else {
-  const resolved = new URL(Bare.argv[1], url.pathToFileURL(os.cwd() + path.sep))
+  const parentURL = url.pathToFileURL(os.cwd())
+
+  if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
+    parentURL.pathname += '/'
+  }
+
+  const resolved = new URL(Bare.argv[1], parentURL)
 
   Bare.argv[1] = url.fileURLToPath(resolved)
 
