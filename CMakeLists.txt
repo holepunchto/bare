@@ -204,6 +204,7 @@ include_bare_module(bare_hrtime bare-hrtime)
 include_bare_module(bare_module bare-module)
 include_bare_module(bare_os bare-os)
 include_bare_module(bare_timers bare-timers)
+include_bare_module(bare_url bare-url)
 
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
@@ -212,11 +213,13 @@ list(APPEND objects
   $<TARGET_OBJECTS:bare_module>
   $<TARGET_OBJECTS:bare_os>
   $<TARGET_OBJECTS:bare_timers>
+  $<TARGET_OBJECTS:bare_url>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:mem>
   $<TARGET_OBJECTS:mimalloc>
   $<TARGET_OBJECTS:utf>
+  $<TARGET_OBJECTS:url>
   $<TARGET_OBJECTS:base64>
   $<TARGET_OBJECTS:hex>
 )
