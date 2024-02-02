@@ -21,6 +21,14 @@ class Bare extends EventEmitter {
     this.exiting = false
   }
 
+  get platform () {
+    return bare.platform
+  }
+
+  get arch () {
+    return bare.arch
+  }
+
   get argv () {
     return bare.argv
   }
@@ -118,6 +126,8 @@ class Bare extends EventEmitter {
     return {
       __proto__: { constructor: Bare },
 
+      platform: this.platform,
+      arch: this.arch,
       argv: this.argv,
       exitCode: this.exitCode,
       suspended: this.suspended,
