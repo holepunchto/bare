@@ -58,7 +58,7 @@ const Addon = module.exports = exports = class Addon {
         break
 
       default:
-        addon._handle = bare.loadDynamicAddon(url.href)
+        addon._handle = bare.loadDynamicAddon(url.pathname)
     }
 
     addon._exports = bare.initAddon(addon._handle, addon._exports)
