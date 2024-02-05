@@ -201,6 +201,7 @@ target_include_directories(
 
 include_bare_module(bare_buffer bare-buffer)
 include_bare_module(bare_hrtime bare-hrtime)
+include_bare_module(bare_inspect bare-inspect)
 include_bare_module(bare_module bare-module)
 include_bare_module(bare_os bare-os)
 include_bare_module(bare_timers bare-timers)
@@ -210,6 +211,7 @@ list(APPEND objects
   $<TARGET_OBJECTS:bare>
   $<TARGET_OBJECTS:bare_buffer>
   $<TARGET_OBJECTS:bare_hrtime>
+  $<TARGET_OBJECTS:bare_inspect>
   $<TARGET_OBJECTS:bare_module>
   $<TARGET_OBJECTS:bare_os>
   $<TARGET_OBJECTS:bare_timers>
