@@ -67,7 +67,9 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static unload (url) {
-    const addon = this._cache[url.href] || null
+    const self = Addon
+
+    const addon = self._cache[url.href] || null
 
     if (addon === null) {
       throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${url.href}'`)
@@ -75,7 +77,7 @@ const Addon = module.exports = exports = class Addon {
 
     const unloaded = addon.unload()
 
-    if (unloaded) delete this._cache[url.href]
+    if (unloaded) delete self._cache[url.href]
 
     return unloaded
   }
