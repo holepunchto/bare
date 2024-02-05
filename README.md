@@ -46,13 +46,13 @@ Whether or not the process is currently suspended.
 
 Whether or not the process is currently exiting.
 
-#### `Bare.versions`
-
-An object containing the version strings of Bare and its dependencies.
-
 #### `Bare.version`
 
 The Bare version string.
+
+#### `Bare.versions`
+
+An object containing the version strings of Bare and its dependencies.
 
 #### `Bare.exit([code])`
 
