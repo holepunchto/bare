@@ -90,7 +90,8 @@ const Addon = module.exports = exports = class Addon {
       name = null,
       version = null,
       referrer = null,
-      protocol = referrer ? referrer.protocol : null
+      protocol = referrer ? referrer.protocol : null,
+      resolutions = referrer ? referrer.resolutions : null
     } = opts
 
     const builtins = bare.getStaticAddons()
@@ -99,6 +100,7 @@ const Addon = module.exports = exports = class Addon {
       host: self.host,
       name,
       version,
+      resolutions,
       builtins,
       extensions: [
         '.bare',

@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/holepunchto/bare#readme",
   "dependencies": {
-    "bare-addon-resolve": "^1.0.0",
+    "bare-addon-resolve": "^1.1.0",
     "bare-buffer": "^2.0.0",
     "bare-console": "^4.0.0",
     "bare-events": "^2.0.0",
