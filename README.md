@@ -24,17 +24,15 @@ Everything else if left to userland modules to implement using these primitives,
 
 The core JavaScript API of Bare is available through the global `Bare` namespace.
 
+#### `Bare.platform`
+
+#### `Bare.arch`
+
 #### `Bare.argv`
 
 The command line arguments passed to the process when launched.
 
-#### `Bare.versions`
-
-An object containing the version strings of Bare and its dependencies.
-
-#### `Bare.version`
-
-The Bare version string.
+#### `Bare.pid`
 
 #### `Bare.exitCode`
 
@@ -47,6 +45,14 @@ Whether or not the process is currently suspended.
 #### `Bare.exiting`
 
 Whether or not the process is currently exiting.
+
+#### `Bare.versions`
+
+An object containing the version strings of Bare and its dependencies.
+
+#### `Bare.version`
+
+The Bare version string.
 
 #### `Bare.exit([code])`
 
