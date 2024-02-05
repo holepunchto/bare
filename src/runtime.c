@@ -802,6 +802,13 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   V("arch", BARE_ARCH);
 #undef V
 
+  js_value_t *pid;
+  err = js_create_int32(env, uv_os_getpid(), &pid);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "pid", pid);
+  assert(err == 0);
+
   const char *platform_identifier;
   err = js_get_platform_identifier(runtime->process->platform, &platform_identifier);
   assert(err == 0);

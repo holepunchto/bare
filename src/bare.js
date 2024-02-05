@@ -33,6 +33,10 @@ class Bare extends EventEmitter {
     return bare.argv
   }
 
+  get pid () {
+    return bare.pid
+  }
+
   get exitCode () {
     return bare.exitCode
   }
@@ -129,6 +133,7 @@ class Bare extends EventEmitter {
       platform: this.platform,
       arch: this.arch,
       argv: this.argv,
+      pid: this.pid,
       exitCode: this.exitCode,
       suspended: this.suspended,
       exiting: this.exiting,
