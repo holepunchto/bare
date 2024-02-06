@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 3.25)
 
 project(bare C)
 
-set(BARE_PREBUILDS_DIR ${PROJECT_SOURCE_DIR}/prebuilds CACHE PATH "Path to the prebuilds directory")
-
-set(BARE_PREBUILDS_KEY qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso CACHE STRING "Key of the prebuilds drive")
-
-set(BARE_PREBUILDS_VERSION 113 CACHE STRING "Version of the prebuilds drive")
-
 include(bare)
 
 bare_target(target)
@@ -25,10 +19,10 @@ endif()
 install_node_modules(LOCKFILE)
 
 mirror_drive(
-  SOURCE ${BARE_PREBUILDS_KEY}
-  DESTINATION ${BARE_PREBUILDS_DIR}
+  SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
+  DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
   PREFIX /${target}
-  CHECKOUT ${BARE_PREBUILDS_VERSION}
+  CHECKOUT 113
 )
 
 if(NOT TARGET uv)
