@@ -26,13 +26,19 @@ The core JavaScript API of Bare is available through the global `Bare` namespace
 
 #### `Bare.platform`
 
+The identifier of the operating system for which Bare was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
+
 #### `Bare.arch`
+
+The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
 
 #### `Bare.argv`
 
 The command line arguments passed to the process when launched.
 
 #### `Bare.pid`
+
+The ID of the current process.
 
 #### `Bare.exitCode`
 
