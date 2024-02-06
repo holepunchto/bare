@@ -22,7 +22,7 @@ if(NOT PROJECT_IS_TOP_LEVEL)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
 endif()
 
-install_node_modules()
+install_node_modules(LOCKFILE)
 
 mirror_drive(
   SOURCE ${BARE_PREBUILDS_KEY}
