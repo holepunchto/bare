@@ -164,7 +164,49 @@ Object.defineProperty(global, 'Bare', {
  * native code.
  */
 
-exports.Addon = require('./addon')
+const Addon = exports.Addon = require('./addon')
+
+bare.addon = function addon (specifier) {
+  let pkg
+
+  switch (specifier) {
+    case '/node_modules/bare-buffer':
+      pkg = require('bare-buffer/package.json')
+      break
+    case '/node_modules/bare-timers':
+      pkg = require('bare-timers/package.json')
+      break
+    case '/node_modules/bare-inspect':
+      pkg = require('bare-inspect/package.json')
+      break
+    case '/node_modules/bare-hrtime':
+      pkg = require('bare-hrtime/package.json')
+      break
+    case '/node_modules/bare-os':
+      pkg = require('bare-os/package.json')
+      break
+    case '/node_modules/bare-url':
+      pkg = require('bare-url/package.json')
+      break
+    case '/node_modules/bare-module':
+      pkg = require('bare-module/package.json')
+      break
+    default:
+      throw new Error(`Unknown addon '${specifier}'`)
+  }
+
+  const href = 'builtin:' + pkg.name + '@' + pkg.version
+
+  if (Addon._cache[href]) return Addon._cache[href]._exports
+
+  const addon = Addon._cache[href] = new Addon()
+
+  addon._handle = bare.loadStaticAddon(pkg.name + '@' + pkg.version)
+
+  addon._exports = bare.initAddon(addon._handle, addon._exports)
+
+  return addon._exports
+}
 
 /**
  * Step 5:
