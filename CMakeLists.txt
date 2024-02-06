@@ -43,7 +43,7 @@ if(NOT TARGET c++)
   find_library(
     c++
     NAMES c++ libc++
-    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -62,7 +62,7 @@ if(NOT TARGET v8)
   find_library(
     v8
     NAMES v8 libv8
-    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -109,7 +109,7 @@ if(NOT TARGET js)
   find_library(
     js
     NAMES js libjs
-    PATHS ${BARE_PREBUILDS_DIR}/${target}
+    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
