@@ -112,8 +112,10 @@ const Addon = module.exports = exports = class Addon {
       switch (resolution.protocol) {
         case 'builtin:': return resolution
         default:
-          if (protocol.exists(resolution)) {
-            return protocol.postresolve(resolution, parentURL)
+          try {
+            return Module.resolve(resolution.href, parentURL)
+          } catch {
+            continue
           }
       }
     }
