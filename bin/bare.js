@@ -1,7 +1,5 @@
 /* global Bare */
-/* eslint-disable no-eval */
 const Module = require('bare-module')
-const path = require('bare-path')
 const os = require('bare-os')
 const url = require('bare-url')
 
@@ -27,6 +25,12 @@ const argc = argv._.length
 
 Bare.argv.splice(1, argc, ...argv._)
 
+const parentURL = url.pathToFileURL(os.cwd())
+
+if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
+  parentURL.pathname += '/'
+}
+
 if (argv.v) {
   console.log(Bare.version)
 
@@ -40,13 +44,13 @@ if (argv.h) {
 }
 
 if (argv.e) {
-  eval(argv.e)
+  Module.load(parentURL, `(${argv.e})`)
 
   Bare.exit()
 }
 
 if (argv.p) {
-  console.log(eval(argv.p))
+  Module.load(parentURL, `console.log(${argv.p})`)
 
   Bare.exit()
 }
@@ -54,12 +58,6 @@ if (argv.p) {
 if (argc === 0) {
   require('bare-repl').start()
 } else {
-  const parentURL = url.pathToFileURL(os.cwd())
-
-  if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
-    parentURL.pathname += '/'
-  }
-
   const resolved = new URL(Bare.argv[1], parentURL)
 
   Bare.argv[1] = url.fileURLToPath(resolved)
