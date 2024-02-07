@@ -1,5 +1,4 @@
 module.exports = {
   target: 'c',
-  name: 'bare_bundle',
-  compress: ['*']
+  name: 'bare_bundle'
 }
