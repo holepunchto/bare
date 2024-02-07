@@ -33,34 +33,18 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 
 if (argv.v) {
   console.log(Bare.version)
-
-  Bare.exit()
-}
-
-if (argv.h) {
+} else if (argv.h) {
   console.log('usage: bare [<filename>]')
-
-  Bare.exit(argv.h || argc > 0 ? 0 : 1)
-}
-
-if (argv.e) {
+} else if (argv.e) {
   Module.load(parentURL, `(${argv.e})`)
-
-  Bare.exit()
-}
-
-if (argv.p) {
+} else if (argv.p) {
   Module.load(parentURL, `console.log(${argv.p})`)
-
-  Bare.exit()
-}
-
-if (argc === 0) {
-  require('bare-repl').start()
-} else {
+} else if (argc > 0) {
   const resolved = new URL(Bare.argv[1], parentURL)
 
   Bare.argv[1] = url.fileURLToPath(resolved)
 
   Module.load(resolved)
+} else {
+  require('bare-repl').start()
 }
