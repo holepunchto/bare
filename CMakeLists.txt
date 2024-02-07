@@ -98,7 +98,7 @@ if(NOT TARGET v8)
     target_link_libraries(
       v8
       INTERFACE
-        winmm.lib
+        winmm
     )
   endif()
 endif()
