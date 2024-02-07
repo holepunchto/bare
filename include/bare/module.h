@@ -32,7 +32,7 @@
 #define BARE_MODULE_CONSTRUCTOR(id) \
   static void bare_register_module_##id(void); \
   __declspec(dllexport, allocate(".CRT$XCU")) void (*bare_register_module_##id##_)(void) = bare_register_module_##id; \
-  __pragma(comment(linker, "/include:bare_register_module_" #id "_")) static void bare_register_module_##id(void)
+  static void bare_register_module_##id(void)
 #else
 #define BARE_MODULE_CONSTRUCTOR(id) \
   static void bare_register_module_##id(void) __attribute__((constructor)); \
