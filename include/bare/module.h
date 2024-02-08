@@ -31,7 +31,7 @@
 #pragma section(".CRT$XCU", read)
 #define BARE_MODULE_CONSTRUCTOR(id) \
   static void bare_register_module_##id(void); \
-  __declspec(dllexport, allocate(".CRT$XCU")) void (*bare_register_module_##id##_)(void) = bare_register_module_##id; \
+  __declspec(allocate(".CRT$XCU")) static void (*bare_register_module_##id##_)(void) = bare_register_module_##id; \
   static void bare_register_module_##id(void)
 #else
 #define BARE_MODULE_CONSTRUCTOR(id) \
