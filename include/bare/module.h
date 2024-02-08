@@ -49,7 +49,7 @@
 // function. This method is suited for both dynamic and static modules.
 
 #define BARE_MODULE(id, fn) \
-  BARE_MODULE_CONSTRUCTOR(id, __COUNTER__) { \
+  BARE_MODULE_CONSTRUCTOR(id, BARE_MODULE_CONSTRUCTOR_VERSION) { \
     bare_module_t module = { \
       BARE_MODULE_VERSION, \
       BARE_MODULE_FILENAME, \
