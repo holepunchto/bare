@@ -27,7 +27,6 @@
     bare_register_module_##id##_##version##_(void) { bare_register_module_##id(); } \
   } bare_register_module_##id##_##version##_; \
   static void bare_register_module_##id(void)
-#define BARE_MODULE_CONSTRUCTOR(id, version) BARE_MODULE_CONSTRUCTOR_BASE(id, version)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU", read)
 #define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
@@ -35,12 +34,13 @@
   static void bare_register_module_##id(void); \
   __declspec(dllexport, allocate(".CRT$XCU")) void (*bare_register_module_##id##_##version##_)(void) = bare_register_module_##id; \
   static void bare_register_module_##id(void)
-#define BARE_MODULE_CONSTRUCTOR(id, version) BARE_MODULE_CONSTRUCTOR_BASE(id, version)
 #else
-#define BARE_MODULE_CONSTRUCTOR(id, version) \
+#define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
   static void bare_register_module_##id(void) __attribute__((constructor)); \
   static void bare_register_module_##id(void)
 #endif
+
+#define BARE_MODULE_CONSTRUCTOR(id, version) BARE_MODULE_CONSTRUCTOR_BASE(id, version)
 
 #ifdef BARE_MODULE_REGISTER_CONSTRUCTOR
 
