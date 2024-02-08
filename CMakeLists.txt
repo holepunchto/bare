@@ -256,6 +256,7 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
+include_bare_module(bare_pipe bare-pipe)
 include_bare_module(bare_repl bare-repl)
 include_bare_module(bare_tty bare-tty)
 
@@ -263,6 +264,7 @@ add_executable(bare_bin
   bin/bare.c
   bin/bare.bundle.h
 
+  $<TARGET_OBJECTS:bare_pipe>
   $<TARGET_OBJECTS:bare_repl>
   $<TARGET_OBJECTS:bare_tty>
 )
