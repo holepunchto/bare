@@ -46,6 +46,8 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static load (url) {
+    const { fileURLToPath } = require('bare-url')
+
     const self = Addon
 
     if (self._cache[url.href]) return self._cache[url.href]
@@ -57,8 +59,12 @@ const Addon = module.exports = exports = class Addon {
         addon._handle = bare.loadStaticAddon(url.pathname)
         break
 
+      case 'file:':
+        addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
+        break
+
       default:
-        addon._handle = bare.loadDynamicAddon(url.pathname)
+        throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon ${url.href}`)
     }
 
     addon._exports = bare.initAddon(addon._handle, addon._exports)
@@ -118,7 +124,7 @@ const Addon = module.exports = exports = class Addon {
     }, readPackage)) {
       switch (resolution.protocol) {
         case 'builtin:': return resolution
-        default:
+        case 'file:':
           try {
             return Module.resolve(resolution.href, parentURL, { imports, resolutions })
           } catch {
