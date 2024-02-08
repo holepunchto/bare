@@ -113,7 +113,7 @@ const Addon = module.exports = exports = class Addon {
         case 'builtin:': return resolution
         default:
           try {
-            return Module.resolve(resolution.href, parentURL)
+            return Module.resolve(resolution.href, parentURL, { resolutions })
           } catch {
             continue
           }
