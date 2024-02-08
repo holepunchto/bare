@@ -92,13 +92,20 @@ const Addon = module.exports = exports = class Addon {
       name = null,
       version = null,
       referrer = null,
-      protocol = referrer ? referrer.protocol : null,
-      resolutions = referrer ? referrer.resolutions : null
+      protocol = referrer ? referrer._protocol : Module._protocols['file:'],
+      imports = referrer ? referrer._imports : null,
+      resolutions = referrer ? referrer._resolutions : null
     } = opts
 
     const builtins = bare.getStaticAddons()
 
-    for (const resolution of resolve(specifier, parentURL, {
+    const resolved = protocol.preresolve(specifier, parentURL)
+
+    const [resolution] = protocol.resolve(specifier, parentURL, imports)
+
+    if (resolution) return protocol.postresolve(resolution, parentURL)
+
+    for (const resolution of resolve(resolved, parentURL, {
       host: self.host,
       name,
       version,
@@ -113,7 +120,7 @@ const Addon = module.exports = exports = class Addon {
         case 'builtin:': return resolution
         default:
           try {
-            return Module.resolve(resolution.href, parentURL, { resolutions })
+            return Module.resolve(resolution.href, parentURL, { imports, resolutions })
           } catch {
             continue
           }
