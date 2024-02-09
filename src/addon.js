@@ -1,12 +1,20 @@
 /* global bare, Bare */
+const Module = require('bare-module')
+const resolve = require('bare-addon-resolve')
+const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
 const Addon = module.exports = exports = class Addon {
-  constructor () {
+  constructor (url) {
+    this._url = url
     this._exports = {}
     this._handle = null
 
     Addon._addons.add(this)
+  }
+
+  get url () {
+    return this._url
   }
 
   get exports () {
@@ -30,6 +38,7 @@ const Addon = module.exports = exports = class Addon {
     return {
       __proto__: { constructor: Addon },
 
+      url: this.url,
       exports: this.exports
     }
   }
@@ -46,13 +55,11 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static load (url) {
-    const { fileURLToPath } = require('bare-url')
-
     const self = Addon
 
     if (self._cache[url.href]) return self._cache[url.href]
 
-    const addon = self._cache[url.href] = new Addon()
+    const addon = self._cache[url.href] = new Addon(url)
 
     switch (url.protocol) {
       case 'builtin:':
@@ -89,9 +96,6 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static resolve (specifier, parentURL, opts = {}) {
-    const Module = require('bare-module')
-    const resolve = require('bare-addon-resolve')
-
     const self = Addon
 
     const {

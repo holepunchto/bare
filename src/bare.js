@@ -1,9 +1,60 @@
 /* global bare */
 
 /**
+ * Step 0:
+ * Declare the genesis addon entry point. All addons loaded by core module will
+ * pass through this function and the specifiers must therefore be resolved
+ * statically without relying on any dependencies other than internal bare.*
+ * APIs.
+ */
+
+const addons = Object.create(null)
+
+bare.addon = function addon (specifier) {
+  let pkg
+
+  // Resolve the specifier to a known package manifest. The manifests must be
+  // statically resolvable to allow them to be included by the bundler.
+  switch (specifier) {
+    case '/node_modules/bare-buffer/':
+      pkg = require('bare-buffer/package.json')
+      break
+    case '/node_modules/bare-timers/':
+      pkg = require('bare-timers/package.json')
+      break
+    case '/node_modules/bare-inspect/':
+      pkg = require('bare-inspect/package.json')
+      break
+    case '/node_modules/bare-hrtime/':
+      pkg = require('bare-hrtime/package.json')
+      break
+    case '/node_modules/bare-os/':
+      pkg = require('bare-os/package.json')
+      break
+    case '/node_modules/bare-url/':
+      pkg = require('bare-url/package.json')
+      break
+    case '/node_modules/bare-module/':
+      pkg = require('bare-module/package.json')
+      break
+    default:
+      throw new Error(`Unknown addon '${specifier}'`)
+  }
+
+  if (addons[pkg.name]) return addons[pkg.name]
+
+  const addon = addons[pkg.name] = { handle: null, exports: {} }
+
+  addon.handle = bare.loadStaticAddon(pkg.name + '@' + pkg.version)
+
+  addon.exports = bare.initAddon(addon.handle, addon.exports)
+
+  return addon.exports
+}
+
+/**
  * Step 1:
- * Load the core event emitter, which has no dependencies on the Bare namespace
- * or native code.
+ * Load the core event emitter, which has no dependencies on the Bare namespace.
  */
 
 const EventEmitter = require('bare-events')
@@ -160,53 +211,10 @@ Object.defineProperty(global, 'Bare', {
 
 /**
  * Step 4:
- * Register the native addon API. Modules loaded from this point on may use
- * native code.
+ * Register the native addon API.
  */
 
-const Addon = exports.Addon = require('./addon')
-
-bare.addon = function addon (specifier) {
-  let pkg
-
-  switch (specifier) {
-    case '/node_modules/bare-buffer/':
-      pkg = require('bare-buffer/package.json')
-      break
-    case '/node_modules/bare-timers/':
-      pkg = require('bare-timers/package.json')
-      break
-    case '/node_modules/bare-inspect/':
-      pkg = require('bare-inspect/package.json')
-      break
-    case '/node_modules/bare-hrtime/':
-      pkg = require('bare-hrtime/package.json')
-      break
-    case '/node_modules/bare-os/':
-      pkg = require('bare-os/package.json')
-      break
-    case '/node_modules/bare-url/':
-      pkg = require('bare-url/package.json')
-      break
-    case '/node_modules/bare-module/':
-      pkg = require('bare-module/package.json')
-      break
-    default:
-      throw new Error(`Unknown addon '${specifier}'`)
-  }
-
-  const href = 'builtin:' + pkg.name + '@' + pkg.version
-
-  if (Addon._cache[href]) return Addon._cache[href]._exports
-
-  const addon = Addon._cache[href] = new Addon()
-
-  addon._handle = bare.loadStaticAddon(pkg.name + '@' + pkg.version)
-
-  addon._exports = bare.initAddon(addon._handle, addon._exports)
-
-  return addon._exports
-}
+exports.Addon = require('./addon')
 
 /**
  * Step 5:
