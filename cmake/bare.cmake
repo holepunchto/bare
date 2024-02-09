@@ -1,4 +1,6 @@
-function(add_bare_module target)
+function(add_bare_module result)
+  bare_module_target("." target)
+
   add_library(${target} OBJECT)
 
   set_target_properties(
@@ -14,4 +16,8 @@ function(add_bare_module target)
     PRIVATE
       $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
   )
+
+  set(${result} ${target})
+
+  return(PROPAGATE ${result})
 endfunction()

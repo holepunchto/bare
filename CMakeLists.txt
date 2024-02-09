@@ -193,23 +193,23 @@ target_include_directories(
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-include_bare_module(bare_buffer bare-buffer)
-include_bare_module(bare_hrtime bare-hrtime)
-include_bare_module(bare_inspect bare-inspect)
-include_bare_module(bare_module bare-module)
-include_bare_module(bare_os bare-os)
-include_bare_module(bare_timers bare-timers)
-include_bare_module(bare_url bare-url)
+include_bare_module(bare-buffer bare_buffer)
+include_bare_module(bare-hrtime bare_hrtime)
+include_bare_module(bare-inspect bare_inspect)
+include_bare_module(bare-module bare_module)
+include_bare_module(bare-os bare_os)
+include_bare_module(bare-timers bare_timers)
+include_bare_module(bare-url bare_url)
 
 list(APPEND objects
   $<TARGET_OBJECTS:bare>
-  $<TARGET_OBJECTS:bare_buffer>
-  $<TARGET_OBJECTS:bare_hrtime>
-  $<TARGET_OBJECTS:bare_inspect>
-  $<TARGET_OBJECTS:bare_module>
-  $<TARGET_OBJECTS:bare_os>
-  $<TARGET_OBJECTS:bare_timers>
-  $<TARGET_OBJECTS:bare_url>
+  $<TARGET_OBJECTS:${bare_buffer}>
+  $<TARGET_OBJECTS:${bare_hrtime}>
+  $<TARGET_OBJECTS:${bare_inspect}>
+  $<TARGET_OBJECTS:${bare_module}>
+  $<TARGET_OBJECTS:${bare_os}>
+  $<TARGET_OBJECTS:${bare_timers}>
+  $<TARGET_OBJECTS:${bare_url}>
   $<TARGET_OBJECTS:uv>
   $<TARGET_OBJECTS:napi>
   $<TARGET_OBJECTS:mem>
@@ -256,17 +256,17 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
-include_bare_module(bare_pipe bare-pipe)
-include_bare_module(bare_repl bare-repl)
-include_bare_module(bare_tty bare-tty)
+include_bare_module(bare-pipe bare_pipe)
+include_bare_module(bare-repl bare_repl)
+include_bare_module(bare-tty bare_tty)
 
 add_executable(bare_bin
   bin/bare.c
   bin/bare.bundle.h
 
-  $<TARGET_OBJECTS:bare_pipe>
-  $<TARGET_OBJECTS:bare_repl>
-  $<TARGET_OBJECTS:bare_tty>
+  $<TARGET_OBJECTS:${bare_pipe}>
+  $<TARGET_OBJECTS:${bare_repl}>
+  $<TARGET_OBJECTS:${bare_tty}>
 )
 
 if(target MATCHES "win32")
