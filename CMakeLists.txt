@@ -231,6 +231,14 @@ set_target_properties(
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
+if(target MATCHES "win32")
+  target_sources(
+    bare_shared
+    PUBLIC
+      src/js.def
+  )
+endif()
+
 target_link_libraries(
   bare_shared
   PUBLIC
@@ -256,6 +264,14 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
 )
 
+if(target MATCHES "win32")
+  target_sources(
+    bare_static
+    PUBLIC
+      src/js.def
+  )
+endif()
+
 include_bare_module(bare-pipe bare_pipe)
 include_bare_module(bare-repl bare_repl)
 include_bare_module(bare-tty bare_tty)
@@ -268,14 +284,6 @@ add_executable(bare_bin
   $<TARGET_OBJECTS:${bare_repl}>
   $<TARGET_OBJECTS:${bare_tty}>
 )
-
-if(target MATCHES "win32")
-  target_sources(
-    bare_bin
-    PRIVATE
-      src/js.def
-  )
-endif()
 
 set_target_properties(
   bare_bin
