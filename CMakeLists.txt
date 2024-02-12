@@ -236,6 +236,7 @@ if(target MATCHES "win32")
     bare_shared
     PUBLIC
       src/js.def
+      src/napi.def
   )
 endif()
 
@@ -269,6 +270,7 @@ if(target MATCHES "win32")
     bare_static
     PUBLIC
       src/js.def
+      src/napi.def
   )
 endif()
 
