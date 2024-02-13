@@ -2,10 +2,10 @@
 
 /**
  * Step 0:
- * Declare the genesis addon entry point. All addons loaded by core module will
- * pass through this function and the specifiers must therefore be resolved
- * statically without relying on any dependencies other than internal bare.*
- * APIs.
+ * Declare the genesis addon entry point. All addons loaded by core modules
+ * will pass through this function and the specifiers must therefore be
+ * resolved statically without relying on any dependencies other than internal
+ * bare.* APIs.
  */
 
 const addons = Object.create(null)
