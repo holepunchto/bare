@@ -1,7 +1,6 @@
 {
   "private": true,
   "name": "bare",
-  "version": "1.0.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
     "test": "standard"
