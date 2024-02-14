@@ -1,0 +1,34 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  test:
+    strategy:
+      matrix:
+        node: [lts/*]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+        - os: ubuntu-latest
+          name: ubuntu
+        - os: macos-latest
+          name: macos
+        - os: windows-latest
+          name: windows
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+    - run: npm install -g bare-dev
+    - run: bare-dev configure
+    - run: bare-dev build
+    - run: bare-dev test
