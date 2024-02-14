@@ -29,8 +29,14 @@ jobs:
     - run: bare-dev configure
     - run: bare-dev build
     - uses: actions/upload-artifact@v4
+      if: ${{ matrix.name == "linux-x64" || matrix.name == "darwin-x64" || matrix.name == "darwin-arm64" }}
+      with:
+        name: ${{ matrix.name }}
+        path: build/bin/bare
+    - uses: actions/upload-artifact@v4
+      if: ${{ matrix.name == "win32-x64" }}
       with:
         name: ${{ matrix.name }}
         path: |
-          build/bin/bare
           build/bin/Release/bare.exe
+          build/bin/Release/bare.lib
