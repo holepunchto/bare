@@ -1,0 +1,36 @@
+name: Prebuild
+on:
+  workflow_dispatch:
+jobs:
+  prebuild:
+    strategy:
+      matrix:
+        node: [20]
+        os: [ubuntu-22.04, macos-12, macos-14, windows-2022]
+        include:
+        - os: ubuntu-22.04
+          name: linux-x64
+        - os: macos-12
+          name: darwin-x64
+        - os: macos-14
+          name: darwin-arm64
+        - os: windows-2022
+          name: win32-x64
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+    - run: npm install -g bare-dev
+    - run: bare-dev configure
+    - run: bare-dev build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}
+        path: |
+          build/bin/bare
+          build/bin/Release/bare.exe
