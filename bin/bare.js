@@ -34,7 +34,7 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 if (argv.v) {
   console.log(Bare.version)
 } else if (argv.h) {
-  console.log('usage: bare [<filename>]')
+  console.log('usage: bare [-e, --eval <script>] [-p, --print <script>] [<filename>]')
 } else if (argv.e) {
   Module.load(parentURL, `(${argv.e})`)
 } else if (argv.p) {
