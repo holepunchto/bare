@@ -74,11 +74,11 @@ Resume the process and all threads after suspension. This can be used to cancel 
 
 #### `Bare.on('uncaughtException', err)`
 
-Emitted when a JavaScript exception is thrown within an exectuion context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes exited with an exit status of 1. Adding an event listener for the `uncaughtException` event overrides the default behavior.
+Emitted when a JavaScript exception is thrown within an exectuion context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes aborted. Adding an event listener for the `uncaughtException` event overrides the default behavior.
 
 #### `Bare.on('unhandledRejection', reason, promise)`
 
-Emitted when a JavaScript promise is rejected within an execution context without that rejection being handled within that execution context. By default, unhandled rejections are printed to `stderr` and the process exited with an exit status of 1. Adding an event listener for the `unhandledRejection` event overrides the default behavior.
+Emitted when a JavaScript promise is rejected within an execution context without that rejection being handled within that execution context. By default, unhandled rejections are printed to `stderr` and the process aborted. Adding an event listener for the `unhandledRejection` event overrides the default behavior.
 
 #### `Bare.on('beforeExit', code)`
 
