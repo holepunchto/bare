@@ -58,6 +58,9 @@ bare_teardown (bare_t *bare, int *exit_code);
  * Run the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk.
+ *
+ * See https://github.com/holepunchto/bare-module for more information on the
+ * supported module formats.
  */
 int
 bare_run (bare_t *bare, const char *filename, const uv_buf_t *source);
@@ -78,24 +81,47 @@ bare_suspend (bare_t *bare);
 int
 bare_resume (bare_t *bare);
 
+/**
+ * Equivalent to `Bare.on('beforeExit', cb)`.
+ */
 int
 bare_on_before_exit (bare_t *bare, bare_before_exit_cb cb);
 
+/**
+ * Equivalent to `Bare.on('exit', cb)`.
+ */
 int
 bare_on_exit (bare_t *bare, bare_exit_cb cb);
 
+/**
+ * Equivalent to `Bare.on('teardown', cb)`.
+ */
 int
 bare_on_teardown (bare_t *bare, bare_teardown_cb cb);
 
+/**
+ * Equivalent to `Bare.on('suspend', cb)`.
+ */
 int
 bare_on_suspend (bare_t *bare, bare_suspend_cb cb);
 
+/**
+ * Equivalent to `Bare.on('idle', cb)`.
+ */
 int
 bare_on_idle (bare_t *bare, bare_idle_cb cb);
 
+/**
+ * Equivalent to `Bare.on('resume', cb)`.
+ */
 int
 bare_on_resume (bare_t *bare, bare_resume_cb cb);
 
+/**
+ * Attach a thread listener which will invoked with the JavaScript environment
+ * of each thread created with the `Thread` constructor. Use this to modify the
+ * environment of the thread before it runs any JavaScript.
+ */
 int
 bare_on_thread (bare_t *bare, bare_thread_cb cb);
 
