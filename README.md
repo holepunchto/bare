@@ -7,13 +7,13 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 Prebuilt binaries are provided by <https://github.com/holepunchto/bare-runtime> and can be installed using `npm`:
 
 ```sh
-$ npm install -g bare-runtime
+npm install -g bare-runtime
 ```
 
 ## Usage
 
 ```sh
-$ bare [-e, --eval <script>] [-p, --print <script>] [<filename>]
+bare [-e, --eval <script>] [-p, --print <script>] [<filename>]
 ```
 
 ## Architecture
@@ -259,19 +259,19 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 The `bare-dev` toolkit, which we'll be invoking with `npx`, is used for building Bare and acts as a convenient wrapper around CMake and other tools. After cloning the repository, start by synchronising the vendored dependencies such as git submodules:
 
 ```sh
-$ npx bare-dev vendor sync
+npx bare-dev vendor sync
 ```
 
 Then, configure the build tree before performing the first build:
 
 ```sh
-$ npx bare-dev configure [--debug]
+npx bare-dev configure [--debug]
 ```
 
 Finally, perform the build:
 
 ```sh
-$ npx bare-dev build
+npx bare-dev build
 ```
 
 When completed, the `bare` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll)` libraries will be available in the root of the `build` directory.
