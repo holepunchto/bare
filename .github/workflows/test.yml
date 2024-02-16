@@ -14,13 +14,16 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
         - os: ubuntu-latest
-          name: ubuntu
+          platform: linux
+          arch: x64
         - os: macos-latest
-          name: macos
+          platform: darwin
+          arch: x64
         - os: windows-latest
-          name: windows
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,11 +31,11 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: corestore
-        key: corestore-${{ matrix.name }}
+        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
     - run: npm install -g bare-dev
-    - run: bare-dev configure --debug
+    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
     - run: bare-dev build --debug
     - run: bare-dev test --debug

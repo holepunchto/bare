@@ -9,15 +9,19 @@ jobs:
         os: [ubuntu-22.04, macos-12, macos-14, windows-2022]
         include:
         - os: ubuntu-22.04
-          name: linux-x64
+          platform: linux
+          arch: x64
         - os: macos-12
-          name: darwin-x64
+          platform: darwin
+          arch: x64
         - os: macos-14
-          name: darwin-arm64
+          platform: darwin
+          arch: arm64
         - os: windows-2022
-          name: win32-x64
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -26,17 +30,17 @@ jobs:
       with:
         node-version: ${{ matrix.node }}
     - run: npm install -g bare-dev
-    - run: bare-dev configure
+    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
     - run: bare-dev build
     - uses: actions/upload-artifact@v4
-      if: ${{ matrix.name == 'linux-x64' || matrix.name == 'darwin-x64' || matrix.name == 'darwin-arm64' }}
+      if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' }}
       with:
-        name: ${{ matrix.name }}
+        name: ${{ matrix.platform }}-${{ matrix.arch }}
         path: build/bin/bare
     - uses: actions/upload-artifact@v4
-      if: ${{ matrix.name == 'win32-x64' }}
+      if: ${{ matrix.platform == 'win32' }}
       with:
-        name: ${{ matrix.name }}
+        name: ${{ matrix.platform }}-${{ matrix.arch }}
         path: |
           build/bin/Release/bare.exe
           build/bin/Release/bare.lib
