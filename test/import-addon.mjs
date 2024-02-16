@@ -1,6 +1,7 @@
+/* global Bare */
 import assert from 'bare-assert'
-import build from './helpers/build.json'
+const { Addon } = Bare
 
-const { default: mod } = await import(build.output.bare_addon)
+const { default: mod } = await import(`./fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 
 assert(mod === 'Hello from addon')

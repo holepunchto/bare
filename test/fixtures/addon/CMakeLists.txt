@@ -4,10 +4,10 @@ project(bare_addon C)
 
 include(bare)
 
-add_bare_module(bare_addon)
+add_bare_module(addon)
 
 target_sources(
-  ${bare_addon}
+  ${addon}
   PRIVATE
     binding.c
 )

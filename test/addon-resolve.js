@@ -1,8 +1,9 @@
 /* global Bare */
 const assert = require('bare-assert')
 const path = require('bare-path')
-const os = require('bare-os')
-const build = require('./helpers/build.json')
+const url = require('bare-url')
 const { Addon } = Bare
 
-assert(Addon.resolve(os.cwd()) === path.normalize(build.output.bare_addon))
+const resolved = Addon.resolve('.', url.pathToFileURL('./test/fixtures/addon/'))
+
+assert(url.fileURLToPath(resolved) == path.resolve('./test/fixtures/addon/prebuilds', Addon.host, 'addon.bare'))

@@ -26,19 +26,6 @@ list(APPEND tests
   timeout-clear.js
 )
 
-list(APPEND skipped_tests
-  addon-load.js
-  addon-resolve.js
-  import-addon.cjs
-  import-addon.mjs
-)
-
-file(
-  GENERATE
-  OUTPUT ${CMAKE_CURRENT_LIST_DIR}/helpers/build.json
-  INPUT helpers/build.json.in
-)
-
 add_subdirectory(fixtures)
 
 foreach(file IN LISTS tests)

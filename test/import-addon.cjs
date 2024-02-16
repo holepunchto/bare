@@ -1,6 +1,7 @@
+/* global Bare */
 const assert = require('bare-assert')
-const build = require('./helpers/build.json')
+const { Addon } = Bare
 
-const mod = require(build.output.bare_addon)
+const mod = require(`./fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 
 assert(mod === 'Hello from addon')

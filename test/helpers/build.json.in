@@ -1,5 +1,0 @@
-{
-  "output": {
-    "bare": "$<TARGET_FILE:bare_bin>"
-  }
-}

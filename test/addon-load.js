@@ -1,8 +1,8 @@
 /* global Bare */
 const assert = require('bare-assert')
-const os = require('bare-os')
+const url = require('bare-url')
 const { Addon } = Bare
 
-const addon = Addon.load(os.cwd())
+const addon = Addon.load(url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`))
 
-assert(addon === 'Hello from addon')
+assert(addon.exports === 'Hello from addon')
