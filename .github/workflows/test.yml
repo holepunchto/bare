@@ -35,4 +35,4 @@ jobs:
     - run: npm install -g bare-dev
     - run: bare-dev configure --debug
     - run: bare-dev build --debug
-    - run: bare-dev test
+    - run: bare-dev test --debug
