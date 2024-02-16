@@ -146,15 +146,6 @@ add_bare_bundle(
   CONFIG src/bundle.config.js
 )
 
-add_bare_bundle(
-  ENTRY bin/bare.js
-  OUT bin/bare.bundle.h
-  CONFIG bin/bundle.config.js
-  DEPENDS
-    bin/bare.js
-    bin/bundle.config.js
-)
-
 add_library(bare OBJECT)
 
 set_target_properties(
@@ -273,6 +264,15 @@ if(target MATCHES "win32")
       src/napi.def
   )
 endif()
+
+add_bare_bundle(
+  ENTRY bin/bare.js
+  OUT bin/bare.bundle.h
+  CONFIG bin/bundle.config.js
+  DEPENDS
+    bin/bare.js
+    bin/bundle.config.js
+)
 
 include_bare_module(bare-pipe bare_pipe)
 include_bare_module(bare-repl bare_repl)
