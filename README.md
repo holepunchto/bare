@@ -248,7 +248,7 @@ int exit_code;
 bare_teardown(bare, &exit_code);
 ```
 
-If `source` is `NULL`, the contents of `filename` will instead be read at runtime.
+If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
 
 ### Suspension
 
