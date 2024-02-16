@@ -7,7 +7,7 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 Prebuilt binaries are provided by <https://github.com/holepunchto/bare-runtime> and can be installed using `npm`:
 
 ```sh
-npm install -g bare-runtime
+npm i -g bare-runtime
 ```
 
 ## Usage
@@ -15,6 +15,8 @@ npm install -g bare-runtime
 ```sh
 bare [-e, --eval <script>] [-p, --print <script>] [<filename>]
 ```
+
+The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
 
 ## Architecture
 
