@@ -33,6 +33,6 @@ jobs:
       with:
         node-version: ${{ matrix.node }}
     - run: npm install -g bare-dev
-    - run: bare-dev configure
-    - run: bare-dev build
+    - run: bare-dev configure --debug
+    - run: bare-dev build --debug
     - run: bare-dev test
