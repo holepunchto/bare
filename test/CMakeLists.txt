@@ -55,12 +55,6 @@ foreach(file IN LISTS tests)
         $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
     )
 
-    target_include_directories(
-      ${test}
-      PRIVATE
-        $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
-    )
-
     set(command ${test})
   endif()
 

@@ -163,6 +163,11 @@ target_sources(
     include/bare/module.h
     include/bare/target.h
     include/bare/version.h
+  PUBLIC
+    $<TARGET_OBJECTS:uv>
+    $<TARGET_OBJECTS:napi>
+    $<TARGET_OBJECTS:mem>
+    $<TARGET_OBJECTS:utf>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -177,41 +182,33 @@ target_sources(
 
 target_include_directories(
   bare
-  PUBLIC
-    include
+  INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
+  PUBLIC
+    include
 )
 
-include_bare_module(bare-buffer bare_buffer)
-include_bare_module(bare-hrtime bare_hrtime)
-include_bare_module(bare-inspect bare_inspect)
-include_bare_module(bare-module bare_module)
-include_bare_module(bare-os bare_os)
-include_bare_module(bare-timers bare_timers)
-include_bare_module(bare-url bare_url)
-
-list(APPEND objects
-  $<TARGET_OBJECTS:bare>
-  $<TARGET_OBJECTS:${bare_buffer}>
-  $<TARGET_OBJECTS:${bare_hrtime}>
-  $<TARGET_OBJECTS:${bare_inspect}>
-  $<TARGET_OBJECTS:${bare_module}>
-  $<TARGET_OBJECTS:${bare_os}>
-  $<TARGET_OBJECTS:${bare_timers}>
-  $<TARGET_OBJECTS:${bare_url}>
-  $<TARGET_OBJECTS:uv>
-  $<TARGET_OBJECTS:napi>
-  $<TARGET_OBJECTS:mem>
-  $<TARGET_OBJECTS:mimalloc>
-  $<TARGET_OBJECTS:utf>
-  $<TARGET_OBJECTS:url>
-  $<TARGET_OBJECTS:base64>
-  $<TARGET_OBJECTS:hex>
+target_link_libraries(
+  bare
+  INTERFACE
+    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
+  PUBLIC
+    napi
+    mem
+    utf
 )
 
-add_library(bare_shared SHARED ${objects})
+link_bare_module(bare bare-buffer)
+link_bare_module(bare bare-hrtime)
+link_bare_module(bare bare-inspect)
+link_bare_module(bare bare-module)
+link_bare_module(bare bare-os)
+link_bare_module(bare bare-timers)
+link_bare_module(bare bare-url)
+
+add_library(bare_shared SHARED)
 
 set_target_properties(
   bare_shared
@@ -231,15 +228,21 @@ if(target MATCHES "win32")
   )
 endif()
 
+target_include_directories(
+  bare_shared
+  INTERFACE
+    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
 target_link_libraries(
   bare_shared
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
   PRIVATE
-    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
+    bare
 )
 
-add_library(bare_static STATIC ${objects})
+add_library(bare_static STATIC)
 
 set_target_properties(
   bare_static
@@ -248,12 +251,18 @@ set_target_properties(
   PREFIX lib
 )
 
+target_include_directories(
+  bare_static
+  INTERFACE
+    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
 target_link_libraries(
   bare_static
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
   PRIVATE
-    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
+    bare
 )
 
 if(target MATCHES "win32")
@@ -274,17 +283,9 @@ add_bare_bundle(
     bin/bundle.config.js
 )
 
-include_bare_module(bare-pipe bare_pipe)
-include_bare_module(bare-repl bare_repl)
-include_bare_module(bare-tty bare_tty)
-
 add_executable(bare_bin
   bin/bare.c
   bin/bare.bundle.h
-
-  $<TARGET_OBJECTS:${bare_pipe}>
-  $<TARGET_OBJECTS:${bare_repl}>
-  $<TARGET_OBJECTS:${bare_tty}>
 )
 
 set_target_properties(
@@ -311,6 +312,10 @@ target_link_libraries(
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
+
+link_bare_module(bare_bin bare-pipe)
+link_bare_module(bare_bin bare-repl)
+link_bare_module(bare_bin bare-tty)
 
 install(
   TARGETS bare_bin
