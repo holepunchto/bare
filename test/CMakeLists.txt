@@ -26,8 +26,6 @@ list(APPEND tests
   timeout-clear.js
 )
 
-add_subdirectory(fixtures)
-
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)
 

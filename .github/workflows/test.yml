@@ -35,7 +35,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-    - run: npm install -g bare-runtime bare-dev
+    - run: npm install -g bare-dev
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
     - run: bare-dev build --debug
     - run: bare-dev test --debug

@@ -1,0 +1,25 @@
+291
+{
+  "version": 0,
+  "main": "/mod.js",
+  "imports": {},
+  "resolutions": {
+    "/mod.js": {
+      "bare:package": "/package.json"
+    }
+  },
+  "files": {
+    "/mod.js": {
+      "offset": 0,
+      "length": 37
+    },
+    "/package.json": {
+      "offset": 37,
+      "length": 23
+    }
+  }
+}
+module.exports = 'Hello from bundle'
+{
+  "name": "bundle"
+}
