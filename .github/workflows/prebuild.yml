@@ -5,7 +5,6 @@ jobs:
   prebuild:
     strategy:
       matrix:
-        node: [20]
         include:
         - os: ubuntu-22.04
           platform: linux
@@ -43,7 +42,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node }}
+        node-version: 20
     - uses: actions/cache@v4
       with:
         path: corestore

@@ -10,7 +10,6 @@ jobs:
   test:
     strategy:
       matrix:
-        node: [lts/*]
         include:
         - os: ubuntu-latest
           platform: linux
@@ -53,7 +52,7 @@ jobs:
         key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node }}
+        node-version: lts/*
     - run: npm install -g bare-dev
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build --debug
