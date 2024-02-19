@@ -49,9 +49,7 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: corestore
-        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('corestore/version') }}
-        restore-keys: |
-          corestore-${{ matrix.platform }}-${{ matrix.arch }}-
+        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*

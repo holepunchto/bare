@@ -46,9 +46,7 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: corestore
-        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('corestore/version') }}
-        restore-keys: |
-          corestore-${{ matrix.platform }}-${{ matrix.arch }}-
+        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
     - run: npm install -g bare-dev
     - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build
