@@ -19,21 +19,26 @@ jobs:
         - os: ubuntu-22.04
           platform: android
           arch: x64
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: ia32
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm64
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: macos-latest
           platform: darwin
           arch: x64
         - os: macos-latest
           platform: ios
           arch: x64
+          flags: --simulator
         - os: windows-latest
           platform: win32
           arch: x64
@@ -50,19 +55,8 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
-
     - run: npm install -g bare-dev
-
-    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
-
-    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --simulator
-      if: ${{ matrix.platform == 'ios' }}
-
-    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk 26.1.10909125 --android-api 34
-      if: ${{ matrix.platform == 'android' }}
-
+    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build --debug
-
     - run: bare-dev test --debug
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}

@@ -14,15 +14,19 @@ jobs:
         - os: ubuntu-22.04
           platform: android
           arch: x64
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: ia32
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm64
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm
+          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: macos-12
           platform: darwin
           arch: x64
@@ -45,23 +49,14 @@ jobs:
       with:
         path: corestore
         key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
-
     - run: npm install -g bare-dev
-
-    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
-
-    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk 26.1.10909125 --android-api 34
-      if: ${{ matrix.platform == 'android' }}
-
+    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build
-
     - uses: actions/upload-artifact@v4
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' }}
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}
         path: build/bin/bare
-
     - uses: actions/upload-artifact@v4
       if: ${{ matrix.platform == 'win32' }}
       with:
