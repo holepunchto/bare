@@ -7,8 +7,6 @@ jobs:
       matrix:
         node: [20]
         os: [ubuntu-22.04, macos-12, macos-14, windows-2022]
-        android-ndk: [26.1.10909125]
-        android-api: [34]
         include:
         - os: ubuntu-22.04
           platform: linux
@@ -53,7 +51,7 @@ jobs:
     - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
 
-    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk ${{ matrix.android-ndk }} --android-api ${{ matrix.android-api }}
+    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk 26.1.10909125 --android-api 34
       if: ${{ matrix.platform == 'android' }}
 
     - run: bare-dev build
