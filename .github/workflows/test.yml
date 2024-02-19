@@ -12,7 +12,8 @@ jobs:
       matrix:
         node: [lts/*]
         os: [ubuntu-latest, macos-latest, windows-latest]
-        android: [{ ndk: 26.1.10909125, api: 34 }]
+        android-ndk: 26.1.10909125
+        android-api: 34
         include:
         - os: ubuntu-latest
           platform: linux
@@ -60,7 +61,7 @@ jobs:
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --simulator
       if: ${{ matrix.platform == 'ios' }}
 
-    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk ${{ matrix.android.ndk }} --android-api ${{ matrix.android.api }}
+    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk ${{ matrix.android-ndk }} --android-api ${{ matrix.android-api }}
       if: ${{ matrix.platform == 'android' }}
 
     - run: bare-dev build --debug
