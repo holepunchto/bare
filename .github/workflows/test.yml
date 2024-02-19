@@ -34,6 +34,9 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
+        - os: macos-latest
+          platform: ios
+          arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -55,6 +58,9 @@ jobs:
 
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
+
+    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --simulator
+      if: ${{ matrix.platform == 'ios' }}
 
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --android-ndk ${{ matrix.android.ndk }} --android-api ${{ matrix.android.api }}
       if: ${{ matrix.platform == 'android' }}
