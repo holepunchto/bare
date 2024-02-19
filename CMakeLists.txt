@@ -6,16 +6,6 @@ include(bare)
 
 bare_target(target)
 
-# Prepend the core CMake module directory to ensure that `include(bare)`
-# resolves to our overrides when including native addons.
-list(PREPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-if(NOT PROJECT_IS_TOP_LEVEL)
-  # Propagate the new module path upwards so embedders don't have to override
-  # it themselves.
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
-endif()
-
 install_node_modules(LOCKFILE)
 
 mirror_drive(
@@ -200,14 +190,6 @@ target_link_libraries(
     utf
 )
 
-link_bare_module(bare bare-buffer)
-link_bare_module(bare bare-hrtime)
-link_bare_module(bare bare-inspect)
-link_bare_module(bare bare-module)
-link_bare_module(bare bare-os)
-link_bare_module(bare bare-timers)
-link_bare_module(bare bare-url)
-
 add_library(bare_shared SHARED)
 
 set_target_properties(
@@ -313,17 +295,20 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
 
+# Now that the `bare_bin` target has been defined, we can statically link any
+# required native modules.
+
+link_bare_module(bare bare-buffer)
+link_bare_module(bare bare-hrtime)
+link_bare_module(bare bare-inspect)
+link_bare_module(bare bare-module)
+link_bare_module(bare bare-os)
+link_bare_module(bare bare-timers)
+link_bare_module(bare bare-url)
+
 link_bare_module(bare_bin bare-pipe)
 link_bare_module(bare_bin bare-repl)
 link_bare_module(bare_bin bare-tty)
-
-install(
-  TARGETS bare_bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  BUNDLE DESTINATION bin
-)
 
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
