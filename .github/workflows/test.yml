@@ -12,9 +12,7 @@ jobs:
       matrix:
         node: [lts/*]
         os: [ubuntu-latest, macos-latest, windows-latest]
-        android:
-        - ndk: 26.1.10909125
-          api: 34
+        android: [{ ndk: 26.1.10909125, api: 34 }]
         include:
         - os: ubuntu-latest
           platform: linux

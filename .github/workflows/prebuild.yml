@@ -7,9 +7,7 @@ jobs:
       matrix:
         node: [20]
         os: [ubuntu-22.04, macos-12, macos-14, windows-2022]
-        android:
-        - ndk: 26.1.10909125
-          api: 34
+        android: [{ ndk: 26.1.10909125, api: 34 }]
         include:
         - os: ubuntu-22.04
           platform: linux
