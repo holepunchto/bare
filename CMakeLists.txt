@@ -158,6 +158,9 @@ target_sources(
     $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:mem>
     $<TARGET_OBJECTS:utf>
+    $<TARGET_OBJECTS:url>
+    $<TARGET_OBJECTS:base64>
+    $<TARGET_OBJECTS:hex>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -188,6 +191,9 @@ target_link_libraries(
     napi
     mem
     utf
+    url
+    base64
+    hex
 )
 
 add_library(bare_shared SHARED)
