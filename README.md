@@ -100,6 +100,9 @@ If the process is exited explicitly, such as by calling `Bare.exit()` or as the 
 
 Emitted just before the process or current thread terminates. Additional work scheduled from an `exit` event listener will be given a chance to run after which the process will terminate. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
 
+> [!IMPORTANT]
+> Only cleanup work may be scheduled from an `exit` event listener. All I/O, including timers, will be closed on `exit` and can therefore not be used.
+
 #### `Bare.on('teardown')`
 
 Emitted after the process or current thread has terminated and just before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener. Bare itself will register `teardown` event listeners to join dangling threads and unload native addons.
