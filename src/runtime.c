@@ -348,6 +348,9 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = fprintf(stdout, "%s", data);
   assert(err >= 0);
 
+  err = fflush(stdout);
+  assert(err == 0);
+
   free(data);
 
   return NULL;
@@ -377,6 +380,9 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 
   err = fprintf(stderr, "%s", data);
   assert(err >= 0);
+
+  err = fflush(stderr);
+  assert(err == 0);
 
   free(data);
 
