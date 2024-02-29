@@ -249,9 +249,9 @@ bare.onresume = exports._onresume.bind(exports)
  * Register the main entry function used by `bare_run()`.
  */
 
-bare.run = function run (filename, source) {
-  const Module = require('bare-module')
-  const url = require('bare-url')
+const Module = require('bare-module')
+const url = require('bare-url')
 
+bare.run = function run (filename, source) {
   Module.load(url.pathToFileURL(filename), source)
 }

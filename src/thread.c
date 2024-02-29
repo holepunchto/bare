@@ -32,6 +32,12 @@ bare_thread_entry (void *data) {
     runtime->process->on_thread((bare_t *) runtime->process, runtime->env);
   }
 
+  js_env_t *env = runtime->env;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
   bare_source_t thread_source;
 
   switch (thread->source.type) {
@@ -42,11 +48,16 @@ bare_thread_entry (void *data) {
   case bare_thread_source_buffer:
     thread_source.type = bare_source_arraybuffer;
 
+    js_value_t *arraybuffer;
+
     void *data;
-    err = js_create_arraybuffer(runtime->env, thread->source.buffer.len, &data, &thread_source.arraybuffer);
+    err = js_create_arraybuffer(env, thread->source.buffer.len, &data, &arraybuffer);
     assert(err == 0);
 
     memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
+
+    err = js_create_reference(env, arraybuffer, 1, &thread_source.arraybuffer);
+    assert(err == 0);
     break;
   }
 
@@ -96,7 +107,14 @@ bare_thread_entry (void *data) {
     break;
   }
 
-  err = js_set_named_property(runtime->env, runtime->exports, "threadData", thread_data);
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  err = js_set_named_property(runtime->env, exports, "threadData", thread_data);
+  assert(err == 0);
+
+  err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
   uv_sem_post(&thread->lock);

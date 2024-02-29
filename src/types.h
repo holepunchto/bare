@@ -22,7 +22,7 @@ struct bare_runtime_s {
   bare_process_t *process;
 
   js_env_t *env;
-  js_value_t *exports;
+  js_ref_t *exports;
 
   struct {
     uv_async_t suspend;
@@ -63,7 +63,7 @@ struct bare_source_s {
 
   union {
     uv_buf_t buffer;
-    js_value_t *arraybuffer;
+    js_ref_t *arraybuffer;
   };
 };
 
