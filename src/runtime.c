@@ -1129,6 +1129,9 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 
   bare_runtime_on_teardown(runtime, exit_code);
 
+  err = js_delete_reference(runtime->env, runtime->exports);
+  assert(err == 0);
+
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
