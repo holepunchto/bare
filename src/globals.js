@@ -18,7 +18,7 @@ global.queueMicrotask = function queueMicrotask (fn) {
     .then(fn)
     // Make sure that exceptions are reported as normal uncaughts, not promise
     // rejections.
-    .catch(err => setTimeout(() => { throw err }, 0))
+    .catch(err => setImmediate(() => { throw err }))
 }
 
 /**
