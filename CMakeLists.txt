@@ -28,7 +28,7 @@ if(NOT TARGET mem)
 endif()
 
 if(NOT TARGET c++)
-  add_library(c++ STATIC IMPORTED)
+  add_library(c++ STATIC IMPORTED GLOBAL)
 
   find_library(
     c++
@@ -47,7 +47,7 @@ if(NOT TARGET c++)
 endif()
 
 if(NOT TARGET v8)
-  add_library(v8 STATIC IMPORTED)
+  add_library(v8 STATIC IMPORTED GLOBAL)
 
   find_library(
     v8
@@ -94,7 +94,7 @@ if(NOT TARGET v8)
 endif()
 
 if(NOT TARGET js)
-  add_library(js STATIC IMPORTED)
+  add_library(js STATIC IMPORTED GLOBAL)
 
   find_library(
     js
