@@ -12,8 +12,12 @@ mirror_drive(
   SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
   DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
   PREFIX /${target}
-  CHECKOUT 113
+  CHECKOUT 115
 )
+
+if(MSVC)
+  add_compile_options(/MT$<$<CONFIG:Debug>:d>)
+endif()
 
 if(NOT TARGET uv)
   add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
