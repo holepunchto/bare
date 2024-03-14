@@ -38,7 +38,7 @@ module.exports = exports = class Thread {
   }
 
   get joined () {
-    return this._handle !== null
+    return this._handle === null
   }
 
   join () {
