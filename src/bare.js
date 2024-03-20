@@ -17,25 +17,28 @@ bare.addon = function addon (specifier) {
   // statically resolvable to allow them to be included by the bundler.
   switch (specifier) {
     case '/node_modules/bare-buffer/':
-      pkg = require('bare-buffer/package.json')
+      pkg = require('bare-buffer/package')
       break
     case '/node_modules/bare-timers/':
-      pkg = require('bare-timers/package.json')
+      pkg = require('bare-timers/package')
       break
     case '/node_modules/bare-inspect/':
-      pkg = require('bare-inspect/package.json')
+      pkg = require('bare-inspect/package')
       break
     case '/node_modules/bare-hrtime/':
-      pkg = require('bare-hrtime/package.json')
+      pkg = require('bare-hrtime/package')
       break
     case '/node_modules/bare-os/':
-      pkg = require('bare-os/package.json')
+      pkg = require('bare-os/package')
+      break
+    case '/node_modules/bare-structured-clone/':
+      pkg = require('bare-structured-clone/package')
       break
     case '/node_modules/bare-url/':
-      pkg = require('bare-url/package.json')
+      pkg = require('bare-url/package')
       break
     case '/node_modules/bare-module/':
-      pkg = require('bare-module/package.json')
+      pkg = require('bare-module/package')
       break
     default:
       throw new Error(`Unknown addon '${specifier}'`)
@@ -177,6 +180,10 @@ class Bare extends EventEmitter {
     this.emit('resume')
   }
 
+  _onthread (data) {
+    exports.Thread.self._ondata(data)
+  }
+
   [Symbol.for('bare.inspect')] () {
     return {
       __proto__: { constructor: Bare },
@@ -243,6 +250,7 @@ bare.onteardown = exports._onteardown.bind(exports)
 bare.onsuspend = exports._onsuspend.bind(exports)
 bare.onidle = exports._onidle.bind(exports)
 bare.onresume = exports._onresume.bind(exports)
+bare.onthread = exports._onthread.bind(exports)
 
 /**
  * Step 8:

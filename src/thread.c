@@ -83,36 +83,21 @@ bare_thread_entry (void *data) {
     assert(err == 0);
     break;
   }
-
-  case bare_thread_data_arraybuffer: {
-    void *data;
-    err = js_create_arraybuffer(runtime->env, thread->data.buffer.len, &data, &thread_data);
-    assert(err == 0);
-
-    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
-    break;
-  }
-
-  case bare_thread_data_sharedarraybuffer:
-    err = js_create_sharedarraybuffer_with_backing_store(runtime->env, thread->data.backing_store, NULL, NULL, &thread_data);
-    assert(err == 0);
-
-    err = js_release_arraybuffer_backing_store(runtime->env, thread->data.backing_store);
-    assert(err == 0);
-    break;
-
-  case bare_thread_data_external:
-    err = js_create_external(runtime->env, thread->data.external, NULL, NULL, &thread_data);
-    assert(err == 0);
-    break;
   }
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
   assert(err == 0);
 
-  err = js_set_named_property(runtime->env, exports, "threadData", thread_data);
+  js_value_t *fn;
+  err = js_get_named_property(env, exports, "onthread", &fn);
   assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  js_call_function(env, global, fn, 1, (js_value_t *[]){thread_data}, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);

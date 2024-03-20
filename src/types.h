@@ -82,15 +82,10 @@ struct bare_thread_data_s {
   enum {
     bare_thread_data_none,
     bare_thread_data_buffer,
-    bare_thread_data_arraybuffer,
-    bare_thread_data_sharedarraybuffer,
-    bare_thread_data_external,
   } type;
 
   union {
     uv_buf_t buffer;
-    js_arraybuffer_backing_store_t *backing_store;
-    void *external;
   };
 };
 

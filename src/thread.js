@@ -1,4 +1,5 @@
 /* global bare, Bare */
+const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
   constructor (filename, opts, callback) {
@@ -31,6 +32,18 @@ module.exports = exports = class Thread {
     } = opts
 
     if (typeof source === 'string') source = Buffer.from(source, encoding)
+
+    if (data !== null) {
+      const serialized = structuredClone.serialize(data)
+
+      const state = { start: 0, end: 0, buffer: null }
+      structuredClone.preencode(state, serialized)
+
+      state.buffer = Buffer.allocUnsafe(state.end)
+      structuredClone.encode(state, serialized)
+
+      data = state.buffer
+    }
 
     this._handle = bare.setupThread(filename, source, data, stackSize)
 
@@ -78,8 +91,16 @@ module.exports = exports = class Thread {
 }
 
 class ThreadProxy {
-  get data () {
-    return ArrayBuffer.isView(bare.threadData) ? Buffer.coerce(bare.threadData) : bare.threadData
+  constructor () {
+    this.data = null
+  }
+
+  _ondata (data) {
+    if (data === null) return
+
+    const state = { start: 0, end: data.byteLength, buffer: data }
+
+    this.data = structuredClone.deserialize(structuredClone.decode(state))
   }
 
   [Symbol.for('bare.inspect')] () {

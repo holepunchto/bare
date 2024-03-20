@@ -313,6 +313,7 @@ link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
 link_bare_module(bare bare-module)
 link_bare_module(bare bare-os)
+link_bare_module(bare bare-structured-clone)
 link_bare_module(bare bare-timers)
 link_bare_module(bare bare-url)
 

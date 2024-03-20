@@ -151,17 +151,11 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
   err = js_get_named_property(env, exports, "onbeforeexit", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -193,17 +187,11 @@ bare_runtime_on_exit (bare_runtime_t *runtime) {
   err = js_get_named_property(env, exports, "onexit", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -235,17 +223,11 @@ bare_runtime_on_teardown (bare_runtime_t *runtime, int *exit_code) {
   err = js_get_named_property(env, exports, "onteardown", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   if (exit_code) {
     js_value_t *val;
@@ -284,17 +266,11 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
   err = js_get_named_property(env, exports, "onsuspend", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -335,17 +311,11 @@ bare_runtime_on_idle (bare_runtime_t *runtime) {
   err = js_get_named_property(env, exports, "onidle", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -375,17 +345,11 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
   err = js_get_named_property(env, exports, "onresume", &fn);
   assert(err == 0);
 
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
+  js_value_t *global;
+  err = js_get_global(env, &global);
   assert(err == 0);
 
-  if (is_set) {
-    js_value_t *global;
-    err = js_get_global(env, &global);
-    assert(err == 0);
-
-    js_call_function(env, global, fn, 0, NULL, NULL);
-  }
+  js_call_function(env, global, fn, 0, NULL, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -781,36 +745,6 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
     assert(err == 0);
 
     data.type = bare_thread_data_buffer;
-  } else {
-    err = js_is_arraybuffer(env, argv[2], &has_data);
-    assert(err == 0);
-
-    if (has_data) {
-      err = js_get_arraybuffer_info(env, argv[2], (void **) &data.buffer.base, (size_t *) &data.buffer.len);
-      assert(err == 0);
-
-      data.type = bare_thread_data_arraybuffer;
-    } else {
-      err = js_is_sharedarraybuffer(env, argv[2], &has_data);
-      assert(err == 0);
-
-      if (has_data) {
-        err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
-        assert(err == 0);
-
-        data.type = bare_thread_data_sharedarraybuffer;
-      } else {
-        err = js_is_external(env, argv[2], &has_data);
-        assert(err == 0);
-
-        if (has_data) {
-          err = js_get_value_external(env, argv[2], &data.external);
-          assert(err == 0);
-
-          data.type = bare_thread_data_external;
-        }
-      }
-    }
   }
 
   uint32_t stack_size;
