@@ -26,7 +26,7 @@
     "bare-os": "^2.0.0",
     "bare-path": "^2.0.0",
     "bare-repl": "^1.0.0",
-    "bare-structured-clone": "^1.0.1",
+    "bare-structured-clone": "^1.0.2",
     "bare-timers": "^2.0.0",
     "bare-tty": "^3.0.0",
     "bare-url": "^1.0.0",

@@ -37,12 +37,12 @@ module.exports = exports = class Thread {
       const serialized = structuredClone.serialize(data)
 
       const state = { start: 0, end: 0, buffer: null }
+
       structuredClone.preencode(state, serialized)
 
-      state.buffer = Buffer.allocUnsafe(state.end)
-      structuredClone.encode(state, serialized)
+      state.buffer = data = Buffer.allocUnsafe(state.end)
 
-      data = state.buffer
+      structuredClone.encode(state, serialized)
     }
 
     this._handle = bare.setupThread(filename, source, data, stackSize)

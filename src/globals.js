@@ -22,6 +22,12 @@ global.queueMicrotask = function queueMicrotask (fn) {
 }
 
 /**
+ * https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
+ */
+
+global.structuredClone = require('bare-structured-clone')
+
+/**
  * Thanks to Node.js, it is customary for the buffer API to be available
  * globally and many of the core modules in Bare also assume this.
  */
