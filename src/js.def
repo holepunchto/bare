@@ -122,7 +122,6 @@ EXPORTS
 	js_is_exception_pending
 	js_is_external
 	js_is_function
-	js_is_native_function
 	js_is_null
 	js_is_number
 	js_is_object
