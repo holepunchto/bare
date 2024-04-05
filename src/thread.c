@@ -95,7 +95,7 @@ bare_thread_entry (void *opaque) {
 
   uv_sem_post(&thread->lock);
 
-  bare_runtime_run(runtime, thread->filename, thread->source);
+  bare_runtime_run(runtime, thread->filename, source);
 
   free(thread->filename);
 
