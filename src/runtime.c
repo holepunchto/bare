@@ -1121,6 +1121,7 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   case bare_source_arraybuffer:
     args[1] = source.arraybuffer;
+    break;
   }
   }
 

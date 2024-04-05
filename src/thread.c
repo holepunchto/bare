@@ -42,7 +42,6 @@ bare_thread_entry (void *opaque) {
 
   switch (thread->source.type) {
   case bare_source_none:
-  case bare_source_arraybuffer:
     source.type = bare_source_none;
     break;
 
@@ -55,6 +54,9 @@ bare_thread_entry (void *opaque) {
 
     memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
     break;
+
+  case bare_source_arraybuffer:
+    abort();
   }
 
   js_value_t *data;
@@ -90,9 +92,6 @@ bare_thread_entry (void *opaque) {
 
   js_call_function(env, global, fn, 1, (js_value_t *[]){data}, NULL);
 
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
   uv_sem_post(&thread->lock);
 
   bare_runtime_run(runtime, thread->filename, source);
@@ -104,6 +103,9 @@ bare_thread_entry (void *opaque) {
   thread->exited = true;
 
   uv_sem_post(&thread->lock);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
 
   err = bare_runtime_teardown(thread->runtime, NULL);
   assert(err == 0);
