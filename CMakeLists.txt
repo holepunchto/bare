@@ -44,6 +44,14 @@ if(NOT TARGET c++)
     PROPERTIES
     IMPORTED_LOCATION ${c++}
   )
+
+  if(target MATCHES "win32")
+    target_link_options(
+      c++
+      INTERFACE
+        /DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>
+    )
+  endif()
 endif()
 
 if(NOT TARGET v8)
