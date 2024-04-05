@@ -20,6 +20,10 @@ main (int argc, char *argv[]) {
   e = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
   assert(e == 0);
 
+  uv_buf_t source = uv_buf_init("", 0);
+
+  bare_run(bare, "/test.js", &source);
+
   int exit_code;
   e = bare_teardown(bare, &exit_code);
   assert(e == 0);
