@@ -33,6 +33,7 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
+          flags: --asan
         - os: macos-latest
           platform: ios
           arch: x64
