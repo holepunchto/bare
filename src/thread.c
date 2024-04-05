@@ -78,6 +78,8 @@ bare_thread_entry (void *opaque) {
   }
   }
 
+  uv_sem_post(&thread->lock);
+
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
   assert(err == 0);
@@ -91,8 +93,6 @@ bare_thread_entry (void *opaque) {
   assert(err == 0);
 
   js_call_function(env, global, fn, 1, (js_value_t *[]){data}, NULL);
-
-  uv_sem_post(&thread->lock);
 
   bare_runtime_run(runtime, thread->filename, source);
 
