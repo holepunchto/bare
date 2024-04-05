@@ -28,10 +28,6 @@ bare_thread_entry (void *opaque) {
   err = bare_runtime_setup(&loop, runtime->process, runtime);
   assert(err == 0);
 
-  if (runtime->process->on_thread) {
-    runtime->process->on_thread((bare_t *) runtime->process, runtime->env);
-  }
-
   js_env_t *env = runtime->env;
 
   js_handle_scope_t *scope;
@@ -93,6 +89,10 @@ bare_thread_entry (void *opaque) {
   assert(err == 0);
 
   js_call_function(env, global, fn, 1, (js_value_t *[]){data}, NULL);
+
+  if (runtime->process->on_thread) {
+    runtime->process->on_thread((bare_t *) runtime->process, env);
+  }
 
   bare_runtime_run(runtime, thread->filename, source);
 
