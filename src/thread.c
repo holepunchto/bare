@@ -38,48 +38,22 @@ bare_thread_entry (void *data) {
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
-  bare_source_t thread_source;
-
-  switch (thread->source.type) {
-  case bare_thread_source_none:
-    thread_source.type = bare_source_none;
-    break;
-
-  case bare_thread_source_buffer:
-    thread_source.type = bare_source_arraybuffer;
-
-    js_value_t *arraybuffer;
-
-    void *data;
-    err = js_create_arraybuffer(env, thread->source.buffer.len, &data, &arraybuffer);
-    assert(err == 0);
-
-    memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
-
-    err = js_create_reference(env, arraybuffer, 1, &thread_source.arraybuffer);
-    assert(err == 0);
-    break;
-  }
+  bare_source_t thread_source = thread->source;
 
   js_value_t *thread_data;
 
   switch (thread->data.type) {
-  case bare_thread_data_none:
+  case bare_data_none:
   default:
     err = js_get_null(runtime->env, &thread_data);
     assert(err == 0);
     break;
 
-  case bare_thread_data_buffer: {
-    js_value_t *arraybuffer;
-
-    void *data;
-    err = js_create_arraybuffer(runtime->env, thread->data.buffer.len, &data, &arraybuffer);
+  case bare_data_sharedarraybuffer: {
+    err = js_create_sharedarraybuffer_with_backing_store(env, thread->data.backing_store, NULL, NULL, &thread_data);
     assert(err == 0);
 
-    memcpy(data, thread->data.buffer.base, thread->data.buffer.len);
-
-    err = js_create_typedarray(runtime->env, js_uint8_array, thread->data.buffer.len, arraybuffer, 0, &thread_data);
+    err = js_release_arraybuffer_backing_store(env, thread->data.backing_store);
     assert(err == 0);
     break;
   }
@@ -122,7 +96,7 @@ bare_thread_entry (void *data) {
 }
 
 int
-bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_source_t source, bare_thread_data_t data, size_t stack_size, bare_thread_t **result) {
+bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_source_t source, bare_data_t data, size_t stack_size, bare_thread_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -160,6 +134,7 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_thread_s
   }
 
   uv_sem_wait(&thread->lock);
+
   uv_sem_post(&thread->lock);
 
   *result = thread;

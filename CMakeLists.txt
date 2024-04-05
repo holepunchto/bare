@@ -27,10 +27,6 @@ if(NOT TARGET utf)
   add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT TARGET mem)
-  add_subdirectory(vendor/libmem EXCLUDE_FROM_ALL)
-endif()
-
 if(NOT TARGET c++)
   add_library(c++ STATIC IMPORTED GLOBAL)
 
@@ -160,7 +156,6 @@ target_sources(
   PUBLIC
     $<TARGET_OBJECTS:uv>
     $<TARGET_OBJECTS:napi>
-    $<TARGET_OBJECTS:mem>
     $<TARGET_OBJECTS:utf>
     $<TARGET_OBJECTS:url>
     $<TARGET_OBJECTS:base64>
@@ -193,7 +188,6 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
   PUBLIC
     napi
-    mem
     utf
     url
     base64

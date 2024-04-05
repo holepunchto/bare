@@ -40,7 +40,9 @@ module.exports = exports = class Thread {
 
       structuredClone.preencode(state, serialized)
 
-      state.buffer = data = Buffer.allocUnsafe(state.end)
+      data = new SharedArrayBuffer(state.end)
+
+      state.buffer = Buffer.from(data)
 
       structuredClone.encode(state, serialized)
     }
@@ -98,7 +100,7 @@ class ThreadProxy {
   _ondata (data) {
     if (data === null) return
 
-    const state = { start: 0, end: data.byteLength, buffer: data }
+    const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
 
     this.data = structuredClone.deserialize(structuredClone.decode(state))
   }

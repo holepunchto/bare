@@ -14,7 +14,3 @@
 	path = vendor/libutf
 	url = ../../holepunchto/libutf.git
 	shallow = true
-[submodule "vendor/libmem"]
-	path = vendor/libmem
-	url = ../../holepunchto/libmem.git
-	shallow = true

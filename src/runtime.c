@@ -721,30 +721,30 @@ bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], filename, 4096, NULL);
   assert(err == 0);
 
-  bare_thread_source_t source = {bare_thread_source_none};
+  bare_source_t source = {bare_source_none};
   bool has_source;
 
   err = js_is_typedarray(env, argv[1], &has_source);
   assert(err == 0);
 
   if (has_source) {
+    source.type = bare_source_buffer;
+
     err = js_get_typedarray_info(env, argv[1], NULL, (void **) &source.buffer.base, (size_t *) &source.buffer.len, NULL, NULL);
     assert(err == 0);
-
-    source.type = bare_thread_source_buffer;
   }
 
-  bare_thread_data_t data = {bare_thread_data_none};
+  bare_data_t data = {bare_data_none};
   bool has_data;
 
-  err = js_is_typedarray(env, argv[2], &has_data);
+  err = js_is_sharedarraybuffer(env, argv[2], &has_data);
   assert(err == 0);
 
   if (has_data) {
-    err = js_get_typedarray_info(env, argv[2], NULL, (void **) &data.buffer.base, (size_t *) &data.buffer.len, NULL, NULL);
-    assert(err == 0);
+    data.type = bare_data_sharedarraybuffer;
 
-    data.type = bare_thread_data_buffer;
+    err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
+    assert(err == 0);
   }
 
   uint32_t stack_size;
@@ -1070,9 +1070,11 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   assert(err == 0);
 
   uv_ref((uv_handle_t *) &runtime->signals.suspend);
+
   uv_ref((uv_handle_t *) &runtime->signals.resume);
 
   uv_close((uv_handle_t *) &runtime->signals.suspend, bare_runtime_on_handle_close);
+
   uv_close((uv_handle_t *) &runtime->signals.resume, bare_runtime_on_handle_close);
 
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
@@ -1108,35 +1110,13 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   switch (source.type) {
   case bare_source_none:
-    err = js_get_undefined(env, &args[1]);
+    err = js_get_null(env, &args[1]);
     assert(err == 0);
     break;
 
   case bare_source_buffer: {
-    js_value_t *arraybuffer;
-
-    err = js_create_external_arraybuffer(env, source.buffer.base, source.buffer.len, NULL, NULL, &arraybuffer);
+    err = js_create_external_arraybuffer(env, source.buffer.base, source.buffer.len, NULL, NULL, &args[1]);
     assert(err == 0);
-
-    err = js_create_typedarray(env, js_uint8_array, source.buffer.len, arraybuffer, 0, &args[1]);
-    if (err < 0) goto err;
-    break;
-  }
-
-  case bare_source_arraybuffer: {
-    js_value_t *arraybuffer;
-    err = js_get_reference_value(env, source.arraybuffer, &arraybuffer);
-    assert(err == 0);
-
-    err = js_delete_reference(env, source.arraybuffer);
-    assert(err == 0);
-
-    size_t len;
-    err = js_get_arraybuffer_info(env, arraybuffer, NULL, &len);
-    assert(err == 0);
-
-    err = js_create_typedarray(env, js_uint8_array, len, arraybuffer, 0, &args[1]);
-    if (err < 0) goto err;
     break;
   }
   }

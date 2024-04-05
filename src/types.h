@@ -10,9 +10,8 @@
 typedef struct bare_runtime_s bare_runtime_t;
 typedef struct bare_process_s bare_process_t;
 typedef struct bare_source_s bare_source_t;
+typedef struct bare_data_s bare_data_t;
 typedef struct bare_thread_s bare_thread_t;
-typedef struct bare_thread_source_s bare_thread_source_t;
-typedef struct bare_thread_data_s bare_thread_data_t;
 typedef struct bare_thread_list_s bare_thread_list_t;
 typedef struct bare_module_list_s bare_module_list_t;
 
@@ -58,19 +57,6 @@ struct bare_source_s {
   enum {
     bare_source_none,
     bare_source_buffer,
-    bare_source_arraybuffer,
-  } type;
-
-  union {
-    uv_buf_t buffer;
-    js_ref_t *arraybuffer;
-  };
-};
-
-struct bare_thread_source_s {
-  enum {
-    bare_thread_source_none,
-    bare_thread_source_buffer,
   } type;
 
   union {
@@ -78,14 +64,14 @@ struct bare_thread_source_s {
   };
 };
 
-struct bare_thread_data_s {
+struct bare_data_s {
   enum {
-    bare_thread_data_none,
-    bare_thread_data_buffer,
+    bare_data_none,
+    bare_data_sharedarraybuffer,
   } type;
 
   union {
-    uv_buf_t buffer;
+    js_arraybuffer_backing_store_t *backing_store;
   };
 };
 
@@ -97,8 +83,8 @@ struct bare_thread_s {
 
   char *filename;
 
-  bare_thread_source_t source;
-  bare_thread_data_t data;
+  bare_source_t source;
+  bare_data_t data;
 
   bool exited;
 };
