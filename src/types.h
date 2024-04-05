@@ -62,7 +62,7 @@ struct bare_source_s {
 
   union {
     uv_buf_t buffer;
-    js_value_t *arraybuffer;
+    js_ref_t *arraybuffer;
   };
 };
 

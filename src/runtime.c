@@ -1120,7 +1120,11 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
     break;
 
   case bare_source_arraybuffer:
-    args[1] = source.arraybuffer;
+    err = js_get_reference_value(env, source.arraybuffer, &args[1]);
+    assert(err == 0);
+
+    err = js_delete_reference(env, source.arraybuffer);
+    assert(err == 0);
     break;
   }
   }
