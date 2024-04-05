@@ -57,10 +57,12 @@ struct bare_source_s {
   enum {
     bare_source_none,
     bare_source_buffer,
+    bare_source_arraybuffer,
   } type;
 
   union {
     uv_buf_t buffer;
+    js_value_t *arraybuffer;
   };
 };
 

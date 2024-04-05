@@ -14,10 +14,10 @@
 #include "types.h"
 
 static void
-bare_thread_entry (void *data) {
+bare_thread_entry (void *opaque) {
   int err;
 
-  bare_thread_t *thread = (bare_thread_t *) data;
+  bare_thread_t *thread = (bare_thread_t *) opaque;
 
   bare_runtime_t *runtime = thread->runtime;
 
@@ -38,19 +38,36 @@ bare_thread_entry (void *data) {
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
-  bare_source_t thread_source = thread->source;
+  bare_source_t source;
 
-  js_value_t *thread_data;
+  switch (thread->source.type) {
+  case bare_source_none:
+  case bare_source_arraybuffer:
+    source.type = bare_source_none;
+    break;
+
+  case bare_source_buffer:
+    source.type = bare_source_arraybuffer;
+
+    void *data;
+    err = js_create_arraybuffer(env, thread->source.buffer.len, &data, &source.arraybuffer);
+    assert(err == 0);
+
+    memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
+    break;
+  }
+
+  js_value_t *data;
 
   switch (thread->data.type) {
   case bare_data_none:
   default:
-    err = js_get_null(runtime->env, &thread_data);
+    err = js_get_null(runtime->env, &data);
     assert(err == 0);
     break;
 
   case bare_data_sharedarraybuffer: {
-    err = js_create_sharedarraybuffer_with_backing_store(env, thread->data.backing_store, NULL, NULL, &thread_data);
+    err = js_create_sharedarraybuffer_with_backing_store(env, thread->data.backing_store, NULL, NULL, &data);
     assert(err == 0);
 
     err = js_release_arraybuffer_backing_store(env, thread->data.backing_store);
@@ -71,14 +88,14 @@ bare_thread_entry (void *data) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, (js_value_t *[]){thread_data}, NULL);
+  js_call_function(env, global, fn, 1, (js_value_t *[]){data}, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
   uv_sem_post(&thread->lock);
 
-  bare_runtime_run(runtime, thread->filename, thread_source);
+  bare_runtime_run(runtime, thread->filename, thread->source);
 
   free(thread->filename);
 
