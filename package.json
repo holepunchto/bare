@@ -18,14 +18,14 @@
   "dependencies": {
     "bare-addon-resolve": "^1.1.0",
     "bare-buffer": "^2.0.0",
-    "bare-console": "^4.0.0",
+    "bare-console": "^5.0.0",
     "bare-events": "^2.0.0",
     "bare-hrtime": "^2.0.0",
-    "bare-inspect": "^2.0.0",
+    "bare-inspect": "^3.0.0",
     "bare-module": "^3.1.0",
     "bare-os": "^2.0.0",
     "bare-path": "^2.0.0",
-    "bare-repl": "^1.0.0",
+    "bare-repl": "^2.0.0",
     "bare-structured-clone": "^1.0.2",
     "bare-timers": "^2.0.0",
     "bare-tty": "^3.0.0",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "bare-assert": "^1.0.0",
-    "bare-http1": "^2.0.0",
+    "bare-http1": "^3.2.0",
     "standard": "^17.0.0"
   }
 }

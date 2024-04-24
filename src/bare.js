@@ -40,6 +40,9 @@ bare.addon = function addon (specifier) {
     case '/node_modules/bare-module/':
       pkg = require('bare-module/package')
       break
+    case '/node_modules/bare-type/':
+      pkg = require('bare-type/package')
+      break
     default:
       throw new Error(`Unknown addon '${specifier}'`)
   }
