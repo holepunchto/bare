@@ -32,11 +32,11 @@ jobs:
           flags: --android-ndk 26.1.10909125 --android-api 34
         - os: macos-latest
           platform: darwin
-          arch: x64
+          arch: arm64
           flags: --asan
         - os: macos-latest
           platform: ios
-          arch: x64
+          arch: arm64
           flags: --simulator
         - os: windows-latest
           platform: win32
