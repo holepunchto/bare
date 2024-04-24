@@ -220,7 +220,9 @@ Module |
 <https://github.com/holepunchto/bare-fs>
 <https://github.com/holepunchto/bare-hrtime>
 <https://github.com/holepunchto/bare-http1>
+<https://github.com/holepunchto/bare-https>
 <https://github.com/holepunchto/bare-inspect>
+<https://github.com/holepunchto/bare-inspector>
 <https://github.com/holepunchto/bare-module>
 <https://github.com/holepunchto/bare-os>
 <https://github.com/holepunchto/bare-path>
@@ -230,9 +232,12 @@ Module |
 <https://github.com/holepunchto/bare-repl>
 <https://github.com/holepunchto/bare-signals>
 <https://github.com/holepunchto/bare-subprocess>
+<https://github.com/holepunchto/bare-tcp>
 <https://github.com/holepunchto/bare-timers>
+<https://github.com/holepunchto/bare-tls>
 <https://github.com/holepunchto/bare-tty>
 <https://github.com/holepunchto/bare-url>
+<https://github.com/holepunchto/bare-worker>
 
 ### Embedding
 
