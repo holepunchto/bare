@@ -215,6 +215,7 @@ Module |
 <https://github.com/holepunchto/bare-bundle>
 <https://github.com/holepunchto/bare-channel>
 <https://github.com/holepunchto/bare-console>
+<https://github.com/holepunchto/bare-crypto>
 <https://github.com/holepunchto/bare-env>
 <https://github.com/holepunchto/bare-events>
 <https://github.com/holepunchto/bare-fs>
@@ -230,6 +231,7 @@ Module |
 <https://github.com/holepunchto/bare-process>
 <https://github.com/holepunchto/bare-readline>
 <https://github.com/holepunchto/bare-repl>
+<https://github.com/holepunchto/bare-stream>
 <https://github.com/holepunchto/bare-signals>
 <https://github.com/holepunchto/bare-subprocess>
 <https://github.com/holepunchto/bare-tcp>
@@ -238,6 +240,7 @@ Module |
 <https://github.com/holepunchto/bare-tty>
 <https://github.com/holepunchto/bare-url>
 <https://github.com/holepunchto/bare-worker>
+<https://github.com/holepunchto/bare-zlib>
 
 ### Embedding
 
