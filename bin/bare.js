@@ -2,28 +2,7 @@
 const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
-
-const argv = require('minimist')(Bare.argv.slice(1), {
-  stopEarly: true,
-  boolean: [
-    'version',
-    'help'
-  ],
-  string: [
-    'eval',
-    'print'
-  ],
-  alias: {
-    version: 'v',
-    help: 'h',
-    eval: 'e',
-    print: 'p'
-  }
-})
-
-const argc = argv._.length
-
-Bare.argv.splice(1, argc, ...argv._)
+const { command, flag, arg, rest } = require('paparam')
 
 const parentURL = url.pathToFileURL(os.cwd())
 
@@ -31,20 +10,40 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
   parentURL.pathname += '/'
 }
 
-if (argv.v) {
-  console.log(Bare.version)
-} else if (argv.h) {
-  console.log('usage: bare [-e, --eval <script>] [-p, --print <script>] [<filename>]')
-} else if (argv.e) {
-  Module.load(parentURL, `(${argv.e})`)
-} else if (argv.p) {
-  Module.load(parentURL, `console.log(${argv.p})`)
-} else if (argc > 0) {
-  const resolved = new URL(Bare.argv[1], parentURL)
+const bare = command(
+  'bare',
+  flag('--version|-v', ''),
+  flag('--eval|-e <script>', ''),
+  flag('--print|-p <script>', ''),
+  arg('<filename>', ''),
+  rest('[...args]'),
+  () => {
+    const { args, flags, rest } = bare
 
-  Bare.argv[1] = url.fileURLToPath(resolved)
+    const argv = []
 
-  Module.load(resolved)
-} else {
-  require('bare-repl').start()
-}
+    if (args.filename) {
+      args.filename = new URL(args.filename, parentURL)
+
+      argv.push(url.fileURLToPath(args.filename))
+    }
+
+    if (rest) argv.push(...rest)
+
+    Bare.argv.splice(1, Bare.argv.length - 1, ...argv)
+
+    if (flags.version) {
+      console.log(Bare.version)
+    } else if (flags.eval) {
+      Module.load(parentURL, `(${flags.eval})`)
+    } else if (flags.print) {
+      Module.load(parentURL, `console.log(${flags.print})`)
+    } else if (args.filename) {
+      Module.load(args.filename)
+    } else {
+      require('bare-repl').start()
+    }
+  }
+)
+
+bare.parse(Bare.argv.slice(1))

@@ -30,7 +30,7 @@
     "bare-timers": "^2.0.0",
     "bare-tty": "^3.0.0",
     "bare-url": "^1.0.0",
-    "minimist": "^1.2.8"
+    "paparam": "^1.1.2"
   },
   "devDependencies": {
     "bare-assert": "^1.0.0",
