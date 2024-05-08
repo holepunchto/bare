@@ -216,6 +216,7 @@ Module |
 <https://github.com/holepunchto/bare-channel>
 <https://github.com/holepunchto/bare-console>
 <https://github.com/holepunchto/bare-crypto>
+<https://github.com/holepunchto/bare-dns>
 <https://github.com/holepunchto/bare-env>
 <https://github.com/holepunchto/bare-events>
 <https://github.com/holepunchto/bare-fs>
