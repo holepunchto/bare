@@ -76,6 +76,8 @@ class Bare extends EventEmitter {
 
     this.suspended = false
     this.exiting = false
+
+    this.exit = this.exit.bind(this)
   }
 
   get platform () {
