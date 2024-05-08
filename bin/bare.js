@@ -2,7 +2,7 @@
 const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
-const { command, flag, arg, rest } = require('paparam')
+const { command, flag, arg, rest, bail } = require('paparam')
 
 const parentURL = url.pathToFileURL(os.cwd())
 
@@ -17,6 +17,7 @@ const bare = command(
   flag('--print|-p <script>', ''),
   arg('<filename>', ''),
   rest('[...args]'),
+  bail((reason) => queueMicrotask(() => { throw reason.err })),
   () => {
     const { args, flags, rest } = bare
 
