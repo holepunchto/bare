@@ -2,6 +2,7 @@
 const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
+const path = require('bare-path')
 const { command, flag, arg, rest, bail } = require('paparam')
 
 const parentURL = url.pathToFileURL(os.cwd())
@@ -24,7 +25,7 @@ const bare = command(
     const argv = []
 
     if (args.filename) {
-      args.filename = new URL(args.filename, parentURL)
+      args.filename = Module.resolve(path.resolve(args.filename), parentURL)
 
       argv.push(url.fileURLToPath(args.filename))
     }
