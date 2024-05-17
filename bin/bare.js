@@ -13,10 +13,10 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 
 const bare = command(
   'bare',
-  flag('--version|-v', ''),
-  flag('--eval|-e <script>', ''),
-  flag('--print|-p <script>', ''),
-  arg('<filename>', ''),
+  flag('--version|-v'),
+  flag('--eval|-e <script>'),
+  flag('--print|-p <script>'),
+  arg('<filename>'),
   rest('[...args]'),
   bail((reason) => queueMicrotask(() => { throw reason.err })),
   () => {
