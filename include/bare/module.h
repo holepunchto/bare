@@ -64,7 +64,6 @@
 // a known symbol that can be loaded from a shared library. It is NOT suited
 // for registering static modules as this will cause symbol duplication.
 
-
 #define BARE_MODULE(id, fn) \
   BARE_EXTERN_C_START \
   js_value_t *BARE_MODULE_SYMBOL_REGISTER(js_env_t *env, js_value_t *exports) { \
