@@ -18,7 +18,26 @@ const bare = command(
   flag('--print|-p <script>'),
   arg('<filename>'),
   rest('[...args]'),
-  bail((reason) => queueMicrotask(() => { throw reason.err })),
+  bail((bail) => {
+    switch (bail.reason) {
+      case 'UNKNOWN_FLAG':
+        console.error(`unknown flag: ${bail.flag.name}`)
+        break
+
+      case 'INVALID_FLAG':
+        console.error(`invalid flag: ${bail.flag.name}`)
+        break
+
+      case 'UNKNOWN_ARG':
+        console.error(`unknown argument: ${bail.arg.value}`)
+        break
+
+      default:
+        return queueMicrotask(() => { throw bail.err })
+    }
+
+    Bare.exit(1)
+  }),
   () => {
     const { args, flags, rest } = bare
 
