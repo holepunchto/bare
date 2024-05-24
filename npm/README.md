@@ -22,7 +22,9 @@ Flags:
   --help|-h   Show help
 ```
 
-The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>. When imported, the module exports the global `Bare` namespace. See <https://github.com/holepunchto/bare#api> for the API documentation.
+The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
+
+When imported, the module exports the global `Bare` namespace. See <https://github.com/holepunchto/bare#api> for the API documentation.
 
 ```js
 const Bare = require('bare')
