@@ -1,0 +1,32 @@
+{
+  "name": "bare",
+  "version": "1.2.2",
+  "description": "Small and modular JavaScript runtime for desktop and mobile",
+  "exports": {
+    ".": {
+      "require": "./index.cjs",
+      "import": "./index.mjs"
+    }
+  },
+  "bin": {
+    "bare": "bin/bare"
+  },
+  "files": [
+    "index.cjs",
+    "index.mjs",
+    "bin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/bare.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/bare/issues"
+  },
+  "homepage": "https://github.com/holepunchto/bare",
+  "dependencies": {
+    "bare-runtime": "1.2.2"
+  }
+}
