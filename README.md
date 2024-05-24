@@ -9,7 +9,7 @@ npm i -g bare
 ## Usage
 
 ```console
-$ bare [flags] <filename> [...args]
+bare [flags] <filename> [...args]
 
 Evaluate a script or start a REPL session if no script is provided.
 
