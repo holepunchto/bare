@@ -8,8 +8,8 @@ npm i -g bare
 
 ## Usage
 
-```sh
-bare [flags] <filename> [...args]
+```console
+$ bare [flags] <filename> [...args]
 
 Evaluate a script or start a REPL session if no script is provided.
 
