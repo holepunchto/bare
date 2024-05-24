@@ -3,7 +3,7 @@ const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
 const path = require('bare-path')
-const { command, flag, arg, rest, bail } = require('paparam')
+const { description, command, flag, arg, rest, bail } = require('paparam')
 
 const parentURL = url.pathToFileURL(os.cwd())
 
@@ -13,11 +13,12 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 
 const bare = command(
   'bare',
-  flag('--version|-v'),
-  flag('--eval|-e <script>'),
-  flag('--print|-p <script>'),
-  arg('<filename>'),
-  rest('[...args]'),
+  description('Evaluate a script or start a REPL session if no script is provided.'),
+  flag('--version|-v', 'Print the Bare version'),
+  flag('--eval|-e <script>', 'Evaluate an inline script'),
+  flag('--print|-p <script>', 'Evaluate an inline script and print the result'),
+  arg('<filename>', 'The name of a script to evaluate'),
+  rest('[...args]', 'Additional arguments made available to the script'),
   bail((bail) => {
     switch (bail.reason) {
       case 'UNKNOWN_FLAG':

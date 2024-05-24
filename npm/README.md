@@ -11,15 +11,17 @@ npm i -g bare
 ```sh
 bare [flags] <filename> [...args]
 
+Evaluate a script or start a REPL session if no script is provided.
+
 Arguments:
-  <filename>
-  [...args]
+  <filename>            The name of a script to evaluate
+  [...args]             Additional arguments made available to the script
 
 Flags:
-  --version|-v
-  --eval|-e <script>
-  --print|-p <script>
-  --help|-h   Show help
+  --version|-v          Print the Bare version
+  --eval|-e <script>    Evaluate an inline script
+  --print|-p <script>   Evaluate an inline script and print the result
+  --help|-h             Show help
 ```
 
 The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
