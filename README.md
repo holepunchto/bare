@@ -2,21 +2,31 @@
 
 Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for writing applications in the lingua franca of modern software. Unlike Node.js, it makes embedding and cross-device support core use cases, aiming to run just as well on your phone as on your laptop. The result is a runtime ideal for networked, peer-to-peer applications that can run on a wide selection of hardware.
 
-## Installation
-
-Prebuilt binaries are provided by <https://github.com/holepunchto/bare-runtime> and can be installed using `npm`:
-
 ```sh
-npm i -g bare-runtime
+npm i -g bare
 ```
 
 ## Usage
 
 ```sh
-bare [-e, --eval <script>] [-p, --print <script>] [<filename>]
+bare [flags] <filename> [...args]
+
+Arguments:
+  <filename>
+  [...args]
+
+Flags:
+  --version|-v
+  --eval|-e <script>
+  --print|-p <script>
+  --help|-h   Show help
 ```
 
-The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
+The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>. When imported, the module exports the global `Bare` namespace.
+
+```js
+const Bare = require('bare')
+```
 
 ## Architecture
 
