@@ -322,6 +322,7 @@ link_bare_module(bare bare-url)
 
 link_bare_module(bare_bin bare-pipe)
 link_bare_module(bare_bin bare-repl)
+link_bare_module(bare_bin bare-signals)
 link_bare_module(bare_bin bare-tty)
 
 if(PROJECT_IS_TOP_LEVEL)
