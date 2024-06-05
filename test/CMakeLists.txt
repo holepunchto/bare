@@ -13,6 +13,7 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
+  restart.c
   suspend-from-thread.js
   suspend-resume.js
   suspend-resume-from-thread.js
