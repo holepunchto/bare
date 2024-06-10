@@ -253,6 +253,7 @@ Module |
 <https://github.com/holepunchto/bare-type>
 <https://github.com/holepunchto/bare-url>
 <https://github.com/holepunchto/bare-worker>
+<https://github.com/holepunchto/bare-ws>
 <https://github.com/holepunchto/bare-zlib>
 
 ### Embedding
