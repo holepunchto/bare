@@ -22,6 +22,7 @@
     "bare-events": "^2.0.0",
     "bare-hrtime": "^2.0.0",
     "bare-inspect": "^3.0.0",
+    "bare-inspector": "^2.3.0",
     "bare-module": "^3.1.0",
     "bare-os": "^2.0.0",
     "bare-path": "^2.0.0",
