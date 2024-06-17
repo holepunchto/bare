@@ -17,6 +17,7 @@ const bare = command(
   flag('--version|-v', 'Print the Bare version'),
   flag('--eval|-e <script>', 'Evaluate an inline script'),
   flag('--print|-p <script>', 'Evaluate an inline script and print the result'),
+  flag('--inspect', 'Activate the inspector'),
   arg('<filename>', 'The name of a script to evaluate'),
   rest('[...args]', 'Additional arguments made available to the script'),
   bail((bail) => {
@@ -54,17 +55,27 @@ const bare = command(
 
     Bare.argv.splice(1, Bare.argv.length - 1, ...argv)
 
-    if (flags.version) {
-      console.log(Bare.version)
-    } else if (flags.eval) {
-      Module.load(parentURL, `(${flags.eval})`)
-    } else if (flags.print) {
-      Module.load(parentURL, `console.log(${flags.print})`)
-    } else if (args.filename) {
-      Module.load(args.filename)
-    } else {
-      require('bare-repl').start()
+    if (flags.version) return console.log(Bare.version)
+
+    let server = null
+
+    if (flags.inspect) {
+      const inspector = require('bare-inspector')
+
+      server = new inspector.Server(9229, { path: args.filename || os.cwd() })
+      server.unref()
     }
+
+    if (flags.eval) return Module.load(parentURL, `(${flags.eval})`)
+
+    if (flags.print) return Module.load(parentURL, `console.log(${flags.print})`)
+
+    if (args.filename) return Module.load(args.filename)
+
+    require('bare-repl').start().on('exit', () => {
+      if (server === null) Bare.exit()
+      else server.close(() => Bare.exit())
+    })
   }
 )
 
