@@ -19,6 +19,10 @@ if(MSVC)
   add_compile_options(/MT$<$<CONFIG:Debug>:d>)
 endif()
 
+if(WIN32)
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
 if(NOT TARGET uv)
   add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
 endif()
