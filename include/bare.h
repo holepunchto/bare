@@ -55,7 +55,7 @@ int
 bare_teardown (bare_t *bare, int *exit_code);
 
 /**
- * Run the module identified by `filename`, which may be any of the formats
+ * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk.
  *
@@ -63,7 +63,13 @@ bare_teardown (bare_t *bare, int *exit_code);
  * supported module formats.
  */
 int
-bare_run (bare_t *bare, const char *filename, const uv_buf_t *source);
+bare_load (bare_t *bare, const char *filename, const uv_buf_t *source);
+
+/**
+ * Run the I/O event loop.
+ */
+int
+bare_run (bare_t *bare);
 
 /**
  * Suspend the process as soon as possible. Once the process has suspended

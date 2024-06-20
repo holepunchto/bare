@@ -259,12 +259,12 @@ bare.onthread = exports._onthread.bind(exports)
 
 /**
  * Step 8:
- * Register the main entry function used by `bare_run()`.
+ * Register the main entry function used by `bare_load()`.
  */
 
 const Module = require('bare-module')
 const url = require('bare-url')
 
-bare.run = function run (filename, source) {
+bare.load = function load (filename, source) {
   Module.load(url.pathToFileURL(filename), source ? Buffer.from(source) : null)
 }

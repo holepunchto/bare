@@ -1086,7 +1086,7 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 }
 
 int
-bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t source) {
+bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t source) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1099,8 +1099,8 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
   err = js_get_reference_value(env, runtime->exports, &exports);
   assert(err == 0);
 
-  js_value_t *run;
-  err = js_get_named_property(env, exports, "run", &run);
+  js_value_t *load;
+  err = js_get_named_property(env, exports, "load", &load);
   assert(err == 0);
 
   js_value_t *args[2];
@@ -1133,10 +1133,23 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, run, 2, args, NULL);
+  js_call_function(env, global, load, 2, args, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  return 0;
+
+err:
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  return -1;
+}
+
+int
+bare_runtime_run (bare_runtime_t *runtime) {
+  int err;
 
   do {
     err = uv_run(runtime->loop, UV_RUN_DEFAULT);
@@ -1162,10 +1175,4 @@ bare_runtime_run (bare_runtime_t *runtime, const char *filename, bare_source_t s
   assert(err == 0);
 
   return 0;
-
-err:
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-  return -1;
 }

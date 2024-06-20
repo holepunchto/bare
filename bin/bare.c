@@ -20,7 +20,10 @@ main (int argc, char *argv[]) {
 
   uv_buf_t source = uv_buf_init((char *) bare_bundle, bare_bundle_len);
 
-  bare_run(bare, "/bare.bundle", &source);
+  bare_load(bare, "/bare.bundle", &source);
+
+  err = bare_run(bare);
+  assert(err == 0);
 
   int exit_code;
   err = bare_teardown(bare, &exit_code);

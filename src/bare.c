@@ -76,12 +76,12 @@ bare_teardown (bare_t *bare, int *exit_code) {
 }
 
 int
-bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
+bare_load (bare_t *bare, const char *filename, const uv_buf_t *source) {
   int err;
 
   bare_runtime_t *runtime = bare->process.runtime;
 
-  err = bare_runtime_run(
+  err = bare_runtime_load(
     runtime,
     filename,
     (bare_source_t){
@@ -92,6 +92,17 @@ bare_run (bare_t *bare, const char *filename, const uv_buf_t *source) {
       ),
     }
   );
+
+  return err;
+}
+
+int
+bare_run (bare_t *bare) {
+  int err;
+
+  bare_runtime_t *runtime = bare->process.runtime;
+
+  err = bare_runtime_run(runtime);
 
   return err;
 }

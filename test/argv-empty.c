@@ -22,7 +22,10 @@ main (int argc, char *argv[]) {
 
   uv_buf_t source = uv_buf_init("", 0);
 
-  bare_run(bare, "/test.js", &source);
+  bare_load(bare, "/test.js", &source);
+
+  e = bare_run(bare);
+  assert(e == 0);
 
   int exit_code;
   e = bare_teardown(bare, &exit_code);

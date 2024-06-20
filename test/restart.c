@@ -34,7 +34,10 @@ main (int argc, char *argv[]) {
 
     uv_buf_t source = uv_buf_init(code, strlen(code));
 
-    bare_run(bare, "/test.js", &source);
+    bare_load(bare, "/test.js", &source);
+
+    e = bare_run(bare);
+    assert(e == 0);
 
     e = bare_teardown(bare, &exit_code);
     assert(e == 0);
