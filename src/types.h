@@ -2,6 +2,7 @@
 #define BARE_TYPES_H
 
 #include <js.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <uv.h>
 
@@ -33,6 +34,8 @@ struct bare_runtime_s {
   bool suspended;
   bool exiting;
   bool terminated;
+
+  atomic_int linger;
 };
 
 struct bare_process_s {

@@ -47,7 +47,7 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, (js_value_t *[]){error}, NULL);
+  js_call_function(env, global, fn, 1, &error, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -270,14 +270,18 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 0, NULL, NULL);
+  js_value_t *linger;
+  err = js_create_int32(env, runtime->linger, &linger);
+  assert(err == 0);
+
+  js_call_function(env, global, fn, 1, &linger, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
   if (bare_runtime_is_main_thread(runtime)) {
     if (runtime->process->on_suspend) {
-      runtime->process->on_suspend((bare_t *) runtime->process);
+      runtime->process->on_suspend((bare_t *) runtime->process, runtime->linger);
     }
   }
 }
@@ -675,8 +679,19 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
+
+  assert(argc == 1);
+
+  int32_t linger;
+  err = js_get_value_int32(env, argv[0], &linger);
+  assert(err == 0);
+
+  runtime->linger = linger;
 
   uv_ref((uv_handle_t *) &runtime->signals.suspend);
 
@@ -886,6 +901,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   runtime->suspended = false;
   runtime->exiting = false;
   runtime->terminated = false;
+  runtime->linger = 0;
 
   err = uv_async_init(runtime->loop, &runtime->signals.suspend, bare_runtime_on_suspend_signal);
   assert(err == 0);
