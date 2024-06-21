@@ -12,6 +12,9 @@ int
 bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code);
 
 int
+bare_runtime_exit (bare_runtime_t *runtime, int exit_code);
+
+int
 bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result);
 
 int

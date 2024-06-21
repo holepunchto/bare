@@ -76,6 +76,17 @@ bare_teardown (bare_t *bare, int *exit_code) {
 }
 
 int
+bare_exit (bare_t *bare, int exit_code) {
+  int err;
+
+  bare_runtime_t *runtime = bare->process.runtime;
+
+  err = bare_runtime_exit(runtime, exit_code);
+
+  return err;
+}
+
+int
 bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
   int err;
 

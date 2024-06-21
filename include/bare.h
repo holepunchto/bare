@@ -55,6 +55,12 @@ int
 bare_teardown (bare_t *bare, int *exit_code);
 
 /**
+ * Immediately terminate the process with an exit status of `exit_code`.
+ */
+int
+bare_exit (bare_t *bare, int exit_code);
+
+/**
  * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk.

@@ -47,7 +47,9 @@ bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, &error, NULL);
+  js_value_t *args[1] = {error};
+
+  js_call_function(env, global, fn, 1, args, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -103,7 +105,9 @@ bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 2, (js_value_t *[]){reason, promise}, NULL);
+  js_value_t *args[2] = {reason, promise};
+
+  js_call_function(env, global, fn, 2, args, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -270,11 +274,12 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_value_t *linger;
-  err = js_create_int32(env, runtime->linger, &linger);
+  js_value_t *args[1];
+
+  err = js_create_int32(env, runtime->linger, &args[0]);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, &linger, NULL);
+  js_call_function(env, global, fn, 1, args, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1067,7 +1072,9 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   err = js_run_script(env, "bare", -1, 0, script, &entry);
   assert(err == 0);
 
-  err = js_call_function(env, global, entry, 1, &exports, NULL);
+  js_value_t *args[1] = {exports};
+
+  err = js_call_function(env, global, entry, 1, args, NULL);
   assert(err == 0);
 
   err = js_close_handle_scope(env, scope);
@@ -1100,6 +1107,41 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   assert(err == 0);
 
   bare_addon_teardown();
+
+  return 0;
+}
+
+int
+bare_runtime_exit (bare_runtime_t *runtime, int exit_code) {
+  int err;
+
+  js_env_t *env = runtime->env;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *exit;
+  err = js_get_named_property(env, exports, "exit", &exit);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  js_value_t *args[1];
+
+  err = js_create_int32(env, exit_code, &args[0]);
+  assert(err == 0);
+
+  js_call_function(env, global, exit, 1, args, NULL);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
 
   return 0;
 }
