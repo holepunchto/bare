@@ -2,6 +2,7 @@ list(APPEND tests
   addon-load.js
   addon-resolve.js
   argv-empty.c
+  exit-on-before-exit.js
   import-addon.cjs
   import-addon.mjs
   import-bundle.js

@@ -654,6 +654,8 @@ bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
+  runtime->terminated = true;
+
   err = js_terminate_execution(env);
   assert(err == 0);
 
@@ -883,6 +885,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   runtime->suspended = false;
   runtime->exiting = false;
+  runtime->terminated = false;
 
   err = uv_async_init(runtime->loop, &runtime->signals.suspend, bare_runtime_on_suspend_signal);
   assert(err == 0);
@@ -1156,7 +1159,9 @@ bare_runtime_run (bare_runtime_t *runtime) {
 
     // Break immediately if `uv_stop()` was called. In this case, before exit
     // hooks should NOT run.
-    if (err != 0) break;
+    if (runtime->terminated) break;
+
+    assert(err == 0);
 
     if (runtime->suspended) {
       bare_runtime_on_idle(runtime);
@@ -1166,6 +1171,14 @@ bare_runtime_run (bare_runtime_t *runtime) {
       uv_ref((uv_handle_t *) &runtime->signals.resume);
     } else {
       bare_runtime_on_before_exit(runtime);
+    }
+
+    // Flush the pending `uv_stop()` and short circuit the loop. Any
+    // outstanding I/O will be deferred until after the exit hook.
+    if (runtime->terminated) {
+      uv_run(runtime->loop, UV_RUN_NOWAIT);
+
+      break;
     }
   } while (uv_loop_alive(runtime->loop));
 

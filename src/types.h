@@ -32,6 +32,7 @@ struct bare_runtime_s {
 
   bool suspended;
   bool exiting;
+  bool terminated;
 };
 
 struct bare_process_s {
