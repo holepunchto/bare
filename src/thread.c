@@ -102,7 +102,7 @@ bare_thread_entry (void *opaque) {
     runtime->process->on_thread((bare_t *) runtime->process, env);
   }
 
-  bare_runtime_load(runtime, thread->filename, source);
+  bare_runtime_load(runtime, thread->filename, source, NULL);
 
   err = bare_runtime_run(runtime);
   assert(err == 0);

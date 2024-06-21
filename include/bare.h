@@ -63,7 +63,7 @@ bare_teardown (bare_t *bare, int *exit_code);
  * supported module formats.
  */
 int
-bare_load (bare_t *bare, const char *filename, const uv_buf_t *source);
+bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result);
 
 /**
  * Run the I/O event loop.

@@ -266,5 +266,5 @@ const Module = require('bare-module')
 const url = require('bare-url')
 
 bare.load = function load (filename, source) {
-  Module.load(url.pathToFileURL(filename), source ? Buffer.from(source) : null)
+  return Module.load(url.pathToFileURL(filename), source ? Buffer.from(source) : null)
 }

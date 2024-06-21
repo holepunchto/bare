@@ -1086,7 +1086,7 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 }
 
 int
-bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t source) {
+bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1133,7 +1133,7 @@ bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t 
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, load, 2, args, NULL);
+  js_call_function(env, global, load, 2, args, result);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
