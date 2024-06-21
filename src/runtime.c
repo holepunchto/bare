@@ -1168,7 +1168,9 @@ bare_runtime_run (bare_runtime_t *runtime) {
 
       if (uv_loop_alive(runtime->loop)) continue;
 
-      uv_ref((uv_handle_t *) &runtime->signals.resume);
+      if (!runtime->terminated) {
+        uv_ref((uv_handle_t *) &runtime->signals.resume);
+      }
     } else {
       bare_runtime_on_before_exit(runtime);
     }
