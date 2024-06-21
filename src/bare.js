@@ -265,7 +265,7 @@ bare.onthread = exports._onthread.bind(exports)
 const Module = require('bare-module')
 const url = require('bare-url')
 
-bare.exit = Bare.exit
+bare.exit = exports.exit
 
 bare.load = function load (filename, source) {
   return Module.load(url.pathToFileURL(filename), source ? Buffer.from(source) : null)
