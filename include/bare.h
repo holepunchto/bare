@@ -78,6 +78,13 @@ int
 bare_run (bare_t *bare);
 
 /**
+ * Terminate the process as soon as possible. It's safe to call this function
+ * from any thread.
+ */
+int
+bare_terminate (bare_t *bare);
+
+/**
  * Suspend the process as soon as possible. Once the process has suspended
  * successfully, `bare_run()` will not return until another thread resumes the
  * process. It's safe to call this function from any thread.

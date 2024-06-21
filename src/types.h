@@ -27,6 +27,7 @@ struct bare_runtime_s {
   struct {
     uv_async_t suspend;
     uv_async_t resume;
+    uv_async_t terminate;
   } signals;
 
   int active_handles;

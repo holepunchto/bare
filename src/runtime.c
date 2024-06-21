@@ -381,6 +381,41 @@ bare_runtime_on_resume_signal (uv_async_t *handle) {
   bare_runtime_on_resume(runtime);
 }
 
+static inline void
+bare_runtime_on_terminate (bare_runtime_t *runtime) {
+  int err;
+
+  js_env_t *env = runtime->env;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *exit;
+  err = js_get_named_property(env, exports, "exit", &exit);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  js_call_function(env, global, exit, 0, NULL, NULL);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+}
+
+static void
+bare_runtime_on_terminate_signal (uv_async_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  bare_runtime_on_terminate(runtime);
+}
+
 static void
 bare_runtime_on_handle_close (uv_handle_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
@@ -922,7 +957,14 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 
   uv_unref((uv_handle_t *) &runtime->signals.resume);
 
-  runtime->active_handles = 2;
+  err = uv_async_init(runtime->loop, &runtime->signals.terminate, bare_runtime_on_terminate_signal);
+  assert(err == 0);
+
+  runtime->signals.terminate.data = (void *) runtime;
+
+  uv_unref((uv_handle_t *) &runtime->signals.terminate);
+
+  runtime->active_handles = 3;
 
   js_env_t *env = runtime->env;
 
@@ -1102,6 +1144,8 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
   uv_close((uv_handle_t *) &runtime->signals.suspend, bare_runtime_on_handle_close);
 
   uv_close((uv_handle_t *) &runtime->signals.resume, bare_runtime_on_handle_close);
+
+  uv_close((uv_handle_t *) &runtime->signals.terminate, bare_runtime_on_handle_close);
 
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
