@@ -109,7 +109,9 @@ bare_run (bare_t *bare) {
 }
 
 int
-bare_suspend (bare_t *bare) {
+bare_suspend (bare_t *bare, int linger) {
+  bare->process.runtime->linger = linger;
+
   return uv_async_send(&bare->process.runtime->signals.suspend);
 }
 

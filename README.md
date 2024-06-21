@@ -82,7 +82,7 @@ An object containing the version strings of Bare and its dependencies.
 
 Immediately terminate the process or current thread with an exit status of `code` which defaults to `Bare.exitCode`.
 
-#### `Bare.suspend()`
+#### `Bare.suspend([linger])`
 
 Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener and no additional work is scheduled, the loop will block until the process is resumed. If additional work is scheduled from an `idle` event, the `idle` event will be emitted again once all work has stopped unless the process was resumed.
 
@@ -122,7 +122,7 @@ Emitted after the process or current thread has terminated and just before the J
 > Bare.prependListener('teardown', () => { ... })
 > ```
 
-#### `Bare.on('suspend')`
+#### `Bare.on('suspend', linger)`
 
 Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work may be scheduled.
 

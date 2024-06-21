@@ -22,6 +22,7 @@ list(APPEND tests
   suspend-resume-from-thread.js
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
+  suspend-resume-with-linger.js
   thread.js
   thread-join.js
   thread-source.js

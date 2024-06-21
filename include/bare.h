@@ -18,7 +18,7 @@ typedef struct bare_options_s bare_options_t;
 typedef void (*bare_before_exit_cb)(bare_t *);
 typedef void (*bare_exit_cb)(bare_t *);
 typedef void (*bare_teardown_cb)(bare_t *);
-typedef void (*bare_suspend_cb)(bare_t *);
+typedef void (*bare_suspend_cb)(bare_t *, int linger);
 typedef void (*bare_idle_cb)(bare_t *);
 typedef void (*bare_resume_cb)(bare_t *);
 typedef void (*bare_thread_cb)(bare_t *, js_env_t *);
@@ -77,7 +77,7 @@ bare_run (bare_t *bare);
  * process. It's safe to call this function from any thread.
  */
 int
-bare_suspend (bare_t *bare);
+bare_suspend (bare_t *bare, int linger);
 
 /**
  * Resume the process as soon as possible. If the process is not yet idle after

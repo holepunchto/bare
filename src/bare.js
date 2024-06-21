@@ -123,8 +123,8 @@ class Bare extends EventEmitter {
     function noop () {}
   }
 
-  suspend () {
-    bare.suspend()
+  suspend (linger = 0) {
+    bare.suspend(linger)
   }
 
   resume () {
@@ -169,10 +169,10 @@ class Bare extends EventEmitter {
     this.emit('teardown')
   }
 
-  _onsuspend () {
+  _onsuspend (linger) {
     this.suspended = true
 
-    this.emit('suspend')
+    this.emit('suspend', linger)
   }
 
   _onidle () {

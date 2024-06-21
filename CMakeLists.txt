@@ -206,6 +206,14 @@ target_link_libraries(
     hex
 )
 
+if(MSVC)
+  target_compile_options(
+    bare
+    PRIVATE
+      /experimental:c11atomics
+  )
+endif()
+
 add_library(bare_shared SHARED)
 
 set_target_properties(
