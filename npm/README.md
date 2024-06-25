@@ -21,6 +21,7 @@ Flags:
   --version|-v          Print the Bare version
   --eval|-e <script>    Evaluate an inline script
   --print|-p <script>   Evaluate an inline script and print the result
+  --inspect             Activate the inspector
   --help|-h             Show help
 ```
 
