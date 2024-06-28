@@ -88,6 +88,10 @@ class Bare extends EventEmitter {
     return bare.arch
   }
 
+  get simulator () {
+    return bare.simulator
+  }
+
   get argv () {
     return bare.argv
   }
@@ -195,6 +199,7 @@ class Bare extends EventEmitter {
 
       platform: this.platform,
       arch: this.arch,
+      simulator: this.simulator,
       argv: this.argv,
       pid: this.pid,
       exitCode: this.exitCode,

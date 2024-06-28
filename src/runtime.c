@@ -1013,6 +1013,13 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   V("arch", BARE_ARCH);
 #undef V
 
+  js_value_t *simulator;
+  err = js_get_boolean(env, BARE_SIMULATOR, &simulator);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "simulator", simulator);
+  assert(err == 0);
+
   js_value_t *pid;
   err = js_create_int32(env, uv_os_getpid(), &pid);
   assert(err == 0);
