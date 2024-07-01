@@ -51,6 +51,10 @@ The identifier of the operating system for which Bare was compiled. The possible
 
 The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, and `x64`.
 
+#### `Bare.simulator`
+
+Whether or not Bare was compiled for a simulator.
+
 #### `Bare.argv`
 
 The command line arguments passed to the process when launched.

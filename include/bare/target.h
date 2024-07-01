@@ -6,9 +6,11 @@
 #if TARGET_OS_IOS
 #define BARE_PLATFORM "ios"
 #define BARE_PLATFORM_IOS
-#else
+#elif TARGET_OS_MAC
 #define BARE_PLATFORM "darwin"
 #define BARE_PLATFORM_DARWIN
+#else
+#error Unsupported platform
 #endif
 #elif defined(__linux__)
 #if defined(__ANDROID__)
@@ -41,6 +43,20 @@
 #error Unsupported architecture
 #endif
 
-#define BARE_TARGET BARE_PLATFORM "-" BARE_ARCH
+#if defined(__APPLE__)
+#define BARE_SIMULATOR TARGET_OS_SIMULATOR
+#else
+#define BARE_SIMULATOR 0
+#endif
+
+#define BARE_TARGET_SYSTEM BARE_PLATFORM "-" BARE_ARCH
+
+#if BARE_SIMULATOR
+#define BARE_TARGET_SIMULATOR "-simulator"
+#else
+#define BARE_TARGET_SIMULATOR
+#endif
+
+#define BARE_TARGET BARE_TARGET_SYSTEM BARE_TARGET_SIMULATOR
 
 #endif // BARE_TARGET_H

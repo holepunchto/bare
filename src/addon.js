@@ -51,7 +51,7 @@ const Addon = module.exports = exports = class Addon {
   }
 
   static get host () {
-    return `${bare.platform}-${bare.arch}`
+    return `${bare.platform}-${bare.arch}${bare.simulator ? '-simulator' : ''}`
   }
 
   static load (url) {
