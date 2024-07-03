@@ -216,7 +216,7 @@ if(target MATCHES "android")
   target_compile_definitions(
     bare
     PRIVATE
-      BARE_ANDROID_USE_LOGCAT=$<BOOL:BARE_ANDROID_USE_LOGCAT>
+      BARE_ANDROID_USE_LOGCAT=$<BOOL:${BARE_ANDROID_USE_LOGCAT}>
   )
 
   target_link_libraries(
