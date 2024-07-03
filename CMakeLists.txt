@@ -6,6 +6,8 @@ include(bare)
 
 bare_target(target)
 
+include(cmake/options.cmake)
+
 install_node_modules(LOCKFILE)
 
 mirror_drive(
@@ -15,11 +17,9 @@ mirror_drive(
   CHECKOUT 141
 )
 
-if(MSVC)
+if(target MATCHES "win32")
   add_compile_options(/MT$<$<CONFIG:Debug>:d>)
-endif()
 
-if(WIN32)
   add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
@@ -89,12 +89,10 @@ if(NOT TARGET v8)
         m
     )
   elseif(target MATCHES "android")
-    find_library(log log)
-
     target_link_libraries(
       v8
       INTERFACE
-        ${log}
+        log
     )
   elseif(target MATCHES "win32")
     target_link_libraries(
@@ -206,11 +204,25 @@ target_link_libraries(
     hex
 )
 
-if(MSVC)
+if(target MATCHES "win32")
   target_compile_options(
     bare
     PRIVATE
       /experimental:c11atomics
+  )
+endif()
+
+if(target MATCHES "android")
+  target_compile_definitions(
+    bare
+    PRIVATE
+      BARE_ANDROID_USE_LOGCAT=$<BOOL:BARE_ANDROID_USE_LOGCAT>
+  )
+
+  target_link_libraries(
+    bare
+    PUBLIC
+      log
   )
 endif()
 
