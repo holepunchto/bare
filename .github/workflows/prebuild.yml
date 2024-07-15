@@ -9,6 +9,9 @@ jobs:
         - os: ubuntu-22.04
           platform: linux
           arch: x64
+        - os: ubuntu-22.04-arm64
+          platform: linux
+          arch: arm64
         - os: ubuntu-22.04
           platform: android
           arch: x64
