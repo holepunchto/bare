@@ -1,9 +1,11 @@
 EXPORTS
+	js_acquire_threadsafe_function
 	js_add_finalizer
 	js_add_type_tag
 	js_adjust_external_memory
 	js_call_function
 	js_call_function_with_checkpoint
+	js_call_threadsafe_function
 	js_check_type_tag
 	js_close_escapable_handle_scope
 	js_close_handle_scope
@@ -45,6 +47,7 @@ EXPORTS
 	js_create_symbol
 	js_create_syntax_error
 	js_create_synthetic_module
+	js_create_threadsafe_function
 	js_create_type_error
 	js_create_typedarray
 	js_create_uint32
@@ -94,6 +97,7 @@ EXPORTS
 	js_get_reference_value
 	js_get_sharedarraybuffer_backing_store
 	js_get_sharedarraybuffer_info
+	js_get_threadsafe_function_context
 	js_get_typedarray_info
 	js_get_undefined
 	js_get_value_bigint_int64
@@ -169,10 +173,12 @@ EXPORTS
 	js_on_unhandled_rejection
 	js_open_escapable_handle_scope
 	js_open_handle_scope
+	js_ref_threadsafe_function
 	js_reference_ref
 	js_reference_unref
 	js_reject_deferred
 	js_release_arraybuffer_backing_store
+	js_release_threadsafe_function
 	js_remove_wrap
 	js_request_garbage_collection
 	js_resolve_deferred
@@ -200,5 +206,6 @@ EXPORTS
 	js_throw_type_verrorf
 	js_throw_verrorf
 	js_typeof
+	js_unref_threadsafe_function
 	js_unwrap
 	js_wrap
