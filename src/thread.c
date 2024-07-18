@@ -38,6 +38,7 @@ bare_thread_entry (void *opaque) {
 
   switch (thread->source.type) {
   case bare_source_none:
+  default:
     source.type = bare_source_none;
     break;
 
@@ -69,14 +70,13 @@ bare_thread_entry (void *opaque) {
     assert(err == 0);
     break;
 
-  case bare_data_sharedarraybuffer: {
+  case bare_data_sharedarraybuffer:
     err = js_create_sharedarraybuffer_with_backing_store(env, thread->data.backing_store, NULL, NULL, &data);
     assert(err == 0);
 
     err = js_release_arraybuffer_backing_store(env, thread->data.backing_store);
     assert(err == 0);
     break;
-  }
   }
 
   uv_sem_post(&thread->lock);

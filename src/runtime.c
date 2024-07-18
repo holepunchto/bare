@@ -1246,11 +1246,12 @@ bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t 
 
   switch (source.type) {
   case bare_source_none:
+  default:
     err = js_get_null(env, &args[1]);
     assert(err == 0);
     break;
 
-  case bare_source_buffer: {
+  case bare_source_buffer:
     err = js_create_external_arraybuffer(env, source.buffer.base, source.buffer.len, NULL, NULL, &args[1]);
     assert(err == 0);
     break;
@@ -1263,13 +1264,22 @@ bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t 
     assert(err == 0);
     break;
   }
-  }
 
   js_value_t *global;
   err = js_get_global(env, &global);
   assert(err == 0);
 
   js_call_function(env, global, load, 2, args, result);
+
+  switch (source.type) {
+  case bare_source_buffer:
+    err = js_detach_arraybuffer(env, args[1]);
+    assert(err == 0);
+    break;
+
+  default:
+    break;
+  }
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
