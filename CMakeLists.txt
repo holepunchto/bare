@@ -88,12 +88,6 @@ if(NOT TARGET v8)
       INTERFACE
         m
     )
-  elseif(target MATCHES "android")
-    target_link_libraries(
-      v8
-      INTERFACE
-        log
-    )
   elseif(target MATCHES "win32")
     target_link_libraries(
       v8
@@ -212,20 +206,6 @@ if(target MATCHES "win32")
   )
 endif()
 
-if(target MATCHES "android")
-  target_compile_definitions(
-    bare
-    PRIVATE
-      BARE_ANDROID_USE_LOGCAT=$<BOOL:${BARE_ANDROID_USE_LOGCAT}>
-  )
-
-  target_link_libraries(
-    bare
-    PUBLIC
-      log
-  )
-endif()
-
 add_library(bare_shared SHARED)
 
 set_target_properties(
@@ -289,6 +269,36 @@ if(target MATCHES "win32")
     PUBLIC
       src/js.def
       src/napi.def
+  )
+endif()
+
+target_compile_definitions(
+  bare
+  PRIVATE
+    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
+)
+
+if (BARE_USE_SYSTEM_LOG)
+  if(NOT TARGET log)
+    add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
+  endif()
+
+  target_link_libraries(
+    bare
+    PUBLIC
+      log
+  )
+
+  target_link_libraries(
+    bare_shared
+    PRIVATE
+      log_static
+  )
+
+  target_link_libraries(
+    bare_static
+    PRIVATE
+      log_static
   )
 endif()
 

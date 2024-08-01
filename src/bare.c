@@ -8,6 +8,10 @@
 
 #include "../include/bare.h"
 
+#if BARE_USE_SYSTEM_LOG
+#include <log.h>
+#endif
+
 #include "runtime.h"
 #include "types.h"
 
@@ -58,6 +62,11 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 
   *result = bare;
 
+#if BARE_USE_SYSTEM_LOG
+  err = log_open("bare", 0);
+  assert(err == 0);
+#endif
+
   return 0;
 }
 
@@ -78,6 +87,11 @@ bare_teardown (bare_t *bare, int *exit_code) {
 int
 bare_exit (bare_t *bare, int exit_code) {
   int err;
+
+#if BARE_USE_SYSTEM_LOG
+  err = log_close();
+  assert(err == 0);
+#endif
 
   bare_runtime_t *runtime = bare->process.runtime;
 
