@@ -1,1 +1,1 @@
-option(BARE_ANDROID_USE_LOGCAT "Use Logcat instead of standard I/O for logging on Android" OFF)
+option(BARE_USE_SYSTEM_LOG "Use system logging instead of standard I/O" OFF)

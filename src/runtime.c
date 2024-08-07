@@ -10,8 +10,8 @@
 
 #include "../include/bare.h"
 
-#if BARE_ANDROID_USE_LOGCAT
-#include <android/log.h>
+#if BARE_USE_SYSTEM_LOG
+#include <log.h>
 #endif
 
 #include "addon.h"
@@ -76,9 +76,9 @@ err: {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-#if BARE_ANDROID_USE_LOGCAT
-  err = __android_log_print(ANDROID_LOG_FATAL, "bare", "Uncaught %s", str);
-  assert(err == 1);
+#if BARE_USE_SYSTEM_LOG
+  err = log_fatal("Uncaught %s", str);
+  assert(err == 0);
 #else
   err = fprintf(stderr, "Uncaught %s\n", str);
   assert(err >= 0);
@@ -139,9 +139,9 @@ err: {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-#if BARE_ANDROID_USE_LOGCAT
-  err = __android_log_print(ANDROID_LOG_FATAL, "bare", "Uncaught (in promise) %s", str);
-  assert(err == 1);
+#if BARE_USE_SYSTEM_LOG
+  err = log_fatal("Uncaught (in promise) %s", str);
+  assert(err == 0);
 #else
   err = fprintf(stderr, "Uncaught (in promise) %s\n", str);
   assert(err >= 0);
@@ -468,9 +468,9 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-#if BARE_ANDROID_USE_LOGCAT
-  err = __android_log_print(ANDROID_LOG_INFO, "bare", "%s", data);
-  assert(err == 1);
+#if BARE_USE_SYSTEM_LOG
+  err = log_info("%s", data);
+  assert(err == 0);
 #else
   err = fprintf(stdout, "%s", data);
   assert(err >= 0);
@@ -513,9 +513,9 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-#if BARE_ANDROID_USE_LOGCAT
-  err = __android_log_print(ANDROID_LOG_ERROR, "bare", "%s", data);
-  assert(err == 1);
+#if BARE_USE_SYSTEM_LOG
+  err = log_error("%s", data);
+  assert(err == 0);
 #else
   err = fprintf(stderr, "%s", data);
   assert(err >= 0);
