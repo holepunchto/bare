@@ -24,6 +24,15 @@ static const bare_options_t bare_default_options = {
 };
 
 int
+bare_version (int *major, int *minor, int *patch) {
+  if (major) *major = BARE_VERSION_MAJOR;
+  if (minor) *minor = BARE_VERSION_MINOR;
+  if (patch) *patch = BARE_VERSION_PATCH;
+
+  return 0;
+}
+
+int
 bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, char **argv, const bare_options_t *options, bare_t **result) {
   int err;
 

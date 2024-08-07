@@ -40,6 +40,13 @@ struct bare_options_s {
 };
 
 /**
+ * Get the current Bare version. Useful for cases where embedders are
+ * dynamically linking Bare.
+ */
+int
+bare_version (int *major, int *minor, int *patch);
+
+/**
  * Set up the Bare process. To get a reference to the JavaScript environment of
  * the process, pass the `env` pointer.
  */
