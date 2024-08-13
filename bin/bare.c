@@ -12,6 +12,11 @@ int
 main (int argc, char *argv[]) {
   int err;
 
+#if BARE_USE_SYSTEM_LOG
+  err = log_open("bare", 0);
+  assert(err == 0);
+#endif
+
   argv = uv_setup_args(argc, argv);
 
   js_platform_t *platform;
@@ -21,11 +26,6 @@ main (int argc, char *argv[]) {
   bare_t *bare;
   err = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
   assert(err == 0);
-
-#if BARE_USE_SYSTEM_LOG
-  err = log_open("bare", 0);
-  assert(err == 0);
-#endif
 
   uv_buf_t source = uv_buf_init((char *) bare_bundle, bare_bundle_len);
 
@@ -38,11 +38,6 @@ main (int argc, char *argv[]) {
   err = bare_teardown(bare, &exit_code);
   assert(err == 0);
 
-#if BARE_USE_SYSTEM_LOG
-  err = log_close();
-  assert(err == 0);
-#endif
-
   err = js_destroy_platform(platform);
   assert(err == 0);
 
@@ -51,6 +46,11 @@ main (int argc, char *argv[]) {
 
   err = uv_loop_close(uv_default_loop());
   assert(err == 0);
+
+#if BARE_USE_SYSTEM_LOG
+  err = log_close();
+  assert(err == 0);
+#endif
 
   return exit_code;
 }
