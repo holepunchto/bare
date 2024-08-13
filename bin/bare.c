@@ -1,9 +1,6 @@
 #include <assert.h>
-#include <uv.h>
-
-#if BARE_USE_SYSTEM_LOG
 #include <log.h>
-#endif
+#include <uv.h>
 
 #include "../include/bare.h"
 #include "bare.bundle.h"
@@ -12,10 +9,8 @@ int
 main (int argc, char *argv[]) {
   int err;
 
-#if BARE_USE_SYSTEM_LOG
   err = log_open("bare", 0);
   assert(err == 0);
-#endif
 
   argv = uv_setup_args(argc, argv);
 
@@ -47,10 +42,8 @@ main (int argc, char *argv[]) {
   err = uv_loop_close(uv_default_loop());
   assert(err == 0);
 
-#if BARE_USE_SYSTEM_LOG
   err = log_close();
   assert(err == 0);
-#endif
 
   return exit_code;
 }

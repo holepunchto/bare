@@ -142,6 +142,10 @@ if(NOT TARGET napi)
   add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
 endif()
 
+if(NOT TARGET log)
+  add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
+endif()
+
 add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
@@ -172,6 +176,7 @@ target_sources(
     $<TARGET_OBJECTS:url>
     $<TARGET_OBJECTS:base64>
     $<TARGET_OBJECTS:hex>
+    $<TARGET_OBJECTS:log>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -204,6 +209,13 @@ target_link_libraries(
     url
     base64
     hex
+    log
+)
+
+target_compile_definitions(
+  bare
+  PUBLIC
+    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
 
 if(target MATCHES "win32")
@@ -211,24 +223,6 @@ if(target MATCHES "win32")
     bare
     PRIVATE
       /experimental:c11atomics
-  )
-endif()
-
-if(BARE_USE_SYSTEM_LOG)
-  if(NOT TARGET log)
-    add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
-  endif()
-
-  target_sources(
-    bare
-    PUBLIC
-      $<TARGET_OBJECTS:log>
-  )
-
-  target_link_libraries(
-    bare
-    PUBLIC
-      log
   )
 endif()
 
@@ -298,12 +292,6 @@ if(target MATCHES "win32")
   )
 endif()
 
-target_compile_definitions(
-  bare
-  PRIVATE
-    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
-)
-
 add_bare_bundle(
   ENTRY bin/bare.js
   OUT bin/bare.bundle.h
@@ -341,12 +329,6 @@ target_link_libraries(
   bare_bin
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
-)
-
-target_compile_definitions(
-  bare_bin
-  PRIVATE
-    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
 
 # Now that the `bare_bin` target has been defined, we can statically link any
