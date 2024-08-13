@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <log.h>
 #include <uv.h>
 
 #include "../include/bare.h"
@@ -7,6 +8,9 @@
 int
 main (int argc, char *argv[]) {
   int err;
+
+  err = log_open("bare", 0);
+  assert(err == 0);
 
   argv = uv_setup_args(argc, argv);
 
@@ -36,6 +40,9 @@ main (int argc, char *argv[]) {
   assert(err == 0);
 
   err = uv_loop_close(uv_default_loop());
+  assert(err == 0);
+
+  err = log_close();
   assert(err == 0);
 
   return exit_code;
