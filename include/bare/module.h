@@ -23,7 +23,7 @@
 #if defined(__cplusplus)
 #define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
   static void bare_register_module_##id(void); \
-  struct bare_register_module_##id##_ { \
+  struct bare_register_module_##id##_##version##_ { \
     bare_register_module_##id##_##version##_(void) { bare_register_module_##id(); } \
   } bare_register_module_##id##_##version##_; \
   static void bare_register_module_##id(void)
