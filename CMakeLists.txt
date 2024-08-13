@@ -286,7 +286,7 @@ target_compile_definitions(
     BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
 
-if (BARE_USE_SYSTEM_LOG)
+if(BARE_USE_SYSTEM_LOG)
   if(NOT TARGET log)
     add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
   endif()
@@ -294,18 +294,6 @@ if (BARE_USE_SYSTEM_LOG)
   target_link_libraries(
     bare
     PUBLIC
-      log
-  )
-
-  target_link_libraries(
-    bare_shared
-    PRIVATE
-      log_static
-  )
-
-  target_link_libraries(
-    bare_static
-    PRIVATE
       log_static
   )
 endif()
@@ -347,6 +335,12 @@ target_link_libraries(
   bare_bin
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
+)
+
+target_compile_definitions(
+  bare_bin
+  PRIVATE
+    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
 
 # Now that the `bare_bin` target has been defined, we can statically link any

@@ -1,6 +1,10 @@
 #include <assert.h>
 #include <uv.h>
 
+#if BARE_USE_SYSTEM_LOG
+#include <log.h>
+#endif
+
 #include "../include/bare.h"
 #include "bare.bundle.h"
 
@@ -18,6 +22,11 @@ main (int argc, char *argv[]) {
   err = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
   assert(err == 0);
 
+#if BARE_USE_SYSTEM_LOG
+  err = log_open("bare", 0);
+  assert(err == 0);
+#endif
+
   uv_buf_t source = uv_buf_init((char *) bare_bundle, bare_bundle_len);
 
   bare_load(bare, "/bare.bundle", &source, NULL);
@@ -28,6 +37,11 @@ main (int argc, char *argv[]) {
   int exit_code;
   err = bare_teardown(bare, &exit_code);
   assert(err == 0);
+
+#if BARE_USE_SYSTEM_LOG
+  err = log_close();
+  assert(err == 0);
+#endif
 
   err = js_destroy_platform(platform);
   assert(err == 0);
