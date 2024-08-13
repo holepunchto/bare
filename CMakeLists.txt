@@ -214,6 +214,24 @@ if(target MATCHES "win32")
   )
 endif()
 
+if(BARE_USE_SYSTEM_LOG)
+  if(NOT TARGET log)
+    add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
+  endif()
+
+  target_sources(
+    bare
+    PUBLIC
+      $<TARGET_OBJECTS:log>
+  )
+
+  target_link_libraries(
+    bare
+    PUBLIC
+      log
+  )
+endif()
+
 add_library(bare_shared SHARED)
 
 set_target_properties(
@@ -285,18 +303,6 @@ target_compile_definitions(
   PRIVATE
     BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
-
-if(BARE_USE_SYSTEM_LOG)
-  if(NOT TARGET log)
-    add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
-  endif()
-
-  target_link_libraries(
-    bare
-    PUBLIC
-      log
-  )
-endif()
 
 add_bare_bundle(
   ENTRY bin/bare.js
