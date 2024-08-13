@@ -294,7 +294,7 @@ if(BARE_USE_SYSTEM_LOG)
   target_link_libraries(
     bare
     PUBLIC
-      log_static
+      log
   )
 endif()
 
