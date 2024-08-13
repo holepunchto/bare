@@ -17,4 +17,4 @@
 [submodule "vendor/liblog"]
 	path = vendor/liblog
 	url = ../../holepunchto/liblog.git
-        shallow = true
+	shallow = true
