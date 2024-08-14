@@ -3,6 +3,7 @@ EXPORTS
 	js_add_finalizer
 	js_add_type_tag
 	js_adjust_external_memory
+	js_attach_context_to_inspector
 	js_call_function
 	js_call_function_with_checkpoint
 	js_call_threadsafe_function
@@ -20,6 +21,7 @@ EXPORTS
 	js_create_arraybuffer_with_backing_store
 	js_create_bigint_int64
 	js_create_bigint_uint64
+	js_create_context
 	js_create_dataview
 	js_create_date
 	js_create_delegate
@@ -60,11 +62,15 @@ EXPORTS
 	js_delete_named_property
 	js_delete_property
 	js_delete_reference
+	js_destroy_context
 	js_destroy_env
 	js_destroy_inspector
 	js_destroy_platform
 	js_detach_arraybuffer
+	js_detach_context_from_inspector
+	js_enter_context
 	js_escape_handle
+	js_exit_context
 	js_fatal_exception
 	js_ffi_create_function
 	js_ffi_create_function_info
