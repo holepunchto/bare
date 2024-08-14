@@ -20,14 +20,7 @@
 
 // https://stackoverflow.com/a/2390626
 
-#if defined(__cplusplus)
-#define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
-  static void bare_register_module_##id(void); \
-  struct bare_register_module_##id##_##version##_ { \
-    bare_register_module_##id##_##version##_(void) { bare_register_module_##id(); } \
-  } bare_register_module_##id##_##version##_; \
-  static void bare_register_module_##id(void)
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER)
 #pragma section(".CRT$XCU", read)
 #define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
   __pragma(comment(linker, "/include:bare_register_module_" #id "_" #version "_")); \
@@ -49,6 +42,7 @@
 // function. This method is suited for both dynamic and static modules.
 
 #define BARE_MODULE(id, fn) \
+  BARE_EXTERN_C_START \
   BARE_MODULE_CONSTRUCTOR(id, BARE_MODULE_CONSTRUCTOR_VERSION) { \
     bare_module_t module = { \
       BARE_MODULE_VERSION, \
@@ -56,7 +50,8 @@
       fn, \
     }; \
     bare_module_register(&module); \
-  }
+  } \
+  BARE_EXTERN_C_END
 
 #else
 
