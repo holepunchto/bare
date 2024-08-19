@@ -325,6 +325,14 @@ set_target_properties(
   RUNTIME_OUTPUT_DIRECTORY bin
 )
 
+if(target MATCHES "ios")
+  set_target_properties(
+    bare_bin
+    PROPERTIES
+    MACOSX_BUNDLE FALSE
+  )
+endif()
+
 target_link_libraries(
   bare_bin
   PUBLIC
