@@ -34,11 +34,24 @@ jobs:
         - os: macos-14
           platform: darwin
           arch: arm64
+        - os: macos-14
+          platform: ios
+          arch: arm64
+        - os: macos-14
+          platform: ios
+          arch: arm64
+          tags: -simulator
+          flags: --simulator
+        - os: macos-14
+          platform: ios
+          arch: x64
+          tags: -simulator
+          flags: --simulator
         - os: windows-2022
           platform: win32
           arch: x64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -46,7 +59,7 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: corestore
-        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
+        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     - uses: actions/setup-node@v4
       with:
         node-version: 20
@@ -54,14 +67,14 @@ jobs:
     - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build
     - uses: actions/upload-artifact@v4
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' }}
+      if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' || matrix.platform === 'ios' }}
       with:
-        name: ${{ matrix.platform }}-${{ matrix.arch }}
+        name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
         path: build/bin/bare
     - uses: actions/upload-artifact@v4
       if: ${{ matrix.platform == 'win32' }}
       with:
-        name: ${{ matrix.platform }}-${{ matrix.arch }}
+        name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
         path: |
-          build/bin/Release/bare.exe
-          build/bin/Release/bare.lib
+          build/bin/*/bare.exe
+          build/bin/*/bare.lib
