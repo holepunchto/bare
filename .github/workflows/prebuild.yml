@@ -67,7 +67,7 @@ jobs:
     - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build
     - uses: actions/upload-artifact@v4
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' || matrix.platform === 'ios' }}
+      if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
         path: build/bin/bare
