@@ -41,19 +41,24 @@ jobs:
           platform: darwin
           arch: arm64
           flags: --asan
-        - os: macos-12
-          platform: ios
-          arch: x64
-          flags: --simulator
         - os: macos-14
           platform: ios
           arch: arm64
+        - os: macos-14
+          platform: ios
+          arch: arm64
+          tags: -simulator
+          flags: --simulator
+        - os: macos-14
+          platform: ios
+          arch: x64
+          tags: -simulator
           flags: --simulator
         - os: windows-2022
           platform: win32
           arch: x64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -61,7 +66,7 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: corestore
-        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}
+        key: corestore-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
