@@ -232,6 +232,7 @@ Module |
 <https://github.com/holepunchto/bare-dns>
 <https://github.com/holepunchto/bare-env>
 <https://github.com/holepunchto/bare-events>
+<https://github.com/holepunchto/bare-fetch>
 <https://github.com/holepunchto/bare-format>
 <https://github.com/holepunchto/bare-fs>
 <https://github.com/holepunchto/bare-hrtime>
@@ -246,6 +247,7 @@ Module |
 <https://github.com/holepunchto/bare-pipe>
 <https://github.com/holepunchto/bare-process>
 <https://github.com/holepunchto/bare-readline>
+<https://github.com/holepunchto/bare-realm>
 <https://github.com/holepunchto/bare-repl>
 <https://github.com/holepunchto/bare-signals>
 <https://github.com/holepunchto/bare-stream>
