@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.27)
 
 project(bare C)
 
@@ -7,6 +7,7 @@ include(bare)
 bare_target(target)
 
 include(cmake/options.cmake)
+include(cmake/overrides.cmake)
 
 install_node_modules(LOCKFILE)
 
