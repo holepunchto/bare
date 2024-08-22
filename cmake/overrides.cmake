@@ -1,21 +1,23 @@
-function(download_bare result)
-  cmake_parse_arguments(
-    PARSE_ARGV 1 ARGV "" "IMPORT_FILE" ""
+function(add_bare_module result)
+  bare_module_target("." target NAME name)
+
+  add_library(${target} OBJECT)
+
+  set_target_properties(
+    ${target}
+    PROPERTIES
+    C_STANDARD 11
+    CXX_STANDARD 20
+    POSITION_INDEPENDENT_CODE ON
   )
 
-  set(import_file ${ARGV_IMPORT_FILE})
+  target_include_directories(
+    ${target}
+    PRIVATE
+      $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+  )
 
-  set(${result} $<TARGET_FILE:bare_bin>)
-
-  if(import_file)
-    set(${import_file} $<TARGET_IMPORT_FILE:bare_bin>)
-  endif()
-
-  return(PROPAGATE ${result} ${import_file})
-endfunction()
-
-function(download_bare_headers result)
-  set(${result} $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>)
+  set(${result} ${target})
 
   return(PROPAGATE ${result})
 endfunction()
