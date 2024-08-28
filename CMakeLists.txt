@@ -340,9 +340,6 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
 
-# Now that the `bare_bin` target has been defined, we can statically link any
-# required native modules.
-
 link_bare_module(bare bare-buffer)
 link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
