@@ -57,24 +57,38 @@ const Addon = module.exports = exports = class Addon {
   static load (url) {
     const self = Addon
 
-    if (self._cache[url.href]) return self._cache[url.href]
+    const cache = self._cache
 
-    const addon = self._cache[url.href] = new Addon(url)
+    if (cache[url.href]) return cache[url.href]
 
-    switch (url.protocol) {
-      case 'builtin:':
-        addon._handle = bare.loadStaticAddon(url.pathname)
-        break
+    const addon = cache[url.href] = new Addon(url)
 
-      case 'file:':
-        addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
-        break
+    try {
+      switch (url.protocol) {
+        case 'builtin:':
+          addon._handle = bare.loadStaticAddon(url.pathname)
+          break
 
-      default:
-        throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon ${url.href}`)
+        case 'linked:':
+          addon._handle = bare.loadDynamicAddon(url.pathname)
+          break
+
+        case 'file:':
+          addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
+          break
+
+        default:
+          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon ${url.href}`)
+      }
+
+      addon._exports = bare.initAddon(addon._handle, addon._exports)
+    } catch (err) {
+      addon.unload()
+
+      delete cache[url.href]
+
+      throw err
     }
-
-    addon._exports = bare.initAddon(addon._handle, addon._exports)
 
     return addon
   }
@@ -82,7 +96,9 @@ const Addon = module.exports = exports = class Addon {
   static unload (url) {
     const self = Addon
 
-    const addon = self._cache[url.href] || null
+    const cache = self._cache
+
+    const addon = cache[url.href] || null
 
     if (addon === null) {
       throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${url.href}'`)
@@ -90,7 +106,7 @@ const Addon = module.exports = exports = class Addon {
 
     const unloaded = addon.unload()
 
-    if (unloaded) delete self._cache[url.href]
+    if (unloaded) delete cache[url.href]
 
     return unloaded
   }
@@ -128,6 +144,14 @@ const Addon = module.exports = exports = class Addon {
     }, readPackage)) {
       switch (resolution.protocol) {
         case 'builtin:': return resolution
+
+        case 'linked:':
+          try {
+            return Addon.load(resolution).url
+          } catch {
+            continue
+          }
+
         case 'file:':
           try {
             return Module.resolve(resolution.href, parentURL, { imports, resolutions })
