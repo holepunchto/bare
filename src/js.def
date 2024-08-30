@@ -87,6 +87,7 @@ EXPORTS
 	js_get_env_loop
 	js_get_env_platform
 	js_get_global
+	js_get_heap_statistics
 	js_get_module_name
 	js_get_module_namespace
 	js_get_named_property
