@@ -234,6 +234,9 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME bare
 
+  # Export an import library for supported platforms, namely macOS and iOS.
+  ENABLE_EXPORTS ON
+
   # Automatically export all available symbols on Windows.
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )

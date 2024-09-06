@@ -70,7 +70,9 @@ jobs:
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
-        path: build/bin/bare
+        path: |
+          build/bin/bare
+          build/libbare.tdb
     - uses: actions/upload-artifact@v4
       if: ${{ matrix.platform == 'win32' }}
       with:
