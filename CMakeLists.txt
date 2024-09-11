@@ -55,6 +55,11 @@ if(NOT TARGET c++)
       c++
       INTERFACE
         /DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>
+
+        # The imported static library always links the release version of the
+        # static CRT; explicitly tell MSVC to not link the release version for
+        # debug builds and vice versa.
+        /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
     )
   endif()
 endif()
