@@ -268,12 +268,21 @@ bare.onthread = exports._onthread.bind(exports)
  */
 
 const Module = require('bare-module')
+const { startsWithWindowsDriveLetter } = require('bare-module-resolve')
 const URL = require('bare-url')
 
 bare.exit = exports.exit
 
 bare.load = function load (filename, source) {
-  let url = URL.parse(filename)
+  let url
+
+  if (startsWithWindowsDriveLetter(filename)) {
+    url = null
+  } else {
+    url = URL.parse(filename)
+  }
+
   if (url === null) url = URL.pathToFileURL(filename)
+
   return Module.load(url, source ? Buffer.from(source) : null)
 }
