@@ -23,7 +23,7 @@
     "bare-hrtime": "^2.0.0",
     "bare-inspect": "^3.0.0",
     "bare-inspector": "^3.0.0",
-    "bare-module": "^4.0.0",
+    "bare-module": "^4.1.0",
     "bare-module-resolve": "^1.6.1",
     "bare-os": "^3.0.1",
     "bare-path": "^3.0.0",
