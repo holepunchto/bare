@@ -118,7 +118,7 @@ const Addon = module.exports = exports = class Addon {
       name = null,
       version = null,
       referrer = null,
-      protocol = referrer ? referrer._protocol : Module._protocols['file:'],
+      protocol = referrer ? referrer._protocol : Module._protocol,
       imports = referrer ? referrer._imports : null,
       resolutions = referrer ? referrer._resolutions : null
     } = opts
