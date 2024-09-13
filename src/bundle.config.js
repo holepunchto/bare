@@ -1,7 +1,4 @@
 module.exports = {
-  format: 'js',
-  target: 'c',
-  name: 'bare_js',
   header:
 `(function (bare) {
   const require = () => {

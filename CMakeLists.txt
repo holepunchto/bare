@@ -302,10 +302,6 @@ endif()
 add_bare_bundle(
   ENTRY bin/bare.js
   OUT bin/bare.bundle.h
-  CONFIG bin/bundle.config.js
-  DEPENDS
-    bin/bare.js
-    bin/bundle.config.js
 )
 
 add_executable(bare_bin
