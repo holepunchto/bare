@@ -947,6 +947,56 @@ bare_runtime_resume_thread (js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static js_value_t *
+bare_runtime_require (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  err = js_throw_error(env, NULL, "Cannot require modules from bootstrap script");
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime_addon (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  bare_runtime_t *runtime;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *addon;
+  err = js_get_named_property(env, exports, "addon", &addon);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_call_function(env, global, addon, 1, argv, &result);
+  assert(err == 0);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  return result;
+}
+
 int
 bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime) {
   int err;
@@ -1137,17 +1187,37 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   err = js_set_named_property(env, global, "global", global);
   assert(err == 0);
 
-  js_value_t *script;
-  err = js_create_string_utf8(env, bare_js, bare_js_len, &script);
+  js_value_t *require;
+  err = js_create_function(env, "require", -1, bare_runtime_require, (void *) runtime, &require);
+  assert(err == 0);
+
+  js_value_t *addon;
+  err = js_create_function(env, "addon", -1, bare_runtime_addon, (void *) runtime, &addon);
+  assert(err == 0);
+
+  err = js_set_named_property(env, require, "addon", addon);
+  assert(err == 0);
+
+  js_value_t *source;
+  err = js_create_string_utf8(env, bare_js, bare_js_len, &source);
+  assert(err == 0);
+
+  js_value_t *args[2];
+
+  err = js_create_string_utf8(env, (utf8_t *) "bare", -1, &args[0]);
+  assert(err == 0);
+
+  err = js_create_string_utf8(env, (utf8_t *) "require", -1, &args[1]);
   assert(err == 0);
 
   js_value_t *entry;
-  err = js_run_script(env, "bare:/bare.js", -1, 0, script, &entry);
+  err = js_create_function_with_source(env, NULL, 0, "bare:/bare.js", -1, args, 2, 1, source, &entry);
   assert(err == 0);
 
-  js_value_t *args[1] = {exports};
+  args[0] = exports;
+  args[1] = require;
 
-  err = js_call_function(env, global, entry, 1, args, NULL);
+  err = js_call_function(env, global, entry, 2, args, NULL);
   assert(err == 0);
 
   err = js_close_handle_scope(env, scope);

@@ -153,7 +153,6 @@ endif()
 add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
-  CONFIG src/bundle.config.js
 )
 
 add_library(bare OBJECT)
