@@ -98,6 +98,7 @@ EXPORTS
 	napi_is_promise
 	napi_is_typedarray
 	napi_make_callback
+	napi_new_instance
 	napi_open_escapable_handle_scope
 	napi_open_handle_scope
 	napi_ref_threadsafe_function
