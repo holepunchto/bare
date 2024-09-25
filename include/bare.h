@@ -51,7 +51,7 @@ bare_version (int *major, int *minor, int *patch);
  * the process, pass the `env` pointer.
  */
 int
-bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, char **argv, const bare_options_t *options, bare_t **result);
+bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result);
 
 /**
  * Tear down the Bare process. The exit code will be stored in `exit_code` if

@@ -47,7 +47,7 @@ struct bare_process_s {
   js_platform_t *platform;
 
   int argc;
-  char **argv;
+  const char **argv;
 
   bare_before_exit_cb on_before_exit;
   bare_exit_cb on_exit;
