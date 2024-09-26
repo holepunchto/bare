@@ -1,5 +1,7 @@
 EXPORTS
 	napi_acquire_threadsafe_function
+	napi_add_async_cleanup_hook
+	napi_add_env_cleanup_hook
 	napi_add_finalizer
 	napi_adjust_external_memory
 	napi_call_function
@@ -106,6 +108,8 @@ EXPORTS
 	napi_reference_unref
 	napi_reject_deferred
 	napi_release_threadsafe_function
+	napi_remove_async_cleanup_hook
+	napi_remove_env_cleanup_hook
 	napi_remove_wrap
 	napi_resolve_deferred
 	napi_run_script

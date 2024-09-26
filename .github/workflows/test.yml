@@ -57,6 +57,9 @@ jobs:
         - os: windows-2022
           platform: win32
           arch: x64
+        - os: windows-2022
+          platform: win32
+          arch: arm64
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
@@ -74,4 +77,4 @@ jobs:
     - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build --debug
     - run: bare-dev test --debug
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
+      if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
