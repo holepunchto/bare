@@ -19,7 +19,7 @@ main (int argc, char *argv[]) {
   assert(err == 0);
 
   bare_t *bare;
-  err = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
+  err = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &bare);
   assert(err == 0);
 
   uv_buf_t source = uv_buf_init((char *) bare_bundle, bare_bundle_len);

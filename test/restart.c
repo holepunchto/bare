@@ -21,7 +21,7 @@ main (int argc, char *argv[]) {
 
   do {
     bare_t *bare;
-    e = bare_setup(uv_default_loop(), platform, NULL, argc, argv, NULL, &bare);
+    e = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &bare);
     assert(e == 0);
 
     char *code;
