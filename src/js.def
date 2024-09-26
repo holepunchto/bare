@@ -1,6 +1,8 @@
 EXPORTS
 	js_acquire_threadsafe_function
+	js_add_deferred_teardown_callback
 	js_add_finalizer
+	js_add_teardown_callback
 	js_add_type_tag
 	js_adjust_external_memory
 	js_attach_context_to_inspector
@@ -75,6 +77,7 @@ EXPORTS
 	js_ffi_create_function
 	js_ffi_create_function_info
 	js_ffi_create_type_info
+	js_finish_deferred_teardown_callback
 	js_get_and_clear_last_exception
 	js_get_array_length
 	js_get_arraybuffer_backing_store
@@ -186,6 +189,7 @@ EXPORTS
 	js_reject_deferred
 	js_release_arraybuffer_backing_store
 	js_release_threadsafe_function
+	js_remove_teardown_callback
 	js_remove_wrap
 	js_request_garbage_collection
 	js_resolve_deferred
