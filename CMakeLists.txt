@@ -54,6 +54,10 @@ if(NOT TARGET c++)
     target_link_options(
       c++
       INTERFACE
+        # Propagate the C++ STL dependency to all consumers that might end up
+        # with the target in their link dependencies.
+        /DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>
+
         # The imported static library always links the release version of the
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
