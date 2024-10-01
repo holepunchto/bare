@@ -46,6 +46,7 @@ EXPORTS
 	js_create_reference
 	js_create_sharedarraybuffer
 	js_create_sharedarraybuffer_with_backing_store
+	js_create_string_latin1
 	js_create_string_utf16le
 	js_create_string_utf8
 	js_create_symbol
@@ -118,11 +119,13 @@ EXPORTS
 	js_get_value_external
 	js_get_value_int32
 	js_get_value_int64
+	js_get_value_string_latin1
 	js_get_value_string_utf16le
 	js_get_value_string_utf8
 	js_get_value_uint32
 	js_has_element
 	js_has_named_property
+	js_has_own_property
 	js_has_property
 	js_instanceof
 	js_instantiate_module
