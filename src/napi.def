@@ -10,6 +10,7 @@ EXPORTS
 	napi_call_threadsafe_function
 	napi_cancel_async_work
 	napi_check_object_type_tag
+	napi_clear_last_error_info
 	napi_close_callback_scope
 	napi_close_escapable_handle_scope
 	napi_close_handle_scope
@@ -131,6 +132,7 @@ EXPORTS
 	napi_run_script
 	napi_set_element
 	napi_set_instance_data
+	napi_set_last_error_info
 	napi_set_named_property
 	napi_set_property
 	napi_strict_equals
