@@ -12,13 +12,14 @@
  */
 
 const resolved = Promise.resolve()
+const crashError = err => setImmediate(() => { throw err })
 
 global.queueMicrotask = function queueMicrotask (fn) {
   resolved
     .then(fn)
     // Make sure that exceptions are reported as normal uncaughts, not promise
     // rejections.
-    .catch(err => setImmediate(() => { throw err }))
+    .catch(crashError)
 }
 
 /**
