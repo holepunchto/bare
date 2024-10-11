@@ -73,17 +73,18 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
-        path: |
-          install/*
+        path: install/*
+        retention-days: 5
   merge:
     runs-on: ubuntu-latest
     needs: prebuild
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: install
-          merge-multiple: true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: prebuilds
-          path: install
+    - uses: actions/download-artifact@v4
+      with:
+        path: install
+        merge-multiple: true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: prebuilds
+        path: install
+        retention-days: 5
