@@ -201,7 +201,6 @@ target_include_directories(
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:napi,INTERFACE_INCLUDE_DIRECTORIES>
   PUBLIC
     include
 )
@@ -364,6 +363,8 @@ link_bare_module(bare_bin bare-inspector)
 link_bare_module(bare_bin bare-tcp)
 link_bare_module(bare_bin bare-tls)
 link_bare_module(bare_bin bare-tty)
+
+install(TARGETS bare_static bare_shared bare_bin)
 
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
