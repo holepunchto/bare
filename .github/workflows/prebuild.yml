@@ -69,17 +69,9 @@ jobs:
     - run: npm install -g bare-dev
     - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-dev build
+    - run: cmake --install build --prefix install/${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     - uses: actions/upload-artifact@v4
-      if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' || matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
         path: |
-          build/bin/bare
-          build/libbare.tbd
-    - uses: actions/upload-artifact@v4
-      if: ${{ matrix.platform == 'win32' }}
-      with:
-        name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
-        path: |
-          build/bin/*/bare.exe
-          build/bin/*/bare.lib
+          install/*
