@@ -70,6 +70,7 @@ jobs:
       with:
         node-version: lts/*
     - run: npm install -g bare-make
+    - run: npm install
     - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
     - run: bare-make build
     - run: bare-make test

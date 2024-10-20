@@ -63,6 +63,7 @@ jobs:
       with:
         node-version: 20
     - run: npm install -g bare-make
+    - run: npm install
     - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
     - run: bare-make build
     - run: bare-make install --prefix install/${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
