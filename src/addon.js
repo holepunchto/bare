@@ -45,6 +45,7 @@ const Addon = module.exports = exports = class Addon {
 
   static _cache = Object.create(null)
   static _addons = new Set()
+  static _builtins = bare.getStaticAddons()
 
   static get cache () {
     return this._cache
@@ -120,10 +121,9 @@ const Addon = module.exports = exports = class Addon {
       referrer = null,
       protocol = referrer ? referrer._protocol : Module._protocol,
       imports = referrer ? referrer._imports : null,
-      resolutions = referrer ? referrer._resolutions : null
+      resolutions = referrer ? referrer._resolutions : null,
+      builtins = self._builtins
     } = opts
-
-    const builtins = bare.getStaticAddons()
 
     const resolved = protocol.preresolve(specifier, parentURL)
 
