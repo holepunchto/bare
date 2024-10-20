@@ -46,9 +46,7 @@ foreach(file IN LISTS tests)
     )
 
     set(command ${test})
-  endif()
-
-  if(file MATCHES "\.(c|m)?js$")
+  elseif(file MATCHES "\.(c|m)?js$")
     set(command bare_bin test/${file})
   endif()
 

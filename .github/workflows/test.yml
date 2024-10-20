@@ -20,27 +20,23 @@ jobs:
         - os: ubuntu-22.04
           platform: android
           arch: x64
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: ia32
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm64
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm
-          flags: --android-ndk 26.1.10909125 --android-api 34
-        - os: macos-12
+        - os: macos-14
           platform: darwin
           arch: x64
-          flags: --asan
+          flags: --sanitize address
         - os: macos-14
           platform: darwin
           arch: arm64
-          flags: --asan
+          flags: --sanitize address
         - os: macos-14
           platform: ios
           arch: arm64
@@ -73,8 +69,8 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
-    - run: npm install -g bare-dev
-    - run: bare-dev configure --debug --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
-    - run: bare-dev build --debug
-    - run: bare-dev test --debug
+    - run: npm install -g bare-make
+    - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
+    - run: bare-make build
+    - run: bare-make test
       if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || (matrix.platform == 'win32' && matrix.arch == 'x64') }}

@@ -15,20 +15,16 @@ jobs:
         - os: ubuntu-22.04
           platform: android
           arch: x64
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: ia32
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm64
-          flags: --android-ndk 26.1.10909125 --android-api 34
         - os: ubuntu-22.04
           platform: android
           arch: arm
-          flags: --android-ndk 26.1.10909125 --android-api 34
-        - os: macos-12
+        - os: macos-14
           platform: darwin
           arch: x64
         - os: macos-14
@@ -66,10 +62,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 20
-    - run: npm install -g bare-dev
-    - run: bare-dev configure --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
-    - run: bare-dev build
-    - run: cmake --install build --prefix install/${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    - run: npm install -g bare-make
+    - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} ${{ matrix.flags }}
+    - run: bare-make build
+    - run: bare-make install --prefix install/${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     - uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}

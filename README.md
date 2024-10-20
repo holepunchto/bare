@@ -292,25 +292,31 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 
 ## Building
 
-The `bare-dev` toolkit, which we'll be invoking with `npx`, is used for building Bare and acts as a convenient wrapper around CMake and other tools. After cloning the repository, start by synchronising the vendored dependencies such as git submodules:
+<https://github.com/holepunchto/bare-make> is used for compiling Bare. Start by installing the tool globally:
 
-```sh
-npx bare-dev vendor sync
+```console
+npm i -g bare-make
 ```
 
-Then, configure the build tree before performing the first build:
+Next, generate the build system:
 
-```sh
-npx bare-dev configure [--debug]
+```console
+bare-make generate
 ```
 
-Finally, perform the build:
+This only has to be run once per repository checkout. When updating `bare-make` or your compiler toolchain it might also be necessary to regenerate the build system. To do so, run the command again with the `--no-cache` flag set to disregard the existing build system cache:
 
-```sh
-npx bare-dev build
+```console
+bare-make generate --no-cache
 ```
 
-When completed, the `bare` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll)` libraries will be available in the root of the `build` directory.
+With a build system generated, Bare can be compiled:
+
+```console
+bare-make build
+```
+
+When completed, the `bare(.exe)` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll|lib)` libraries will be available in the root of the `build` directory.
 
 ### Linking
 
