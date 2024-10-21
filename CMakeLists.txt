@@ -6,10 +6,10 @@ find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 
 project(bare C CXX ASM)
 
-bare_target(target)
-
 include(cmake/options.cmake)
 include(cmake/overrides.cmake)
+
+bare_target(target)
 
 mirror_drive(
   SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
