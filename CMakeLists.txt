@@ -4,7 +4,7 @@ find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 
-project(bare C)
+project(bare C CXX ASM)
 
 bare_target(target)
 
