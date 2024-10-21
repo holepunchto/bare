@@ -11,8 +11,6 @@ bare_target(target)
 include(cmake/options.cmake)
 include(cmake/overrides.cmake)
 
-install_node_modules(LOCKFILE)
-
 mirror_drive(
   SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
   DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
