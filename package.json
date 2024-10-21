@@ -37,6 +37,9 @@
   "devDependencies": {
     "bare-assert": "^1.0.0",
     "bare-http1": "^3.2.0",
+    "cmake-bare": "^1.1.7",
+    "cmake-bare-bundle": "^1.0.1",
+    "cmake-drive": "^1.0.2",
     "standard": "^17.0.0"
   }
 }

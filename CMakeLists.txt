@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(bare C)
+find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
+find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
+find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 
-include(bare)
-
-bare_target(target)
+project(bare C CXX ASM)
 
 include(cmake/options.cmake)
 include(cmake/overrides.cmake)
 
-install_node_modules(LOCKFILE)
+bare_target(target)
 
 mirror_drive(
   SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
@@ -178,11 +178,8 @@ target_sources(
     include/bare/version.h
   PUBLIC
     $<TARGET_OBJECTS:uv>
-    $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:utf>
-    $<TARGET_OBJECTS:url>
-    $<TARGET_OBJECTS:base64>
-    $<TARGET_OBJECTS:hex>
+    $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:log>
   PRIVATE
     src/addon.c
@@ -210,11 +207,8 @@ target_link_libraries(
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
   PUBLIC
-    napi
     utf
-    url
-    base64
-    hex
+    napi
     log
 )
 
@@ -224,13 +218,15 @@ target_compile_definitions(
     BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
 )
 
-if(target MATCHES "win32")
-  target_compile_options(
-    bare
-    PRIVATE
-      /experimental:c11atomics
-  )
-endif()
+link_bare_module(bare bare-buffer)
+link_bare_module(bare bare-hrtime)
+link_bare_module(bare bare-inspect)
+link_bare_module(bare bare-module)
+link_bare_module(bare bare-os)
+link_bare_module(bare bare-structured-clone)
+link_bare_module(bare bare-timers)
+link_bare_module(bare bare-type)
+link_bare_module(bare bare-url)
 
 add_library(bare_shared SHARED)
 
@@ -301,70 +297,9 @@ if(target MATCHES "win32")
   )
 endif()
 
-add_bare_bundle(
-  ENTRY bin/bare.js
-  OUT bin/bare.bundle.h
-)
+add_subdirectory(bin)
 
-add_executable(bare_bin
-  bin/bare.c
-  bin/bare.bundle.h
-)
-
-set_target_properties(
-  bare_bin
-  PROPERTIES
-  OUTPUT_NAME bare
-
-  # Export symbols from the executable to allow native addons to link against
-  # them.
-  ENABLE_EXPORTS ON
-
-  # Automatically export all available symbols on Windows.
-  WINDOWS_EXPORT_ALL_SYMBOLS ON
-
-  # Make sure none of the executable artefacts collide with the static and
-  # shared library artefacts. This is particularly important on Windows.
-  ARCHIVE_OUTPUT_DIRECTORY bin
-  LIBRARY_OUTPUT_DIRECTORY bin
-  RUNTIME_OUTPUT_DIRECTORY bin
-)
-
-if(target MATCHES "ios")
-  set_target_properties(
-    bare_bin
-    PROPERTIES
-    MACOSX_BUNDLE FALSE
-  )
-endif()
-
-target_link_libraries(
-  bare_bin
-  PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
-)
-
-link_bare_module(bare bare-buffer)
-link_bare_module(bare bare-hrtime)
-link_bare_module(bare bare-inspect)
-link_bare_module(bare bare-module)
-link_bare_module(bare bare-os)
-link_bare_module(bare bare-structured-clone)
-link_bare_module(bare bare-timers)
-link_bare_module(bare bare-type)
-link_bare_module(bare bare-url)
-
-link_bare_module(bare_bin bare-pipe)
-link_bare_module(bare_bin bare-repl)
-link_bare_module(bare_bin bare-signals)
-link_bare_module(bare_bin bare-crypto)
-link_bare_module(bare_bin bare-dns)
-link_bare_module(bare_bin bare-inspector)
-link_bare_module(bare_bin bare-tcp)
-link_bare_module(bare_bin bare-tls)
-link_bare_module(bare_bin bare-tty)
-
-install(TARGETS bare_static bare_shared bare_bin)
+install(TARGETS bare_static bare_shared)
 
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
