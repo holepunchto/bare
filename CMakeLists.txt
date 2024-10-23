@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.27)
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
-find_package(cmake-npm REQUIRED PATHS node_modules/cmake-npm)
 
 project(bare C CXX ASM)
 
