@@ -10,8 +10,6 @@ project(bare C CXX ASM)
 include(cmake/options.cmake)
 include(cmake/overrides.cmake)
 
-install_node_modules()
-
 bare_target(target)
 
 mirror_drive(
