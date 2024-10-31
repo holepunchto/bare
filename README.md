@@ -29,13 +29,13 @@ The specified `<script>` or `<filename>` is run using `Module.load()`. For more 
 
 ## Architecture
 
-Bare is built on top of <https://github.com/holepunchto/libjs>, which provides low-level bindings to V8, and <https://github.com/libuv/libuv>, which provides an asynchronous I/O event loop. Bare itself only adds a few missing pieces on top to support a wider ecosystem of modules:
+Bare is built on top of <https://github.com/holepunchto/libjs>, which provides low-level bindings to V8 in an engine independent manner, and <https://github.com/libuv/libuv>, which provides an asynchronous I/O event loop. Bare itself only adds a few missing pieces on top to support a wider ecosystem of modules:
 
 1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
 2. A native addon system supporting both statically and dynamically linked addons.
 3. Light-weight thread support with synchronous joins and shared array buffer support.
 
-Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succint and _bare_.
+Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succint and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
 
 ## API
 
