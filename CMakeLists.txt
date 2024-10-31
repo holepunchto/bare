@@ -181,6 +181,9 @@ target_sources(
     $<TARGET_OBJECTS:utf>
     $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:log>
+    $<TARGET_OBJECTS:url>
+    $<TARGET_OBJECTS:base64>
+    $<TARGET_OBJECTS:hex>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -210,6 +213,9 @@ target_link_libraries(
     utf
     napi
     log
+    url
+    base64
+    hex
 )
 
 target_compile_definitions(
