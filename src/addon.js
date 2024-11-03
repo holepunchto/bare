@@ -43,9 +43,11 @@ const Addon = module.exports = exports = class Addon {
     }
   }
 
+  static _protocol = Module._protocol
   static _cache = Object.create(null)
   static _addons = new Set()
   static _builtins = bare.getStaticAddons()
+  static _conditions = Module._conditions
 
   static get cache () {
     return this._cache
@@ -119,19 +121,21 @@ const Addon = module.exports = exports = class Addon {
       name = null,
       version = null,
       referrer = null,
-      protocol = referrer ? referrer._protocol : Module._protocol,
+      protocol = referrer ? referrer._protocol : self._protocol,
       imports = referrer ? referrer._imports : null,
       resolutions = referrer ? referrer._resolutions : null,
-      builtins = self._builtins
+      builtins = self._builtins,
+      conditions = referrer ? referrer._conditions : self._conditions
     } = opts
 
     const resolved = protocol.preresolve(specifier, parentURL)
 
-    const [resolution] = protocol.resolve(specifier, parentURL, imports)
+    const [resolution] = protocol.resolve(resolved, parentURL, imports)
 
     if (resolution) return protocol.postresolve(resolution, parentURL)
 
     for (const resolution of resolve(resolved, parentURL, {
+      conditions: ['addon', ...conditions],
       host: self.host,
       name,
       version,
@@ -144,19 +148,15 @@ const Addon = module.exports = exports = class Addon {
     }, readPackage)) {
       switch (resolution.protocol) {
         case 'builtin:': return resolution
-
         case 'linked:':
           try {
             return Addon.load(resolution).url
           } catch {
             continue
           }
-
-        case 'file:':
-          try {
-            return Module.resolve(resolution.href, parentURL, { imports, resolutions })
-          } catch {
-            continue
+        default:
+          if (protocol.exists(resolution)) {
+            return protocol.postresolve(protocol.addon ? protocol.addon(resolution) : resolution)
           }
       }
     }
