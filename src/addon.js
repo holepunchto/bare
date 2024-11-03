@@ -71,17 +71,14 @@ const Addon = module.exports = exports = class Addon {
         case 'builtin:':
           addon._handle = bare.loadStaticAddon(url.pathname)
           break
-
         case 'linked:':
           addon._handle = bare.loadDynamicAddon(url.pathname)
           break
-
         case 'file:':
           addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
           break
-
         default:
-          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon ${url.href}`)
+          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon '${url.href}'`)
       }
 
       addon._exports = bare.initAddon(addon._handle, addon._exports)
