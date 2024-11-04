@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.27)
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
+find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
@@ -155,8 +156,10 @@ if(NOT TARGET log)
 endif()
 
 add_bare_bundle(
+  bare_bundle
   ENTRY src/bare.js
   OUT src/bare.js.h
+  BUILTINS src/builtins.json
 )
 
 add_library(bare OBJECT)
@@ -228,6 +231,7 @@ link_bare_module(bare bare-buffer)
 link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
 link_bare_module(bare bare-module)
+link_bare_module(bare bare-module-lexer)
 link_bare_module(bare bare-os)
 link_bare_module(bare bare-structured-clone)
 link_bare_module(bare bare-timers)

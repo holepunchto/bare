@@ -10,48 +10,12 @@
 
 const addons = Object.create(null)
 
-bare.addon = function addon (specifier) {
-  let pkg
+bare.addon = function addon (href) {
+  if (addons[href]) return addons[href]
 
-  // Resolve the specifier to a known package manifest. The manifests must be
-  // statically resolvable to allow them to be included by the bundler.
-  switch (specifier) {
-    case '/node_modules/bare-buffer/':
-      pkg = require('bare-buffer/package')
-      break
-    case '/node_modules/bare-timers/':
-      pkg = require('bare-timers/package')
-      break
-    case '/node_modules/bare-inspect/':
-      pkg = require('bare-inspect/package')
-      break
-    case '/node_modules/bare-hrtime/':
-      pkg = require('bare-hrtime/package')
-      break
-    case '/node_modules/bare-os/':
-      pkg = require('bare-os/package')
-      break
-    case '/node_modules/bare-structured-clone/':
-      pkg = require('bare-structured-clone/package')
-      break
-    case '/node_modules/bare-url/':
-      pkg = require('bare-url/package')
-      break
-    case '/node_modules/bare-module/':
-      pkg = require('bare-module/package')
-      break
-    case '/node_modules/bare-type/':
-      pkg = require('bare-type/package')
-      break
-    default:
-      throw new Error(`Unknown addon '${specifier}'`)
-  }
+  const addon = addons[href] = { handle: null, exports: {} }
 
-  if (addons[pkg.name]) return addons[pkg.name]
-
-  const addon = addons[pkg.name] = { handle: null, exports: {} }
-
-  addon.handle = bare.loadStaticAddon(pkg.name + '@' + pkg.version)
+  addon.handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
 
   addon.exports = bare.initAddon(addon.handle, addon.exports)
 

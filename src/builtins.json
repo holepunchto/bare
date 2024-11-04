@@ -1,0 +1,12 @@
+[
+  { "addon": "bare-buffer" },
+  { "addon": "bare-hrtime" },
+  { "addon": "bare-inspect" },
+  { "addon": "bare-module" },
+  { "addon": "bare-module-lexer" },
+  { "addon": "bare-os" },
+  { "addon": "bare-structured-clone" },
+  { "addon": "bare-timers" },
+  { "addon": "bare-type" },
+  { "addon": "bare-url" }
+]

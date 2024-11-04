@@ -1,6 +1,8 @@
 add_bare_bundle(
+  bare_bin_bundle
   ENTRY bin/bare.js
   OUT bin/bare.bundle.h
+  BUILTINS bin/builtins.json
   WORKING_DIRECTORY ..
 )
 
@@ -44,12 +46,12 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
 )
 
-link_bare_module(bare_bin bare-pipe)
-link_bare_module(bare_bin bare-repl)
-link_bare_module(bare_bin bare-signals)
 link_bare_module(bare_bin bare-crypto)
 link_bare_module(bare_bin bare-dns)
 link_bare_module(bare_bin bare-inspector)
+link_bare_module(bare_bin bare-pipe)
+link_bare_module(bare_bin bare-repl)
+link_bare_module(bare_bin bare-signals)
 link_bare_module(bare_bin bare-tcp)
 link_bare_module(bare_bin bare-tls)
 link_bare_module(bare_bin bare-tty)

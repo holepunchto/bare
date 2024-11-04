@@ -1,0 +1,21 @@
+[
+  { "addon": "bare-buffer" },
+  { "addon": "bare-crypto" },
+  { "addon": "bare-dns" },
+  { "addon": "bare-hrtime" },
+  { "addon": "bare-inspect" },
+  { "addon": "bare-inspector" },
+  { "addon": "bare-module" },
+  { "addon": "bare-module-lexer" },
+  { "addon": "bare-os" },
+  { "addon": "bare-pipe" },
+  { "addon": "bare-repl" },
+  { "addon": "bare-signals" },
+  { "addon": "bare-structured-clone" },
+  { "addon": "bare-tcp" },
+  { "addon": "bare-timers" },
+  { "addon": "bare-tls" },
+  { "addon": "bare-tty" },
+  { "addon": "bare-type" },
+  { "addon": "bare-url" }
+]
