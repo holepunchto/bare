@@ -1211,7 +1211,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
   assert(err == 0);
 
   js_value_t *entry;
-  err = js_create_function_with_source(env, NULL, 0, "bare:/bare.js", -1, args, 2, 1, source, &entry);
+  err = js_create_function_with_source(env, NULL, 0, "bare:/bare.js", -1, args, 2, 0, source, &entry);
   assert(err == 0);
 
   args[0] = exports;
