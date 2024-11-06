@@ -1,24 +1,5 @@
-291
-{
-  "version": 0,
-  "main": "/mod.js",
-  "imports": {},
-  "resolutions": {
-    "/mod.js": {
-      "bare:package": "/package.json"
-    }
-  },
-  "files": {
-    "/mod.js": {
-      "offset": 0,
-      "length": 37
-    },
-    "/package.json": {
-      "offset": 37,
-      "length": 23
-    }
-  }
-}
+324
+{"version":0,"id":"cb8c7077a070e206346668f12585dfcfb8164a5d2696638ff776f0d95ea363df","main":"/mod.js","imports":{},"resolutions":{"/mod.js":{"#package":"/package.json"},"/package.json":{}},"addons":[],"assets":[],"files":{"/mod.js":{"offset":0,"length":37,"mode":420},"/package.json":{"offset":37,"length":23,"mode":420}}}
 module.exports = 'Hello from bundle'
 {
   "name": "bundle"
