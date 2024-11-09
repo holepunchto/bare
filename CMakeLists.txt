@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.27)
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
+find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
@@ -23,14 +24,6 @@ if(target MATCHES "win32")
   add_compile_options(/MT$<$<CONFIG:Debug>:d>)
 
   add_definitions(-DWIN32_LEAN_AND_MEAN)
-endif()
-
-if(NOT TARGET uv)
-  add_subdirectory(vendor/libuv EXCLUDE_FROM_ALL)
-endif()
-
-if(NOT TARGET utf)
-  add_subdirectory(vendor/libutf EXCLUDE_FROM_ALL)
 endif()
 
 if(NOT TARGET c++)
@@ -132,14 +125,6 @@ if(NOT TARGET js)
     IMPORTED_LOCATION ${js}
   )
 
-  target_include_directories(
-    js
-    INTERFACE
-      vendor/libjs/include
-      vendor/libuv/include
-      vendor/libutf/include
-  )
-
   target_link_libraries(
     js
     INTERFACE
@@ -147,13 +132,11 @@ if(NOT TARGET js)
   )
 endif()
 
-if(NOT TARGET napi)
-  add_subdirectory(vendor/libnapi EXCLUDE_FROM_ALL)
-endif()
-
-if(NOT TARGET log)
-  add_subdirectory(vendor/liblog EXCLUDE_FROM_ALL)
-endif()
+fetch_package("github:libuv/libuv@1.48.0")
+fetch_package("github:holepunchto/libutf#65b6ba0")
+fetch_package("github:holepunchto/liblog#b8d9f24")
+fetch_package("github:holepunchto/libjs#0da3975")
+fetch_package("github:holepunchto/libnapi#324c25c")
 
 add_bare_bundle(
   bare_bundle
