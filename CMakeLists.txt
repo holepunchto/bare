@@ -135,7 +135,7 @@ endif()
 fetch_package("github:libuv/libuv@1.48.0")
 fetch_package("github:holepunchto/libutf#65b6ba0")
 fetch_package("github:holepunchto/liblog#b8d9f24")
-fetch_package("github:holepunchto/libjs#0da3975")
+fetch_package("github:holepunchto/libjs#41e480f")
 fetch_package("github:holepunchto/libnapi#324c25c")
 
 add_bare_bundle(
