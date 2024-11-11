@@ -41,6 +41,7 @@
     "cmake-bare-bundle": "^2.0.0",
     "cmake-drive": "^1.1.1",
     "cmake-fetch": "^1.0.0",
+    "cmake-napi": "^1.0.7",
     "standard": "^17.0.0"
   }
 }
