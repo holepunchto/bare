@@ -59,7 +59,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/cache@v4
       with:
-        path: build/corestore
+        path: build/_drive
         key: corestore-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     - uses: actions/setup-node@v4
       with:
