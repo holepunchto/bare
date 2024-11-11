@@ -133,8 +133,8 @@ if(NOT TARGET js)
 endif()
 
 fetch_package("github:libuv/libuv@1.48.0")
-fetch_package("github:holepunchto/libutf#65b6ba0")
-fetch_package("github:holepunchto/liblog#b8d9f24")
+fetch_package("github:holepunchto/libutf#15dc6d6")
+fetch_package("github:holepunchto/liblog#a40c28a")
 fetch_package("github:holepunchto/libjs#41e480f")
 fetch_package("github:holepunchto/libnapi#324c25c")
 
