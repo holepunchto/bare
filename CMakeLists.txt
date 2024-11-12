@@ -198,6 +198,7 @@ target_link_libraries(
   PUBLIC
     utf
     napi
+  PRIVATE
     log
     url
     base64

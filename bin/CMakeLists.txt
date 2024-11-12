@@ -44,6 +44,8 @@ target_link_libraries(
   bare_bin
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
+  PRIVATE
+    log_static
 )
 
 link_bare_module(bare_bin bare-crypto)
