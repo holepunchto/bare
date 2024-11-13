@@ -164,6 +164,7 @@ target_sources(
     include/bare/version.h
   PUBLIC
     $<TARGET_OBJECTS:uv>
+    $<TARGET_OBJECTS:napi>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -191,14 +192,14 @@ target_link_libraries(
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
   PRIVATE
     $<TARGET_OBJECTS:utf>
-    $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:log>
     $<TARGET_OBJECTS:url>
     $<TARGET_OBJECTS:base64>
     $<TARGET_OBJECTS:hex>
+  PUBLIC
+    napi
   PRIVATE
     utf
-    napi
     log
     url
     base64
