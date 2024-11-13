@@ -196,10 +196,9 @@ target_link_libraries(
     $<TARGET_OBJECTS:url>
     $<TARGET_OBJECTS:base64>
     $<TARGET_OBJECTS:hex>
-  PUBLIC
+  PRIVATE
     utf
     napi
-  PRIVATE
     log
     url
     base64
