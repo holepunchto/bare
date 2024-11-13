@@ -162,6 +162,8 @@ target_sources(
     include/bare/module.h
     include/bare/target.h
     include/bare/version.h
+  PUBLIC
+    $<TARGET_OBJECTS:uv>
   PRIVATE
     src/addon.c
     src/addon.h
@@ -188,7 +190,6 @@ target_link_libraries(
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
   PRIVATE
-    $<TARGET_OBJECTS:uv>
     $<TARGET_OBJECTS:utf>
     $<TARGET_OBJECTS:napi>
     $<TARGET_OBJECTS:log>
