@@ -229,6 +229,7 @@ Module |
 <https://github.com/holepunchto/bare-channel>
 <https://github.com/holepunchto/bare-console>
 <https://github.com/holepunchto/bare-crypto>
+<https://github.com/holepunchto/bare-dgram>
 <https://github.com/holepunchto/bare-dns>
 <https://github.com/holepunchto/bare-env>
 <https://github.com/holepunchto/bare-events>
@@ -240,15 +241,19 @@ Module |
 <https://github.com/holepunchto/bare-https>
 <https://github.com/holepunchto/bare-inspect>
 <https://github.com/holepunchto/bare-inspector>
+<https://github.com/holepunchto/bare-ipc>
 <https://github.com/holepunchto/bare-module>
 <https://github.com/holepunchto/bare-net>
 <https://github.com/holepunchto/bare-os>
 <https://github.com/holepunchto/bare-path>
 <https://github.com/holepunchto/bare-pipe>
 <https://github.com/holepunchto/bare-process>
+<https://github.com/holepunchto/bare-querystring>
 <https://github.com/holepunchto/bare-readline>
 <https://github.com/holepunchto/bare-realm>
 <https://github.com/holepunchto/bare-repl>
+<https://github.com/holepunchto/bare-rpc>
+<https://github.com/holepunchto/bare-semver>
 <https://github.com/holepunchto/bare-signals>
 <https://github.com/holepunchto/bare-stream>
 <https://github.com/holepunchto/bare-structured-clone>
@@ -259,6 +264,7 @@ Module |
 <https://github.com/holepunchto/bare-tty>
 <https://github.com/holepunchto/bare-type>
 <https://github.com/holepunchto/bare-url>
+<https://github.com/holepunchto/bare-vm>
 <https://github.com/holepunchto/bare-worker>
 <https://github.com/holepunchto/bare-ws>
 <https://github.com/holepunchto/bare-zlib>
