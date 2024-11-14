@@ -274,7 +274,7 @@ When completed, the `bare(.exe)` binary will be available in the `build/bin` dir
 
 When linking against the static `libbare.(a|lib)` library, make sure to use whole archive linking as Bare relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
 
-### Modules
+## Modules
 
 Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare:
 
