@@ -158,11 +158,7 @@ const Addon = module.exports = exports = class Addon {
       }
     }
 
-    let msg = `Cannot find addon '${specifier}'`
-
-    if (referrer) msg += ` imported from '${referrer._url.href}'`
-
-    throw AddonError.ADDON_NOT_FOUND(msg)
+    throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${specifier}' imported from '${parentURL.href}'`)
 
     function readPackage (packageURL) {
       if (protocol.exists(packageURL)) {
