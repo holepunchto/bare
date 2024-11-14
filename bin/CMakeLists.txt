@@ -15,28 +15,15 @@ set_target_properties(
   bare_bin
   PROPERTIES
   OUTPUT_NAME bare
-
-  # Export symbols from the executable to allow native addons to link against
-  # them.
   ENABLE_EXPORTS ON
-
-  # Automatically export all available symbols on Windows.
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
-if(target MATCHES "ios")
+if(target MATCHES "darwin|ios")
   set_target_properties(
     bare_bin
     PROPERTIES
     MACOSX_BUNDLE FALSE
-  )
-endif()
-
-if(target MATCHES "win32")
-  target_link_options(
-    bare_bin
-    PRIVATE
-      /NOIMPLIB
   )
 endif()
 

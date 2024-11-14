@@ -229,11 +229,7 @@ set_target_properties(
   bare_shared
   PROPERTIES
   OUTPUT_NAME bare
-
-  # Export an import library for supported platforms, namely macOS and iOS.
   ENABLE_EXPORTS ON
-
-  # Automatically export all available symbols on Windows.
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
@@ -269,6 +265,15 @@ set_target_properties(
   PREFIX lib
 )
 
+if(target MATCHES "win32")
+  target_sources(
+    bare_static
+    PUBLIC
+      src/js.def
+      src/napi.def
+  )
+endif()
+
 target_include_directories(
   bare_static
   INTERFACE
@@ -282,15 +287,6 @@ target_link_libraries(
   PRIVATE
     bare
 )
-
-if(target MATCHES "win32")
-  target_sources(
-    bare_static
-    PUBLIC
-      src/js.def
-      src/napi.def
-  )
-endif()
 
 add_subdirectory(bin)
 
