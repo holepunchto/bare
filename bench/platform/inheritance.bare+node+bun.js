@@ -37,4 +37,4 @@ bench('new Function()', () => {
   r = new B_2()
 })
 
-r
+r // eslint-disable-line no-unused-expressions
