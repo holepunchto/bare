@@ -78,7 +78,7 @@ const Addon = module.exports = exports = class Addon {
           addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
           break
         default:
-          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol for addon '${url.href}'`)
+          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol '${url.protocol}' for addon '${url.href}'`)
       }
 
       addon._exports = bare.initAddon(addon._handle, addon._exports)
