@@ -2,6 +2,7 @@ list(APPEND tests
   addon-load.js
   addon-resolve.js
   argv-empty.c
+  dependent-addon.js
   exit-on-before-exit.js
   exit-on-idle.js
   exit-on-suspend.js
