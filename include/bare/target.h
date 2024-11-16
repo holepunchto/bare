@@ -22,7 +22,7 @@
 #endif
 #elif defined(_WIN32)
 #define BARE_PLATFORM "win32"
-#define BARE_PLATFORM_WINDOWS
+#define BARE_PLATFORM_WIN32
 #else
 #error Unsupported platform
 #endif
