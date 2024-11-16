@@ -8,7 +8,7 @@
 #include <utf.h>
 #include <uv.h>
 
-#ifndef BARE_PLATFORM_WIN32
+#if !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 
@@ -155,7 +155,7 @@ bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
 
   uv_lib_t *lib = malloc(sizeof(uv_lib_t));
 
-#ifdef BARE_PLATFORM_WIN32
+#if defined(_WIN32)
   err = uv_dlopen(specifier, lib);
 #else
   dlerror(); // Reset any previous error
