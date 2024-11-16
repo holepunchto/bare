@@ -155,18 +155,7 @@ Unload a dynamic native addon identified by `url`. If the function returns `true
 
 Resolve a native addon specifier by searching for a static native addon or dynamic object library matching `specifier` imported from `parentURL`.
 
-Options include:
-
-```js
-{
-  // The name of the addon. If `null`, it will instead be read from the
-  // resolved `package.json`.
-  name: null,
-  // The version of the addon. If `null`, it will instead be read from the
-  // resolved `package.json`.
-  version: null
-}
-```
+Options are reserved.
 
 ### `Bare.Thread`
 

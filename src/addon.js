@@ -115,8 +115,6 @@ const Addon = module.exports = exports = class Addon {
     const self = Addon
 
     const {
-      name = null,
-      version = null,
       referrer = null,
       protocol = referrer ? referrer._protocol : self._protocol,
       imports = referrer ? referrer._imports : null,
@@ -134,8 +132,6 @@ const Addon = module.exports = exports = class Addon {
     for (const resolution of resolve(resolved, parentURL, {
       conditions: ['addon', ...conditions],
       host: self.host,
-      name,
-      version,
       resolutions,
       builtins,
       extensions: [
