@@ -8,6 +8,10 @@
 #include <utf.h>
 #include <uv.h>
 
+#ifndef BARE_PLATFORM_WIN32
+#include <dlfcn.h>
+#endif
+
 #include "types.h"
 
 static bare_module_list_t *bare_addon_static = NULL;
@@ -151,7 +155,21 @@ bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
 
   uv_lib_t *lib = malloc(sizeof(uv_lib_t));
 
+#ifdef BARE_PLATFORM_WIN32
   err = uv_dlopen(specifier, lib);
+#else
+  dlerror(); // Reset any previous error
+
+  lib->handle = dlopen(specifier, RTLD_LAZY | RTLD_GLOBAL);
+
+  if (lib->handle) {
+    lib->errmsg = NULL;
+    err = 0;
+  } else {
+    lib->errmsg = strdup(dlerror());
+    err = -1;
+  }
+#endif
 
   bool opened = err >= 0;
 
