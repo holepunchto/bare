@@ -104,7 +104,7 @@ bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_
   err = bare_runtime_load(
     runtime,
     filename,
-    (bare_source_t){
+    (bare_source_t) {
       .type = source ? bare_source_buffer : bare_source_none,
       .buffer = uv_buf_init(
         source ? source->base : NULL,

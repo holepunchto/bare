@@ -93,7 +93,7 @@ bare_thread_entry (void *opaque) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, (js_value_t *[]){data}, NULL);
+  js_call_function(env, global, fn, 1, (js_value_t *[]) {data}, NULL);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);

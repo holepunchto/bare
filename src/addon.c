@@ -171,7 +171,7 @@ bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
     if (err < 0) goto err;
   }
 
-  bare_module_register(&(bare_module_t){
+  bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
     .filename = strdup(specifier),
     .init = init,
@@ -291,7 +291,7 @@ void
 napi_module_register (napi_module *mod) {
   assert(mod->nm_version == NAPI_MODULE_VERSION);
 
-  bare_module_register(&(bare_module_t){
+  bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
     .filename = mod->nm_filename,
     .init = mod->nm_register_func,
