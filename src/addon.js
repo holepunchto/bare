@@ -94,12 +94,7 @@ const Addon = module.exports = exports = class Addon {
         case 'file:':
           for (const packageURL of lookupPackageScope(url, { resolutions })) {
             if (protocol.exists(packageURL)) {
-              const info = Module.load(packageURL, { protocol })._exports
-
-              if (info) {
-                addon._name = info.name + '@' + info.version.substring(0, info.version.indexOf('.')) + '.bare'
-              }
-
+              addon._name = addonName(Module.load(packageURL, { protocol })._exports)
               break
             }
           }
@@ -193,6 +188,20 @@ const Addon = module.exports = exports = class Addon {
       return null
     }
   }
+}
+
+function addonName (info) {
+  if (typeof info !== 'object' || info === null) return null
+
+  const name = info.name
+  if (typeof name !== 'string' || name === '') return null
+
+  const version = info.version
+  if (typeof version !== 'string' || version === '') return null
+
+  const major = version.substring(0, version.indexOf('.'))
+
+  return name + '@' + major + '.bare'
 }
 
 Bare
