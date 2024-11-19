@@ -275,7 +275,7 @@ bare_addon_teardown (void) {
 }
 
 uv_lib_t *
-bare_module_query (const char *name) {
+bare_module_find (const char *name) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   uv_mutex_lock(&bare_addon_lock);
