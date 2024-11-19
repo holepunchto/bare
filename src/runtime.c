@@ -631,7 +631,9 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
     err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
     assert(err == 0);
 
-    name = malloc(len + 1);
+    len += 1 /* NULL */;
+
+    name = malloc(len);
     err = js_get_value_string_utf8(env, argv[1], name, len, NULL);
     assert(err == 0);
   }

@@ -237,6 +237,7 @@ if(target MATCHES "win32")
   target_sources(
     bare_shared
     PUBLIC
+      src/bare.def
       src/js.def
       src/napi.def
   )
@@ -269,6 +270,7 @@ if(target MATCHES "win32")
   target_sources(
     bare_static
     PUBLIC
+      src/bare.def
       src/js.def
       src/napi.def
   )

@@ -1,0 +1,3 @@
+EXPORTS
+	bare_module_query
+	bare_module_register
