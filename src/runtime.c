@@ -608,21 +608,41 @@ bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   utf8_t specifier[4096];
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier);
+  utf8_t *name = NULL;
 
-  if (mod == NULL) goto err;
+  bool has_name;
+  err = js_is_string(env, argv[1], &has_name);
+  assert(err == 0);
+
+  if (has_name) {
+    size_t len;
+    err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
+    assert(err == 0);
+
+    name = malloc(len + 1);
+    err = js_get_value_string_utf8(env, argv[1], name, len, NULL);
+    assert(err == 0);
+  }
+
+  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier, (char *) name);
+
+  if (mod == NULL) {
+    if (name) free(name);
+
+    goto err;
+  }
 
   js_value_t *handle;
   err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
