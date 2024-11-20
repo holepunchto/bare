@@ -21,13 +21,13 @@ static uv_mutex_t bare_addon_lock;
 static uv_once_t bare_addon_lock_guard = UV_ONCE_INIT;
 
 static void
-bare_addon_on_lock_init (void) {
+bare_addon_on_lock_init(void) {
   int err = uv_mutex_init_recursive(&bare_addon_lock);
   assert(err == 0);
 }
 
 js_value_t *
-bare_addon_get_static (bare_runtime_t *runtime) {
+bare_addon_get_static(bare_runtime_t *runtime) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -59,7 +59,7 @@ bare_addon_get_static (bare_runtime_t *runtime) {
 }
 
 js_value_t *
-bare_addon_get_dynamic (bare_runtime_t *runtime) {
+bare_addon_get_dynamic(bare_runtime_t *runtime) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -91,7 +91,7 @@ bare_addon_get_dynamic (bare_runtime_t *runtime) {
 }
 
 bare_module_t *
-bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
+bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   uv_mutex_lock(&bare_addon_lock);
@@ -120,7 +120,7 @@ bare_addon_load_static (bare_runtime_t *runtime, const char *specifier) {
 }
 
 bare_module_t *
-bare_addon_load_dynamic (bare_runtime_t *runtime, const char *specifier) {
+bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -203,7 +203,7 @@ err:
 }
 
 bool
-bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
+bare_addon_unload(bare_runtime_t *runtime, bare_module_t *mod) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   bare_module_list_t *node = (bare_module_list_t *) mod;
@@ -220,7 +220,7 @@ bare_addon_unload (bare_runtime_t *runtime, bare_module_t *mod) {
 }
 
 void
-bare_addon_teardown (void) {
+bare_addon_teardown(void) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   uv_mutex_lock(&bare_addon_lock);
@@ -255,7 +255,7 @@ bare_addon_teardown (void) {
 }
 
 void
-bare_module_register (bare_module_t *mod) {
+bare_module_register(bare_module_t *mod) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   uv_mutex_lock(&bare_addon_lock);
@@ -288,7 +288,7 @@ bare_module_register (bare_module_t *mod) {
 }
 
 void
-napi_module_register (napi_module *mod) {
+napi_module_register(napi_module *mod) {
   assert(mod->nm_version == NAPI_MODULE_VERSION);
 
   bare_module_register(&(bare_module_t) {

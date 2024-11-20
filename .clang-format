@@ -8,7 +8,3 @@ BinPackParameters: false
 ContinuationIndentWidth: 2
 ColumnLimit: 0
 SpaceAfterCStyleCast: true
-SpaceBeforeParens: Custom
-SpaceBeforeParensOptions:
-  AfterFunctionDeclarationName: true
-  AfterFunctionDefinitionName: true
