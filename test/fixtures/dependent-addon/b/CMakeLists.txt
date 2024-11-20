@@ -11,3 +11,5 @@ target_sources(
   PRIVATE
     binding.c
 )
+
+link_bare_module(${addon_b} a SHARED)
