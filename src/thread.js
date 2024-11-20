@@ -2,7 +2,7 @@
 const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
-  constructor (filename, opts, callback) {
+  constructor(filename, opts, callback) {
     if (typeof filename === 'function') {
       callback = filename
       filename = '<thread>'
@@ -21,15 +21,13 @@ module.exports = exports = class Thread {
     }
 
     if (callback) {
-      opts = { ...opts, source: `(${callback.toString()})(Bare.Thread.self.data)` }
+      opts = {
+        ...opts,
+        source: `(${callback.toString()})(Bare.Thread.self.data)`
+      }
     }
 
-    let {
-      data = null,
-      source = null,
-      encoding = 'utf8',
-      stackSize = 0
-    } = opts
+    let { data = null, source = null, encoding = 'utf8', stackSize = 0 } = opts
 
     if (typeof source === 'string') source = Buffer.from(source, encoding)
 
@@ -52,11 +50,11 @@ module.exports = exports = class Thread {
     Thread._threads.add(this)
   }
 
-  get joined () {
+  get joined() {
     return this._handle === null
   }
 
-  join () {
+  join() {
     if (this._handle) {
       bare.joinThread(this._handle)
       this._handle = null
@@ -65,15 +63,15 @@ module.exports = exports = class Thread {
     Thread._threads.delete(this)
   }
 
-  suspend () {
+  suspend() {
     if (this._handle) bare.suspendThread(this._handle)
   }
 
-  resume () {
+  resume() {
     if (this._handle) bare.resumeThread(this._handle)
   }
 
-  [Symbol.for('bare.inspect')] () {
+  [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: Thread },
 
@@ -83,21 +81,21 @@ module.exports = exports = class Thread {
 
   static _threads = new Set()
 
-  static create (filename, opts, callback) {
+  static create(filename, opts, callback) {
     return new Thread(filename, opts, callback)
   }
 
-  static get isMainThread () {
+  static get isMainThread() {
     return bare.isMainThread
   }
 }
 
 class ThreadProxy {
-  constructor () {
+  constructor() {
     this.data = null
   }
 
-  _ondata (data) {
+  _ondata(data) {
     if (data === null) return
 
     const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
@@ -105,7 +103,7 @@ class ThreadProxy {
     this.data = structuredClone.deserialize(structuredClone.decode(state))
   }
 
-  [Symbol.for('bare.inspect')] () {
+  [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: ThreadProxy },
 
@@ -116,12 +114,11 @@ class ThreadProxy {
 
 exports.self = exports.isMainThread ? null : new ThreadProxy()
 
-Bare
-  .prependListener('teardown', () => {
-    for (const thread of exports._threads) {
-      thread.join()
-    }
-  })
+Bare.prependListener('teardown', () => {
+  for (const thread of exports._threads) {
+    thread.join()
+  }
+})
   .on('suspend', () => {
     for (const thread of exports._threads) {
       thread.suspend()

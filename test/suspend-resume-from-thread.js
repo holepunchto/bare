@@ -1,10 +1,9 @@
 /* global Bare */
 const { Thread } = Bare
 
-Bare
-  .on('suspend', () => {
-    console.log('emit suspend')
-  })
+Bare.on('suspend', () => {
+  console.log('emit suspend')
+})
   .on('idle', () => {
     console.log('emit idle')
   })
@@ -14,10 +13,9 @@ Bare
   .suspend()
 
 Thread.create(() => {
-  Bare
-    .on('suspend', () => {
-      console.log('emit suspend thread')
-    })
+  Bare.on('suspend', () => {
+    console.log('emit suspend thread')
+  })
     .on('idle', () => {
       console.log('emit idle thread')
       Bare.resume()

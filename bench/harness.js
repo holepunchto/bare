@@ -10,7 +10,7 @@ console.log('TAP version 13')
 
 let n = 0
 
-globalThis.bench = function bench (name, fn) {
+globalThis.bench = function bench(name, fn) {
   const start = now()
 
   console.log(`\n# ${name}`)
@@ -65,48 +65,44 @@ globalThis.bench = function bench (name, fn) {
   }
 
   console.log('    #', mean(samples) | 0, 'ops/s')
-  console.log(`ok ${++n} - ${name} # time = ${now() - start | 0}ms`)
+  console.log(`ok ${++n} - ${name} # time = ${(now() - start) | 0}ms`)
 }
 
 let now
 
 if (typeof process === 'object') {
-  now = function now () {
+  now = function now() {
     const time = process.hrtime()
     return time[0] * 1e3 + time[1] / 1e6
   }
 } else if (typeof performance === 'object') {
-  now = function now () {
+  now = function now() {
     return performance.now()
   }
 } else {
-  now = function now () {
+  now = function now() {
     return Date.now()
   }
 }
 
-function sum (samples) {
+function sum(samples) {
   return samples.reduce((a, b) => a + b, 0)
 }
 
-function mean (samples) {
+function mean(samples) {
   return sum(samples) / samples.length
 }
 
-function variance (samples,
-  m = mean(samples)
-) {
+function variance(samples, m = mean(samples)) {
   return mean(samples.map((n) => (n - m) ** 2))
 }
 
-function deviation (samples,
-  m = mean(samples),
-  v = variance(samples, m)
-) {
+function deviation(samples, m = mean(samples), v = variance(samples, m)) {
   return Math.sqrt(v)
 }
 
-function error (samples,
+function error(
+  samples,
   m = mean(samples),
   v = variance(samples, m),
   d = deviation(samples, m, v)
@@ -114,7 +110,9 @@ function error (samples,
   return d / Math.sqrt(samples.length)
 }
 
-function confidence (samples, Z,
+function confidence(
+  samples,
+  Z,
   m = mean(samples),
   v = variance(samples, m),
   d = deviation(samples, m, v),
