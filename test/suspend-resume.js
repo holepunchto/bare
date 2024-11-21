@@ -3,11 +3,10 @@ const assert = require('bare-assert')
 
 let suspended = false
 
-Bare
-  .on('suspend', () => {
-    console.log('emit suspend')
-    suspended = true
-  })
+Bare.on('suspend', () => {
+  console.log('emit suspend')
+  suspended = true
+})
   .on('idle', () => {
     assert(false, 'Should not idle')
   })

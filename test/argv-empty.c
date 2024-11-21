@@ -4,7 +4,7 @@
 #include <uv.h>
 
 int
-main (int argc, char *argv[]) {
+main(int argc, char *argv[]) {
   int e;
 
   argc = 0;

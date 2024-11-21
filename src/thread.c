@@ -14,7 +14,7 @@
 #include "types.h"
 
 static void
-bare_thread_entry (void *opaque) {
+bare_thread_entry(void *opaque) {
   int err;
 
   bare_thread_t *thread = (bare_thread_t *) opaque;
@@ -123,7 +123,7 @@ bare_thread_entry (void *opaque) {
 }
 
 int
-bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_source_t source, bare_data_t data, size_t stack_size, bare_thread_t **result) {
+bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t source, bare_data_t data, size_t stack_size, bare_thread_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -170,7 +170,7 @@ bare_thread_create (bare_runtime_t *runtime, const char *filename, bare_source_t
 }
 
 int
-bare_thread_join (bare_runtime_t *runtime, bare_thread_t *thread) {
+bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -191,7 +191,7 @@ bare_thread_join (bare_runtime_t *runtime, bare_thread_t *thread) {
 }
 
 int
-bare_thread_suspend (bare_thread_t *thread) {
+bare_thread_suspend(bare_thread_t *thread) {
   int err;
 
   uv_sem_wait(&thread->lock);
@@ -208,7 +208,7 @@ done:
 }
 
 int
-bare_thread_resume (bare_thread_t *thread) {
+bare_thread_resume(bare_thread_t *thread) {
   int err;
 
   uv_sem_wait(&thread->lock);

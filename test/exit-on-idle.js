@@ -1,6 +1,4 @@
 /* global Bare */
-Bare
-  .on('idle', () => {
-    Bare.exit()
-  })
-  .suspend()
+Bare.on('idle', () => {
+  Bare.exit()
+}).suspend()

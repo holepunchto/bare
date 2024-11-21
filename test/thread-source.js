@@ -6,6 +6,8 @@ assert(Thread.isMainThread === true)
 
 const entry = 'does-not-exist.js'
 
-const thread = new Thread(entry, { source: Buffer.from('console.log(\'Hello from thread\')') })
+const thread = new Thread(entry, {
+  source: Buffer.from("console.log('Hello from thread')")
+})
 
 thread.join()

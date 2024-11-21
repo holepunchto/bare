@@ -21,12 +21,12 @@
 #include "types.h"
 
 static inline bool
-bare_runtime_is_main_thread (bare_runtime_t *runtime) {
+bare_runtime_is_main_thread(bare_runtime_t *runtime) {
   return runtime->process->runtime == runtime;
 }
 
 static void
-bare_runtime_on_uncaught_exception (js_env_t *env, js_value_t *error, void *data) {
+bare_runtime_on_uncaught_exception(js_env_t *env, js_value_t *error, void *data) {
   int err;
 
   bare_runtime_t *runtime = (bare_runtime_t *) data;
@@ -89,7 +89,7 @@ err: {
 }
 
 static void
-bare_runtime_on_unhandled_rejection (js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
+bare_runtime_on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value_t *promise, void *data) {
   int err;
 
   bare_runtime_t *runtime = (bare_runtime_t *) data;
@@ -152,7 +152,7 @@ err: {
 }
 
 static inline void
-bare_runtime_on_before_exit (bare_runtime_t *runtime) {
+bare_runtime_on_before_exit(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -186,7 +186,7 @@ bare_runtime_on_before_exit (bare_runtime_t *runtime) {
 }
 
 static inline void
-bare_runtime_on_exit (bare_runtime_t *runtime) {
+bare_runtime_on_exit(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -222,7 +222,7 @@ bare_runtime_on_exit (bare_runtime_t *runtime) {
 }
 
 static inline void
-bare_runtime_on_teardown (bare_runtime_t *runtime, int *exit_code) {
+bare_runtime_on_teardown(bare_runtime_t *runtime, int *exit_code) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -267,7 +267,7 @@ bare_runtime_on_teardown (bare_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
-bare_runtime_on_suspend (bare_runtime_t *runtime) {
+bare_runtime_on_suspend(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -306,7 +306,7 @@ bare_runtime_on_suspend (bare_runtime_t *runtime) {
 }
 
 static void
-bare_runtime_on_suspend_signal (uv_async_t *handle) {
+bare_runtime_on_suspend_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   runtime->suspended = true;
@@ -317,7 +317,7 @@ bare_runtime_on_suspend_signal (uv_async_t *handle) {
 }
 
 static inline void
-bare_runtime_on_idle (bare_runtime_t *runtime) {
+bare_runtime_on_idle(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -351,7 +351,7 @@ bare_runtime_on_idle (bare_runtime_t *runtime) {
 }
 
 static inline void
-bare_runtime_on_resume (bare_runtime_t *runtime) {
+bare_runtime_on_resume(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -385,7 +385,7 @@ bare_runtime_on_resume (bare_runtime_t *runtime) {
 }
 
 static void
-bare_runtime_on_resume_signal (uv_async_t *handle) {
+bare_runtime_on_resume_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   runtime->suspended = false;
@@ -396,7 +396,7 @@ bare_runtime_on_resume_signal (uv_async_t *handle) {
 }
 
 static inline void
-bare_runtime_on_terminate (bare_runtime_t *runtime) {
+bare_runtime_on_terminate(bare_runtime_t *runtime) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -424,14 +424,14 @@ bare_runtime_on_terminate (bare_runtime_t *runtime) {
 }
 
 static void
-bare_runtime_on_terminate_signal (uv_async_t *handle) {
+bare_runtime_on_terminate_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   bare_runtime_on_terminate(runtime);
 }
 
 static void
-bare_runtime_on_handle_close (uv_handle_t *handle) {
+bare_runtime_on_handle_close(uv_handle_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   if (--runtime->active_handles == 0) {
@@ -440,7 +440,7 @@ bare_runtime_on_handle_close (uv_handle_t *handle) {
 }
 
 static js_value_t *
-bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_print_info(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -485,7 +485,7 @@ bare_runtime_print_info (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_print_error(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -530,7 +530,7 @@ bare_runtime_print_error (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_get_static_addons (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_get_static_addons(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -542,7 +542,7 @@ bare_runtime_get_static_addons (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_get_dynamic_addons (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_get_dynamic_addons(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -554,7 +554,7 @@ bare_runtime_get_dynamic_addons (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_load_static_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_escapable_handle_scope_t *scope;
@@ -599,7 +599,7 @@ err:
 }
 
 static js_value_t *
-bare_runtime_load_dynamic_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_escapable_handle_scope_t *scope;
@@ -666,7 +666,7 @@ err:
 }
 
 static js_value_t *
-bare_runtime_init_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_escapable_handle_scope_t *scope;
@@ -699,7 +699,7 @@ bare_runtime_init_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_unload_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_unload_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_escapable_handle_scope_t *scope;
@@ -736,7 +736,7 @@ bare_runtime_unload_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_terminate(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -755,12 +755,12 @@ bare_runtime_terminate (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_abort (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_abort(js_env_t *env, js_callback_info_t *info) {
   abort();
 }
 
 static js_value_t *
-bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_suspend(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -788,7 +788,7 @@ bare_runtime_suspend (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_resume(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   bare_runtime_t *runtime;
@@ -803,7 +803,7 @@ bare_runtime_resume (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_setup_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_escapable_handle_scope_t *scope;
@@ -878,7 +878,7 @@ err:
 }
 
 static js_value_t *
-bare_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_join_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -908,7 +908,7 @@ bare_runtime_join_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_suspend_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_suspend_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -939,7 +939,7 @@ bare_runtime_suspend_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_resume_thread (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_resume_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -970,7 +970,7 @@ bare_runtime_resume_thread (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_require (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_require(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   err = js_throw_error(env, NULL, "Cannot require modules from bootstrap script");
@@ -980,7 +980,7 @@ bare_runtime_require (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime_addon (js_env_t *env, js_callback_info_t *info) {
+bare_runtime_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   js_handle_scope_t *scope;
@@ -1020,7 +1020,7 @@ bare_runtime_addon (js_env_t *env, js_callback_info_t *info) {
 }
 
 int
-bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime) {
+bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime) {
   int err;
 
   runtime->loop = loop;
@@ -1249,7 +1249,7 @@ bare_runtime_setup (uv_loop_t *loop, bare_process_t *process, bare_runtime_t *ru
 }
 
 int
-bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
+bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
   int err;
 
   bare_runtime_on_teardown(runtime, exit_code);
@@ -1279,7 +1279,7 @@ bare_runtime_teardown (bare_runtime_t *runtime, int *exit_code) {
 }
 
 int
-bare_runtime_exit (bare_runtime_t *runtime, int exit_code) {
+bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1314,7 +1314,7 @@ bare_runtime_exit (bare_runtime_t *runtime, int exit_code) {
 }
 
 int
-bare_runtime_load (bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1386,7 +1386,7 @@ err:
 }
 
 int
-bare_runtime_run (bare_runtime_t *runtime) {
+bare_runtime_run(bare_runtime_t *runtime) {
   int err;
 
   do {
