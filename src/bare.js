@@ -10,10 +10,10 @@
 
 const addons = Object.create(null)
 
-bare.addon = function addon (href) {
+bare.addon = function addon(href) {
   if (addons[href]) return addons[href]
 
-  const addon = addons[href] = { handle: null, exports: {} }
+  const addon = (addons[href] = { handle: null, exports: {} })
 
   addon.handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
 
@@ -35,7 +35,7 @@ const EventEmitter = require('bare-events')
  */
 
 class Bare extends EventEmitter {
-  constructor () {
+  constructor() {
     super()
 
     this.suspended = false
@@ -44,43 +44,43 @@ class Bare extends EventEmitter {
     this.exit = this.exit.bind(this)
   }
 
-  get platform () {
+  get platform() {
     return bare.platform
   }
 
-  get arch () {
+  get arch() {
     return bare.arch
   }
 
-  get simulator () {
+  get simulator() {
     return bare.simulator
   }
 
-  get argv () {
+  get argv() {
     return bare.argv
   }
 
-  get pid () {
+  get pid() {
     return bare.pid
   }
 
-  get exitCode () {
+  get exitCode() {
     return bare.exitCode
   }
 
-  set exitCode (code) {
+  set exitCode(code) {
     bare.exitCode = code & 0xff
   }
 
-  get version () {
+  get version() {
     return 'v' + bare.versions.bare
   }
 
-  get versions () {
+  get versions() {
     return bare.versions
   }
 
-  exit (code = this.exitCode) {
+  exit(code = this.exitCode) {
     this.exiting = true
     this.exitCode = code
 
@@ -88,30 +88,28 @@ class Bare extends EventEmitter {
 
     noop() // Trigger a stack check
 
-    function noop () {}
+    function noop() {}
   }
 
-  suspend (linger = 0) {
+  suspend(linger = 0) {
     bare.suspend(linger)
   }
 
-  resume () {
+  resume() {
     bare.resume()
   }
 
-  _onuncaughtexception (err) {
+  _onuncaughtexception(err) {
     const inspect = require('bare-inspect')
 
     if (this.exiting || this.emit('uncaughtException', err)) return
 
-    bare.printError(
-      `Uncaught ${inspect(err, { colors: bare.isTTY })}\n`
-    )
+    bare.printError(`Uncaught ${inspect(err, { colors: bare.isTTY })}\n`)
 
     bare.abort()
   }
 
-  _onunhandledrejection (reason, promise) {
+  _onunhandledrejection(reason, promise) {
     const inspect = require('bare-inspect')
 
     if (this.exiting || this.emit('unhandledRejection', reason, promise)) return
@@ -123,41 +121,41 @@ class Bare extends EventEmitter {
     bare.abort()
   }
 
-  _onbeforeexit () {
+  _onbeforeexit() {
     this.emit('beforeExit', bare.exitCode)
   }
 
-  _onexit () {
+  _onexit() {
     this.exiting = true
 
     this.emit('exit', bare.exitCode)
   }
 
-  _onteardown () {
+  _onteardown() {
     this.emit('teardown')
   }
 
-  _onsuspend (linger) {
+  _onsuspend(linger) {
     this.suspended = true
 
     this.emit('suspend', linger)
   }
 
-  _onidle () {
+  _onidle() {
     this.emit('idle')
   }
 
-  _onresume () {
+  _onresume() {
     this.suspended = false
 
     this.emit('resume')
   }
 
-  _onthread (data) {
+  _onthread(data) {
     exports.Thread.self._ondata(data)
   }
 
-  [Symbol.for('bare.inspect')] () {
+  [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: Bare },
 
@@ -237,7 +235,7 @@ const URL = require('bare-url')
 
 bare.exit = exports.exit
 
-bare.load = function load (filename, source) {
+bare.load = function load(filename, source) {
   let url
 
   if (startsWithWindowsDriveLetter(filename)) {

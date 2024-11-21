@@ -13,7 +13,9 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 
 const bare = command(
   'bare',
-  description('Evaluate a script or start a REPL session if no script is provided.'),
+  description(
+    'Evaluate a script or start a REPL session if no script is provided.'
+  ),
   flag('--version|-v', 'Print the Bare version'),
   flag('--eval|-e <script>', 'Evaluate an inline script'),
   flag('--print|-p <script>', 'Evaluate an inline script and print the result'),
@@ -35,7 +37,9 @@ const bare = command(
         break
 
       default:
-        return queueMicrotask(() => { throw bail.err })
+        return queueMicrotask(() => {
+          throw bail.err
+        })
     }
 
     Bare.exit(1)
@@ -68,14 +72,17 @@ const bare = command(
 
     if (flags.eval) return Module.load(parentURL, `(${flags.eval})`)
 
-    if (flags.print) return Module.load(parentURL, `console.log(${flags.print})`)
+    if (flags.print)
+      return Module.load(parentURL, `console.log(${flags.print})`)
 
     if (args.filename) return Module.load(args.filename)
 
-    require('bare-repl').start().on('exit', () => {
-      if (server === null) Bare.exit()
-      else server.close(() => Bare.exit())
-    })
+    require('bare-repl')
+      .start()
+      .on('exit', () => {
+        if (server === null) Bare.exit()
+        else server.close(() => Bare.exit())
+      })
   }
 )
 

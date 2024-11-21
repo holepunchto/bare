@@ -1,6 +1,4 @@
 /* global Bare */
-Bare
-  .on('suspend', () => {
-    Bare.exit()
-  })
-  .suspend()
+Bare.on('suspend', () => {
+  Bare.exit()
+}).suspend()

@@ -44,14 +44,14 @@ struct bare_options_s {
  * dynamically linking Bare.
  */
 int
-bare_version (int *major, int *minor, int *patch);
+bare_version(int *major, int *minor, int *patch);
 
 /**
  * Set up the Bare process. To get a reference to the JavaScript environment of
  * the process, pass the `env` pointer.
  */
 int
-bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result);
+bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result);
 
 /**
  * Tear down the Bare process. The exit code will be stored in `exit_code` if
@@ -59,13 +59,13 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
  * this function returns.
  */
 int
-bare_teardown (bare_t *bare, int *exit_code);
+bare_teardown(bare_t *bare, int *exit_code);
 
 /**
  * Immediately terminate the process with an exit status of `exit_code`.
  */
 int
-bare_exit (bare_t *bare, int exit_code);
+bare_exit(bare_t *bare, int exit_code);
 
 /**
  * Load the module identified by `filename`, which may be any of the formats
@@ -76,20 +76,20 @@ bare_exit (bare_t *bare, int exit_code);
  * supported module formats.
  */
 int
-bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result);
+bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result);
 
 /**
  * Run the I/O event loop.
  */
 int
-bare_run (bare_t *bare);
+bare_run(bare_t *bare);
 
 /**
  * Terminate the process as soon as possible. It's safe to call this function
  * from any thread.
  */
 int
-bare_terminate (bare_t *bare);
+bare_terminate(bare_t *bare);
 
 /**
  * Suspend the process as soon as possible. Once the process has suspended
@@ -97,7 +97,7 @@ bare_terminate (bare_t *bare);
  * process. It's safe to call this function from any thread.
  */
 int
-bare_suspend (bare_t *bare, int linger);
+bare_suspend(bare_t *bare, int linger);
 
 /**
  * Resume the process as soon as possible. If the process is not yet idle after
@@ -105,43 +105,43 @@ bare_suspend (bare_t *bare, int linger);
  * function from any thread.
  */
 int
-bare_resume (bare_t *bare);
+bare_resume(bare_t *bare);
 
 /**
  * Equivalent to `Bare.on('beforeExit', cb)`.
  */
 int
-bare_on_before_exit (bare_t *bare, bare_before_exit_cb cb);
+bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb);
 
 /**
  * Equivalent to `Bare.on('exit', cb)`.
  */
 int
-bare_on_exit (bare_t *bare, bare_exit_cb cb);
+bare_on_exit(bare_t *bare, bare_exit_cb cb);
 
 /**
  * Equivalent to `Bare.on('teardown', cb)`.
  */
 int
-bare_on_teardown (bare_t *bare, bare_teardown_cb cb);
+bare_on_teardown(bare_t *bare, bare_teardown_cb cb);
 
 /**
  * Equivalent to `Bare.on('suspend', cb)`.
  */
 int
-bare_on_suspend (bare_t *bare, bare_suspend_cb cb);
+bare_on_suspend(bare_t *bare, bare_suspend_cb cb);
 
 /**
  * Equivalent to `Bare.on('idle', cb)`.
  */
 int
-bare_on_idle (bare_t *bare, bare_idle_cb cb);
+bare_on_idle(bare_t *bare, bare_idle_cb cb);
 
 /**
  * Equivalent to `Bare.on('resume', cb)`.
  */
 int
-bare_on_resume (bare_t *bare, bare_resume_cb cb);
+bare_on_resume(bare_t *bare, bare_resume_cb cb);
 
 /**
  * Attach a thread listener which will invoked with the JavaScript environment
@@ -149,7 +149,7 @@ bare_on_resume (bare_t *bare, bare_resume_cb cb);
  * environment of the thread before it runs any JavaScript.
  */
 int
-bare_on_thread (bare_t *bare, bare_thread_cb cb);
+bare_on_thread(bare_t *bare, bare_thread_cb cb);
 
 #ifdef __cplusplus
 }

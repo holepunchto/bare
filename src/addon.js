@@ -4,8 +4,8 @@ const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
-const Addon = module.exports = exports = class Addon {
-  constructor (url) {
+module.exports = exports = class Addon {
+  constructor(url) {
     this._url = url
     this._exports = {}
     this._handle = null
@@ -13,15 +13,15 @@ const Addon = module.exports = exports = class Addon {
     Addon._addons.add(this)
   }
 
-  get url () {
+  get url() {
     return this._url
   }
 
-  get exports () {
+  get exports() {
     return this._exports
   }
 
-  unload () {
+  unload() {
     let unloaded = false
 
     if (this._handle) {
@@ -34,7 +34,7 @@ const Addon = module.exports = exports = class Addon {
     return unloaded
   }
 
-  [Symbol.for('bare.inspect')] () {
+  [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: Addon },
 
@@ -49,22 +49,22 @@ const Addon = module.exports = exports = class Addon {
   static _builtins = bare.getStaticAddons()
   static _conditions = Module._conditions
 
-  static get cache () {
+  static get cache() {
     return this._cache
   }
 
-  static get host () {
+  static get host() {
     return `${bare.platform}-${bare.arch}${bare.simulator ? '-simulator' : ''}`
   }
 
-  static load (url) {
+  static load(url) {
     const self = Addon
 
     const cache = self._cache
 
     if (cache[url.href]) return cache[url.href]
 
-    const addon = cache[url.href] = new Addon(url)
+    const addon = (cache[url.href] = new Addon(url))
 
     try {
       switch (url.protocol) {
@@ -78,7 +78,9 @@ const Addon = module.exports = exports = class Addon {
           addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
           break
         default:
-          throw AddonError.UNSUPPORTED_PROTOCOL(`Unsupported protocol '${url.protocol}' for addon '${url.href}'`)
+          throw AddonError.UNSUPPORTED_PROTOCOL(
+            `Unsupported protocol '${url.protocol}' for addon '${url.href}'`
+          )
       }
 
       addon._exports = bare.initAddon(addon._handle, addon._exports)
@@ -93,7 +95,7 @@ const Addon = module.exports = exports = class Addon {
     return addon
   }
 
-  static unload (url) {
+  static unload(url) {
     const self = Addon
 
     const cache = self._cache
@@ -111,7 +113,7 @@ const Addon = module.exports = exports = class Addon {
     return unloaded
   }
 
-  static resolve (specifier, parentURL, opts = {}) {
+  static resolve(specifier, parentURL, opts = {}) {
     const self = Addon
 
     const {
@@ -129,18 +131,21 @@ const Addon = module.exports = exports = class Addon {
 
     if (resolution) return protocol.postresolve(resolution, parentURL)
 
-    for (const resolution of resolve(resolved, parentURL, {
-      conditions: ['addon', ...conditions],
-      host: self.host,
-      resolutions,
-      builtins,
-      extensions: [
-        '.bare',
-        '.node'
-      ]
-    }, readPackage)) {
+    for (const resolution of resolve(
+      resolved,
+      parentURL,
+      {
+        conditions: ['addon', ...conditions],
+        host: self.host,
+        resolutions,
+        builtins,
+        extensions: ['.bare', '.node']
+      },
+      readPackage
+    )) {
       switch (resolution.protocol) {
-        case 'builtin:': return resolution
+        case 'builtin:':
+          return resolution
         case 'linked:':
           try {
             return Addon.load(resolution).url
@@ -149,14 +154,18 @@ const Addon = module.exports = exports = class Addon {
           }
         default:
           if (protocol.exists(resolution)) {
-            return protocol.postresolve(protocol.addon ? protocol.addon(resolution) : resolution)
+            return protocol.postresolve(
+              protocol.addon ? protocol.addon(resolution) : resolution
+            )
           }
       }
     }
 
-    throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${specifier}' imported from '${parentURL.href}'`)
+    throw AddonError.ADDON_NOT_FOUND(
+      `Cannot find addon '${specifier}' imported from '${parentURL.href}'`
+    )
 
-    function readPackage (packageURL) {
+    function readPackage(packageURL) {
       if (protocol.exists(packageURL)) {
         return Module.load(packageURL, { protocol })._exports
       }
@@ -166,9 +175,8 @@ const Addon = module.exports = exports = class Addon {
   }
 }
 
-Bare
-  .prependListener('teardown', () => {
-    for (const addon of Addon._addons) {
-      addon.unload()
-    }
-  })
+Bare.prependListener('teardown', () => {
+  for (const addon of exports._addons) {
+    addon.unload()
+  }
+})

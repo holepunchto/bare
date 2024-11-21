@@ -7,7 +7,9 @@ try {
   fs.chmodSync(bin, 0o755)
 }
 try {
-  require('child_process').execFileSync(bin, process.argv.slice(2), { stdio: 'inherit' })
+  require('child_process').execFileSync(bin, process.argv.slice(2), {
+    stdio: 'inherit'
+  })
 } catch (err) {
   process.exitCode = err.status || 1
 }

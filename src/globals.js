@@ -13,9 +13,12 @@
 
 const resolved = Promise.resolve()
 
-const crash = err => setImmediate(() => { throw err })
+const crash = (err) =>
+  setImmediate(() => {
+    throw err
+  })
 
-global.queueMicrotask = function queueMicrotask (fn) {
+global.queueMicrotask = function queueMicrotask(fn) {
   resolved
     .then(fn)
     // Make sure that exceptions are reported as normal uncaughts, not promise
@@ -62,11 +65,11 @@ global.console = new Console({
   colors: bare.isTTY,
   bind: true,
 
-  stdout (data) {
+  stdout(data) {
     bare.printInfo(data.replace(/\u0000/g, '\\x00')) // eslint-disable-line no-control-regex
   },
 
-  stderr (data) {
+  stderr(data) {
     bare.printError(data.replace(/\u0000/g, '\\x00')) // eslint-disable-line no-control-regex
   }
 })

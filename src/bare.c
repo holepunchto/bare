@@ -24,7 +24,7 @@ static const bare_options_t bare_default_options = {
 };
 
 int
-bare_version (int *major, int *minor, int *patch) {
+bare_version(int *major, int *minor, int *patch) {
   if (major) *major = BARE_VERSION_MAJOR;
   if (minor) *minor = BARE_VERSION_MINOR;
   if (patch) *patch = BARE_VERSION_PATCH;
@@ -33,7 +33,7 @@ bare_version (int *major, int *minor, int *patch) {
 }
 
 int
-bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result) {
+bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result) {
   int err;
 
   bare_t *bare = malloc(sizeof(bare_t));
@@ -71,7 +71,7 @@ bare_setup (uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, 
 }
 
 int
-bare_teardown (bare_t *bare, int *exit_code) {
+bare_teardown(bare_t *bare, int *exit_code) {
   int err;
 
   bare_process_t *process = &bare->process;
@@ -85,7 +85,7 @@ bare_teardown (bare_t *bare, int *exit_code) {
 }
 
 int
-bare_exit (bare_t *bare, int exit_code) {
+bare_exit(bare_t *bare, int exit_code) {
   int err;
 
   bare_runtime_t *runtime = bare->process.runtime;
@@ -96,7 +96,7 @@ bare_exit (bare_t *bare, int exit_code) {
 }
 
 int
-bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
+bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
   int err;
 
   bare_runtime_t *runtime = bare->process.runtime;
@@ -118,7 +118,7 @@ bare_load (bare_t *bare, const char *filename, const uv_buf_t *source, js_value_
 }
 
 int
-bare_run (bare_t *bare) {
+bare_run(bare_t *bare) {
   int err;
 
   bare_runtime_t *runtime = bare->process.runtime;
@@ -129,66 +129,66 @@ bare_run (bare_t *bare) {
 }
 
 int
-bare_terminate (bare_t *bare) {
+bare_terminate(bare_t *bare) {
   return uv_async_send(&bare->process.runtime->signals.terminate);
 }
 
 int
-bare_suspend (bare_t *bare, int linger) {
+bare_suspend(bare_t *bare, int linger) {
   bare->process.runtime->linger = linger;
 
   return uv_async_send(&bare->process.runtime->signals.suspend);
 }
 
 int
-bare_resume (bare_t *bare) {
+bare_resume(bare_t *bare) {
   return uv_async_send(&bare->process.runtime->signals.resume);
 }
 
 int
-bare_on_before_exit (bare_t *bare, bare_before_exit_cb cb) {
+bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb) {
   bare->process.on_before_exit = cb;
 
   return 0;
 }
 
 int
-bare_on_exit (bare_t *bare, bare_exit_cb cb) {
+bare_on_exit(bare_t *bare, bare_exit_cb cb) {
   bare->process.on_exit = cb;
 
   return 0;
 }
 
 int
-bare_on_teardown (bare_t *bare, bare_teardown_cb cb) {
+bare_on_teardown(bare_t *bare, bare_teardown_cb cb) {
   bare->process.on_teardown = cb;
 
   return 0;
 }
 
 int
-bare_on_suspend (bare_t *bare, bare_suspend_cb cb) {
+bare_on_suspend(bare_t *bare, bare_suspend_cb cb) {
   bare->process.on_suspend = cb;
 
   return 0;
 }
 
 int
-bare_on_idle (bare_t *bare, bare_idle_cb cb) {
+bare_on_idle(bare_t *bare, bare_idle_cb cb) {
   bare->process.on_idle = cb;
 
   return 0;
 }
 
 int
-bare_on_resume (bare_t *bare, bare_resume_cb cb) {
+bare_on_resume(bare_t *bare, bare_resume_cb cb) {
   bare->process.on_resume = cb;
 
   return 0;
 }
 
 int
-bare_on_thread (bare_t *bare, bare_thread_cb cb) {
+bare_on_thread(bare_t *bare, bare_thread_cb cb) {
   bare->process.on_thread = cb;
 
   return 0;
