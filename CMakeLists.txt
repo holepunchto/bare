@@ -9,7 +9,6 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 project(bare C CXX ASM)
 
 include(cmake/options.cmake)
-include(cmake/overrides.cmake)
 
 bare_target(target)
 
