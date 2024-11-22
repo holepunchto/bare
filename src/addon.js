@@ -1,5 +1,6 @@
 /* global bare, Bare */
 const Module = require('bare-module')
+const { lookupPackageScope } = require('bare-module-resolve')
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
@@ -8,13 +9,20 @@ module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
     this._exports = {}
+    this._name = null
     this._handle = null
+
+    Object.preventExtensions(this)
 
     Addon._addons.add(this)
   }
 
   get url() {
     return this._url
+  }
+
+  get name() {
+    return this._name
   }
 
   get exports() {
@@ -39,6 +47,7 @@ module.exports = exports = class Addon {
       __proto__: { constructor: Addon },
 
       url: this.url,
+      name: this._name,
       exports: this.exports
     }
   }
@@ -57,14 +66,22 @@ module.exports = exports = class Addon {
     return `${bare.platform}-${bare.arch}${bare.simulator ? '-simulator' : ''}`
   }
 
-  static load(url) {
+  static load(url, opts = {}) {
     const self = Addon
+
+    const {
+      referrer = null,
+      protocol = referrer ? referrer._protocol : self._protocol,
+      resolutions = referrer ? referrer._resolutions : null
+    } = opts
 
     const cache = self._cache
 
-    if (cache[url.href]) return cache[url.href]
+    let addon = cache[url.href] || null
 
-    const addon = (cache[url.href] = new Addon(url))
+    if (addon !== null) return addon
+
+    addon = cache[url.href] = new Addon(url)
 
     try {
       switch (url.protocol) {
@@ -72,10 +89,24 @@ module.exports = exports = class Addon {
           addon._handle = bare.loadStaticAddon(url.pathname)
           break
         case 'linked:':
-          addon._handle = bare.loadDynamicAddon(url.pathname)
+          addon._handle = bare.loadDynamicAddon(url.pathname, addon._name)
           break
         case 'file:':
-          addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
+          for (const packageURL of lookupPackageScope(url, {
+            resolutions
+          })) {
+            if (protocol.exists(packageURL)) {
+              addon._name = addonName(
+                Module.load(packageURL, { protocol })._exports
+              )
+              break
+            }
+          }
+
+          addon._handle = bare.loadDynamicAddon(
+            fileURLToPath(url),
+            addon._name
+          )
           break
         default:
           throw AddonError.UNSUPPORTED_PROTOCOL(
@@ -148,7 +179,7 @@ module.exports = exports = class Addon {
           return resolution
         case 'linked:':
           try {
-            return Addon.load(resolution).url
+            return Addon.load(resolution, opts).url
           } catch {
             continue
           }
@@ -173,6 +204,20 @@ module.exports = exports = class Addon {
       return null
     }
   }
+}
+
+function addonName(info) {
+  if (typeof info !== 'object' || info === null) return null
+
+  const name = info.name
+  if (typeof name !== 'string' || name === '') return null
+
+  const version = info.version
+  if (typeof version !== 'string' || version === '') return null
+
+  const major = version.substring(0, version.indexOf('.'))
+
+  return name.replace(/\//g, '+') + '@' + major + '.bare'
 }
 
 Bare.prependListener('teardown', () => {

@@ -8,6 +8,10 @@
 #include <utf.h>
 #include <uv.h>
 
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#endif
+
 #include "types.h"
 
 static bare_module_list_t *bare_addon_static = NULL;
@@ -120,7 +124,7 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 }
 
 bare_module_t *
-bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
+bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *name) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -151,7 +155,21 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_lib_t *lib = malloc(sizeof(uv_lib_t));
 
+#if defined(_WIN32)
   err = uv_dlopen(specifier, lib);
+#else
+  dlerror(); // Reset any previous error
+
+  lib->handle = dlopen(specifier, RTLD_LAZY | RTLD_LOCAL);
+
+  if (lib->handle) {
+    lib->errmsg = NULL;
+    err = 0;
+  } else {
+    lib->errmsg = strdup(dlerror());
+    err = -1;
+  }
+#endif
 
   bool opened = err >= 0;
 
@@ -182,8 +200,9 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 done:
   mod = &next->mod;
 
-  next->pending = false;
+  next->name = name;
   next->resolved = strdup(specifier);
+  next->pending = false;
   next->lib = lib;
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -246,12 +265,37 @@ bare_addon_teardown(void) {
       node->next->previous = node->previous;
     }
 
-    free(node->lib);
+    free(node->name);
     free(node->resolved);
+    free(node->lib);
     free(node);
   }
 
   uv_mutex_unlock(&bare_addon_lock);
+}
+
+uv_lib_t *
+bare_module_find(const char *name) {
+  uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
+
+  uv_mutex_lock(&bare_addon_lock);
+
+  bare_module_list_t *next = bare_addon_dynamic;
+
+  uv_lib_t *result = NULL;
+
+  while (next) {
+    if (strcmp(name, next->name) == 0) {
+      result = next->lib;
+      break;
+    }
+
+    next = next->next;
+  }
+
+  uv_mutex_unlock(&bare_addon_lock);
+
+  return result;
 }
 
 void
@@ -271,6 +315,7 @@ bare_module_register(bare_module_t *mod) {
   next->mod.filename = NULL;
   next->mod.init = mod->init;
 
+  next->name = NULL;
   next->resolved = is_dynamic ? NULL : strdup(mod->filename);
   next->pending = is_dynamic;
   next->refs = 1;
