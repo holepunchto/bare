@@ -103,10 +103,7 @@ module.exports = exports = class Addon {
             }
           }
 
-          addon._handle = bare.loadDynamicAddon(
-            fileURLToPath(url),
-            addon._name
-          )
+          addon._handle = bare.loadDynamicAddon(fileURLToPath(url), addon._name)
           break
         default:
           throw AddonError.UNSUPPORTED_PROTOCOL(
