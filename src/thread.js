@@ -95,14 +95,6 @@ class ThreadProxy {
     this.data = null
   }
 
-  _ondata(data) {
-    if (data === null) return
-
-    const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
-
-    this.data = structuredClone.deserialize(structuredClone.decode(state))
-  }
-
   [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: ThreadProxy },
@@ -113,6 +105,14 @@ class ThreadProxy {
 }
 
 exports.self = exports.isMainThread ? null : new ThreadProxy()
+
+bare.onthread = function onthread(data) {
+  if (data === null) return
+
+  const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
+
+  exports.self.data = structuredClone.deserialize(structuredClone.decode(state))
+}
 
 Bare.prependListener('teardown', () => {
   for (const thread of exports._threads) {

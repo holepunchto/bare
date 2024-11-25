@@ -32,16 +32,10 @@ const EventEmitter = require('bare-events')
  * Declare the Bare object.
  */
 
+let suspended = false
+let exiting = false
+
 class Bare extends EventEmitter {
-  constructor() {
-    super()
-
-    this.suspended = false
-    this.exiting = false
-
-    this.exit = this.exit.bind(this)
-  }
-
   get platform() {
     return bare.platform
   }
@@ -70,6 +64,14 @@ class Bare extends EventEmitter {
     bare.exitCode = code & 0xff
   }
 
+  get suspended() {
+    return suspended
+  }
+
+  get exiting() {
+    return exiting
+  }
+
   get version() {
     return 'v' + bare.versions.bare
   }
@@ -78,10 +80,10 @@ class Bare extends EventEmitter {
     return bare.versions
   }
 
-  exit(code = this.exitCode) {
-    this.exiting = true
-    this.exitCode = code
+  exit(code = bare.exitCode) {
+    exiting = true
 
+    bare.exitCode = code & 0xff
     bare.terminate()
 
     noop() // Trigger a stack check
@@ -95,56 +97,6 @@ class Bare extends EventEmitter {
 
   resume() {
     bare.resume()
-  }
-
-  _onuncaughtexception(err) {
-    if (this.exiting || this.emit('uncaughtException', err)) return
-
-    console.error(`Uncaught %o`, err)
-
-    bare.abort()
-  }
-
-  _onunhandledrejection(reason, promise) {
-    if (this.exiting || this.emit('unhandledRejection', reason, promise)) return
-
-    console.error(`Uncaught (in promise) %o`, reason)
-
-    bare.abort()
-  }
-
-  _onbeforeexit() {
-    this.emit('beforeExit', bare.exitCode)
-  }
-
-  _onexit() {
-    this.exiting = true
-
-    this.emit('exit', bare.exitCode)
-  }
-
-  _onteardown() {
-    this.emit('teardown')
-  }
-
-  _onsuspend(linger) {
-    this.suspended = true
-
-    this.emit('suspend', linger)
-  }
-
-  _onidle() {
-    this.emit('idle')
-  }
-
-  _onresume() {
-    this.suspended = false
-
-    this.emit('resume')
-  }
-
-  _onthread(data) {
-    exports.Thread.self._ondata(data)
   }
 
   [Symbol.for('bare.inspect')]() {
@@ -213,15 +165,48 @@ require('bare-console/global')
  * Register the native lifecycle hooks.
  */
 
-bare.onuncaughtexception = exports._onuncaughtexception.bind(exports)
-bare.onunhandledrejection = exports._onunhandledrejection.bind(exports)
-bare.onbeforeexit = exports._onbeforeexit.bind(exports)
-bare.onexit = exports._onexit.bind(exports)
-bare.onteardown = exports._onteardown.bind(exports)
-bare.onsuspend = exports._onsuspend.bind(exports)
-bare.onidle = exports._onidle.bind(exports)
-bare.onresume = exports._onresume.bind(exports)
-bare.onthread = exports._onthread.bind(exports)
+bare.onuncaughtexception = function onuncaughtexception(err) {
+  if (exiting || exports.emit('uncaughtException', err)) return
+
+  console.error(`Uncaught %o`, err)
+
+  bare.abort()
+}
+
+bare.onunhandledrejection = function onunhandledrejection(reason, promise) {
+  if (exiting || exports.emit('unhandledRejection', reason, promise)) return
+
+  console.error(`Uncaught (in promise) %o`, reason)
+
+  bare.abort()
+}
+
+bare.onbeforeexit = function onbeforeexit() {
+  exports.emit('beforeExit', bare.exitCode)
+}
+
+bare.onexit = function onexit() {
+  exiting = true
+  exports.emit('exit', bare.exitCode)
+}
+
+bare.onteardown = function onteardown() {
+  exports.emit('teardown')
+}
+
+bare.onsuspend = function onsuspend(linger) {
+  suspended = true
+  exports.emit('suspend', linger)
+}
+
+bare.onidle = function onidle() {
+  exports.emit('idle')
+}
+
+bare.onresume = function onresume() {
+  suspended = false
+  exports.emit('resume')
+}
 
 /**
  * Step 8:
