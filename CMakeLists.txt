@@ -8,8 +8,6 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
-include(options.cmake)
-
 bare_target(target)
 
 mirror_drive(
@@ -133,7 +131,6 @@ endif()
 
 fetch_package("github:libuv/libuv@1.48.0")
 fetch_package("github:holepunchto/libutf#c4b7b15")
-fetch_package("github:holepunchto/liblog#a40c28a")
 fetch_package("github:holepunchto/libjs#41e480f")
 fetch_package("github:holepunchto/libnapi#324c25c")
 
@@ -205,15 +202,10 @@ target_link_libraries(
     hex
 )
 
-target_compile_definitions(
-  bare
-  PUBLIC
-    BARE_USE_SYSTEM_LOG=$<BOOL:${BARE_USE_SYSTEM_LOG}>
-)
-
 link_bare_module(bare bare-buffer)
 link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
+link_bare_module(bare bare-logger)
 link_bare_module(bare bare-module)
 link_bare_module(bare bare-module-lexer)
 link_bare_module(bare bare-os)

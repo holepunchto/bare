@@ -2,6 +2,7 @@
   { "addon": "bare-buffer" },
   { "addon": "bare-hrtime" },
   { "addon": "bare-inspect" },
+  { "addon": "bare-logger" },
   { "addon": "bare-module" },
   { "addon": "bare-module-lexer" },
   { "addon": "bare-os" },

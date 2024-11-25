@@ -18,10 +18,9 @@
   "dependencies": {
     "bare-addon-resolve": "^1.4.1",
     "bare-buffer": "^2.0.0",
-    "bare-console": "^5.0.0",
+    "bare-console": "^6.0.0",
     "bare-events": "^2.0.0",
     "bare-hrtime": "^2.0.0",
-    "bare-inspect": "^3.0.0",
     "bare-inspector": "^3.0.0",
     "bare-module": "^4.1.0",
     "bare-module-resolve": "^1.6.1",

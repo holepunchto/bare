@@ -10,10 +10,6 @@
 
 #include "../include/bare.h"
 
-#if BARE_USE_SYSTEM_LOG
-#include <log.h>
-#endif
-
 #include "addon.h"
 #include "bare.js.h"
 #include "runtime.h"
@@ -41,11 +37,7 @@ bare_runtime_on_uncaught_exception(js_env_t *env, js_value_t *error, void *data)
 
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onuncaughtexception", &fn);
-  if (err < 0) goto err;
-
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
-  if (err < 0 || !is_set) goto err;
+  assert(err == 0);
 
   js_value_t *global;
   err = js_get_global(env, &global);
@@ -57,35 +49,6 @@ bare_runtime_on_uncaught_exception(js_env_t *env, js_value_t *error, void *data)
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
-
-  return;
-
-err: {
-  js_value_t *stack;
-  err = js_get_named_property(env, error, "stack", &stack);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
-  assert(err == 0);
-
-  utf8_t *str = malloc(len + 1);
-  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
-  assert(err == 0);
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-#if BARE_USE_SYSTEM_LOG
-  err = log_fatal("Uncaught %s", str);
-  assert(err == 0);
-#else
-  err = fprintf(stderr, "Uncaught %s\n", str);
-  assert(err >= 0);
-#endif
-
-  abort();
-}
 }
 
 static void
@@ -104,11 +67,7 @@ bare_runtime_on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value_
 
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onunhandledrejection", &fn);
-  if (err < 0) goto err;
-
-  bool is_set;
-  err = js_is_function(env, fn, &is_set);
-  if (err < 0 || !is_set) goto err;
+  assert(err == 0);
 
   js_value_t *global;
   err = js_get_global(env, &global);
@@ -120,35 +79,6 @@ bare_runtime_on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value_
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
-
-  return;
-
-err: {
-  js_value_t *stack;
-  err = js_get_named_property(env, reason, "stack", &stack);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, stack, NULL, 0, &len);
-  assert(err == 0);
-
-  utf8_t *str = malloc(len + 1);
-  err = js_get_value_string_utf8(env, stack, str, len + 1, NULL);
-  assert(err == 0);
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-#if BARE_USE_SYSTEM_LOG
-  err = log_fatal("Uncaught (in promise) %s", str);
-  assert(err == 0);
-#else
-  err = fprintf(stderr, "Uncaught (in promise) %s\n", str);
-  assert(err >= 0);
-#endif
-
-  abort();
-}
 }
 
 static inline void
@@ -437,96 +367,6 @@ bare_runtime_on_handle_close(uv_handle_t *handle) {
   if (--runtime->active_handles == 0) {
     free(runtime);
   }
-}
-
-static js_value_t *
-bare_runtime_print_info(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  size_t data_len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
-  assert(err == 0);
-
-  data_len += 1 /* NULL */;
-
-  utf8_t *data = malloc(data_len);
-  err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
-  assert(err == 0);
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-#if BARE_USE_SYSTEM_LOG
-  err = log_info("%s", data);
-  assert(err == 0);
-#else
-  err = fprintf(stdout, "%s", data);
-  assert(err >= 0);
-#endif
-
-  err = fflush(stdout);
-  assert(err == 0);
-
-  free(data);
-
-  return NULL;
-}
-
-static js_value_t *
-bare_runtime_print_error(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
-  js_value_t *argv[1];
-  size_t argc = 1;
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  size_t data_len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &data_len);
-  assert(err == 0);
-
-  data_len += 1 /* NULL */;
-
-  utf8_t *data = malloc(data_len);
-  err = js_get_value_string_utf8(env, argv[0], data, data_len, &data_len);
-  assert(err == 0);
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-#if BARE_USE_SYSTEM_LOG
-  err = log_error("%s", data);
-  assert(err == 0);
-#else
-  err = fprintf(stderr, "%s", data);
-  assert(err >= 0);
-#endif
-
-  err = fflush(stderr);
-  assert(err == 0);
-
-  free(data);
-
-  return NULL;
 }
 
 static js_value_t *
@@ -1105,6 +945,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
+
   V("platform", BARE_PLATFORM);
   V("arch", BARE_ARCH);
 #undef V
@@ -1168,9 +1009,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     assert(err == 0); \
   }
 
-  V("printInfo", bare_runtime_print_info);
-  V("printError", bare_runtime_print_error);
-
   V("getStaticAddons", bare_runtime_get_static_addons);
   V("getDynamicAddons", bare_runtime_get_dynamic_addons);
   V("loadStaticAddon", bare_runtime_load_static_addon);
@@ -1199,7 +1037,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   }
 
   V("isMainThread", bare_runtime_is_main_thread(runtime));
-  V("isTTY", uv_guess_handle(1) == UV_TTY);
 #undef V
 
   js_value_t *global;

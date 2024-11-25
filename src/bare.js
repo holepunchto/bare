@@ -3,9 +3,7 @@
 /**
  * Step 0:
  * Declare the genesis addon entry point. All addons loaded by core modules
- * will pass through this function and the specifiers must therefore be
- * resolved statically without relying on any dependencies other than internal
- * bare.* APIs.
+ * will pass through this function.
  */
 
 const addons = Object.create(null)
@@ -100,23 +98,17 @@ class Bare extends EventEmitter {
   }
 
   _onuncaughtexception(err) {
-    const inspect = require('bare-inspect')
-
     if (this.exiting || this.emit('uncaughtException', err)) return
 
-    bare.printError(`Uncaught ${inspect(err, { colors: bare.isTTY })}\n`)
+    console.error(`Uncaught %o`, err)
 
     bare.abort()
   }
 
   _onunhandledrejection(reason, promise) {
-    const inspect = require('bare-inspect')
-
     if (this.exiting || this.emit('unhandledRejection', reason, promise)) return
 
-    bare.printError(
-      `Uncaught (in promise) ${inspect(reason, { colors: bare.isTTY })}\n`
-    )
+    console.error(`Uncaught (in promise) %o`, reason)
 
     bare.abort()
   }
@@ -204,10 +196,17 @@ exports.Thread = require('./thread')
 
 /**
  * Step 6:
- * Register the remaining globals.
+ * Register the remaining global APIs. We prefer modules over making APIs
+ * available in the global scope and do the latter to stay somewhat compatible
+ * with other environments, such as Web and Node.js.
  */
 
-require('./globals')
+require('bare-queue-microtask/global')
+require('bare-buffer/global')
+require('bare-timers/global')
+require('bare-structured-clone/global')
+require('bare-url/global')
+require('bare-console/global')
 
 /**
  * Step 7:
