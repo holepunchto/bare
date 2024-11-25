@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <js.h>
+#include <stddef.h>
 #include <uv.h>
 
 #include "bare/module.h"

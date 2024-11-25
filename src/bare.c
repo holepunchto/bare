@@ -1,9 +1,7 @@
 #include <assert.h>
 #include <js.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 #include <uv.h>
 
 #include "../include/bare.h"
