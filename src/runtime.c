@@ -879,26 +879,19 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->terminated = false;
   runtime->linger = 0;
 
-  err = uv_async_init(runtime->loop, &runtime->signals.suspend, bare_runtime_on_suspend_signal);
-  assert(err == 0);
+#define V(signal) \
+  { \
+    uv_async_t *handle = &runtime->signals.signal; \
+    handle->data = (void *) runtime; \
+    err = uv_async_init(runtime->loop, handle, bare_runtime_on_suspend_signal); \
+    assert(err == 0); \
+    uv_unref((uv_handle_t *) handle); \
+  }
 
-  runtime->signals.suspend.data = (void *) runtime;
-
-  uv_unref((uv_handle_t *) &runtime->signals.suspend);
-
-  err = uv_async_init(runtime->loop, &runtime->signals.resume, bare_runtime_on_resume_signal);
-  assert(err == 0);
-
-  runtime->signals.resume.data = (void *) runtime;
-
-  uv_unref((uv_handle_t *) &runtime->signals.resume);
-
-  err = uv_async_init(runtime->loop, &runtime->signals.terminate, bare_runtime_on_terminate_signal);
-  assert(err == 0);
-
-  runtime->signals.terminate.data = (void *) runtime;
-
-  uv_unref((uv_handle_t *) &runtime->signals.terminate);
+  V(suspend)
+  V(resume)
+  V(terminate)
+#undef V
 
   runtime->active_handles = 3;
 
@@ -1097,15 +1090,17 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
-  uv_ref((uv_handle_t *) &runtime->signals.suspend);
+#define V(signal) \
+  { \
+    uv_handle_t *handle = (uv_handle_t *) &runtime->signals.signal; \
+    uv_ref(handle); \
+    uv_close(handle, bare_runtime_on_handle_close); \
+  }
 
-  uv_ref((uv_handle_t *) &runtime->signals.resume);
-
-  uv_close((uv_handle_t *) &runtime->signals.suspend, bare_runtime_on_handle_close);
-
-  uv_close((uv_handle_t *) &runtime->signals.resume, bare_runtime_on_handle_close);
-
-  uv_close((uv_handle_t *) &runtime->signals.terminate, bare_runtime_on_handle_close);
+  V(suspend)
+  V(resume)
+  V(terminate)
+#undef V
 
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
@@ -1257,9 +1252,6 @@ bare_runtime_run(bare_runtime_t *runtime) {
   } while (uv_loop_alive(runtime->loop));
 
   bare_runtime_on_exit(runtime);
-
-  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-  assert(err == 0);
 
   return 0;
 }
