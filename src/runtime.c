@@ -883,7 +883,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   { \
     uv_async_t *handle = &runtime->signals.signal; \
     handle->data = (void *) runtime; \
-    err = uv_async_init(runtime->loop, handle, bare_runtime_on_suspend_signal); \
+    err = uv_async_init(runtime->loop, handle, bare_runtime_on_##signal##_signal); \
     assert(err == 0); \
     uv_unref((uv_handle_t *) handle); \
   }
