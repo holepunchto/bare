@@ -167,7 +167,8 @@ module.exports = exports = class Addon {
         host: self.host,
         resolutions,
         builtins,
-        extensions: ['.bare', '.node']
+        extensions: ['.bare', '.node'],
+        engines: Bare.versions
       },
       readPackage
     )) {
