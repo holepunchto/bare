@@ -6,7 +6,7 @@
 #include "bare.bundle.h"
 
 int
-main (int argc, char *argv[]) {
+main(int argc, char *argv[]) {
   int err;
 
   err = log_open("bare", 0);
