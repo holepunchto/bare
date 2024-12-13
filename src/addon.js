@@ -215,7 +215,7 @@ function addonName(info) {
 
   const major = version.substring(0, version.indexOf('.'))
 
-  return name.replace(/\//g, '+') + '@' + major + '.bare'
+  return name.replace(/\//g, '+').replace(/^@/, '') + '@' + major + '.bare'
 }
 
 Bare.prependListener('teardown', () => {
