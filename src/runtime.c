@@ -1091,11 +1091,7 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
   assert(err == 0);
 
 #define V(signal) \
-  { \
-    uv_handle_t *handle = (uv_handle_t *) &runtime->signals.signal; \
-    uv_ref(handle); \
-    uv_close(handle, bare_runtime_on_handle_close); \
-  }
+  uv_close((uv_handle_t *) &runtime->signals.signal, bare_runtime_on_handle_close);
 
   V(suspend)
   V(resume)
