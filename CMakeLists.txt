@@ -14,7 +14,7 @@ mirror_drive(
   SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
   DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
   PREFIX /${target}
-  CHECKOUT 282
+  CHECKOUT 288
 )
 
 if(target MATCHES "win32")
@@ -130,8 +130,8 @@ if(NOT TARGET js)
 endif()
 
 fetch_package("github:libuv/libuv@1.48.0")
-fetch_package("github:holepunchto/libutf#c4b7b15")
-fetch_package("github:holepunchto/libjs#41e480f")
+fetch_package("github:holepunchto/libutf#9509b28")
+fetch_package("github:holepunchto/libjs#35e7566")
 fetch_package("github:holepunchto/libnapi#324c25c")
 
 add_bare_bundle(
