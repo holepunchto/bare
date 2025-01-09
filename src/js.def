@@ -32,8 +32,10 @@ EXPORTS
 	js_create_error
 	js_create_external
 	js_create_external_arraybuffer
+	js_create_external_string_latin1
+	js_create_external_string_utf16le
+	js_create_external_string_utf8
 	js_create_function
-	js_create_function_with_ffi
 	js_create_function_with_source
 	js_create_inspector
 	js_create_int32
@@ -42,6 +44,9 @@ EXPORTS
 	js_create_object
 	js_create_platform
 	js_create_promise
+	js_create_property_key_latin1
+	js_create_property_key_utf16le
+	js_create_property_key_utf8
 	js_create_range_error
 	js_create_reference
 	js_create_sharedarraybuffer
@@ -54,6 +59,7 @@ EXPORTS
 	js_create_synthetic_module
 	js_create_threadsafe_function
 	js_create_type_error
+	js_create_typed_function
 	js_create_typedarray
 	js_create_uint32
 	js_create_unsafe_arraybuffer
@@ -75,9 +81,6 @@ EXPORTS
 	js_escape_handle
 	js_exit_context
 	js_fatal_exception
-	js_ffi_create_function
-	js_ffi_create_function_info
-	js_ffi_create_type_info
 	js_finish_deferred_teardown_callback
 	js_get_and_clear_last_exception
 	js_get_array_length
@@ -87,6 +90,7 @@ EXPORTS
 	js_get_boolean
 	js_get_callback_info
 	js_get_dataview_info
+	js_get_dataview_view
 	js_get_element
 	js_get_env_loop
 	js_get_env_platform
@@ -108,8 +112,11 @@ EXPORTS
 	js_get_reference_value
 	js_get_sharedarraybuffer_backing_store
 	js_get_sharedarraybuffer_info
+	js_get_string_view
 	js_get_threadsafe_function_context
+	js_get_typed_callback_info
 	js_get_typedarray_info
+	js_get_typedarray_view
 	js_get_undefined
 	js_get_value_bigint_int64
 	js_get_value_bigint_uint64
@@ -191,7 +198,10 @@ EXPORTS
 	js_reference_unref
 	js_reject_deferred
 	js_release_arraybuffer_backing_store
+	js_release_dataview_view
+	js_release_string_view
 	js_release_threadsafe_function
+	js_release_typedarray_view
 	js_remove_teardown_callback
 	js_remove_wrap
 	js_request_garbage_collection
@@ -199,12 +209,12 @@ EXPORTS
 	js_run_module
 	js_run_script
 	js_send_inspector_request
-	js_set_arraybuffer_zero_fill_enabled
 	js_set_element
 	js_set_module_export
 	js_set_named_property
 	js_set_property
 	js_strict_equals
+	js_symbol_for
 	js_terminate_execution
 	js_throw
 	js_throw_error
