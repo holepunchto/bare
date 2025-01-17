@@ -263,6 +263,25 @@ When completed, the `bare(.exe)` binary will be available in the `build/bin` dir
 
 When linking against the static `libbare.(a|lib)` library, make sure to use whole archive linking as Bare relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
 
+## Platform support
+
+Bare officially supports the platform targets for which it provides prebuilds as defined by the [`.github/workflows/prebuild.yml`](.github/workflows/prebuild.yml) workflow.
+
+| Platform  | Architecture | Version                              | Notes          |
+| :-------- | :----------- | :----------------------------------- | :------------- |
+| GNU/Linux | `arm64`      | >= Linux 5.15, >= GNU C Library 2.35 | Ubuntu 22.04   |
+| GNU/Linux | `x64`        | >= Linux 5.15, >= GNU C Library 2.35 | Ubuntu 22.04   |
+| Android   | `arm`        | >= 9                                 |
+| Android   | `arm64`      | >= 9                                 |
+| Android   | `ia32`       | >= 9                                 |
+| Android   | `x64`        | >= 9                                 |
+| macOS     | `arm64`      | >= 11.0                              |
+| macOS     | `x64`        | >= 11.0                              |
+| iOS       | `arm64`      | >= 14.0                              |
+| iOS       | `x64`        | >= 14.0                              | Simulator only |
+| Windows   | `arm64`      | >= Windows 11                        |
+| Windows   | `x64`        | >= Windows 10                        |
+
 ## Modules
 
 Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare:
