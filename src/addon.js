@@ -5,6 +5,8 @@ const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
+const { constants } = Module
+
 module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
@@ -95,7 +97,7 @@ module.exports = exports = class Addon {
           for (const packageURL of lookupPackageScope(url, {
             resolutions
           })) {
-            if (protocol.exists(packageURL)) {
+            if (protocol.exists(packageURL, constants.types.JSON)) {
               addon._name = addonName(
                 Module.load(packageURL, { protocol })._exports
               )
@@ -182,7 +184,7 @@ module.exports = exports = class Addon {
             continue
           }
         default:
-          if (protocol.exists(resolution)) {
+          if (protocol.exists(resolution, constants.types.ADDON)) {
             return protocol.postresolve(
               protocol.addon ? protocol.addon(resolution) : resolution
             )
@@ -195,7 +197,7 @@ module.exports = exports = class Addon {
     )
 
     function readPackage(packageURL) {
-      if (protocol.exists(packageURL)) {
+      if (protocol.exists(packageURL, constants.types.JSON)) {
         return Module.load(packageURL, { protocol })._exports
       }
 
