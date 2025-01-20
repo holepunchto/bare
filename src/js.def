@@ -32,6 +32,7 @@ EXPORTS
 	js_create_error
 	js_create_external
 	js_create_external_arraybuffer
+	js_create_external_sharedarraybuffer
 	js_create_external_string_latin1
 	js_create_external_string_utf16le
 	js_create_external_string_utf8
