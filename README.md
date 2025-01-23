@@ -143,13 +143,17 @@ Emitted when the process or current thread resumes after suspension. Deferred an
 
 The `Bare.Addon` namespace provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
 
-#### `const addon = Addon.load(url)`
+#### `const addon = Addon.load(url[, options])`
 
 Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
 
-#### `const unloaded = Addon.unload(url)`
+Options are reserved.
+
+#### `const unloaded = Addon.unload(url[, options])`
 
 Unload a dynamic native addon identified by `url`. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
+
+Options are reserved.
 
 #### `const url = Addon.resolve(specifier, parentURL[, options])`
 
