@@ -243,7 +243,13 @@ The suspension API is available through `bare_suspend()` and `bare_resume()` fro
 npm i -g bare-make
 ```
 
-Next, generate the build system:
+Next, install the required build and runtime dependencies:
+
+```console
+npm i
+```
+
+Then, generate the build system:
 
 ```console
 bare-make generate
