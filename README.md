@@ -275,7 +275,7 @@ When linking against the static `libbare.(a|lib)` library, make sure to use whol
 
 ## Platform support
 
-Bare officially supports the platform targets for which it provides prebuilds as defined by the [`.github/workflows/prebuild.yml`](.github/workflows/prebuild.yml) workflow.
+Bare officially supports the platform targets for which it provides prebuilds as defined by the [`.github/workflows/prebuild.yml`](.github/workflows/prebuild.yml) workflow. Development happens primarily on Apple hardware with Linux and Windows systems running as virtual machines.
 
 | Platform  | Architecture | Version                              | Notes          |
 | :-------- | :----------- | :----------------------------------- | :------------- |
