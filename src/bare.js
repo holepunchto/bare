@@ -168,17 +168,21 @@ require('bare-console/global')
 bare.onuncaughtexception = function onuncaughtexception(err) {
   if (exiting || exports.emit('uncaughtException', err)) return
 
-  console.error(`Uncaught %o`, err)
-
-  bare.abort()
+  try {
+    console.error(`Uncaught %o`, err)
+  } finally {
+    bare.abort()
+  }
 }
 
 bare.onunhandledrejection = function onunhandledrejection(reason, promise) {
   if (exiting || exports.emit('unhandledRejection', reason, promise)) return
 
-  console.error(`Uncaught (in promise) %o`, reason)
-
-  bare.abort()
+  try {
+    console.error(`Uncaught (in promise) %o`, reason)
+  } finally {
+    bare.abort()
+  }
 }
 
 bare.onbeforeexit = function onbeforeexit() {
