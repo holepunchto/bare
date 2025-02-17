@@ -10,8 +10,8 @@ const { constants } = Module
 module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
-    this._exports = {}
     this._name = null
+    this._exports = {}
     this._handle = null
 
     Object.preventExtensions(this)
