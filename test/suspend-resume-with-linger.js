@@ -1,4 +1,3 @@
-/* global Bare */
 const assert = require('bare-assert')
 
 Bare.on('suspend', (linger) => {

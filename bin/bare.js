@@ -1,4 +1,3 @@
-/* global Bare */
 const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
@@ -70,12 +69,17 @@ const bare = command(
       server.unref()
     }
 
-    if (flags.eval) return Module.load(parentURL, `(${flags.eval})`)
+    if (flags.eval) {
+      return Module.load(parentURL, `(${flags.eval})`)
+    }
 
-    if (flags.print)
+    if (flags.print) {
       return Module.load(parentURL, `console.log(${flags.print})`)
+    }
 
-    if (args.filename) return Module.load(args.filename)
+    if (args.filename) {
+      return Module.load(args.filename)
+    }
 
     require('bare-repl')
       .start()

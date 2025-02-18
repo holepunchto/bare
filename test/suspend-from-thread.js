@@ -1,4 +1,3 @@
-/* global Bare */
 const { Thread } = Bare
 
 Bare.on('suspend', () => {

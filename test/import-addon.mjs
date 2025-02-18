@@ -1,4 +1,3 @@
-/* global Bare */
 import assert from 'bare-assert'
 const { Addon } = Bare
 

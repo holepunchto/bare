@@ -1,4 +1,3 @@
-/* global Bare */
 const assert = require('bare-assert')
 const path = require('bare-path')
 const { Thread } = Bare

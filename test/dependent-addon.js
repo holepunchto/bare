@@ -1,4 +1,3 @@
-/* global Bare */
 const assert = require('bare-assert')
 const url = require('bare-url')
 const { Addon } = Bare
