@@ -8,14 +8,9 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
-bare_target(target)
+set(BARE_ENGINE "github:holepunchto/libjs#35e7566" CACHE STRING "The JavaScript engine to use")
 
-mirror_drive(
-  SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
-  DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
-  PREFIX /${target}
-  CHECKOUT 343
-)
+bare_target(target)
 
 if(target MATCHES "win32")
   add_compile_options(/MT$<$<CONFIG:Debug>:d>)
@@ -23,7 +18,18 @@ if(target MATCHES "win32")
   add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
-if(NOT TARGET c++)
+fetch_package("github:libuv/libuv@1.50.0")
+
+fetch_package("github:holepunchto/libutf#9509b28")
+
+if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
+  mirror_drive(
+    SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
+    DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
+    PREFIX /${target}
+    CHECKOUT 343
+  )
+
   add_library(c++ STATIC IMPORTED GLOBAL)
 
   find_library(
@@ -55,9 +61,7 @@ if(NOT TARGET c++)
         /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
     )
   endif()
-endif()
 
-if(NOT TARGET v8)
   add_library(v8 STATIC IMPORTED GLOBAL)
 
   find_library(
@@ -102,9 +106,7 @@ if(NOT TARGET v8)
         winmm
     )
   endif()
-endif()
 
-if(NOT TARGET js)
   add_library(js STATIC IMPORTED GLOBAL)
 
   find_library(
@@ -127,11 +129,12 @@ if(NOT TARGET js)
     INTERFACE
       v8
   )
+
+  add_library(js_static ALIAS js)
 endif()
 
-fetch_package("github:libuv/libuv@1.50.0")
-fetch_package("github:holepunchto/libutf#9509b28")
-fetch_package("github:holepunchto/libjs#35e7566")
+fetch_package("${BARE_ENGINE}")
+
 fetch_package("github:holepunchto/libnapi#324c25c")
 
 add_bare_bundle(
@@ -186,6 +189,7 @@ target_link_libraries(
   bare
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
+    $<TARGET_PROPERTY:js,INTERFACE_LINK_LIBRARIES>
   PRIVATE
     $<TARGET_OBJECTS:utf>
     $<TARGET_OBJECTS:log>
@@ -243,7 +247,7 @@ target_include_directories(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>
   PRIVATE
     bare
 )
@@ -276,7 +280,7 @@ target_include_directories(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,js>
+    $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>
   PRIVATE
     bare
 )
