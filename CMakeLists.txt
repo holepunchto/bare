@@ -133,7 +133,7 @@ if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   add_library(js_static ALIAS js)
 endif()
 
-fetch_package(${BARE_ENGINE})
+fetch_package("${BARE_ENGINE}")
 
 fetch_package("github:holepunchto/libnapi#324c25c")
 
