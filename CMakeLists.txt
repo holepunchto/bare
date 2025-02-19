@@ -22,7 +22,7 @@ fetch_package("github:libuv/libuv@1.50.0")
 
 fetch_package("github:holepunchto/libutf#9509b28")
 
-if(BARE_ENGINE MATCHES "github:holepunchto/libjs")
+if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   mirror_drive(
     SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
