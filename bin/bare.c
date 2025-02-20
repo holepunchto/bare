@@ -22,10 +22,10 @@ bare__on_platform_thread(void *data) {
   err = uv_loop_init(&loop);
   assert(err == 0);
 
-  err = js_create_platform(&loop, NULL, &bare__platform);
+  err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
   assert(err == 0);
 
-  err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
+  err = js_create_platform(&loop, NULL, &bare__platform);
   assert(err == 0);
 
   uv_sem_post(&bare__platform_ready);
