@@ -63,6 +63,8 @@ main(int argc, char *argv[]) {
 
   uv_sem_wait(&bare__platform_ready);
 
+  uv_sem_destroy(&bare__platform_ready);
+
   bare_t *bare;
   err = bare_setup(loop, bare__platform, NULL, argc, (const char **) argv, NULL, &bare);
   assert(err == 0);
