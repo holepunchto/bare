@@ -81,13 +81,13 @@ main(int argc, char *argv[]) {
   err = uv_loop_close(loop);
   assert(err == 0);
 
-  err = log_close();
-  assert(err == 0);
-
   err = uv_async_send(&bare__platform_shutdown);
   assert(err == 0);
 
   uv_thread_join(&thread);
+
+  err = log_close();
+  assert(err == 0);
 
   return exit_code;
 }
