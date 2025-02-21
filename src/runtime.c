@@ -823,8 +823,8 @@ static js_value_t *
 bare_runtime_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
+  js_escapable_handle_scope_t *scope;
+  err = js_open_escapable_handle_scope(env, &scope);
   assert(err == 0);
 
   bare_runtime_t *runtime;
@@ -853,7 +853,10 @@ bare_runtime_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_call_function(env, global, addon, 1, argv, &result);
   assert(err == 0);
 
-  err = js_close_handle_scope(env, scope);
+  err = js_escape_handle(env, scope, result, &result);
+  assert(err == 0);
+
+  err = js_close_escapable_handle_scope(env, scope);
   assert(err == 0);
 
   return result;
