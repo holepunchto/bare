@@ -39,6 +39,12 @@
 #elif defined(__i386__) || defined(_M_IX86)
 #define BARE_ARCH "ia32"
 #define BARE_ARCH_IA32
+#elif defined(__MIPSEB__)
+#define BARE_ARCH "mips"
+#define BARE_ARCH_MIPS
+#elif defined(__MIPSEL__)
+#define BARE_ARCH "mipsel"
+#define BARE_ARCH_MIPSEL
 #else
 #error Unsupported architecture
 #endif
