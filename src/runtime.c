@@ -16,6 +16,20 @@
 #include "thread.h"
 #include "types.h"
 
+#define bare_runtime_invoke_callback(runtime, callback, ...) \
+  if (runtime->process->callbacks.callback) { \
+    runtime->process->callbacks.callback( \
+      (bare_t *) runtime->process, \
+      ##__VA_ARGS__, \
+      runtime->process->callbacks.callback##_data \
+    ); \
+  }
+
+#define bare_runtime_invoke_callback_if_main_thread(runtime, callback, ...) \
+  if (bare_runtime_is_main_thread(runtime)) { \
+    bare_runtime_invoke_callback(runtime, callback, ##__VA_ARGS__); \
+  }
+
 static inline bool
 bare_runtime_is_main_thread(bare_runtime_t *runtime) {
   return runtime->process->runtime == runtime;
@@ -108,11 +122,7 @@ bare_runtime_on_before_exit(bare_runtime_t *runtime) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_before_exit) {
-      runtime->process->on_before_exit((bare_t *) runtime->process);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, before_exit);
 }
 
 static inline void
@@ -144,11 +154,7 @@ bare_runtime_on_exit(bare_runtime_t *runtime) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_exit) {
-      runtime->process->on_exit((bare_t *) runtime->process);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, exit);
 }
 
 static inline void
@@ -189,11 +195,7 @@ bare_runtime_on_teardown(bare_runtime_t *runtime, int *exit_code) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_teardown) {
-      runtime->process->on_teardown((bare_t *) runtime->process);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, teardown);
 }
 
 static inline void
@@ -228,11 +230,7 @@ bare_runtime_on_suspend(bare_runtime_t *runtime) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_suspend) {
-      runtime->process->on_suspend((bare_t *) runtime->process, runtime->linger);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, suspend, runtime->linger);
 }
 
 static void
@@ -273,11 +271,7 @@ bare_runtime_on_idle(bare_runtime_t *runtime) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_idle) {
-      runtime->process->on_idle((bare_t *) runtime->process);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, idle);
 }
 
 static inline void
@@ -307,11 +301,7 @@ bare_runtime_on_resume(bare_runtime_t *runtime) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (bare_runtime_is_main_thread(runtime)) {
-    if (runtime->process->on_resume) {
-      runtime->process->on_resume((bare_t *) runtime->process);
-    }
-  }
+  bare_runtime_invoke_callback_if_main_thread(runtime, resume);
 }
 
 static void

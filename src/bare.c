@@ -48,13 +48,13 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   process->argc = argc;
   process->argv = argv;
 
-  process->on_before_exit = NULL;
-  process->on_exit = NULL;
-  process->on_teardown = NULL;
-  process->on_suspend = NULL;
-  process->on_idle = NULL;
-  process->on_resume = NULL;
-  process->on_thread = NULL;
+  process->callbacks.before_exit = NULL;
+  process->callbacks.exit = NULL;
+  process->callbacks.teardown = NULL;
+  process->callbacks.suspend = NULL;
+  process->callbacks.idle = NULL;
+  process->callbacks.resume = NULL;
+  process->callbacks.thread = NULL;
 
   bare_runtime_t *runtime = process->runtime;
 
@@ -144,50 +144,57 @@ bare_resume(bare_t *bare) {
 }
 
 int
-bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb) {
-  bare->process.on_before_exit = cb;
+bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb, void *data) {
+  bare->process.callbacks.before_exit = cb;
+  bare->process.callbacks.before_exit_data = data;
 
   return 0;
 }
 
 int
-bare_on_exit(bare_t *bare, bare_exit_cb cb) {
-  bare->process.on_exit = cb;
+bare_on_exit(bare_t *bare, bare_exit_cb cb, void *data) {
+  bare->process.callbacks.exit = cb;
+  bare->process.callbacks.exit_data = cb;
 
   return 0;
 }
 
 int
-bare_on_teardown(bare_t *bare, bare_teardown_cb cb) {
-  bare->process.on_teardown = cb;
+bare_on_teardown(bare_t *bare, bare_teardown_cb cb, void *data) {
+  bare->process.callbacks.teardown = cb;
+  bare->process.callbacks.teardown_data = data;
 
   return 0;
 }
 
 int
-bare_on_suspend(bare_t *bare, bare_suspend_cb cb) {
-  bare->process.on_suspend = cb;
+bare_on_suspend(bare_t *bare, bare_suspend_cb cb, void *data) {
+  bare->process.callbacks.suspend = cb;
+  bare->process.callbacks.suspend_data = data;
 
   return 0;
 }
 
 int
-bare_on_idle(bare_t *bare, bare_idle_cb cb) {
-  bare->process.on_idle = cb;
+bare_on_idle(bare_t *bare, bare_idle_cb cb, void *data) {
+  bare->process.callbacks.idle = cb;
+  bare->process.callbacks.idle_data = cb;
 
   return 0;
 }
 
 int
-bare_on_resume(bare_t *bare, bare_resume_cb cb) {
-  bare->process.on_resume = cb;
+bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data) {
+  bare->process.callbacks.resume = cb;
+  bare->process.callbacks.resume_data = data;
 
   return 0;
 }
 
 int
-bare_on_thread(bare_t *bare, bare_thread_cb cb) {
-  bare->process.on_thread = cb;
+bare_on_thread(bare_t *bare, bare_thread_cb cb, void *data) {
+  bare->process.callbacks.thread = cb;
+  bare->process.callbacks.thread_data = data;
 
   return 0;
 }

@@ -16,13 +16,13 @@ extern "C" {
 typedef struct bare_s bare_t;
 typedef struct bare_options_s bare_options_t;
 
-typedef void (*bare_before_exit_cb)(bare_t *);
-typedef void (*bare_exit_cb)(bare_t *);
-typedef void (*bare_teardown_cb)(bare_t *);
-typedef void (*bare_suspend_cb)(bare_t *, int linger);
-typedef void (*bare_idle_cb)(bare_t *);
-typedef void (*bare_resume_cb)(bare_t *);
-typedef void (*bare_thread_cb)(bare_t *, js_env_t *);
+typedef void (*bare_before_exit_cb)(bare_t *, void *data);
+typedef void (*bare_exit_cb)(bare_t *, void *data);
+typedef void (*bare_teardown_cb)(bare_t *, void *data);
+typedef void (*bare_suspend_cb)(bare_t *, int linger, void *data);
+typedef void (*bare_idle_cb)(bare_t *, void *data);
+typedef void (*bare_resume_cb)(bare_t *, void *data);
+typedef void (*bare_thread_cb)(bare_t *, js_env_t *, void *data);
 
 /** @version 0 */
 struct bare_options_s {
@@ -112,37 +112,37 @@ bare_resume(bare_t *bare);
  * Equivalent to `Bare.on('beforeExit', cb)`.
  */
 int
-bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb);
+bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('exit', cb)`.
  */
 int
-bare_on_exit(bare_t *bare, bare_exit_cb cb);
+bare_on_exit(bare_t *bare, bare_exit_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('teardown', cb)`.
  */
 int
-bare_on_teardown(bare_t *bare, bare_teardown_cb cb);
+bare_on_teardown(bare_t *bare, bare_teardown_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('suspend', cb)`.
  */
 int
-bare_on_suspend(bare_t *bare, bare_suspend_cb cb);
+bare_on_suspend(bare_t *bare, bare_suspend_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('idle', cb)`.
  */
 int
-bare_on_idle(bare_t *bare, bare_idle_cb cb);
+bare_on_idle(bare_t *bare, bare_idle_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('resume', cb)`.
  */
 int
-bare_on_resume(bare_t *bare, bare_resume_cb cb);
+bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data);
 
 /**
  * Attach a thread listener which will invoked with the JavaScript environment
@@ -150,7 +150,7 @@ bare_on_resume(bare_t *bare, bare_resume_cb cb);
  * environment of the thread before it runs any JavaScript.
  */
 int
-bare_on_thread(bare_t *bare, bare_thread_cb cb);
+bare_on_thread(bare_t *bare, bare_thread_cb cb, void *data);
 
 #ifdef __cplusplus
 }

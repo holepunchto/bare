@@ -49,13 +49,28 @@ struct bare_process_s {
   int argc;
   const char **argv;
 
-  bare_before_exit_cb on_before_exit;
-  bare_exit_cb on_exit;
-  bare_teardown_cb on_teardown;
-  bare_suspend_cb on_suspend;
-  bare_idle_cb on_idle;
-  bare_resume_cb on_resume;
-  bare_thread_cb on_thread;
+  struct {
+    bare_before_exit_cb before_exit;
+    void *before_exit_data;
+
+    bare_exit_cb exit;
+    void *exit_data;
+
+    bare_teardown_cb teardown;
+    void *teardown_data;
+
+    bare_suspend_cb suspend;
+    void *suspend_data;
+
+    bare_idle_cb idle;
+    void *idle_data;
+
+    bare_resume_cb resume;
+    void *resume_data;
+
+    bare_thread_cb thread;
+    void *thread_data;
+  } callbacks;
 };
 
 struct bare_source_s {

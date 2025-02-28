@@ -98,8 +98,8 @@ bare_thread_entry(void *opaque) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (runtime->process->on_thread) {
-    runtime->process->on_thread((bare_t *) runtime->process, env);
+  if (runtime->process->callbacks.thread) {
+    runtime->process->callbacks.thread((bare_t *) runtime->process, env, runtime->process->callbacks.thread_data);
   }
 
   bare_runtime_load(runtime, thread->filename, source, NULL);
