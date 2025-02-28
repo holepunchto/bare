@@ -154,7 +154,7 @@ bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb, void *data) {
 int
 bare_on_exit(bare_t *bare, bare_exit_cb cb, void *data) {
   bare->process.callbacks.exit = cb;
-  bare->process.callbacks.exit_data = cb;
+  bare->process.callbacks.exit_data = data;
 
   return 0;
 }
@@ -178,7 +178,7 @@ bare_on_suspend(bare_t *bare, bare_suspend_cb cb, void *data) {
 int
 bare_on_idle(bare_t *bare, bare_idle_cb cb, void *data) {
   bare->process.callbacks.idle = cb;
-  bare->process.callbacks.idle_data = cb;
+  bare->process.callbacks.idle_data = data;
 
   return 0;
 }
