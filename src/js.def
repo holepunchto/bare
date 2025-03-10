@@ -84,6 +84,7 @@ EXPORTS
 	js_fatal_exception
 	js_finish_deferred_teardown_callback
 	js_get_and_clear_last_exception
+	js_get_array_elements
 	js_get_array_length
 	js_get_arraybuffer_backing_store
 	js_get_arraybuffer_info
@@ -210,6 +211,7 @@ EXPORTS
 	js_run_module
 	js_run_script
 	js_send_inspector_request
+	js_set_array_elements
 	js_set_element
 	js_set_module_export
 	js_set_named_property

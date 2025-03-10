@@ -8,7 +8,7 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
-set(BARE_ENGINE "github:holepunchto/libjs#35e7566" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#4dddee1" CACHE STRING "The JavaScript engine to use")
 
 bare_target(target)
 
@@ -27,7 +27,7 @@ if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
     PREFIX /${target}
-    CHECKOUT 343
+    CHECKOUT 382
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -99,6 +99,12 @@ if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         ${log}
     )
+  elseif(target MATCHES "darwin|ios")
+    target_link_libraries(
+      v8
+      INTERFACE
+        "-framework CoreFoundation"
+    )
   elseif(target MATCHES "win32")
     target_link_libraries(
       v8
@@ -135,7 +141,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#324c25c")
+fetch_package("github:holepunchto/libnapi#f66a448")
 
 add_bare_bundle(
   bare_bundle
