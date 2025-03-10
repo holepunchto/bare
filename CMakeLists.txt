@@ -10,6 +10,8 @@ project(bare C CXX ASM)
 
 set(BARE_ENGINE "github:holepunchto/libjs#4dddee1" CACHE STRING "The JavaScript engine to use")
 
+set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
+
 bare_target(target)
 
 if(target MATCHES "win32")
@@ -22,7 +24,7 @@ fetch_package("github:libuv/libuv@1.50.0")
 
 fetch_package("github:holepunchto/libutf#2fc7d59")
 
-if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
+if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   mirror_drive(
     SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
