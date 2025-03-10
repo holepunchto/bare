@@ -99,6 +99,12 @@ if(BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         ${log}
     )
+  elseif(target MATCHES "darwin|ios")
+    target_link_libraries(
+      v8
+      INTERFACE
+        "-framework CoreFoundation"
+    )
   elseif(target MATCHES "win32")
     target_link_libraries(
       v8
