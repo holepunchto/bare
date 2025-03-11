@@ -261,6 +261,12 @@ This only has to be run once per repository checkout. When updating `bare-make` 
 bare-make generate --no-cache
 ```
 
+Bare is Engine-agnostic, running by default the Chromium's V8 Engine through the [libjs](https://github.com/holepunchto/libjs) abstraction layer. Along with V8, Bare has support for: [JerryScript](https://github.com/holepunchto/libjerry), [QuickJS](https://github.com/holepunchto/libqjs) and [JavaScriptCore](https://github.com/holepunchto/libjsc). To use an alternative engine, use the `BARE_ENGINE` compile option:
+
+```console
+bare-make generate --define BARE_ENGINE=github:holepunchto/libjerry
+```
+
 With a build system generated, Bare can be compiled:
 
 ```console
@@ -281,7 +287,7 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 
 **Tier 2:** Platform targets for which Bare is known to work, but without automated compilation and testing. Regressions may occur between releases and will be considered bugs.
 
-> [!NOTE]  
+> [!NOTE]
 > Development happens primarily on Apple hardware with Linux and Windows systems running as virtual machines.
 
 | Platform  | Architecture | Version                              | Tier | Notes                       |
