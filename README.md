@@ -35,7 +35,7 @@ Bare is built on top of <https://github.com/holepunchto/libjs>, which provides l
 2. A native addon system supporting both statically and dynamically linked addons.
 3. Light-weight thread support with synchronous joins and shared array buffer support.
 
-Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succint and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
+Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succinct and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
 
 ## API
 
@@ -97,7 +97,7 @@ Resume the process and all threads after suspension. This can be used to cancel 
 
 #### `Bare.on('uncaughtException', err)`
 
-Emitted when a JavaScript exception is thrown within an exectuion context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes aborted. Adding an event listener for the `uncaughtException` event overrides the default behavior.
+Emitted when a JavaScript exception is thrown within an execution context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes aborted. Adding an event listener for the `uncaughtException` event overrides the default behavior.
 
 #### `Bare.on('unhandledRejection', reason, promise)`
 
