@@ -275,7 +275,7 @@ When linking against the static `libbare.(a|lib)` library, make sure to use whol
 
 ### Options
 
-Bare provides a few compile options that can be configured to customize various aspects of the runtime. Compile options may be set by passing the `--define value=flag` flag to the `bare-make generate` command when generating the build system.
+Bare provides a few compile options that can be configured to customize various aspects of the runtime. Compile options may be set by passing the `--define option=value` flag to the `bare-make generate` command when generating the build system.
 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
