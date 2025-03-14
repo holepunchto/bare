@@ -317,57 +317,57 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 
 ## Modules
 
-Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare:
+Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare.
 
-| Module                                                 |
-| :----------------------------------------------------- |
-| <https://github.com/holepunchto/bare-abort>            |
-| <https://github.com/holepunchto/bare-assert>           |
-| <https://github.com/holepunchto/bare-atomics>          |
-| <https://github.com/holepunchto/bare-buffer>           |
-| <https://github.com/holepunchto/bare-bundle>           |
-| <https://github.com/holepunchto/bare-channel>          |
-| <https://github.com/holepunchto/bare-console>          |
-| <https://github.com/holepunchto/bare-crypto>           |
-| <https://github.com/holepunchto/bare-dgram>            |
-| <https://github.com/holepunchto/bare-dns>              |
-| <https://github.com/holepunchto/bare-env>              |
-| <https://github.com/holepunchto/bare-events>           |
-| <https://github.com/holepunchto/bare-fetch>            |
-| <https://github.com/holepunchto/bare-format>           |
-| <https://github.com/holepunchto/bare-fs>               |
-| <https://github.com/holepunchto/bare-hrtime>           |
-| <https://github.com/holepunchto/bare-http1>            |
-| <https://github.com/holepunchto/bare-https>            |
-| <https://github.com/holepunchto/bare-inspect>          |
-| <https://github.com/holepunchto/bare-inspector>        |
-| <https://github.com/holepunchto/bare-ipc>              |
-| <https://github.com/holepunchto/bare-module>           |
-| <https://github.com/holepunchto/bare-net>              |
-| <https://github.com/holepunchto/bare-os>               |
-| <https://github.com/holepunchto/bare-path>             |
-| <https://github.com/holepunchto/bare-pipe>             |
-| <https://github.com/holepunchto/bare-process>          |
-| <https://github.com/holepunchto/bare-querystring>      |
-| <https://github.com/holepunchto/bare-readline>         |
-| <https://github.com/holepunchto/bare-realm>            |
-| <https://github.com/holepunchto/bare-repl>             |
-| <https://github.com/holepunchto/bare-rpc>              |
-| <https://github.com/holepunchto/bare-semver>           |
-| <https://github.com/holepunchto/bare-signals>          |
-| <https://github.com/holepunchto/bare-stream>           |
-| <https://github.com/holepunchto/bare-structured-clone> |
-| <https://github.com/holepunchto/bare-subprocess>       |
-| <https://github.com/holepunchto/bare-tcp>              |
-| <https://github.com/holepunchto/bare-timers>           |
-| <https://github.com/holepunchto/bare-tls>              |
-| <https://github.com/holepunchto/bare-tty>              |
-| <https://github.com/holepunchto/bare-type>             |
-| <https://github.com/holepunchto/bare-url>              |
-| <https://github.com/holepunchto/bare-vm>               |
-| <https://github.com/holepunchto/bare-worker>           |
-| <https://github.com/holepunchto/bare-ws>               |
-| <https://github.com/holepunchto/bare-zlib>             |
+| Module                                                                        | Description                                                                              | Version                                                 |
+| :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------ |
+| [bare-abort](https://github.com/holepunchto/bare-abort)                       | Cause abnormal program termination and generate a crash report                           | ![](https://img.shields.io/npm/v/bare-abort)            |
+| [bare-assert](https://github.com/holepunchto/bare-assert)                     | Assertion library for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-assert)           |
+| [bare-atomics](https://github.com/holepunchto/bare-atomics)                   | Native synchronization primitives for JavaScript                                         | ![](https://img.shields.io/npm/v/bare-atomics)          |
+| [bare-buffer](https://github.com/holepunchto/bare-buffer)                     | Native buffers for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-buffer)           |
+| [bare-bundle](https://github.com/holepunchto/bare-bundle)                     | Application bundle format for JavaScript, inspired by <https://github.com/electron/asar> | ![](https://img.shields.io/npm/v/bare-bundle)           |
+| [bare-channel](https://github.com/holepunchto/bare-channel)                   | Inter-thread messaging for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-channel)          |
+| [bare-console](https://github.com/holepunchto/bare-console)                   | WHATWG debugging console for JavaScript                                                  | ![](https://img.shields.io/npm/v/bare-console)          |
+| [bare-crypto](https://github.com/holepunchto/bare-crypto)                     | Cryptographic primitives for JavaScript                                                  | ![](https://img.shields.io/npm/v/bare-crypto)           |
+| [bare-dgram](https://github.com/holepunchto/bare-dgram)                       | Native UDP for JavaScript                                                                | ![](https://img.shields.io/npm/v/bare-dgram)            |
+| [bare-dns](https://github.com/holepunchto/bare-dns)                           | Domain name resolution for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-dns)              |
+| [bare-env](https://github.com/holepunchto/bare-env)                           | Environment variable support for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-env)              |
+| [bare-events](https://github.com/holepunchto/bare-events)                     | Event emitters for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-events)           |
+| [bare-fetch](https://github.com/holepunchto/bare-fetch)                       | WHATWG Fetch implementation for Bare                                                     | ![](https://img.shields.io/npm/v/bare-fetch)            |
+| [bare-format](https://github.com/holepunchto/bare-format)                     | String formatting for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-format)           |
+| [bare-fs](https://github.com/holepunchto/bare-fs)                             | Native file system for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-fs)               |
+| [bare-hrtime](https://github.com/holepunchto/bare-hrtime)                     | High-resolution timers for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-hrtime)           |
+| [bare-http1](https://github.com/holepunchto/bare-http1)                       | HTTP/1 library for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-http1)            |
+| [bare-https](https://github.com/holepunchto/bare-https)                       | HTTPS library for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-https)            |
+| [bare-inspect](https://github.com/holepunchto/bare-inspect)                   | Inspect objects as strings for debugging                                                 | ![](https://img.shields.io/npm/v/bare-inspect)          |
+| [bare-inspector](https://github.com/holepunchto/bare-inspector)               | V8 inspector support for Bare                                                            | ![](https://img.shields.io/npm/v/bare-inspector)        |
+| [bare-ipc](https://github.com/holepunchto/bare-ipc)                           | Lightweight pipe-based IPC for Bare                                                      | ![](https://img.shields.io/npm/v/bare-ipc)              |
+| [bare-module](https://github.com/holepunchto/bare-module)                     | Module support for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-module)           |
+| [bare-net](https://github.com/holepunchto/bare-net)                           | TCP and IPC servers and clients for JavaScript                                           | ![](https://img.shields.io/npm/v/bare-net)              |
+| [bare-os](https://github.com/holepunchto/bare-os)                             | Operating system utilities for JavaScript                                                | ![](https://img.shields.io/npm/v/bare-os)               |
+| [bare-path](https://github.com/holepunchto/bare-path)                         | Path manipulation library for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-path)             |
+| [bare-pipe](https://github.com/holepunchto/bare-pipe)                         | Native I/O pipes for JavaScript                                                          | ![](https://img.shields.io/npm/v/bare-pipe)             |
+| [bare-process](https://github.com/holepunchto/bare-process)                   | Node.js-compatible process control for Bare                                              | ![](https://img.shields.io/npm/v/bare-process)          |
+| [bare-querystring](https://github.com/holepunchto/bare-querystring)           | URL query string utilities                                                               | ![](https://img.shields.io/npm/v/bare-querystring)      |
+| [bare-readline](https://github.com/holepunchto/bare-readline)                 | Line editing for interactive CLIs with command history                                   | ![](https://img.shields.io/npm/v/bare-readline)         |
+| [bare-realm](https://github.com/holepunchto/bare-realm)                       | Realm support for Bare                                                                   | ![](https://img.shields.io/npm/v/bare-realm)            |
+| [bare-repl](https://github.com/holepunchto/bare-repl)                         | Read-Evaluate-Print-Loop environment for JavaScript                                      | ![](https://img.shields.io/npm/v/bare-repl)             |
+| [bare-rpc](https://github.com/holepunchto/bare-rpc)                           | <https://github.com/holepunchto/librpc> ABI compatible RPC for Bare                      | ![](https://img.shields.io/npm/v/bare-rpc)              |
+| [bare-semver](https://github.com/holepunchto/bare-semver)                     | Minimal semantic versioning library for Bare                                             | ![](https://img.shields.io/npm/v/bare-semver)           |
+| [bare-signals](https://github.com/holepunchto/bare-signals)                   | Native signal handling for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-signals)          |
+| [bare-stream](https://github.com/holepunchto/bare-stream)                     | Streaming data for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-stream)           |
+| [bare-structured-clone](https://github.com/holepunchto/bare-structured-clone) | Structured cloning algorithm for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-structured-clone) |
+| [bare-subprocess](https://github.com/holepunchto/bare-subprocess)             | Native process spawning for JavaScript                                                   | ![](https://img.shields.io/npm/v/bare-subprocess)       |
+| [bare-tcp](https://github.com/holepunchto/bare-tcp)                           | Native TCP sockets for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tcp)              |
+| [bare-timers](https://github.com/holepunchto/bare-timers)                     | Native timers for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-timers)           |
+| [bare-tls](https://github.com/holepunchto/bare-tls)                           | Transport Layer Security (TLS) streams for JavaScript                                    | ![](https://img.shields.io/npm/v/bare-tls)              |
+| [bare-tty](https://github.com/holepunchto/bare-tty)                           | Native TTY streams for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tty)              |
+| [bare-type](https://github.com/holepunchto/bare-type)                         | Cross-realm type predicates for Bare                                                     | ![](https://img.shields.io/npm/v/bare-type)             |
+| [bare-url](https://github.com/holepunchto/bare-url)                           | WHATWG URL implementation for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-url)              |
+| [bare-vm](https://github.com/holepunchto/bare-vm)                             | Isolated JavaScript contexts for Bare                                                    | ![](https://img.shields.io/npm/v/bare-vm)               |
+| [bare-worker](https://github.com/holepunchto/bare-worker)                     | Higher-level worker threads for JavaScript                                               | ![](https://img.shields.io/npm/v/bare-worker)           |
+| [bare-ws](https://github.com/holepunchto/bare-ws)                             | WebSocket library for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-ws)               |
+| [bare-zlib](https://github.com/holepunchto/bare-zlib)                         | Stream-based zlib bindings for JavaScript                                                | ![](https://img.shields.io/npm/v/bare-zlib)             |
 
 ## License
 
