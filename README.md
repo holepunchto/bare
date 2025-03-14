@@ -273,6 +273,18 @@ When completed, the `bare(.exe)` binary will be available in the `build/bin` dir
 
 When linking against the static `libbare.(a|lib)` library, make sure to use whole archive linking as Bare relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
 
+### Options
+
+Bare provides a few compile options that can be configured to customize various aspects of the runtime. Compile options may be set by passing the `--define value=flag` flag to the `bare-make generate` command when generating the build system.
+
+> [!WARNING]  
+> The compile options are not covered by semantic versioning and are subject to change without warning.
+
+| Option           | Default                    | Description                                             |
+| :--------------- | :------------------------- | :------------------------------------------------------ |
+| `BARE_ENGINE`    | `github:holepunchto/libjs` | The JavaScript engine to use                            |
+| `BARE_PREBUILDS` | `ON`                       | Enable prebuilds for supported third-party dependencies |
+
 ## Platform support
 
 Bare uses a tiered support system to manage expectations for the platforms that it targets. Targets may move between tiers between minor releases and as such a change in tier will not be considered a breaking change.
