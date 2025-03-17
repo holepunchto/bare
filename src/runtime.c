@@ -1224,9 +1224,9 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
       if (uv_loop_alive(runtime->loop)) continue;
 
-      if (!runtime->terminated) {
-        uv_ref((uv_handle_t *) &runtime->signals.resume);
-      }
+      if (runtime->terminated) goto terminate;
+
+      uv_ref((uv_handle_t *) &runtime->signals.resume);
     } else {
       bare_runtime_on_before_exit(runtime);
     }
@@ -1234,6 +1234,7 @@ bare_runtime_run(bare_runtime_t *runtime) {
     // Flush the pending `uv_stop()` and short circuit the loop. Any
     // outstanding I/O will be deferred until after the exit hook.
     if (runtime->terminated) {
+    terminate:
       uv_run(runtime->loop, UV_RUN_NOWAIT);
 
       break;
