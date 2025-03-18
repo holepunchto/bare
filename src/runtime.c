@@ -355,6 +355,10 @@ bare_runtime_on_handle_close(uv_handle_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   if (--runtime->active_handles == 0) {
+    uv_mutex_destroy(&runtime->lock);
+
+    uv_cond_destroy(&runtime->wake);
+
     free(runtime);
   }
 }
@@ -1104,10 +1108,6 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
 
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
-
-  uv_mutex_destroy(&runtime->lock);
-
-  uv_cond_destroy(&runtime->wake);
 
   bare_addon_teardown();
 
