@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <js.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -59,7 +58,12 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   bare_runtime_t *runtime = process->runtime;
 
   err = bare_runtime_setup(loop, process, runtime);
-  assert(err == 0);
+  if (err < 0) {
+    free(process->runtime);
+    free(bare);
+
+    return err;
+  }
 
   if (env) *env = runtime->env;
 
@@ -70,12 +74,8 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
 int
 bare_teardown(bare_t *bare, int *exit_code) {
-  int err;
-
-  bare_process_t *process = &bare->process;
-
-  err = bare_runtime_teardown(process->runtime, exit_code);
-  assert(err == 0);
+  int err = bare_runtime_teardown(bare->process.runtime, exit_code);
+  if (err < 0) return err;
 
   free(bare);
 
@@ -84,23 +84,13 @@ bare_teardown(bare_t *bare, int *exit_code) {
 
 int
 bare_exit(bare_t *bare, int exit_code) {
-  int err;
-
-  bare_runtime_t *runtime = bare->process.runtime;
-
-  err = bare_runtime_exit(runtime, exit_code);
-
-  return err;
+  return bare_runtime_exit(bare->process.runtime, exit_code);
 }
 
 int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
-  int err;
-
-  bare_runtime_t *runtime = bare->process.runtime;
-
-  err = bare_runtime_load(
-    runtime,
+  return bare_runtime_load(
+    bare->process.runtime,
     filename,
     (bare_source_t) {
       .type = source ? bare_source_buffer : bare_source_none,
@@ -111,24 +101,11 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
     },
     result
   );
-
-  return err;
 }
 
 int
 bare_run(bare_t *bare) {
-  int err;
-
-  bare_runtime_t *runtime = bare->process.runtime;
-
-  err = bare_runtime_run(runtime);
-
-  return err;
-}
-
-int
-bare_terminate(bare_t *bare) {
-  return uv_async_send(&bare->process.runtime->signals.terminate);
+  return bare_runtime_run(bare->process.runtime);
 }
 
 int
@@ -140,7 +117,17 @@ bare_suspend(bare_t *bare, int linger) {
 
 int
 bare_resume(bare_t *bare) {
-  return uv_async_send(&bare->process.runtime->signals.resume);
+  int err = uv_async_send(&bare->process.runtime->signals.resume);
+  if (err < 0) return err;
+
+  uv_cond_signal(&bare->process.runtime->wake);
+
+  return 0;
+}
+
+int
+bare_terminate(bare_t *bare) {
+  return uv_async_send(&bare->process.runtime->signals.terminate);
 }
 
 int

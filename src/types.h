@@ -24,6 +24,9 @@ struct bare_runtime_s {
   js_env_t *env;
   js_ref_t *exports;
 
+  uv_mutex_t lock;
+  uv_cond_t wake;
+
   struct {
     uv_async_t suspend;
     uv_async_t resume;

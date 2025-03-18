@@ -607,6 +607,7 @@ bare_runtime_suspend(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int32(env, argv[0], &linger);
   assert(err == 0);
 
+  runtime->suspended = true;
   runtime->linger = linger;
 
   uv_ref((uv_handle_t *) &runtime->signals.suspend);
@@ -626,8 +627,12 @@ bare_runtime_resume(js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
+  runtime->suspended = false;
+
   err = uv_async_send(&runtime->process->runtime->signals.resume);
   assert(err == 0);
+
+  uv_cond_signal(&runtime->process->runtime->wake);
 
   return NULL;
 }
@@ -872,6 +877,12 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->terminated = false;
   runtime->linger = 0;
 
+  err = uv_mutex_init(&runtime->lock);
+  assert(err == 0);
+
+  err = uv_cond_init(&runtime->wake);
+  assert(err == 0);
+
 #define V(signal) \
   { \
     uv_async_t *handle = &runtime->signals.signal; \
@@ -1094,6 +1105,10 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
 
+  uv_mutex_destroy(&runtime->lock);
+
+  uv_cond_destroy(&runtime->wake);
+
   bare_addon_teardown();
 
   return 0;
@@ -1227,6 +1242,16 @@ bare_runtime_run(bare_runtime_t *runtime) {
       if (runtime->terminated) goto terminate;
 
       uv_ref((uv_handle_t *) &runtime->signals.resume);
+
+      uv_mutex_lock(&runtime->lock);
+
+      while (runtime->suspended) {
+        uv_cond_wait(&runtime->wake, &runtime->lock);
+
+        uv_run(runtime->loop, UV_RUN_NOWAIT);
+      }
+
+      uv_mutex_unlock(&runtime->lock);
     } else {
       bare_runtime_on_before_exit(runtime);
     }

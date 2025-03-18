@@ -218,6 +218,8 @@ bare_thread_resume(bare_thread_t *thread) {
   err = uv_async_send(&thread->runtime->signals.resume);
   assert(err == 0);
 
+  uv_cond_signal(&thread->runtime->wake);
+
 done:
   uv_sem_post(&thread->lock);
 
