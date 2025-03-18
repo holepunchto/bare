@@ -16,16 +16,9 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME bare
   ENABLE_EXPORTS ON
+  MACOSX_BUNDLE OFF
   WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
-
-if(target MATCHES "darwin|ios")
-  set_target_properties(
-    bare_bin
-    PROPERTIES
-    MACOSX_BUNDLE FALSE
-  )
-endif()
 
 target_link_libraries(
   bare_bin
