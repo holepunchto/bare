@@ -67,7 +67,7 @@ foreach(file IN LISTS tests)
     set_tests_properties(
       ${file}
       PROPERTIES
-      DISABLED True
+      DISABLED ON
     )
   endif()
 endforeach()
