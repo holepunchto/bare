@@ -350,16 +350,21 @@ bare_runtime_on_terminate_signal(uv_async_t *handle) {
   bare_runtime_on_terminate(runtime);
 }
 
+static inline void
+bare_runtime_on_free(bare_runtime_t *runtime) {
+  uv_mutex_destroy(&runtime->lock);
+
+  uv_cond_destroy(&runtime->wake);
+
+  free(runtime);
+}
+
 static void
 bare_runtime_on_handle_close(uv_handle_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   if (--runtime->active_handles == 0) {
-    uv_mutex_destroy(&runtime->lock);
-
-    uv_cond_destroy(&runtime->wake);
-
-    free(runtime);
+    bare_runtime_on_free(runtime);
   }
 }
 

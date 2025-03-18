@@ -60,7 +60,7 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   err = bare_runtime_setup(loop, process, runtime);
   if (err < 0) {
     free(process->runtime);
-    free(bare);
+    free(process);
 
     return err;
   }
