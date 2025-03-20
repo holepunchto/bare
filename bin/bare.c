@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <log.h>
+#include <rlimit.h>
 #include <uv.h>
 
 #include "../include/bare.h"
@@ -48,6 +49,9 @@ main(int argc, char *argv[]) {
   int err;
 
   err = log_open("bare", 0);
+  assert(err == 0);
+
+  err = rlimit_set(rlimit_open_files, rlimit_infer);
   assert(err == 0);
 
   uv_loop_t *loop = uv_default_loop();

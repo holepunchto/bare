@@ -26,6 +26,7 @@ target_link_libraries(
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
   PRIVATE
     log_static
+    rlimit_static
 )
 
 link_bare_module(bare_bin bare-crypto)

@@ -22,6 +22,7 @@ endif()
 
 fetch_package("github:libuv/libuv@1.50.0")
 
+fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#2fc7d59")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
