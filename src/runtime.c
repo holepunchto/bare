@@ -1254,6 +1254,8 @@ bare_runtime_run(bare_runtime_t *runtime) {
         uv_cond_wait(&runtime->wake, &runtime->lock);
 
         uv_run(runtime->loop, UV_RUN_NOWAIT);
+
+        if (runtime->terminated) break;
       }
 
       uv_mutex_unlock(&runtime->lock);

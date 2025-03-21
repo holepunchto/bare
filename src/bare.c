@@ -127,7 +127,12 @@ bare_resume(bare_t *bare) {
 
 int
 bare_terminate(bare_t *bare) {
-  return uv_async_send(&bare->process.runtime->signals.terminate);
+  int err = uv_async_send(&bare->process.runtime->signals.terminate);
+  if (err < 0) return err;
+
+  uv_cond_signal(&bare->process.runtime->wake);
+
+  return 0;
 }
 
 int
