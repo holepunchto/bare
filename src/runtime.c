@@ -239,8 +239,6 @@ bare_runtime_on_suspend_signal(uv_async_t *handle) {
 
   runtime->suspended = true;
 
-  uv_unref((uv_handle_t *) &runtime->signals.suspend);
-
   bare_runtime_on_suspend(runtime);
 }
 
@@ -309,8 +307,6 @@ bare_runtime_on_resume_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
   runtime->suspended = false;
-
-  uv_unref((uv_handle_t *) &runtime->signals.resume);
 
   bare_runtime_on_resume(runtime);
 }
@@ -618,8 +614,6 @@ bare_runtime_suspend(js_env_t *env, js_callback_info_t *info) {
 
   runtime->suspended = true;
   runtime->linger = linger;
-
-  uv_ref((uv_handle_t *) &runtime->signals.suspend);
 
   err = uv_async_send(&runtime->process->runtime->signals.suspend);
   assert(err == 0);
@@ -1259,6 +1253,8 @@ bare_runtime_run(bare_runtime_t *runtime) {
       }
 
       uv_mutex_unlock(&runtime->lock);
+
+      uv_unref((uv_handle_t *) &runtime->signals.resume);
     } else {
       bare_runtime_on_before_exit(runtime);
     }
