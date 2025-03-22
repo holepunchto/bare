@@ -14,12 +14,6 @@ set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dep
 
 bare_target(target)
 
-if(target MATCHES "win32")
-  add_compile_options(/MT$<$<CONFIG:Debug>:d>)
-
-  add_definitions(-DWIN32_LEAN_AND_MEAN)
-endif()
-
 fetch_package("github:libuv/libuv@1.50.0")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
