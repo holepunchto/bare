@@ -199,7 +199,6 @@ bare.onteardown = function onteardown() {
 }
 
 bare.onsuspend = function onsuspend(linger) {
-  if (suspended) return
   suspended = true
   exports.emit('suspend', linger)
 }
@@ -209,7 +208,6 @@ bare.onidle = function onidle() {
 }
 
 bare.onresume = function onresume() {
-  if (!suspended) return
   suspended = false
   exports.emit('resume')
 }
