@@ -139,6 +139,21 @@ Emitted when the process or current thread becomes idle after suspension. If no 
 
 Emitted when the process or current thread resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
 
+### Lifecycle
+
+```mermaid
+stateDiagram
+  direction LR
+  [*] --> Active
+  Active --> Suspended: Bare.suspend()
+  Active --> Exited
+  Suspended --> Active: Bare.resume()
+  Suspended --> Terminated: Bare.exit()
+  Active --> Terminated: Bare.exit()
+  Terminated --> Exited
+  Exited --> [*]
+```
+
 ### `Bare.Addon`
 
 The `Bare.Addon` namespace provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
