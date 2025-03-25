@@ -4,7 +4,9 @@ list(APPEND tests
   argv-empty.c
   dependent-addon.js
   exit-on-before-exit.js
+  exit-on-exit.js
   exit-on-idle.js
+  exit-on-resume.js
   exit-on-suspend.js
   import-addon.cjs
   import-addon.mjs

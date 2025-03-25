@@ -585,10 +585,12 @@ bare_runtime_terminate(js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  runtime->state = bare_runtime_terminated;
-
   err = js_terminate_execution(env);
   assert(err == 0);
+
+  if (runtime->state == bare_runtime_exited) return NULL;
+
+  runtime->state = bare_runtime_terminated;
 
   uv_stop(runtime->loop);
 
