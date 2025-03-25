@@ -129,9 +129,9 @@ static inline void
 bare_runtime_on_exit(bare_runtime_t *runtime) {
   int err;
 
-  js_env_t *env = runtime->env;
+  runtime->state = bare_runtime_exited;
 
-  runtime->exiting = true;
+  js_env_t *env = runtime->env;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -202,6 +202,10 @@ static inline void
 bare_runtime_on_suspend(bare_runtime_t *runtime) {
   int err;
 
+  if (runtime->state != bare_runtime_active) return;
+
+  runtime->state = bare_runtime_suspended;
+
   js_env_t *env = runtime->env;
 
   js_handle_scope_t *scope;
@@ -236,8 +240,6 @@ bare_runtime_on_suspend(bare_runtime_t *runtime) {
 static void
 bare_runtime_on_suspend_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
-
-  runtime->suspended = true;
 
   bare_runtime_on_suspend(runtime);
 }
@@ -276,6 +278,10 @@ static inline void
 bare_runtime_on_resume(bare_runtime_t *runtime) {
   int err;
 
+  if (runtime->state != bare_runtime_suspended) return;
+
+  runtime->state = bare_runtime_active;
+
   js_env_t *env = runtime->env;
 
   js_handle_scope_t *scope;
@@ -306,14 +312,14 @@ static void
 bare_runtime_on_resume_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
-  runtime->suspended = false;
-
   bare_runtime_on_resume(runtime);
 }
 
 static inline void
 bare_runtime_on_terminate(bare_runtime_t *runtime) {
   int err;
+
+  if (runtime->state == bare_runtime_exited) return;
 
   js_env_t *env = runtime->env;
 
@@ -579,12 +585,12 @@ bare_runtime_terminate(js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  runtime->terminated = true;
+  runtime->state = bare_runtime_terminated;
 
   err = js_terminate_execution(env);
   assert(err == 0);
 
-  if (!runtime->exiting) uv_stop(runtime->loop);
+  uv_stop(runtime->loop);
 
   return NULL;
 }
@@ -612,7 +618,6 @@ bare_runtime_suspend(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int32(env, argv[0], &linger);
   assert(err == 0);
 
-  runtime->suspended = true;
   runtime->linger = linger;
 
   err = uv_async_send(&runtime->process->runtime->signals.suspend);
@@ -629,8 +634,6 @@ bare_runtime_resume(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
-
-  runtime->suspended = false;
 
   err = uv_async_send(&runtime->process->runtime->signals.resume);
   assert(err == 0);
@@ -875,9 +878,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   err = js_create_env(runtime->loop, runtime->process->platform, &options, &runtime->env);
   assert(err == 0);
 
-  runtime->suspended = false;
-  runtime->exiting = false;
-  runtime->terminated = false;
+  runtime->state = bare_runtime_active;
   runtime->linger = 0;
 
   err = uv_mutex_init(&runtime->lock);
@@ -1229,27 +1230,29 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
     // Break immediately if `uv_stop()` was called. In this case, before exit
     // hooks should NOT run.
-    if (runtime->terminated) break;
+    if (runtime->state == bare_runtime_terminated) break;
 
     assert(err == 0);
 
-    if (runtime->suspended) {
+    if (runtime->state == bare_runtime_suspended) {
       bare_runtime_on_idle(runtime);
 
       if (uv_loop_alive(runtime->loop)) continue;
 
-      if (runtime->terminated) goto terminate;
+      if (runtime->state == bare_runtime_terminated) goto terminate;
 
       uv_ref((uv_handle_t *) &runtime->signals.resume);
 
       uv_mutex_lock(&runtime->lock);
 
-      while (runtime->suspended) {
-        uv_cond_wait(&runtime->wake, &runtime->lock);
-
+      for (;;) {
         uv_run(runtime->loop, UV_RUN_NOWAIT);
 
-        if (runtime->terminated) break;
+        if (runtime->state == bare_runtime_suspended) {
+          uv_cond_wait(&runtime->wake, &runtime->lock);
+        } else {
+          break;
+        }
       }
 
       uv_mutex_unlock(&runtime->lock);
@@ -1261,7 +1264,7 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
     // Flush the pending `uv_stop()` and short circuit the loop. Any
     // outstanding I/O will be deferred until after the exit hook.
-    if (runtime->terminated) {
+    if (runtime->state == bare_runtime_terminated) {
     terminate:
       uv_run(runtime->loop, UV_RUN_NOWAIT);
 

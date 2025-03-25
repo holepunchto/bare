@@ -16,6 +16,13 @@ typedef struct bare_thread_s bare_thread_t;
 typedef struct bare_thread_list_s bare_thread_list_t;
 typedef struct bare_module_list_s bare_module_list_t;
 
+enum {
+  bare_runtime_active = 0,
+  bare_runtime_suspended = 1,
+  bare_runtime_terminated = 2,
+  bare_runtime_exited = 3,
+};
+
 struct bare_runtime_s {
   uv_loop_t *loop;
 
@@ -35,9 +42,7 @@ struct bare_runtime_s {
 
   int active_handles;
 
-  bool suspended;
-  bool exiting;
-  bool terminated;
+  int state;
 
   atomic_int linger;
 };
