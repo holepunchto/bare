@@ -8,6 +8,9 @@ list(APPEND tests
   exit-on-idle.js
   exit-on-resume.js
   exit-on-suspend.js
+  idle-on-idle.js
+  idle-on-resume.js
+  idle-on-suspend.js
   import-addon.cjs
   import-addon.mjs
   import-bundle.js

@@ -89,7 +89,11 @@ Immediately terminate the process or current thread with an exit status of `code
 
 #### `Bare.suspend([linger])`
 
-Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener and no additional work is scheduled, the loop will block until the process is resumed. If additional work is scheduled from an `idle` event, the `idle` event will be emitted again once all work has stopped unless the process was resumed.
+Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block until the process is resumed.
+
+#### `Bare.idle()`
+
+Immediately suspend the event loop and trigger the `idle` event.
 
 #### `Bare.resume()`
 
@@ -129,11 +133,11 @@ Emitted after the process or current thread has terminated and before the JavaSc
 
 #### `Bare.on('suspend', linger)`
 
-Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work may be scheduled.
+Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled.
 
 #### `Bare.on('idle')`
 
-Emitted when the process or current thread becomes idle after suspension. If no additional work is scheduled from this event, the loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `Bare.resume()` to cancel the suspension.
+Emitted when the process or current thread becomes idle after suspension. After all handlers have run, the event loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `Bare.resume()` to cancel the suspension.
 
 #### `Bare.on('resume')`
 
@@ -146,10 +150,16 @@ stateDiagram
   direction LR
   [*] --> Active
   Active --> Suspended: Bare.suspend()
+  Active --> Terminated: Bare.exit()
   Active --> Exited
   Suspended --> Active: Bare.resume()
+  Suspended --> Sleeping: Bare.idle()
   Suspended --> Terminated: Bare.exit()
-  Active --> Terminated: Bare.exit()
+  Suspended --> Idle
+  Idle --> Active: Bare.resume()
+  Idle --> Terminated: Bare.exit()
+  Idle --> Sleeping
+  Sleeping --> Active
   Terminated --> Exited
   Exited --> [*]
 ```
