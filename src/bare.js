@@ -95,6 +95,10 @@ class Bare extends EventEmitter {
     bare.suspend(linger)
   }
 
+  idle() {
+    bare.idle()
+  }
+
   resume() {
     bare.resume()
   }
