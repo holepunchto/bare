@@ -1283,7 +1283,7 @@ bare_runtime_run(bare_runtime_t *runtime) {
       uv_mutex_lock(&runtime->lock);
 
       for (;;) {
-        uv_run(runtime->loop, UV_RUN_NOWAIT);
+        uv_run(runtime->loop, UV_RUN_ONCE);
 
         if (runtime->state == bare_runtime_state_sleeping) {
           uv_cond_wait(&runtime->wake, &runtime->lock);
