@@ -217,7 +217,11 @@ function addonName(info) {
 
   const major = version.substring(0, version.indexOf('.'))
 
-  return name.replace(/\//g, '+').replace(/^@/, '') + '@' + major + '.bare'
+  if (name.includes('__')) {
+    throw AddonError.INVALID_PACKAGE_NAME(`Package name '${name}' is invalid`)
+  }
+
+  return name.replace(/\//g, '__').replace(/^@/, '') + '@' + major + '.bare'
 }
 
 Bare.prependListener('teardown', () => {
