@@ -233,6 +233,14 @@ Whether or not the thread has been joined with the current thread.
 
 Block and wait for the thread to exit.
 
+#### `thread.suspend([linger])`
+
+Suspend the thread. Equivalent to calling `Bare.suspend()` from within the thread.
+
+#### `thread.resume()`
+
+Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
+
 ### Embedding
 
 Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):
