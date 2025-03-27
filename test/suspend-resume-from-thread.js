@@ -22,6 +22,4 @@ Thread.create(() => {
     .on('resume', () => {
       console.log('emit resume thread')
     })
-
-  setTimeout(() => {}, 100) // Keep the thread alive
 })
