@@ -1,17 +1,6 @@
 const { Thread } = Bare
 
-Bare.on('suspend', () => {
-  console.log('emit suspend')
-})
-  .on('idle', () => {
-    console.log('emit idle')
-  })
-  .on('resume', () => {
-    console.log('emit resume')
-  })
-  .suspend()
-
-Thread.create(() => {
+const thread = new Thread(() => {
   Bare.on('suspend', () => {
     console.log('emit suspend thread')
   })
@@ -23,3 +12,6 @@ Thread.create(() => {
       console.log('emit resume thread')
     })
 })
+
+thread.suspend()
+thread.join()

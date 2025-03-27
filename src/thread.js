@@ -55,16 +55,15 @@ module.exports = exports = class Thread {
   }
 
   join() {
-    if (this._handle) {
-      bare.joinThread(this._handle)
-      this._handle = null
-    }
+    if (this._handle) bare.joinThread(this._handle)
+
+    this._handle = null
 
     Thread._threads.delete(this)
   }
 
-  suspend() {
-    if (this._handle) bare.suspendThread(this._handle)
+  suspend(linger = 0) {
+    if (this._handle) bare.suspendThread(this._handle, linger)
   }
 
   resume() {
@@ -113,19 +112,3 @@ bare.onthread = function onthread(data) {
 
   exports.self.data = structuredClone.deserialize(structuredClone.decode(state))
 }
-
-Bare.prependListener('teardown', () => {
-  for (const thread of exports._threads) {
-    thread.join()
-  }
-})
-  .on('suspend', () => {
-    for (const thread of exports._threads) {
-      thread.suspend()
-    }
-  })
-  .on('resume', () => {
-    for (const thread of exports._threads) {
-      thread.resume()
-    }
-  })
