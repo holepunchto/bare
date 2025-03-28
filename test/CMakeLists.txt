@@ -23,6 +23,7 @@ list(APPEND tests
   import-mjs.cjs
   import-mjs.mjs
   restart.c
+  scoped-addon.js
   suspend-resume.js
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
