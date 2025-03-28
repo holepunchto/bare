@@ -1,0 +1,12 @@
+{
+  "name": "@bare/addon",
+  "version": "1.2.3",
+  "addon": true,
+  "files": [
+    "index.js",
+    "prebuilds"
+  ],
+  "devDependencies": {
+    "cmake-bare": "^1.5.4"
+  }
+}
