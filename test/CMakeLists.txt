@@ -23,11 +23,10 @@ list(APPEND tests
   import-mjs.cjs
   import-mjs.mjs
   restart.c
-  suspend-from-thread.js
   suspend-resume.js
-  suspend-resume-from-thread.js
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
+  suspend-resume-thread.js
   suspend-resume-with-linger.js
   thread.js
   thread-join.js

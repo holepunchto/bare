@@ -191,12 +191,14 @@ bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
 }
 
 int
-bare_thread_suspend(bare_thread_t *thread) {
+bare_thread_suspend(bare_thread_t *thread, int linger) {
   int err;
 
   uv_sem_wait(&thread->lock);
 
   if (thread->exited) goto done;
+
+  thread->runtime->linger = linger;
 
   err = uv_async_send(&thread->runtime->signals.suspend);
   assert(err == 0);

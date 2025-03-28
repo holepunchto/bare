@@ -191,7 +191,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *na
 
   bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
-    .filename = strdup(specifier),
+    .filename = specifier,
     .init = init,
   });
 

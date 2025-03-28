@@ -223,9 +223,3 @@ function addonName(info) {
 
   return name.replace(/\//g, '__').replace(/^@/, '') + '@' + major + '.bare'
 }
-
-Bare.prependListener('teardown', () => {
-  for (const addon of exports._addons) {
-    addon.unload()
-  }
-})

@@ -199,11 +199,24 @@ bare.onexit = function onexit() {
 }
 
 bare.onteardown = function onteardown() {
+  for (const thread of exports.Thread._threads) {
+    thread.join()
+  }
+
+  for (const addon of exports.Addon._addons) {
+    addon.unload()
+  }
+
   exports.emit('teardown')
 }
 
 bare.onsuspend = function onsuspend(linger) {
   suspended = true
+
+  for (const thread of exports.Thread._threads) {
+    thread.suspend(linger)
+  }
+
   exports.emit('suspend', linger)
 }
 
@@ -213,6 +226,11 @@ bare.onidle = function onidle() {
 
 bare.onresume = function onresume() {
   suspended = false
+
+  for (const thread of exports.Thread._threads) {
+    thread.resume()
+  }
+
   exports.emit('resume')
 }
 

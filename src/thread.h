@@ -13,7 +13,7 @@ int
 bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread);
 
 int
-bare_thread_suspend(bare_thread_t *thread);
+bare_thread_suspend(bare_thread_t *thread, int linger);
 
 int
 bare_thread_resume(bare_thread_t *thread);
