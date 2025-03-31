@@ -45,6 +45,13 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   )
 
   if(target MATCHES "win32")
+    target_compile_options(
+      c++
+      INTERFACE
+        /EHs-c-
+        /GR-
+    )
+
     target_link_options(
       c++
       INTERFACE
@@ -56,6 +63,13 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
         /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
+    )
+  else()
+    target_compile_options(
+      c++
+      INTERFACE
+        -fno-exceptions
+        -fno-rtti
     )
   endif()
 
