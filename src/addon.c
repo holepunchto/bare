@@ -156,7 +156,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *na
   uv_lib_t lib;
 
 #if defined(_WIN32)
-  err = uv_dlopen(specifier, lib);
+  err = uv_dlopen(specifier, &lib);
 #else
   dlerror(); // Reset any previous error
 
