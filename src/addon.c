@@ -153,20 +153,20 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *na
 
   bare_addon_pending = &bare_addon_dynamic;
 
-  uv_lib_t *lib = malloc(sizeof(uv_lib_t));
+  uv_lib_t lib;
 
 #if defined(_WIN32)
   err = uv_dlopen(specifier, lib);
 #else
   dlerror(); // Reset any previous error
 
-  lib->handle = dlopen(specifier, RTLD_LAZY | RTLD_LOCAL);
+  lib.handle = dlopen(specifier, RTLD_LAZY | RTLD_LOCAL);
 
-  if (lib->handle) {
-    lib->errmsg = NULL;
+  if (lib.handle) {
+    lib.errmsg = NULL;
     err = 0;
   } else {
-    lib->errmsg = strdup(dlerror());
+    lib.errmsg = strdup(dlerror());
     err = -1;
   }
 #endif
@@ -181,10 +181,10 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *na
 
   bare_module_cb init;
 
-  err = uv_dlsym(lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &init);
+  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &init);
 
   if (err < 0) {
-    err = uv_dlsym(lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &init);
+    err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &init);
 
     if (err < 0) goto err;
   }
@@ -212,11 +212,10 @@ done:
 err:
   uv_mutex_unlock(&bare_addon_lock);
 
-  js_throw_error(runtime->env, NULL, uv_dlerror(lib));
+  err = js_throw_error(runtime->env, NULL, uv_dlerror(&lib));
+  assert(err == 0);
 
-  if (opened) uv_dlclose(lib);
-
-  free(lib);
+  if (opened) uv_dlclose(&lib);
 
   return NULL;
 }
@@ -227,7 +226,7 @@ bare_addon_unload(bare_runtime_t *runtime, bare_module_t *mod) {
 
   bare_module_list_t *node = (bare_module_list_t *) mod;
 
-  if (node->lib == NULL) return false;
+  if (node->lib.handle == NULL) return false;
 
   uv_mutex_lock(&bare_addon_lock);
 
@@ -253,7 +252,7 @@ bare_addon_teardown(void) {
 
     if (node->refs) continue;
 
-    uv_dlclose(node->lib);
+    uv_dlclose(&node->lib);
 
     if (node->previous) {
       node->previous->next = node->next;
@@ -267,7 +266,6 @@ bare_addon_teardown(void) {
 
     free(node->name);
     free(node->resolved);
-    free(node->lib);
     free(node);
   }
 
@@ -286,7 +284,7 @@ bare_module_find(const char *name) {
 
   while (next) {
     if (strcmp(name, next->name) == 0) {
-      result = next->lib;
+      result = &next->lib;
       break;
     }
 
@@ -319,7 +317,7 @@ bare_module_register(bare_module_t *mod) {
   next->resolved = is_dynamic ? NULL : strdup(mod->filename);
   next->pending = is_dynamic;
   next->refs = 1;
-  next->lib = NULL;
+  next->lib.handle = NULL;
 
   next->next = *bare_addon_pending;
 

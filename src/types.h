@@ -134,7 +134,7 @@ struct bare_module_list_s {
   char *resolved;
   bool pending;
   int refs;
-  uv_lib_t *lib;
+  uv_lib_t lib;
 
   bare_module_list_t *previous;
   bare_module_list_t *next;
