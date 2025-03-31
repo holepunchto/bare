@@ -63,6 +63,9 @@ module.exports = exports = class Thread {
   }
 
   suspend(linger = 0) {
+    if (linger <= 0) linger = 0
+    else linger = linger & 0xffffffff
+
     if (this._handle) bare.suspendThread(this._handle, linger)
   }
 

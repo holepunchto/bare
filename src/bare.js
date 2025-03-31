@@ -92,6 +92,9 @@ class Bare extends EventEmitter {
   }
 
   suspend(linger = 0) {
+    if (linger <= 0) linger = 0
+    else linger = linger & 0xffffffff
+
     bare.suspend(linger)
   }
 
