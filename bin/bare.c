@@ -56,9 +56,6 @@ main(int argc, char *argv[]) {
 
   uv_loop_t *loop = uv_default_loop();
 
-  err = uv_loop_configure(loop, UV_METRICS_IDLE_TIME);
-  assert(err == 0);
-
   argv = uv_setup_args(argc, argv);
 
   err = uv_sem_init(&bare__platform_ready, 0);
