@@ -19,7 +19,7 @@ const bare = command(
   flag('--eval|-e <script>', 'Evaluate an inline script'),
   flag('--print|-p <script>', 'Evaluate an inline script and print the result'),
   flag('--inspect', 'Activate the inspector'),
-  arg('<filename>', 'The name of a script to evaluate'),
+  arg('[filename]', 'The name of a script to evaluate'),
   rest('[...args]', 'Additional arguments made available to the script'),
   bail((bail) => {
     switch (bail.reason) {
