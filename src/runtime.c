@@ -1235,16 +1235,6 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   js_call_function(env, global, load, 2, args, result);
 
-  switch (source.type) {
-  case bare_source_buffer:
-    err = js_detach_arraybuffer(env, args[1]);
-    assert(err == 0);
-    break;
-
-  default:
-    break;
-  }
-
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
