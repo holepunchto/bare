@@ -71,7 +71,8 @@ bare_exit(bare_t *bare, int exit_code);
 /**
  * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
- * of `filename` will be read from disk.
+ * of `filename` will be read from disk. If `source` is provided, its contents
+ * must remain alive until after `bare_teardown()` has returned.
  *
  * See https://github.com/holepunchto/bare-module for more information on the
  * supported module formats.
