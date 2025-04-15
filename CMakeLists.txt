@@ -48,7 +48,6 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     target_compile_options(
       c++
       INTERFACE
-        /EHs-c-
         /GR-
     )
 
@@ -68,7 +67,6 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     target_compile_options(
       c++
       INTERFACE
-        -fno-exceptions
         -fno-rtti
     )
   endif()
