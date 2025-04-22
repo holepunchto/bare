@@ -161,6 +161,8 @@ module.exports = exports = class Addon {
 
     if (resolution) return protocol.postresolve(resolution, parentURL)
 
+    const candidates = []
+
     for (const resolution of resolve(
       resolved,
       parentURL,
@@ -174,6 +176,8 @@ module.exports = exports = class Addon {
       },
       readPackage
     )) {
+      candidates.push(resolution)
+
       switch (resolution.protocol) {
         case 'builtin:':
           return resolution
@@ -193,7 +197,8 @@ module.exports = exports = class Addon {
     }
 
     throw AddonError.ADDON_NOT_FOUND(
-      `Cannot find addon '${specifier}' imported from '${parentURL.href}'`
+      `Cannot find demon '${specifier}' imported from '${parentURL.href}'
+Failed attempts: ${candidates.map((candidate) => `\n- ${candidate.toString()}`)}`
     )
 
     function readPackage(packageURL) {
