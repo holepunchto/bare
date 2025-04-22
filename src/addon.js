@@ -196,10 +196,14 @@ module.exports = exports = class Addon {
       }
     }
 
-    throw AddonError.ADDON_NOT_FOUND(
-      `Cannot find demon '${specifier}' imported from '${parentURL.href}'
-Failed attempts: ${candidates.map((candidate) => `\n- ${candidate.toString()}`)}`
-    )
+    let message = `Cannot find addon '${specifier}' imported from '${parentURL.href}'`
+
+    if (candidates.length > 0) {
+      message += '\nAttempted:'
+      message += '\n' + candidates.map((url) => '- ' + url.href).join('\n')
+    }
+
+    throw AddonError.ADDON_NOT_FOUND(message)
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, constants.types.JSON)) {
