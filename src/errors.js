@@ -12,8 +12,16 @@ exports.AddonError = class AddonError extends Error {
     return 'AddonError'
   }
 
-  static ADDON_NOT_FOUND(msg) {
-    return new AddonError(msg, 'ADDON_NOT_FOUND', AddonError.ADDON_NOT_FOUND)
+  static ADDON_NOT_FOUND(msg, candidates = []) {
+    const err = new AddonError(
+      msg,
+      'ADDON_NOT_FOUND',
+      AddonError.ADDON_NOT_FOUND
+    )
+
+    err.candidates = candidates
+
+    return err
   }
 
   static UNSUPPORTED_PROTOCOL(msg) {

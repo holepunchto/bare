@@ -199,11 +199,11 @@ module.exports = exports = class Addon {
     let message = `Cannot find addon '${specifier}' imported from '${parentURL.href}'`
 
     if (candidates.length > 0) {
-      message += '\nAttempted:'
+      message += '\nCandidates:'
       message += '\n' + candidates.map((url) => '- ' + url.href).join('\n')
     }
 
-    throw AddonError.ADDON_NOT_FOUND(message)
+    throw AddonError.ADDON_NOT_FOUND(message, candidates)
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, constants.types.JSON)) {
