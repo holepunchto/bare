@@ -984,6 +984,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   V("platform", BARE_PLATFORM);
   V("arch", BARE_ARCH);
+  V("host", BARE_HOST);
 #undef V
 
   js_value_t *simulator;
