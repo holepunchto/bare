@@ -58,10 +58,10 @@
 #endif
 
 #if defined(__linux__)
-#if defined(__ANDROID__)
-#define BARE_LIBC_BIONIC 1
-#elif defined(__MUSL__)
+#if defined(__MUSL__)
 #define BARE_LIBC_MUSL 1
+#elif defined(__ANDROID__)
+#define BARE_LIBC_BIONIC 1
 #else
 #define BARE_LIBC_GNU 1
 #endif
