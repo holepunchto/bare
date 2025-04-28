@@ -92,7 +92,6 @@ EXPORTS
 	js_get_boolean
 	js_get_callback_info
 	js_get_dataview_info
-	js_get_dataview_view
 	js_get_element
 	js_get_env_loop
 	js_get_env_platform
@@ -118,7 +117,6 @@ EXPORTS
 	js_get_threadsafe_function_context
 	js_get_typed_callback_info
 	js_get_typedarray_info
-	js_get_typedarray_view
 	js_get_undefined
 	js_get_value_bigint_int64
 	js_get_value_bigint_uint64
@@ -200,10 +198,8 @@ EXPORTS
 	js_reference_unref
 	js_reject_deferred
 	js_release_arraybuffer_backing_store
-	js_release_dataview_view
 	js_release_string_view
 	js_release_threadsafe_function
-	js_release_typedarray_view
 	js_remove_teardown_callback
 	js_remove_wrap
 	js_request_garbage_collection
