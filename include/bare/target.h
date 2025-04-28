@@ -60,6 +60,11 @@
 #if defined(__linux__)
 #if defined(__MUSL__)
 #define BARE_LIBC_MUSL 1
+#if defined(__SOFTFP__)
+#define BARE_LIBC_MUSL_VARIANT "sf"
+#else
+#define BARE_LIBC_MUSL_VARIANT
+#endif
 #elif defined(__ANDROID__)
 #define BARE_LIBC_BIONIC 1
 #else
@@ -84,7 +89,7 @@
 #if BARE_SIMULATOR
 #define BARE_TARGET_ENVIRONMENT "-simulator"
 #elif BARE_LIBC_MUSL
-#define BARE_TARGET_ENVIRONMENT "-musl"
+#define BARE_TARGET_ENVIRONMENT "-musl" BARE_LIBC_MUSL_VARIANT
 #else
 #define BARE_TARGET_ENVIRONMENT
 #endif
