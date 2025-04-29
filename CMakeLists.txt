@@ -8,7 +8,7 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
-set(BARE_ENGINE "github:holepunchto/libjs#0adb993" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#3aedf18" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
