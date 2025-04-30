@@ -18,6 +18,9 @@ EXPORTS
 	napi_coerce_to_number
 	napi_coerce_to_object
 	napi_coerce_to_string
+	napi_convert_from_key_collection_mode
+	napi_convert_from_key_conversion
+	napi_convert_from_key_filter
 	napi_convert_from_threadsafe_function_call_mode
 	napi_convert_from_threadsafe_function_release_mode
 	napi_convert_from_typedarray_type
@@ -66,6 +69,7 @@ EXPORTS
 	napi_escape_handle
 	napi_fatal_error
 	napi_fatal_exception
+	napi_get_all_property_names
 	napi_get_and_clear_last_exception
 	napi_get_array_length
 	napi_get_arraybuffer_info

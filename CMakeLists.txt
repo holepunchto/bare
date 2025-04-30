@@ -8,7 +8,7 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX ASM)
 
-set(BARE_ENGINE "github:holepunchto/libjs#3aedf18" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#e1f41ba" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -24,7 +24,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
     PREFIX /${target}
-    CHECKOUT 460
+    CHECKOUT 473
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -150,7 +150,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#f66a448")
+fetch_package("github:holepunchto/libnapi#8573615")
 
 add_bare_bundle(
   bare_bundle
