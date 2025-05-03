@@ -72,9 +72,13 @@ The ID of the current process.
 
 The code that will be returned once the process exits. If the process is exited using `Bare.exit()` without specifying a code, `Bare.exitCode` is used.
 
+#### `Bare.suspending`
+
+Whether or not the process is currently suspending.
+
 #### `Bare.suspended`
 
-Whether or not the process is currently suspended.
+Whether or not the process has fully suspended.
 
 #### `Bare.exiting`
 

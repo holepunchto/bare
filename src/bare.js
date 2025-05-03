@@ -32,6 +32,7 @@ const EventEmitter = require('bare-events')
  * Declare the Bare object.
  */
 
+let suspending = false
 let suspended = false
 let exiting = false
 
@@ -62,6 +63,10 @@ class Bare extends EventEmitter {
 
   set exitCode(code) {
     bare.exitCode = code & 0xff
+  }
+
+  get suspending() {
+    return suspending
   }
 
   get suspended() {
@@ -214,7 +219,7 @@ bare.onteardown = function onteardown() {
 }
 
 bare.onsuspend = function onsuspend(linger) {
-  suspended = true
+  suspending = true
 
   for (const thread of exports.Thread._threads) {
     thread.suspend(linger)
@@ -224,10 +229,14 @@ bare.onsuspend = function onsuspend(linger) {
 }
 
 bare.onidle = function onidle() {
+  suspending = false
+  suspended = true
+
   exports.emit('idle')
 }
 
 bare.onresume = function onresume() {
+  suspending = false
   suspended = false
 
   for (const thread of exports.Thread._threads) {
