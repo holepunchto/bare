@@ -160,7 +160,7 @@ stateDiagram
   [*] --> Active
   Active --> Suspending: Bare.suspend()
   Active --> Terminated: Bare.exit()
-  Active --> Exited
+  Active --> Exiting
   Suspending --> Active: Bare.resume()
   Suspending --> Suspended: Bare.idle()
   Suspending --> Terminated: Bare.exit()
@@ -169,8 +169,8 @@ stateDiagram
   Idle --> Terminated: Bare.exit()
   Idle --> Suspended
   Suspended --> Active
-  Terminated --> Exited
-  Exited --> [*]
+  Terminated --> Exiting
+  Exiting --> [*]
 ```
 
 ### `Bare.Addon`
