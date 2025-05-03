@@ -158,17 +158,17 @@ Emitted when the process or current thread resumes after suspension. Deferred an
 stateDiagram
   direction LR
   [*] --> Active
-  Active --> Suspended: Bare.suspend()
+  Active --> Suspending: Bare.suspend()
   Active --> Terminated: Bare.exit()
   Active --> Exited
-  Suspended --> Active: Bare.resume()
-  Suspended --> Sleeping: Bare.idle()
-  Suspended --> Terminated: Bare.exit()
-  Suspended --> Idle
+  Suspending --> Active: Bare.resume()
+  Suspending --> Suspended: Bare.idle()
+  Suspending --> Terminated: Bare.exit()
+  Suspending --> Idle
   Idle --> Active: Bare.resume()
   Idle --> Terminated: Bare.exit()
-  Idle --> Sleeping
-  Sleeping --> Active
+  Idle --> Suspended
+  Suspended --> Active
   Terminated --> Exited
   Exited --> [*]
 ```
