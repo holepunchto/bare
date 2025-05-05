@@ -72,9 +72,13 @@ The ID of the current process.
 
 The code that will be returned once the process exits. If the process is exited using `Bare.exit()` without specifying a code, `Bare.exitCode` is used.
 
+#### `Bare.suspending`
+
+Whether or not the process is currently suspending.
+
 #### `Bare.suspended`
 
-Whether or not the process is currently suspended.
+Whether or not the process has fully suspended.
 
 #### `Bare.exiting`
 
@@ -154,19 +158,19 @@ Emitted when the process or current thread resumes after suspension. Deferred an
 stateDiagram
   direction LR
   [*] --> Active
-  Active --> Suspended: Bare.suspend()
+  Active --> Suspending: Bare.suspend()
   Active --> Terminated: Bare.exit()
-  Active --> Exited
-  Suspended --> Active: Bare.resume()
-  Suspended --> Sleeping: Bare.idle()
-  Suspended --> Terminated: Bare.exit()
-  Suspended --> Idle
+  Active --> Exiting
+  Suspending --> Active: Bare.resume()
+  Suspending --> Suspended: Bare.idle()
+  Suspending --> Terminated: Bare.exit()
+  Suspending --> Idle
   Idle --> Active: Bare.resume()
   Idle --> Terminated: Bare.exit()
-  Idle --> Sleeping
-  Sleeping --> Active
-  Terminated --> Exited
-  Exited --> [*]
+  Idle --> Suspended
+  Suspended --> Active
+  Terminated --> Exiting
+  Exiting --> [*]
 ```
 
 ### `Bare.Addon`

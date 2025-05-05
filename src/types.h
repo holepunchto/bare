@@ -18,11 +18,11 @@ typedef struct bare_module_list_s bare_module_list_t;
 
 typedef enum {
   bare_runtime_state_active = 0,
-  bare_runtime_state_suspended = 1,
+  bare_runtime_state_suspending = 1,
   bare_runtime_state_idle = 2,
-  bare_runtime_state_sleeping = 3,
+  bare_runtime_state_suspended = 3,
   bare_runtime_state_terminated = 4,
-  bare_runtime_state_exited = 5,
+  bare_runtime_state_exiting = 5,
 } bare_runtime_state_t;
 
 struct bare_runtime_s {
