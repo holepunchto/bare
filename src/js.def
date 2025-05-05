@@ -50,6 +50,7 @@ EXPORTS
 	js_create_property_key_utf8
 	js_create_range_error
 	js_create_reference
+	js_create_reference_error
 	js_create_sharedarraybuffer
 	js_create_sharedarraybuffer_with_backing_store
 	js_create_string_latin1
@@ -222,6 +223,9 @@ EXPORTS
 	js_throw_range_error
 	js_throw_range_errorf
 	js_throw_range_verrorf
+	js_throw_reference_error
+	js_throw_reference_errorf
+	js_throw_reference_verrorf
 	js_throw_syntax_error
 	js_throw_syntax_errorf
 	js_throw_syntax_verrorf
