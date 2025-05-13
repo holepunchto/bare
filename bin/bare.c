@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <log.h>
 #include <rlimit.h>
+#include <signal.h>
 #include <uv.h>
 
 #include "../include/bare.h"
@@ -47,6 +48,10 @@ bare__on_platform_thread(void *data) {
 int
 main(int argc, char *argv[]) {
   int err;
+
+#ifdef SIGPIPE
+  signal(SIGPIPE, SIG_IGN);
+#endif
 
   err = log_open("bare", 0);
   assert(err == 0);
