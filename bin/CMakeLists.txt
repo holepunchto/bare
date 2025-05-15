@@ -39,4 +39,6 @@ link_bare_module(bare_bin bare-tcp)
 link_bare_module(bare_bin bare-tls)
 link_bare_module(bare_bin bare-tty)
 
+target_link_libraries(ssl c++)
+
 install(TARGETS bare_bin)
