@@ -121,6 +121,7 @@ class Bare extends EventEmitter {
       argv: this.argv,
       pid: this.pid,
       exitCode: this.exitCode,
+      suspending: this.suspending,
       suspended: this.suspended,
       exiting: this.exiting,
       version: this.version,
