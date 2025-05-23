@@ -20,7 +20,7 @@ set(BARE_ENGINE "github:holepunchto/libjs#e991f64" CACHE STRING "The JavaScript 
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
-fetch_package("github:libuv/libuv@1.50.0")
+fetch_package("github:libuv/libuv@1.51.0")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#2fc7d59")
