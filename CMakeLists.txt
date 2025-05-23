@@ -6,14 +6,12 @@ find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
-project(bare C CXX)
+project(bare C CXX ASM)
 
 bare_target(target)
 
 if(target MATCHES "win32-x64")
   enable_language(ASM_NASM)
-else()
-  enable_language(ASM)
 endif()
 
 set(BARE_ENGINE "github:holepunchto/libjs#e991f64" CACHE STRING "The JavaScript engine to use")
