@@ -8,11 +8,17 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
 project(bare C CXX)
 
+bare_target(target)
+
+if(target MATCHES "win32-x64")
+  enable_language(ASM_NASM)
+else()
+  enable_language(ASM)
+endif()
+
 set(BARE_ENGINE "github:holepunchto/libjs#e991f64" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
-
-bare_target(target)
 
 fetch_package("github:libuv/libuv@1.50.0")
 
