@@ -6,7 +6,7 @@ find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 
-project(bare C CXX ASM)
+project(bare C CXX)
 
 set(BARE_ENGINE "github:holepunchto/libjs#e991f64" CACHE STRING "The JavaScript engine to use")
 

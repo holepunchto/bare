@@ -76,6 +76,10 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 20
         if: ${{ matrix.platform == 'linux' }}
+      - run: |
+          choco install nasm
+          "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+        if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-make
       - run: npm install
       - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
