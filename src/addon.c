@@ -98,6 +98,8 @@ bare_module_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
+  int err;
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_t *mod = NULL;
@@ -115,7 +117,8 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   uv_mutex_unlock(&bare_addon_lock);
 
   if (mod == NULL) {
-    js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
+    err = js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
+    assert(err == 0);
 
     return NULL;
   }
@@ -124,7 +127,7 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 }
 
 bare_module_t *
-bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, const char *name) {
+bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -179,20 +182,26 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, const ch
 
   if (next && next->pending) goto done;
 
-  bare_module_cb init;
+  const char *name;
 
-  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &init);
+  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_NAME), (void **) &name);
+
+  if (err < 0) name = NULL;
+
+  bare_module_exports_cb exports;
+
+  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &exports);
 
   if (err < 0) {
-    err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &init);
+    err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &exports);
 
     if (err < 0) goto err;
   }
 
   bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
-    .filename = specifier,
-    .init = init,
+    .name = name,
+    .exports = exports,
   });
 
   next = *bare_addon_pending;
@@ -200,7 +209,6 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, const ch
 done:
   mod = &next->mod;
 
-  next->name = strdup(name);
   next->resolved = strdup(specifier);
   next->pending = false;
   next->lib = lib;
@@ -264,7 +272,6 @@ bare_addon_teardown(void) {
       node->next->previous = node->previous;
     }
 
-    free(node->name);
     free(node->resolved);
     free(node);
   }
@@ -283,7 +290,7 @@ bare_module_find(const char *name) {
   uv_lib_t *result = NULL;
 
   while (next) {
-    if (strcmp(name, next->name) == 0) {
+    if (strncmp(name, next->mod.name, strlen(name)) == 0) {
       result = &next->lib;
       break;
     }
@@ -310,11 +317,10 @@ bare_module_register(bare_module_t *mod) {
   next->previous = NULL;
 
   next->mod.version = mod->version;
-  next->mod.filename = NULL;
-  next->mod.init = mod->init;
+  next->mod.name = mod->name;
+  next->mod.exports = mod->exports;
 
-  next->name = NULL;
-  next->resolved = is_dynamic ? NULL : strdup(mod->filename);
+  next->resolved = is_dynamic ? NULL : strdup(mod->name);
   next->pending = is_dynamic;
   next->refs = 1;
   next->lib.handle = NULL;
@@ -336,7 +342,7 @@ napi_module_register(napi_module *mod) {
 
   bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
-    .filename = mod->nm_filename,
-    .init = mod->nm_register_func,
+    .name = mod->nm_filename,
+    .exports = mod->nm_register_func,
   });
 }

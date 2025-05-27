@@ -460,39 +460,19 @@ bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  js_value_t *argv[2];
-  size_t argc = 2;
+  js_value_t *argv[1];
+  size_t argc = 1;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 1);
 
   utf8_t specifier[4096];
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  utf8_t *name = NULL;
-
-  bool has_name;
-  err = js_is_string(env, argv[1], &has_name);
-  assert(err == 0);
-
-  if (has_name) {
-    size_t len;
-    err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-    assert(err == 0);
-
-    len += 1 /* NULL */;
-
-    name = malloc(len);
-    err = js_get_value_string_utf8(env, argv[1], name, len, NULL);
-    assert(err == 0);
-  }
-
-  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier, (char *) name);
-
-  free(name);
+  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier);
 
   if (mod == NULL) goto err;
 
@@ -537,7 +517,7 @@ bare_runtime_init_addon(js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *exports = argv[1];
 
-  exports = mod->init(env, exports);
+  exports = mod->exports(env, exports);
 
   err = js_escape_handle(env, scope, exports, &exports);
   assert(err == 0);
