@@ -124,7 +124,7 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 }
 
 bare_module_t *
-bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *name) {
+bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, const char *name) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   int err;
@@ -200,7 +200,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, char *na
 done:
   mod = &next->mod;
 
-  next->name = name;
+  next->name = strdup(name);
   next->resolved = strdup(specifier);
   next->pending = false;
   next->lib = lib;

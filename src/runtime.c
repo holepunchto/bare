@@ -492,11 +492,9 @@ bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier, (char *) name);
 
-  if (mod == NULL) {
-    if (name) free(name);
+  free(name);
 
-    goto err;
-  }
+  if (mod == NULL) goto err;
 
   js_value_t *handle;
   err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
