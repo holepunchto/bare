@@ -131,7 +131,6 @@ struct bare_thread_list_s {
 struct bare_module_list_s {
   bare_module_t mod;
   char *resolved;
-  bool pending;
   int refs;
   uv_lib_t lib;
 

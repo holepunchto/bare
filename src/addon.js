@@ -44,7 +44,6 @@ module.exports = exports = class Addon {
       __proto__: { constructor: Addon },
 
       url: this.url,
-      name: this._name,
       exports: this.exports
     }
   }

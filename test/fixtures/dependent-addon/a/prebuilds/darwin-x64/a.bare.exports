@@ -1,0 +1,39 @@
+{
+  "main_library": {
+    "current_versions": [
+      {
+        "version": "1.2.3"
+      }
+    ],
+    "exported_symbols": [
+      {
+        "text": {
+          "global": [
+            "_bare_register_module_v0",
+            "_bare_get_module_name_v0",
+            "_addon_a_fn"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "a@1.bare"
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "11",
+        "target": "x86_64-macos"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}
