@@ -200,7 +200,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier, const ch
 done:
   mod = &next->mod;
 
-  next->name = strdup(name);
+  next->name = name ? strdup(name) : NULL;
   next->resolved = strdup(specifier);
   next->pending = false;
   next->lib = lib;
