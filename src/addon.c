@@ -241,11 +241,15 @@ bool
 bare_addon_unload(bare_runtime_t *runtime, bare_module_t *mod) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
+  uv_mutex_lock(&bare_addon_lock);
+
   bare_module_list_t *node = (bare_module_list_t *) mod;
 
-  if (node->refs == 0) return false;
+  if (node->refs == 0) {
+    uv_mutex_unlock(&bare_addon_lock);
 
-  uv_mutex_lock(&bare_addon_lock);
+    return false;
+  }
 
   bool unloaded = --node->refs == 0;
 
