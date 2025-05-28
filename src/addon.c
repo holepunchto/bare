@@ -33,27 +33,15 @@ bare_addon_on_init(void) {
   err = uv_mutex_init_recursive(&bare_addon_lock);
   assert(err == 0);
 
-  uv_lib_t lib;
-
 #if defined(_WIN32)
-  err = uv_dlopen(NULL, &lib);
+  bare_addon_lib.handle = GetModuleHandleW(NULL);
 #else
-  dlerror(); // Reset any previous error
-
-  lib.handle = dlopen(NULL, RTLD_LAZY);
-
-  if (lib.handle) {
-    lib.errmsg = NULL;
-    err = 0;
-  } else {
-    lib.errmsg = strdup(dlerror());
-    err = -1;
-  }
+  bare_addon_lib.handle = dlopen(NULL, RTLD_LAZY);
 #endif
 
-  assert(err == 0);
+  bare_addon_lib.errmsg = NULL;
 
-  bare_addon_lib = lib;
+  assert(bare_addon_lib.handle);
 }
 
 js_value_t *
