@@ -36,7 +36,7 @@ bare_addon_on_init(void) {
   uv_lib_t lib;
 
 #if defined(_WIN32)
-  err = uv_dlopen(NULL, lib);
+  err = uv_dlopen(NULL, &lib);
 #else
   dlerror(); // Reset any previous error
 
