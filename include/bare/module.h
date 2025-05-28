@@ -13,7 +13,7 @@
 
 #define BARE_MODULE_SYMBOL_HELPER(base, version) BARE_CONCAT(base, version)
 
-#define BARE_MODULE_SYMBOL_NAME_BASE bare_module_name_v
+#define BARE_MODULE_SYMBOL_NAME_BASE bare_get_module_name_v
 
 #define BARE_MODULE_SYMBOL_NAME \
   BARE_MODULE_SYMBOL_HELPER(BARE_MODULE_SYMBOL_NAME_BASE, BARE_MODULE_VERSION)
@@ -66,7 +66,9 @@
 
 #define BARE_MODULE(id, fn) \
   BARE_EXTERN_C_START \
-  const char BARE_MODULE_SYMBOL_NAME[] = BARE_MODULE_NAME; \
+  const char *BARE_MODULE_SYMBOL_NAME(void) { \
+    return BARE_MODULE_NAME; \
+  } \
   js_value_t *BARE_MODULE_SYMBOL_REGISTER(js_env_t *env, js_value_t *exports) { \
     return fn(env, exports); \
   } \
@@ -76,7 +78,9 @@
 
 typedef struct bare_module_s bare_module_t;
 
-typedef js_value_t *(*bare_module_exports_cb)(js_env_t *env, js_value_t *exports);
+typedef const char *(*bare_module_name_cb)(void);
+
+typedef js_value_t *(*bare_module_register_cb)(js_env_t *env, js_value_t *exports);
 
 /** @version 0 */
 struct bare_module_s {
@@ -86,7 +90,7 @@ struct bare_module_s {
   const char *name;
 
   /** @since 0 */
-  bare_module_exports_cb exports;
+  bare_module_register_cb exports;
 };
 
 void

@@ -182,13 +182,13 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   if (next && next->pending) goto done;
 
-  const char *name;
+  bare_module_name_cb name;
 
   err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_NAME), (void **) &name);
 
   if (err < 0) name = NULL;
 
-  bare_module_exports_cb exports;
+  bare_module_register_cb exports;
 
   err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &exports);
 
@@ -200,7 +200,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
-    .name = name,
+    .name = name == NULL ? NULL : name(),
     .exports = exports,
   });
 
@@ -280,7 +280,7 @@ bare_addon_teardown(void) {
 }
 
 uv_lib_t *
-bare_module_find(const char *name) {
+bare_module_find(const char *query) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
   uv_mutex_lock(&bare_addon_lock);
@@ -290,7 +290,7 @@ bare_module_find(const char *name) {
   uv_lib_t *result = NULL;
 
   while (next) {
-    if (strncmp(name, next->mod.name, strlen(name)) == 0) {
+    if (strncmp(query, next->mod.name, strlen(query)) == 0) {
       result = &next->lib;
       break;
     }
