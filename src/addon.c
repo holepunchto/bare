@@ -289,8 +289,14 @@ bare_module_find(const char *query) {
 
   uv_lib_t *result = NULL;
 
+  size_t len = strlen(query);
+
+  if (len > 5 && strcmp(&query[len - 5], ".bare") == 0) len -= 5;
+
   while (next) {
-    if (strncmp(query, next->mod.name, strlen(query)) == 0) {
+    const char *name = next->mod.name;
+
+    if (name && strncmp(query, name, len) == 0) {
       result = &next->lib;
       break;
     }
