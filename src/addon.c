@@ -283,15 +283,15 @@ uv_lib_t *
 bare_module_find(const char *query) {
   uv_once(&bare_addon_lock_guard, bare_addon_on_lock_init);
 
+  size_t len = strlen(query);
+
+  if (len > 5 && strcmp(&query[len - 5], ".bare") == 0) len -= 5;
+
   uv_mutex_lock(&bare_addon_lock);
 
   bare_module_list_t *next = bare_addon_dynamic;
 
   uv_lib_t *result = NULL;
-
-  size_t len = strlen(query);
-
-  if (len > 5 && strcmp(&query[len - 5], ".bare") == 0) len -= 5;
 
   while (next) {
     const char *name = next->mod.name;
