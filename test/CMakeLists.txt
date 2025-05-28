@@ -1,5 +1,6 @@
 list(APPEND tests
   addon-load.js
+  addon-load-unload.js
   addon-resolve.js
   argv-empty.c
   dependent-addon.js
