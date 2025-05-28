@@ -8,7 +8,7 @@
 #define BARE_MODULE_VERSION 0
 
 #ifndef BARE_MODULE_NAME
-#define BARE_MODULE_NAME ""
+#define BARE_MODULE_NAME NULL
 #endif
 
 #define BARE_MODULE_SYMBOL_HELPER(base, version) BARE_CONCAT(base, version)
