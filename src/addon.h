@@ -13,10 +13,10 @@ bare_addon_get_static(bare_runtime_t *runtime);
 js_value_t *
 bare_addon_get_dynamic(bare_runtime_t *runtime);
 
-bare_module_t *
+bare_module_list_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier);
 
-bare_module_t *
+bare_module_list_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier);
 
 bool

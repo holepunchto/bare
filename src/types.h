@@ -129,9 +129,13 @@ struct bare_thread_list_s {
 };
 
 struct bare_module_list_s {
-  bare_module_t mod;
+  char *name;
   char *resolved;
+
+  bare_module_register_cb exports;
+
   int refs;
+
   uv_lib_t lib;
 
   bare_module_list_t *previous;
