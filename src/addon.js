@@ -1,6 +1,5 @@
 /* global bare, Bare */
 const Module = require('bare-module')
-const { lookupPackageScope } = require('bare-module-resolve')
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
