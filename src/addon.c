@@ -14,11 +14,11 @@
 
 #include "types.h"
 
-static bare_module_list_t *bare_addon_static = NULL;
+static bare_addon_t *bare_addon_static = NULL;
 
-static bare_module_list_t *bare_addon_dynamic = NULL;
+static bare_addon_t *bare_addon_dynamic = NULL;
 
-static bare_module_list_t **bare_addon_pending = &bare_addon_static;
+static bare_addon_t **bare_addon_pending = &bare_addon_static;
 
 static uv_mutex_t bare_addon_lock;
 
@@ -56,19 +56,19 @@ bare_addon_get_static(bare_runtime_t *runtime) {
   err = js_create_array(runtime->env, &result);
   assert(err == 0);
 
-  bare_module_list_t *next = bare_addon_static;
+  bare_addon_t *addon = bare_addon_static;
 
   uint32_t i = 0;
 
-  while (next) {
+  while (addon) {
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) next->resolved, -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);
     assert(err == 0);
 
-    next = next->next;
+    addon = addon->next;
   }
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -88,19 +88,19 @@ bare_addon_get_dynamic(bare_runtime_t *runtime) {
   err = js_create_array(runtime->env, &result);
   assert(err == 0);
 
-  bare_module_list_t *next = bare_addon_dynamic;
+  bare_addon_t *addon = bare_addon_dynamic;
 
   uint32_t i = 0;
 
-  while (next) {
+  while (addon) {
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) next->resolved, -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);
     assert(err == 0);
 
-    next = next->next;
+    addon = addon->next;
   }
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -108,7 +108,7 @@ bare_addon_get_dynamic(bare_runtime_t *runtime) {
   return result;
 }
 
-bare_module_list_t *
+bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
@@ -116,16 +116,16 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_lock(&bare_addon_lock);
 
-  bare_module_list_t *found = NULL;
-  bare_module_list_t *next = bare_addon_static;
+  bare_addon_t *found = NULL;
+  bare_addon_t *addon = bare_addon_static;
 
-  while (next) {
-    if (strcmp(specifier, next->resolved) == 0) {
-      found = next;
+  while (addon) {
+    if (strcmp(specifier, addon->resolved) == 0) {
+      found = addon;
       break;
     }
 
-    next = next->next;
+    addon = addon->next;
   }
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -140,7 +140,7 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   return found;
 }
 
-bare_module_list_t *
+bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
@@ -148,20 +148,20 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_lock(&bare_addon_lock);
 
-  bare_module_list_t *found = NULL;
-  bare_module_list_t *next = bare_addon_dynamic;
+  bare_addon_t *found = NULL;
+  bare_addon_t *addon = bare_addon_dynamic;
 
-  while (next) {
-    if (strcmp(specifier, next->resolved) == 0) {
+  while (addon) {
+    if (strcmp(specifier, addon->resolved) == 0) {
       found = found;
       break;
     }
 
-    next = next->next;
+    addon = addon->next;
   }
 
   if (found) {
-    next->refs++;
+    addon->refs++;
 
     uv_mutex_unlock(&bare_addon_lock);
 
@@ -214,13 +214,13 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
     .exports = exports,
   });
 
-  next = bare_addon_dynamic;
+  addon = bare_addon_dynamic;
 
 done:
-  found = next;
+  found = addon;
 
-  next->resolved = strdup(specifier);
-  next->lib = lib;
+  addon->resolved = strdup(specifier);
+  addon->lib = lib;
 
   uv_mutex_unlock(&bare_addon_lock);
 
@@ -238,18 +238,18 @@ err:
 }
 
 bool
-bare_addon_unload(bare_runtime_t *runtime, bare_module_list_t *node) {
+bare_addon_unload(bare_runtime_t *runtime, bare_addon_t *addon) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
   uv_mutex_lock(&bare_addon_lock);
 
-  if (node->refs == 0) {
+  if (addon->refs == 0) {
     uv_mutex_unlock(&bare_addon_lock);
 
     return false;
   }
 
-  bool unloaded = --node->refs == 0;
+  bool unloaded = --addon->refs == 0;
 
   uv_mutex_unlock(&bare_addon_lock);
 
@@ -262,25 +262,25 @@ bare_addon_teardown(void) {
 
   uv_mutex_lock(&bare_addon_lock);
 
-  bare_module_list_t *next = bare_addon_dynamic;
+  bare_addon_t *addon = bare_addon_dynamic;
 
-  while (next) {
-    bare_module_list_t *node = next;
+  while (addon) {
+    bare_addon_t *addon = addon;
 
-    next = next->next;
+    addon = addon->next;
 
-    if (node->refs) continue;
+    if (addon->refs) continue;
 
-    uv_dlclose(&node->lib);
+    uv_dlclose(&addon->lib);
 
-    if (node->previous) node->previous->next = node->next;
-    else bare_addon_dynamic = node->next;
+    if (addon->previous) addon->previous->next = addon->next;
+    else bare_addon_dynamic = addon->next;
 
-    if (node->next) node->next->previous = node->previous;
+    if (addon->next) addon->next->previous = addon->previous;
 
-    free(node->name);
-    free(node->resolved);
-    free(node);
+    free(addon->name);
+    free(addon->resolved);
+    free(addon);
   }
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -298,30 +298,30 @@ bare_module_find(const char *query) {
 
   uv_mutex_lock(&bare_addon_lock);
 
-  bare_module_list_t *next = bare_addon_static;
+  bare_addon_t *addon = bare_addon_static;
 
-  while (next) {
-    const char *name = next->name;
+  while (addon) {
+    const char *name = addon->name;
 
     if (name && strncmp(query, name, len) == 0) {
-      result = &next->lib;
+      result = &addon->lib;
       break;
     }
 
-    next = next->next;
+    addon = addon->next;
   }
 
-  next = bare_addon_dynamic;
+  addon = bare_addon_dynamic;
 
-  while (next) {
-    const char *name = next->name;
+  while (addon) {
+    const char *name = addon->name;
 
     if (name && strncmp(query, name, len) == 0) {
-      result = &next->lib;
+      result = &addon->lib;
       break;
     }
 
-    next = next->next;
+    addon = addon->next;
   }
 
   uv_mutex_unlock(&bare_addon_lock);
@@ -337,30 +337,30 @@ bare_module_register(bare_module_t *module) {
 
   bool is_dynamic = bare_addon_pending == &bare_addon_dynamic;
 
-  bare_module_list_t *next = malloc(sizeof(bare_module_list_t));
+  bare_addon_t *addon = malloc(sizeof(bare_addon_t));
 
-  next->next = NULL;
-  next->previous = NULL;
+  addon->next = NULL;
+  addon->previous = NULL;
 
-  next->name = module->name ? strdup(module->name) : NULL;
-  next->exports = module->exports;
+  addon->name = module->name ? strdup(module->name) : NULL;
+  addon->exports = module->exports;
 
   if (is_dynamic) {
-    next->resolved = NULL;
-    next->refs = 1;
+    addon->resolved = NULL;
+    addon->refs = 1;
   } else {
     assert(module->name);
 
-    next->resolved = strdup(module->name);
-    next->refs = 0;
-    next->lib = bare_addon_lib;
+    addon->resolved = strdup(module->name);
+    addon->refs = 0;
+    addon->lib = bare_addon_lib;
   }
 
-  next->next = *bare_addon_pending;
+  addon->next = *bare_addon_pending;
 
-  if (next->next) next->next->previous = next;
+  if (addon->next) addon->next->previous = addon;
 
-  *bare_addon_pending = next;
+  *bare_addon_pending = addon;
 
   if (is_dynamic) bare_addon_pending = NULL;
 

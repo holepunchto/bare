@@ -427,7 +427,7 @@ bare_runtime_load_static_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_list_t *node = bare_addon_load_static(runtime, (char *) specifier);
+  bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
   if (node == NULL) goto err;
 
@@ -472,7 +472,7 @@ bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_list_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
+  bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
   if (node == NULL) goto err;
 
@@ -511,7 +511,7 @@ bare_runtime_init_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  bare_module_list_t *node;
+  bare_addon_t *node;
   err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
@@ -546,7 +546,7 @@ bare_runtime_unload_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_module_list_t *node;
+  bare_addon_t *node;
   err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
