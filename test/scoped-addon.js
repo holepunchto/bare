@@ -15,4 +15,4 @@ assert(resolution.href === expected.href)
 
 const addon = Addon.load(expected)
 
-assert(addon.exports === 'Hello from addon')
+assert(addon.exports === 'Hello from scoped addon')

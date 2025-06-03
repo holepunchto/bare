@@ -427,12 +427,12 @@ bare_runtime_load_static_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_static(runtime, (char *) specifier);
+  bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
-  if (mod == NULL) goto err;
+  if (node == NULL) goto err;
 
   js_value_t *handle;
-  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
+  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
   assert(err == 0);
 
   err = js_escape_handle(env, scope, handle, &handle);
@@ -460,44 +460,24 @@ bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  js_value_t *argv[2];
-  size_t argc = 2;
+  js_value_t *argv[1];
+  size_t argc = 1;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 1);
 
   utf8_t specifier[4096];
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  utf8_t *name = NULL;
+  bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
-  bool has_name;
-  err = js_is_string(env, argv[1], &has_name);
-  assert(err == 0);
-
-  if (has_name) {
-    size_t len;
-    err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-    assert(err == 0);
-
-    len += 1 /* NULL */;
-
-    name = malloc(len);
-    err = js_get_value_string_utf8(env, argv[1], name, len, NULL);
-    assert(err == 0);
-  }
-
-  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier, (char *) name);
-
-  free(name);
-
-  if (mod == NULL) goto err;
+  if (node == NULL) goto err;
 
   js_value_t *handle;
-  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
+  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
   assert(err == 0);
 
   err = js_escape_handle(env, scope, handle, &handle);
@@ -531,13 +511,13 @@ bare_runtime_init_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  bare_module_t *mod;
-  err = js_get_value_external(env, argv[0], (void **) &mod);
+  bare_addon_t *node;
+  err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
   js_value_t *exports = argv[1];
 
-  exports = mod->init(env, exports);
+  exports = node->exports(env, exports);
 
   err = js_escape_handle(env, scope, exports, &exports);
   assert(err == 0);
@@ -566,11 +546,11 @@ bare_runtime_unload_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_module_t *mod;
-  err = js_get_value_external(env, argv[0], (void **) &mod);
+  bare_addon_t *node;
+  err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
-  bool unloaded = bare_addon_unload(runtime, mod);
+  bool unloaded = bare_addon_unload(runtime, node);
 
   js_value_t *result;
   err = js_get_boolean(env, unloaded, &result);

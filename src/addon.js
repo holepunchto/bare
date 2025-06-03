@@ -1,6 +1,5 @@
 /* global bare, Bare */
 const Module = require('bare-module')
-const { lookupPackageScope } = require('bare-module-resolve')
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
@@ -10,7 +9,6 @@ const { constants } = Module
 module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
-    this._name = null
     this._exports = {}
     this._handle = null
 
@@ -21,10 +19,6 @@ module.exports = exports = class Addon {
 
   get url() {
     return this._url
-  }
-
-  get name() {
-    return this._name
   }
 
   get exports() {
@@ -49,7 +43,6 @@ module.exports = exports = class Addon {
       __proto__: { constructor: Addon },
 
       url: this.url,
-      name: this._name,
       exports: this.exports
     }
   }
@@ -68,14 +61,8 @@ module.exports = exports = class Addon {
     return bare.host
   }
 
-  static load(url, opts = {}) {
+  static load(url, opts /* reserved */) {
     const self = Addon
-
-    const {
-      referrer = null,
-      protocol = referrer ? referrer._protocol : self._protocol,
-      resolutions = referrer ? referrer._resolutions : null
-    } = opts
 
     const cache = self._cache
 
@@ -91,21 +78,10 @@ module.exports = exports = class Addon {
           addon._handle = bare.loadStaticAddon(url.pathname)
           break
         case 'linked:':
-          addon._handle = bare.loadDynamicAddon(url.pathname, addon._name)
+          addon._handle = bare.loadDynamicAddon(url.pathname)
           break
         case 'file:':
-          for (const packageURL of lookupPackageScope(url, {
-            resolutions
-          })) {
-            if (protocol.exists(packageURL, constants.types.JSON)) {
-              addon._name = addonName(
-                Module.load(packageURL, { protocol })._exports
-              )
-              break
-            }
-          }
-
-          addon._handle = bare.loadDynamicAddon(fileURLToPath(url), addon._name)
+          addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
           break
         default:
           throw AddonError.UNSUPPORTED_PROTOCOL(
@@ -125,7 +101,7 @@ module.exports = exports = class Addon {
     return addon
   }
 
-  static unload(url) {
+  static unload(url, opts /* reserved */) {
     const self = Addon
 
     const cache = self._cache
@@ -213,22 +189,4 @@ module.exports = exports = class Addon {
       return null
     }
   }
-}
-
-function addonName(info) {
-  if (typeof info !== 'object' || info === null) return null
-
-  const name = info.name
-  if (typeof name !== 'string' || name === '') return null
-
-  const version = info.version
-  if (typeof version !== 'string' || version === '') return null
-
-  const major = version.substring(0, version.indexOf('.'))
-
-  if (name.includes('__')) {
-    throw AddonError.INVALID_PACKAGE_NAME(`Package name '${name}' is invalid`)
-  }
-
-  return name.replace(/\//g, '__').replace(/^@/, '') + '@' + major + '.bare'
 }

@@ -31,12 +31,4 @@ exports.AddonError = class AddonError extends Error {
       AddonError.UNSUPPORTED_PROTOCOL
     )
   }
-
-  static INVALID_PACKAGE_NAME(msg) {
-    return new AddonError(
-      msg,
-      'INVALID_PACKAGE_NAME',
-      AddonError.INVALID_PACKAGE_NAME
-    )
-  }
 }

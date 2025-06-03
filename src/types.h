@@ -13,8 +13,7 @@ typedef struct bare_process_s bare_process_t;
 typedef struct bare_source_s bare_source_t;
 typedef struct bare_data_s bare_data_t;
 typedef struct bare_thread_s bare_thread_t;
-typedef struct bare_thread_list_s bare_thread_list_t;
-typedef struct bare_module_list_s bare_module_list_t;
+typedef struct bare_addon_s bare_addon_t;
 
 typedef enum {
   bare_runtime_state_active = 0,
@@ -121,23 +120,18 @@ struct bare_thread_s {
   bool exited;
 };
 
-struct bare_thread_list_s {
-  bare_thread_t thread;
-
-  bare_thread_list_t *previous;
-  bare_thread_list_t *next;
-};
-
-struct bare_module_list_s {
-  bare_module_t mod;
+struct bare_addon_s {
   char *name;
   char *resolved;
-  bool pending;
+
+  bare_module_register_cb exports;
+
   int refs;
+
   uv_lib_t lib;
 
-  bare_module_list_t *previous;
-  bare_module_list_t *next;
+  bare_addon_t *previous;
+  bare_addon_t *next;
 };
 
 #endif // BARE_TYPES_H
