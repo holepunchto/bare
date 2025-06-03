@@ -222,13 +222,11 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
     .exports = exports,
   });
 
-  next = bare_addon_dynamic;
-
 done:
-  found = next;
+  found = bare_addon_dynamic;
 
-  next->resolved = strdup(specifier);
-  next->lib = lib;
+  found->resolved = strdup(specifier);
+  found->lib = lib;
 
   uv_mutex_unlock(&bare_addon_lock);
 
