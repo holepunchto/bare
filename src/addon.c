@@ -229,10 +229,10 @@ done:
 err:
   uv_mutex_unlock(&bare_addon_lock);
 
-  uv_dlclose(&lib);
-
   err = js_throw_error(runtime->env, NULL, uv_dlerror(&lib));
   assert(err == 0);
+
+  uv_dlclose(&lib);
 
   return NULL;
 }
