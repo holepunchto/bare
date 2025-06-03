@@ -94,6 +94,6 @@ struct bare_module_s {
 };
 
 void
-bare_module_register(bare_module_t *mod);
+bare_module_register(bare_module_t *module);
 
 #endif // BARE_MODULE_H

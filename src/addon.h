@@ -20,7 +20,7 @@ bare_module_list_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier);
 
 bool
-bare_addon_unload(bare_runtime_t *runtime, bare_module_t *mod);
+bare_addon_unload(bare_runtime_t *runtime, bare_module_list_t *node);
 
 void
 bare_addon_teardown(void);

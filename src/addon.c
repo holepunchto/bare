@@ -238,12 +238,10 @@ err:
 }
 
 bool
-bare_addon_unload(bare_runtime_t *runtime, bare_module_t *mod) {
+bare_addon_unload(bare_runtime_t *runtime, bare_module_list_t *node) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
   uv_mutex_lock(&bare_addon_lock);
-
-  bare_module_list_t *node = (bare_module_list_t *) mod;
 
   if (node->refs == 0) {
     uv_mutex_unlock(&bare_addon_lock);
@@ -332,7 +330,7 @@ bare_module_find(const char *query) {
 }
 
 void
-bare_module_register(bare_module_t *mod) {
+bare_module_register(bare_module_t *module) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
 
   uv_mutex_lock(&bare_addon_lock);
@@ -344,16 +342,16 @@ bare_module_register(bare_module_t *mod) {
   next->next = NULL;
   next->previous = NULL;
 
-  next->name = mod->name ? strdup(mod->name) : NULL;
-  next->exports = mod->exports;
+  next->name = module->name ? strdup(module->name) : NULL;
+  next->exports = module->exports;
 
   if (is_dynamic) {
     next->resolved = NULL;
     next->refs = 1;
   } else {
-    assert(mod->name);
+    assert(module->name);
 
-    next->resolved = strdup(mod->name);
+    next->resolved = strdup(module->name);
     next->refs = 0;
     next->lib = bare_addon_lib;
   }
@@ -370,12 +368,12 @@ bare_module_register(bare_module_t *mod) {
 }
 
 void
-napi_module_register(napi_module *mod) {
-  assert(mod->nm_version == NAPI_MODULE_VERSION);
+napi_module_register(napi_module *module) {
+  assert(module->nm_version == NAPI_MODULE_VERSION);
 
   bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
-    .name = mod->nm_filename,
-    .exports = mod->nm_register_func,
+    .name = module->nm_filename,
+    .exports = module->nm_register_func,
   });
 }

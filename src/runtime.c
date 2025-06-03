@@ -427,12 +427,12 @@ bare_runtime_load_static_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_static(runtime, (char *) specifier);
+  bare_module_list_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
-  if (mod == NULL) goto err;
+  if (node == NULL) goto err;
 
   js_value_t *handle;
-  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
+  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
   assert(err == 0);
 
   err = js_escape_handle(env, scope, handle, &handle);
@@ -472,12 +472,12 @@ bare_runtime_load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
   assert(err == 0);
 
-  bare_module_t *mod = bare_addon_load_dynamic(runtime, (char *) specifier);
+  bare_module_list_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
-  if (mod == NULL) goto err;
+  if (node == NULL) goto err;
 
   js_value_t *handle;
-  err = js_create_external(runtime->env, mod, NULL, NULL, &handle);
+  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
   assert(err == 0);
 
   err = js_escape_handle(env, scope, handle, &handle);
@@ -511,13 +511,13 @@ bare_runtime_init_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  bare_module_t *mod;
-  err = js_get_value_external(env, argv[0], (void **) &mod);
+  bare_module_list_t *node;
+  err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
   js_value_t *exports = argv[1];
 
-  exports = mod->exports(env, exports);
+  exports = node->exports(env, exports);
 
   err = js_escape_handle(env, scope, exports, &exports);
   assert(err == 0);
@@ -546,11 +546,11 @@ bare_runtime_unload_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_module_t *mod;
-  err = js_get_value_external(env, argv[0], (void **) &mod);
+  bare_module_list_t *node;
+  err = js_get_value_external(env, argv[0], (void **) &node);
   assert(err == 0);
 
-  bool unloaded = bare_addon_unload(runtime, mod);
+  bool unloaded = bare_addon_unload(runtime, node);
 
   js_value_t *result;
   err = js_get_boolean(env, unloaded, &result);
