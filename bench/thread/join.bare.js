@@ -1,5 +1,3 @@
-/* global bench, Bare */
-
 const { Thread } = Bare
 
 require('../harness')

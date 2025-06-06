@@ -1,5 +1,3 @@
-/* global bench */
-
 require('../harness')
 
 bench('Buffer.allocUnsafe', () => {

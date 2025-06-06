@@ -1,4 +1,3 @@
-/* global bare, Bare */
 const Module = require('bare-module')
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')

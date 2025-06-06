@@ -1,5 +1,3 @@
-/* global bench */
-
 require('../harness')
 
 const a = Buffer.alloc(65536, 'a')

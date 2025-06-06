@@ -1,5 +1,3 @@
-/* global bare */
-
 /**
  * Step 0:
  * Declare the genesis addon entry point. All addons loaded by core modules

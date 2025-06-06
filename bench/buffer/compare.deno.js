@@ -1,5 +1,3 @@
-/* global bench */
-
 import { Buffer } from 'node:buffer'
 
 import '../harness.js'
