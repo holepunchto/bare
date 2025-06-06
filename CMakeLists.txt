@@ -16,7 +16,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#e991f64" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#aa49ac1" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
