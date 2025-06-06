@@ -105,6 +105,7 @@ EXPORTS
 	js_get_new_target
 	js_get_null
 	js_get_platform_identifier
+	js_get_platform_limits
 	js_get_platform_loop
 	js_get_platform_version
 	js_get_promise_result
@@ -153,6 +154,7 @@ EXPORTS
 	js_is_error
 	js_is_exception_pending
 	js_is_external
+	js_is_float16array
 	js_is_float32array
 	js_is_float64array
 	js_is_function
