@@ -14,9 +14,11 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             arch: x64
+            flags: --sanitize address
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
+            flags: --sanitize address
           - os: ubuntu-22.04
             platform: android
             arch: x64
