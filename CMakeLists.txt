@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
 
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
+find_package(cmake-harden REQUIRED PATHS node_modules/cmake-harden)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
@@ -166,6 +167,8 @@ add_bare_bundle(
 )
 
 add_library(bare OBJECT)
+
+harden(bare)
 
 set_target_properties(
   bare

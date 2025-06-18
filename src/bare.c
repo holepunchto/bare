@@ -96,7 +96,7 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
       .type = source ? bare_source_buffer : bare_source_none,
       .buffer = uv_buf_init(
         source ? source->base : NULL,
-        source ? source->len : 0
+        source ? (unsigned int) source->len : 0
       ),
     },
     result
