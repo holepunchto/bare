@@ -66,7 +66,7 @@ bare_addon_get_static(bare_runtime_t *runtime) {
     next = addon->next;
 
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, (size_t) -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);
@@ -100,7 +100,7 @@ bare_addon_get_dynamic(bare_runtime_t *runtime) {
     next = addon->next;
 
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, (size_t) -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);

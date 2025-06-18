@@ -936,15 +936,15 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   assert(err == 0);
 
   js_value_t *argv;
-  err = js_create_array_with_length(env, runtime->process->argc, &argv);
+  err = js_create_array_with_length(env, (size_t) runtime->process->argc, &argv);
   assert(err == 0);
 
   err = js_set_named_property(env, exports, "argv", argv);
   assert(err == 0);
 
-  for (int i = 0, n = runtime->process->argc; i < n; i++) {
+  for (uint32_t i = 0, n = (uint32_t) runtime->process->argc; i < n; i++) {
     js_value_t *val;
-    err = js_create_string_utf8(env, (utf8_t *) runtime->process->argv[i], -1, &val);
+    err = js_create_string_utf8(env, (utf8_t *) runtime->process->argv[i], (size_t) -1, &val);
     assert(err == 0);
 
     err = js_set_element(env, argv, i, val);
@@ -954,7 +954,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 #define V(name, str) \
   { \
     js_value_t *val; \
-    err = js_create_string_utf8(env, (utf8_t *) str, -1, &val); \
+    err = js_create_string_utf8(env, (utf8_t *) str, (size_t) -1, &val); \
     assert(err == 0); \
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
@@ -997,7 +997,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 #define V(name, version) \
   { \
     js_value_t *val; \
-    err = js_create_string_utf8(env, (utf8_t *) (version), -1, &val); \
+    err = js_create_string_utf8(env, (utf8_t *) (version), (size_t) -1, &val); \
     assert(err == 0); \
     err = js_set_named_property(env, versions, name, val); \
     assert(err == 0); \
@@ -1018,7 +1018,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 #define V(name, fn) \
   { \
     js_value_t *val; \
-    err = js_create_function(env, name, -1, fn, (void *) runtime, &val); \
+    err = js_create_function(env, name, (size_t) -1, fn, (void *) runtime, &val); \
     assert(err == 0); \
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
@@ -1063,11 +1063,11 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   assert(err == 0);
 
   js_value_t *require;
-  err = js_create_function(env, "require", -1, bare_runtime_require, (void *) runtime, &require);
+  err = js_create_function(env, "require", (size_t) -1, bare_runtime_require, (void *) runtime, &require);
   assert(err == 0);
 
   js_value_t *addon;
-  err = js_create_function(env, "addon", -1, bare_runtime_addon, (void *) runtime, &addon);
+  err = js_create_function(env, "addon", (size_t) -1, bare_runtime_addon, (void *) runtime, &addon);
   assert(err == 0);
 
   err = js_set_named_property(env, require, "addon", addon);
@@ -1079,14 +1079,14 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   js_value_t *args[2];
 
-  err = js_create_string_utf8(env, (utf8_t *) "bare", -1, &args[0]);
+  err = js_create_string_utf8(env, (utf8_t *) "bare", (size_t) -1, &args[0]);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, (utf8_t *) "require", -1, &args[1]);
+  err = js_create_string_utf8(env, (utf8_t *) "require", (size_t) -1, &args[1]);
   assert(err == 0);
 
   js_value_t *entry;
-  err = js_create_function_with_source(env, NULL, 0, "bare:/bare.js", -1, args, 2, 0, source, &entry);
+  err = js_create_function_with_source(env, NULL, 0, "bare:/bare.js", (size_t) -1, args, 2, 0, source, &entry);
   assert(err == 0);
 
   args[0] = exports;
@@ -1184,7 +1184,7 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   js_value_t *args[2];
 
-  err = js_create_string_utf8(env, (utf8_t *) filename, -1, &args[0]);
+  err = js_create_string_utf8(env, (utf8_t *) filename, (size_t) -1, &args[0]);
   if (err < 0) goto err;
 
   switch (source.type) {
