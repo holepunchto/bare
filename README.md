@@ -346,10 +346,10 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | GNU/Linux | `x64`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03  |
 | GNU/Linux | `mips`       | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03               |
 | GNU/Linux | `mipsel`     | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03               |
-| Android   | `arm`        | >= 9                                 | 1    |
-| Android   | `arm64`      | >= 9                                 | 1    |
-| Android   | `ia32`       | >= 9                                 | 1    |
-| Android   | `x64`        | >= 9                                 | 1    |
+| Android   | `arm`        | >= 10                                | 1    |
+| Android   | `arm64`      | >= 10                                | 1    |
+| Android   | `ia32`       | >= 10                                | 1    |
+| Android   | `x64`        | >= 10                                | 1    |
 | macOS     | `arm64`      | >= 11.0                              | 1    |
 | macOS     | `x64`        | >= 11.0                              | 1    |
 | iOS       | `arm64`      | >= 14.0                              | 1    |
