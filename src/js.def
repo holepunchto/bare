@@ -106,6 +106,7 @@ EXPORTS
 	js_get_null
 	js_get_platform_identifier
 	js_get_platform_limits
+	js_get_platform_limits
 	js_get_platform_loop
 	js_get_platform_version
 	js_get_promise_result
