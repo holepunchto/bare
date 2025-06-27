@@ -77,6 +77,8 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 20
         if: ${{ matrix.platform == 'linux' }}
+      - run: choco upgrade llvm
+        if: ${{ matrix.platform == 'win32' }}
       - run: choco install nasm
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-make
