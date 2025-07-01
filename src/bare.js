@@ -206,6 +206,8 @@ bare.onexit = function onexit() {
 }
 
 bare.onteardown = function onteardown() {
+  exports.emit('teardown')
+
   for (const thread of exports.Thread._threads) {
     thread.join()
   }
@@ -213,8 +215,6 @@ bare.onteardown = function onteardown() {
   for (const addon of exports.Addon._addons) {
     addon.unload()
   }
-
-  exports.emit('teardown')
 }
 
 bare.onsuspend = function onsuspend(linger) {
