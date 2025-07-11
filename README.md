@@ -197,7 +197,7 @@ Options are reserved.
 
 ### `Bare.Thread`
 
-The `Bare.Thread` provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
+The `Bare.Thread` namespace provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
 
 #### `Thread.isMainThread`
 
@@ -422,7 +422,7 @@ Bare provides no standard library beyond the core JavaScript API available throu
 
 ### Why does Bare not support the JavaScript Internationalization API even when compiled with V8?
 
-Our V8 prebuilds strip the Internationalization API (<https://402.ecma-international.org/>) from JavaScript as it depends on the Internationalization Components for Unicode (ICU, <https://icu.unicode.org/>), which would add significant overhead to binary size of Bare. In this aspect, Bare is comparable to Node.js compiled with the `--without-intl` flag (<https://nodejs.org/api/intl.html>). Embedders are of course free to bring along their own build of V8 with the Internationlization API enabled by disabling our prebuilds using the `BARE_PREBUILDS` option, see [Options](#options).
+Our V8 prebuilds strip the Internationalization API (<https://402.ecma-international.org/>) from JavaScript as it depends on the Internationalization Components for Unicode (ICU, <https://icu.unicode.org/>), which would add significant overhead to the binary size of Bare. In this aspect, Bare is comparable to Node.js compiled with the `--without-intl` flag (<https://nodejs.org/api/intl.html>). Embedders are of course free to bring along their own build of V8 with the Internationlization API enabled by disabling our prebuilds using the `BARE_PREBUILDS` option, see [Options](#options).
 
 ## License
 
