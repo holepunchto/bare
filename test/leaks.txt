@@ -1,2 +1,5 @@
 leak:js_create_function
 leak:js_create_typed_function
+leak:js_create_external
+leak:js_create_synthetic_module
+leak:js_create_module
