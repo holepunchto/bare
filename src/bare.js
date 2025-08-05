@@ -7,9 +7,11 @@
 const addons = Object.create(null)
 
 bare.addon = function addon(href) {
-  if (addons[href]) return addons[href]
+  let addon = addons[href]
 
-  const addon = (addons[href] = { handle: null, exports: {} })
+  if (addon) return addon
+
+  addon = addons[href] = { handle: null, exports: {} }
 
   addon.handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
 
