@@ -70,7 +70,7 @@ const bare = command(
     }
 
     if (flags.eval) {
-      return Module.load(parentURL, `(${flags.eval})`)
+      return Module.load(parentURL, flags.eval)
     }
 
     if (flags.print) {
