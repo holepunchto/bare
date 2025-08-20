@@ -46,6 +46,7 @@ struct bare_runtime_s {
   bare_runtime_state_t state;
 
   atomic_int linger;
+  atomic_bool suspending;
 };
 
 struct bare_process_s {

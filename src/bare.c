@@ -111,12 +111,15 @@ bare_run(bare_t *bare) {
 int
 bare_suspend(bare_t *bare, int linger) {
   bare->process.runtime->linger = linger;
+  bare->process.runtime->suspending = true;
 
   return uv_async_send(&bare->process.runtime->signals.suspend);
 }
 
 int
 bare_resume(bare_t *bare) {
+  bare->process.runtime->suspending = false;
+
   int err = uv_async_send(&bare->process.runtime->signals.resume);
   if (err < 0) return err;
 

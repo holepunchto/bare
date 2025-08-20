@@ -199,6 +199,7 @@ bare_thread_suspend(bare_thread_t *thread, int linger) {
   if (thread->exited) goto done;
 
   thread->runtime->linger = linger;
+  thread->runtime->suspending = true;
 
   err = uv_async_send(&thread->runtime->signals.suspend);
   assert(err == 0);
@@ -216,6 +217,8 @@ bare_thread_resume(bare_thread_t *thread) {
   uv_sem_wait(&thread->lock);
 
   if (thread->exited) goto done;
+
+  thread->runtime->suspending = false;
 
   err = uv_async_send(&thread->runtime->signals.resume);
   assert(err == 0);
