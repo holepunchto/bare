@@ -241,6 +241,8 @@ static void
 bare_runtime_on_suspend_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
 
+  uv_unref((uv_handle_t *) handle);
+
   if (!runtime->suspending) return;
 
   bare_runtime_on_suspend(runtime);
@@ -324,6 +326,8 @@ bare_runtime_on_resume(bare_runtime_t *runtime) {
 static void
 bare_runtime_on_resume_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  uv_unref((uv_handle_t *) handle);
 
   if (runtime->suspending) return;
 
@@ -616,6 +620,8 @@ bare_runtime_suspend(js_env_t *env, js_callback_info_t *info) {
   runtime->linger = linger;
   runtime->suspending = true;
 
+  uv_ref((uv_handle_t *) &runtime->signals.suspend);
+
   err = uv_async_send(&runtime->signals.suspend);
   assert(err == 0);
 
@@ -650,6 +656,8 @@ bare_runtime_resume(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   runtime->suspending = false;
+
+  uv_ref((uv_handle_t *) &runtime->signals.resume);
 
   err = uv_async_send(&runtime->signals.resume);
   assert(err == 0);
