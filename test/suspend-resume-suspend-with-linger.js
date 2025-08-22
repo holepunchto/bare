@@ -5,17 +5,19 @@ let suspended = false
 Bare.on('exit', () => {
   assert(suspended, 'Should have suspended')
 })
-  .on('suspend', () => {
+  .on('suspend', (linger) => {
     console.log('emit suspend')
+    assert(linger === 2000)
     suspended = true
+    Bare.resume()
   })
   .on('idle', () => {
     assert(false, 'Should not idle')
   })
   .on('resume', () => {
     console.log('emit resume')
-    assert(suspended)
   })
 
-Bare.suspend()
+Bare.suspend(1000)
 Bare.resume()
+Bare.suspend(2000)
