@@ -9,7 +9,9 @@ Bare.on('exit', () => {
 })
   .on('suspend', () => {
     console.log('emit suspend')
-    suspended++
+    if (suspended++) return
+    Bare.resume()
+    Bare.suspend()
   })
   .on('idle', () => {
     console.log('emit idle')
@@ -18,9 +20,6 @@ Bare.on('exit', () => {
   })
   .on('resume', () => {
     console.log('emit resume')
-    assert(suspended)
   })
 
-Bare.suspend()
-Bare.resume()
 Bare.suspend()

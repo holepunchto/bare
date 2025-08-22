@@ -1,9 +1,15 @@
 const assert = require('bare-assert')
 
-Bare.on('suspend', (linger) => {
-  console.log('emit suspend')
-  assert(linger === 1000)
+let suspended = false
+
+Bare.on('exit', () => {
+  assert(suspended, 'Should have suspended')
 })
+  .on('suspend', (linger) => {
+    console.log('emit suspend')
+    assert(linger === 1000)
+    suspended = true
+  })
   .on('idle', () => {
     assert(false, 'Should not idle')
   })

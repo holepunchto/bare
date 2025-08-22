@@ -29,6 +29,7 @@ list(APPEND tests
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
   suspend-resume-suspend.js
+  suspend-resume-suspend-on-suspend.js
   suspend-resume-thread.js
   suspend-resume-with-linger.js
   thread.js

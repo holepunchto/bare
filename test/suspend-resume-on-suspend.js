@@ -2,11 +2,14 @@ const assert = require('bare-assert')
 
 let suspended = false
 
-Bare.on('suspend', () => {
-  console.log('emit suspend')
-  suspended = true
-  Bare.resume()
+Bare.on('exit', () => {
+  assert(suspended, 'Should have suspended')
 })
+  .on('suspend', () => {
+    console.log('emit suspend')
+    suspended = true
+    Bare.resume()
+  })
   .on('idle', () => {
     console.log('emit idle')
   })
