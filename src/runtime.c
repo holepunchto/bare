@@ -252,7 +252,8 @@ bare_runtime_on_idle(bare_runtime_t *runtime) {
 
   if (
     runtime->state != bare_runtime_state_suspending &&
-    runtime->state != bare_runtime_state_idle
+    runtime->state != bare_runtime_state_idle &&
+    runtime->state != bare_runtime_state_awake
   ) return;
 
   runtime->state = bare_runtime_state_idle;
@@ -290,7 +291,8 @@ bare_runtime_on_resume(bare_runtime_t *runtime) {
   if (
     runtime->state != bare_runtime_state_suspending &&
     runtime->state != bare_runtime_state_idle &&
-    runtime->state != bare_runtime_state_suspended
+    runtime->state != bare_runtime_state_suspended &&
+    runtime->state != bare_runtime_state_awake
   ) return;
 
   runtime->state = bare_runtime_state_active;
@@ -330,6 +332,68 @@ bare_runtime_on_resume_signal(uv_async_t *handle) {
   bare_runtime_on_resume(runtime);
 
   if (runtime->suspending) bare_runtime_on_suspend(runtime);
+}
+
+static inline void
+bare_runtime_on_wakeup(bare_runtime_t *runtime) {
+  int err;
+
+  if (runtime->state != bare_runtime_state_suspended) return;
+
+  runtime->state = bare_runtime_state_awake;
+
+  js_env_t *env = runtime->env;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *fn;
+  err = js_get_named_property(env, exports, "onwakeup", &fn);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  js_value_t *args[1];
+
+  err = js_create_int32(env, runtime->deadline, &args[0]);
+  assert(err == 0);
+
+  js_call_function(env, global, fn, 1, args, NULL);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  bare_runtime_invoke_callback_if_main_thread(runtime, wakeup, runtime->deadline);
+}
+
+static void
+bare_runtime_on_wakeup_signal(uv_async_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  uv_unref((uv_handle_t *) handle);
+
+  bare_runtime_on_wakeup(runtime);
+}
+
+static inline void
+bare_runtime_on_wakeup_timeout(uv_timer_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  if (
+    runtime->state != bare_runtime_state_suspending &&
+    runtime->state != bare_runtime_state_awake
+  ) return;
+
+  runtime->state = bare_runtime_state_idle;
+
+  uv_stop(runtime->loop);
 }
 
 static inline void
@@ -635,7 +699,10 @@ bare_runtime_idle(js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  if (runtime->state != bare_runtime_state_suspending) return NULL;
+  if (
+    runtime->state != bare_runtime_state_suspending &&
+    runtime->state != bare_runtime_state_awake
+  ) return NULL;
 
   runtime->state = bare_runtime_state_idle;
 
@@ -658,6 +725,36 @@ bare_runtime_resume(js_env_t *env, js_callback_info_t *info) {
   uv_ref((uv_handle_t *) &runtime->signals.resume);
 
   err = uv_async_send(&runtime->signals.resume);
+  assert(err == 0);
+
+  uv_cond_signal(&runtime->wake);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime_wakeup(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  int32_t deadline;
+  err = js_get_value_int32(env, argv[0], &deadline);
+  assert(err == 0);
+
+  runtime->deadline = deadline;
+
+  uv_ref((uv_handle_t *) &runtime->signals.wakeup);
+
+  err = uv_async_send(&runtime->signals.wakeup);
   assert(err == 0);
 
   uv_cond_signal(&runtime->wake);
@@ -837,6 +934,41 @@ bare_runtime_resume_thread(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime_wakeup_thread(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  bare_runtime_t *runtime;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_thread_t *thread;
+  err = js_get_value_external(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  int32_t deadline;
+  err = js_get_value_int32(env, argv[1], &deadline);
+  assert(err == 0);
+
+  err = bare_thread_wakeup(thread, deadline);
+  assert(err == 0);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
 bare_runtime_require(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -913,21 +1045,36 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   err = uv_cond_init(&runtime->wake);
   assert(err == 0);
 
+  runtime->active_handles = 0;
+
 #define V(signal) \
   { \
     uv_async_t *handle = &runtime->signals.signal; \
+\
     handle->data = (void *) runtime; \
+\
     err = uv_async_init(runtime->loop, handle, bare_runtime_on_##signal##_signal); \
     assert(err == 0); \
+\
     uv_unref((uv_handle_t *) handle); \
+\
+    runtime->active_handles++; \
   }
 
   V(suspend)
   V(resume)
+  V(wakeup)
   V(terminate)
 #undef V
 
-  runtime->active_handles = 3;
+  err = uv_timer_init(runtime->loop, &runtime->timeout);
+  assert(err == 0);
+
+  runtime->timeout.data = (void *) runtime;
+
+  uv_unref((uv_handle_t *) &runtime->timeout);
+
+  runtime->active_handles++;
 
   js_env_t *env = runtime->env;
 
@@ -969,6 +1116,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     js_value_t *val; \
     err = js_create_string_utf8(env, (utf8_t *) str, (size_t) -1, &val); \
     assert(err == 0); \
+\
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
@@ -1012,6 +1160,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     js_value_t *val; \
     err = js_create_string_utf8(env, (utf8_t *) (version), (size_t) -1, &val); \
     assert(err == 0); \
+\
     err = js_set_named_property(env, versions, name, val); \
     assert(err == 0); \
   }
@@ -1033,6 +1182,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     js_value_t *val; \
     err = js_create_function(env, name, (size_t) -1, fn, (void *) runtime, &val); \
     assert(err == 0); \
+\
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
@@ -1049,11 +1199,13 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("suspend", bare_runtime_suspend);
   V("idle", bare_runtime_idle);
   V("resume", bare_runtime_resume);
+  V("wakeup", bare_runtime_wakeup);
 
   V("setupThread", bare_runtime_setup_thread);
   V("joinThread", bare_runtime_join_thread);
   V("suspendThread", bare_runtime_suspend_thread);
   V("resumeThread", bare_runtime_resume_thread);
+  V("wakeupThread", bare_runtime_wakeup_thread);
 #undef V
 
 #define V(name, bool) \
@@ -1061,6 +1213,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     js_value_t *val; \
     err = js_get_boolean(env, bool, &val); \
     assert(err == 0); \
+\
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
@@ -1131,8 +1284,11 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
 
   V(suspend)
   V(resume)
+  V(wakeup)
   V(terminate)
 #undef V
+
+  uv_close((uv_handle_t *) &runtime->timeout, bare_runtime_on_handle_close);
 
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
@@ -1266,6 +1422,29 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
       for (;;) {
         uv_run(runtime->loop, UV_RUN_ONCE);
+
+        if (runtime->state == bare_runtime_state_awake) {
+          uv_unref((uv_handle_t *) &runtime->signals.resume);
+
+          err = uv_timer_start(&runtime->timeout, bare_runtime_on_wakeup_timeout, runtime->deadline, 0);
+          assert(err == 0);
+
+          uv_run(runtime->loop, UV_RUN_DEFAULT);
+
+          err = uv_timer_stop(&runtime->timeout);
+          assert(err == 0);
+
+          if (
+            runtime->state == bare_runtime_state_idle ||
+            runtime->state == bare_runtime_state_awake
+          ) {
+            uv_mutex_unlock(&runtime->lock);
+
+            goto idle;
+          }
+
+          uv_ref((uv_handle_t *) &runtime->signals.resume);
+        }
 
         if (runtime->state == bare_runtime_state_suspended) {
           uv_cond_wait(&runtime->wake, &runtime->lock);

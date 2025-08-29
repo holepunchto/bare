@@ -72,6 +72,13 @@ module.exports = exports = class Thread {
     if (this._handle) bare.resumeThread(this._handle)
   }
 
+  wakeup(deadline = 0) {
+    if (deadline <= 0) deadline = 0
+    else deadline = deadline & 0xffffffff
+
+    if (this._handle) bare.wakeupThread(this._handle)
+  }
+
   [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: Thread },

@@ -108,6 +108,10 @@ Immediately suspend the event loop and trigger the `idle` event.
 
 Resume the process and all threads after suspension. This can be used to cancel suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
 
+#### `Bare.wakeup([deadline])`
+
+Wake the process and all threads during suspension. This will emit a `wakeup` event signalling that work may be performed until `deadline` is reached.
+
 #### `Bare.on('uncaughtException', err)`
 
 Emitted when a JavaScript exception is thrown within an execution context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes aborted. Adding an event listener for the `uncaughtException` event overrides the default behavior.
@@ -142,7 +146,7 @@ Emitted after the process or current thread has terminated and before the JavaSc
 
 #### `Bare.on('suspend', linger)`
 
-Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled.
+Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled. A `suspend` event listener may call `Bare.resume()` to cancel the suspension.
 
 #### `Bare.on('idle')`
 
@@ -151,6 +155,10 @@ Emitted when the process or current thread becomes idle after suspension. After 
 #### `Bare.on('resume')`
 
 Emitted when the process or current thread resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
+
+#### `Bare.on('wakeup', deadline)`
+
+Emitted when the process or current thread wakes up during suspension. Once the process becomes idle, or if the process is not idle by the time `deadline` has passed, the process will suspend itself again and an `idle` event be emitted. A `wakeup` event listener may call `Bare.resume()` to resume the process.
 
 ### Lifecycle
 
@@ -165,10 +173,15 @@ stateDiagram
   Suspending --> Suspended: Bare.idle()
   Suspending --> Terminated: Bare.exit()
   Suspending --> Idle
+  Awake --> Active: Bare.resume()
+  Awake --> Suspended: Bare.idle()
+  Awake --> Terminated: Bare.exit()
+  Awake --> Idle
+  Idle --> Suspended
   Idle --> Active: Bare.resume()
   Idle --> Terminated: Bare.exit()
-  Idle --> Suspended
   Suspended --> Active
+  Suspended --> Awake: Bare.wakeup()
   Terminated --> Exiting
   Exiting --> [*]
 ```
@@ -250,6 +263,10 @@ Suspend the thread. Equivalent to calling `Bare.suspend()` from within the threa
 
 Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
 
+#### `thread.wakeup([deadline])`
+
+Wake the thread. Equivalent to calling `Bare.wakeup()` from within the thread.
+
 ### Embedding
 
 Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):
@@ -273,9 +290,9 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 
 ### Suspension
 
-Bare provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, a `suspend` event will be emitted on the `Bare` namespace. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
+Bare provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, using either `bare_suspend()` from C or `Bare.suspend()` from JavaScript, a `suspend` event will be emitted on the `Bare` namespace. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, using either `bare_resume()` from C or `Bare.resume()` from JavaScript, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
 
-The suspension API is available through `bare_suspend()` and `bare_resume()` from C and `Bare.suspend()` and `Bare.resume()` from JavaScript.
+While suspended, the loop may also be woken up for limited periods of time to perform work, using either `bare_wakeup()` from C or `Bare.wakeup()` from JavaScript, which will emit a `wakeup` event. Each wakeup has an associated deadline after which the loop will be stopped and the process suspended again, emitting another `idle` event.
 
 ## Building
 

@@ -20,8 +20,9 @@ typedef enum {
   bare_runtime_state_suspending = 1,
   bare_runtime_state_idle = 2,
   bare_runtime_state_suspended = 3,
-  bare_runtime_state_terminated = 4,
-  bare_runtime_state_exiting = 5,
+  bare_runtime_state_awake = 4,
+  bare_runtime_state_terminated = 5,
+  bare_runtime_state_exiting = 6,
 } bare_runtime_state_t;
 
 struct bare_runtime_s {
@@ -38,14 +39,18 @@ struct bare_runtime_s {
   struct {
     uv_async_t suspend;
     uv_async_t resume;
+    uv_async_t wakeup;
     uv_async_t terminate;
   } signals;
+
+  uv_timer_t timeout;
 
   int active_handles;
 
   bare_runtime_state_t state;
 
   atomic_int linger;
+  atomic_int deadline;
   atomic_bool suspending;
 };
 
@@ -77,6 +82,9 @@ struct bare_process_s {
 
     bare_resume_cb resume;
     void *resume_data;
+
+    bare_wakeup_cb wakeup;
+    void *wakeup_data;
 
     bare_thread_cb thread;
     void *thread_data;
