@@ -38,6 +38,12 @@ list(APPEND tests
   thread-shared-data.js
   timeout.js
   timeout-clear.js
+  wakeup.js
+  wakeup-before-suspend.js
+  wakeup-exceed-deadline.js
+  wakeup-on-suspend.js
+  wakeup-resume.js
+  wakeup-suspend.js
 )
 
 foreach(file IN LISTS tests)
