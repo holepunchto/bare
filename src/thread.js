@@ -76,7 +76,7 @@ module.exports = exports = class Thread {
     if (deadline <= 0) deadline = 0
     else deadline = deadline & 0xffffffff
 
-    if (this._handle) bare.wakeupThread(this._handle)
+    if (this._handle) bare.wakeupThread(this._handle, deadline)
   }
 
   [Symbol.for('bare.inspect')]() {
