@@ -379,7 +379,7 @@ bare_runtime_on_wakeup_signal(uv_async_t *handle) {
 
   uv_unref((uv_handle_t *) handle);
 
-  bare_runtime_on_wakeup(runtime);
+  if (runtime->suspending) bare_runtime_on_wakeup(runtime);
 }
 
 static inline void
