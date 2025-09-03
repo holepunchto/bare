@@ -41,6 +41,7 @@ list(APPEND tests
   wakeup.js
   wakeup-before-suspend.js
   wakeup-exceed-deadline.js
+  wakeup-on-resume.js
   wakeup-on-suspend.js
   wakeup-on-wakeup.js
   wakeup-resume.js
