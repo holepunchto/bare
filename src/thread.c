@@ -231,4 +231,25 @@ done:
   return 0;
 }
 
+int
+bare_thread_wakeup(bare_thread_t *thread, int deadline) {
+  int err;
+
+  uv_sem_wait(&thread->lock);
+
+  if (thread->exited) goto done;
+
+  thread->runtime->deadline = deadline;
+
+  err = uv_async_send(&thread->runtime->signals.wakeup);
+  assert(err == 0);
+
+  uv_cond_signal(&thread->runtime->wake);
+
+done:
+  uv_sem_post(&thread->lock);
+
+  return 0;
+}
+
 #endif // BARE_THREAD_H

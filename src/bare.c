@@ -53,6 +53,7 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   process->callbacks.suspend = NULL;
   process->callbacks.idle = NULL;
   process->callbacks.resume = NULL;
+  process->callbacks.wakeup = NULL;
   process->callbacks.thread = NULL;
 
   bare_runtime_t *runtime = process->runtime;
@@ -129,6 +130,18 @@ bare_resume(bare_t *bare) {
 }
 
 int
+bare_wakeup(bare_t *bare, int deadline) {
+  bare->process.runtime->deadline = deadline;
+
+  int err = uv_async_send(&bare->process.runtime->signals.wakeup);
+  if (err < 0) return err;
+
+  uv_cond_signal(&bare->process.runtime->wake);
+
+  return 0;
+}
+
+int
 bare_terminate(bare_t *bare) {
   int err = uv_async_send(&bare->process.runtime->signals.terminate);
   if (err < 0) return err;
@@ -182,6 +195,14 @@ int
 bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data) {
   bare->process.callbacks.resume = cb;
   bare->process.callbacks.resume_data = data;
+
+  return 0;
+}
+
+int
+bare_on_wakeup(bare_t *bare, bare_wakeup_cb cb, void *data) {
+  bare->process.callbacks.wakeup = cb;
+  bare->process.callbacks.wakeup_data = data;
 
   return 0;
 }

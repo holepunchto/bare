@@ -111,6 +111,13 @@ class Bare extends EventEmitter {
     bare.resume()
   }
 
+  wakeup(deadline = 0) {
+    if (deadline <= 0) deadline = 0
+    else deadline = deadline & 0xffffffff
+
+    bare.wakeup(deadline)
+  }
+
   [Symbol.for('bare.inspect')]() {
     return {
       __proto__: { constructor: Bare },
@@ -245,6 +252,14 @@ bare.onresume = function onresume() {
   }
 
   exports.emit('resume')
+}
+
+bare.onwakeup = function onwakeup(deadline) {
+  for (const thread of exports.Thread._threads) {
+    thread.wakeup(deadline)
+  }
+
+  exports.emit('wakeup', deadline)
 }
 
 /**

@@ -18,4 +18,7 @@ bare_thread_suspend(bare_thread_t *thread, int linger);
 int
 bare_thread_resume(bare_thread_t *thread);
 
+int
+bare_thread_wakeup(bare_thread_t *thread, int deadline);
+
 #endif // BARE_THREAD_H

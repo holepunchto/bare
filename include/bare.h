@@ -22,6 +22,7 @@ typedef void (*bare_teardown_cb)(bare_t *, void *data);
 typedef void (*bare_suspend_cb)(bare_t *, int linger, void *data);
 typedef void (*bare_idle_cb)(bare_t *, void *data);
 typedef void (*bare_resume_cb)(bare_t *, void *data);
+typedef void (*bare_wakeup_cb)(bare_t *, int deadline, void *data);
 typedef void (*bare_thread_cb)(bare_t *, js_env_t *, void *data);
 
 /** @version 0 */
@@ -103,6 +104,13 @@ int
 bare_resume(bare_t *bare);
 
 /**
+ * Wake up the process if suspended and give it time to perform background work.
+ * It's safe to call this function from any thread.
+ */
+int
+bare_wakeup(bare_t *bare, int deadline);
+
+/**
  * Terminate the process as soon as possible. It's safe to call this function
  * from any thread.
  */
@@ -144,6 +152,12 @@ bare_on_idle(bare_t *bare, bare_idle_cb cb, void *data);
  */
 int
 bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data);
+
+/**
+ * Equivalent to `Bare.on('wakeup', cb)`.
+ */
+int
+bare_on_wakeup(bare_t *bare, bare_wakeup_cb cb, void *data);
 
 /**
  * Attach a thread listener which will invoked with the JavaScript environment
