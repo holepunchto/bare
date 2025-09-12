@@ -44,6 +44,30 @@ bare_addon_on_init(void) {
   assert(bare_addon_lib.handle);
 }
 
+static void
+bare_addon_on_teardown(void *data) {
+  bare_addon_t *addon = data;
+
+  uv_mutex_lock(&bare_addon_lock);
+
+  bool unloaded = --addon->refs == 0;
+
+  if (unloaded) {
+    uv_dlclose(&addon->lib);
+
+    if (addon->previous) addon->previous->next = addon->next;
+    else bare_addon_dynamic = addon->next;
+
+    if (addon->next) addon->next->previous = addon->previous;
+
+    free(addon->name);
+    free(addon->resolved);
+    free(addon);
+  }
+
+  uv_mutex_unlock(&bare_addon_lock);
+}
+
 js_value_t *
 bare_addon_get_static(bare_runtime_t *runtime) {
   uv_once(&bare_addon_guard, bare_addon_on_init);
@@ -171,9 +195,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   if (found) {
     found->refs++;
 
-    uv_mutex_unlock(&bare_addon_lock);
-
-    return found;
+    goto done;
   }
 
   bare_addon_pending = &bare_addon_dynamic;
@@ -198,7 +220,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   if (err < 0) goto err;
 
-  if (bare_addon_pending == NULL) goto done; // Addon registered itself
+  if (bare_addon_pending == NULL) goto registered; // Addon registered itself
 
   bare_module_name_cb name;
 
@@ -222,11 +244,15 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
     .exports = exports,
   });
 
-done:
+registered:
   found = bare_addon_dynamic;
 
   found->resolved = strdup(specifier);
   found->lib = lib;
+
+done:
+  err = js_add_teardown_callback(runtime->env, bare_addon_on_teardown, found);
+  assert(err == 0);
 
   uv_mutex_unlock(&bare_addon_lock);
 
@@ -241,55 +267,6 @@ err:
   uv_dlclose(&lib);
 
   return NULL;
-}
-
-bool
-bare_addon_unload(bare_runtime_t *runtime, bare_addon_t *addon) {
-  uv_once(&bare_addon_guard, bare_addon_on_init);
-
-  uv_mutex_lock(&bare_addon_lock);
-
-  if (addon->refs == 0) {
-    uv_mutex_unlock(&bare_addon_lock);
-
-    return false;
-  }
-
-  bool unloaded = --addon->refs == 0;
-
-  uv_mutex_unlock(&bare_addon_lock);
-
-  return unloaded;
-}
-
-void
-bare_addon_teardown(void) {
-  uv_once(&bare_addon_guard, bare_addon_on_init);
-
-  uv_mutex_lock(&bare_addon_lock);
-
-  bare_addon_t *next = bare_addon_dynamic;
-
-  while (next) {
-    bare_addon_t *addon = next;
-
-    next = addon->next;
-
-    if (addon->refs) continue;
-
-    uv_dlclose(&addon->lib);
-
-    if (addon->previous) addon->previous->next = addon->next;
-    else bare_addon_dynamic = addon->next;
-
-    if (addon->next) addon->next->previous = addon->previous;
-
-    free(addon->name);
-    free(addon->resolved);
-    free(addon);
-  }
-
-  uv_mutex_unlock(&bare_addon_lock);
 }
 
 uv_lib_t *

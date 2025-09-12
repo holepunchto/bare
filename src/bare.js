@@ -211,37 +211,34 @@ bare.onbeforeexit = function onbeforeexit() {
 
 bare.onexit = function onexit() {
   exiting = true
+
   exports.emit('exit', bare.exitCode)
 }
 
 bare.onteardown = function onteardown() {
-  exports.emit('teardown')
-
-  for (const thread of exports.Thread._threads) {
-    thread.join()
-  }
-
-  for (const addon of exports.Addon._addons) {
-    addon.unload()
+  try {
+    exports.emit('teardown')
+  } finally {
+    for (const thread of bare.threads) thread.join()
   }
 }
 
 bare.onsuspend = function onsuspend(linger) {
   suspending = true
 
-  for (const thread of exports.Thread._threads) {
-    thread.suspend(linger)
+  try {
+    for (const thread of bare.threads) thread.suspend(linger)
+  } finally {
+    exports.emit('suspend', linger)
   }
-
-  exports.emit('suspend', linger)
 }
 
 bare.onwakeup = function onwakeup(deadline) {
-  for (const thread of exports.Thread._threads) {
-    thread.wakeup(deadline)
+  try {
+    for (const thread of bare.threads) thread.wakeup(deadline)
+  } finally {
+    exports.emit('wakeup', deadline)
   }
-
-  exports.emit('wakeup', deadline)
 }
 
 bare.onidle = function onidle() {
@@ -255,11 +252,11 @@ bare.onresume = function onresume() {
   suspending = false
   suspended = false
 
-  for (const thread of exports.Thread._threads) {
-    thread.resume()
+  try {
+    for (const thread of bare.threads) thread.resume()
+  } finally {
+    exports.emit('resume')
   }
-
-  exports.emit('resume')
 }
 
 /**
