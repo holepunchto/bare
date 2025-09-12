@@ -132,7 +132,7 @@ Emitted before the process or current thread terminates. Additional work must no
 
 #### `Bare.on('teardown')`
 
-Emitted after the process or current thread has terminated and before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener. Bare itself will register `teardown` event listeners to join dangling threads and unload native addons.
+Emitted after the process or current thread has terminated and before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener.
 
 > [!IMPORTANT]
 >
@@ -194,12 +194,6 @@ The `Bare.Addon` namespace provides support for loading native addons, which are
 #### `const addon = Addon.load(url[, options])`
 
 Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
-
-Options are reserved.
-
-#### `const unloaded = Addon.unload(url[, options])`
-
-Unload a dynamic native addon identified by `url`. If the function returns `true`, the addon was unloaded from memory. If it instead returns `false`, the addon is still in use by one or more threads and will only be unloaded from memory when those threads either exit or explicitly unload the addon.
 
 Options are reserved.
 

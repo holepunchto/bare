@@ -12,8 +12,6 @@ module.exports = exports = class Addon {
     this._handle = null
 
     Object.preventExtensions(this)
-
-    Addon._addons.add(this)
   }
 
   get url() {
@@ -22,19 +20,6 @@ module.exports = exports = class Addon {
 
   get exports() {
     return this._exports
-  }
-
-  unload() {
-    let unloaded = false
-
-    if (this._handle) {
-      unloaded = bare.unloadAddon(this._handle)
-      this._handle = null
-    }
-
-    Addon._addons.delete(this)
-
-    return unloaded
   }
 
   [Symbol.for('bare.inspect')]() {
@@ -48,7 +33,6 @@ module.exports = exports = class Addon {
 
   static _protocol = Module._protocol
   static _cache = Object.create(null)
-  static _addons = new Set()
   static _builtins = bare.getStaticAddons()
   static _conditions = Module._conditions
 
@@ -90,32 +74,12 @@ module.exports = exports = class Addon {
 
       addon._exports = bare.initAddon(addon._handle, addon._exports)
     } catch (err) {
-      addon.unload()
-
       delete cache[url.href]
 
       throw err
     }
 
     return addon
-  }
-
-  static unload(url, opts /* reserved */) {
-    const self = Addon
-
-    const cache = self._cache
-
-    const addon = cache[url.href] || null
-
-    if (addon === null) {
-      throw AddonError.ADDON_NOT_FOUND(`Cannot find addon '${url.href}'`)
-    }
-
-    const unloaded = addon.unload()
-
-    if (unloaded) delete cache[url.href]
-
-    return unloaded
   }
 
   static resolve(specifier, parentURL, opts = {}) {
