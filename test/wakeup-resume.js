@@ -15,17 +15,21 @@ Bare.on('exit', () => {
   })
   .on('idle', () => {
     console.log('emit idle')
-    idled = true
-    Bare.wakeup(100)
+    if (idled) Bare.resume()
+    else {
+      idled = true
+      Bare.wakeup(100)
+      Bare.resume()
+    }
   })
   .on('resume', () => {
     console.log('emit resume')
     assert(suspended)
   })
-  .on('wakeup', () => {
+  .on('wakeup', (deadline) => {
     console.log('emit wakeup')
     awake = true
-    Bare.resume()
+    assert(deadline === 100)
   })
 
 Bare.suspend()

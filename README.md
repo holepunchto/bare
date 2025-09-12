@@ -100,6 +100,10 @@ Immediately terminate the process or current thread with an exit status of `code
 
 Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block until the process is resumed.
 
+#### `Bare.wakeup([deadline])`
+
+Wake the process and all threads during suspension. This will emit a `wakeup` event signalling that work may be performed until `deadline` is reached.
+
 #### `Bare.idle()`
 
 Immediately suspend the event loop and trigger the `idle` event.
@@ -107,10 +111,6 @@ Immediately suspend the event loop and trigger the `idle` event.
 #### `Bare.resume()`
 
 Resume the process and all threads after suspension. This can be used to cancel suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
-
-#### `Bare.wakeup([deadline])`
-
-Wake the process and all threads during suspension. This will emit a `wakeup` event signalling that work may be performed until `deadline` is reached.
 
 #### `Bare.on('uncaughtException', err)`
 
@@ -148,6 +148,10 @@ Emitted after the process or current thread has terminated and before the JavaSc
 
 Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled. A `suspend` event listener may call `Bare.resume()` to cancel the suspension.
 
+#### `Bare.on('wakeup', deadline)`
+
+Emitted when the process or current thread wakes up during suspension. Once the process becomes idle, or if the process is not idle by the time `deadline` has passed, the process will suspend itself again and an `idle` event be emitted. A `wakeup` event listener may call `Bare.resume()` to resume the process.
+
 #### `Bare.on('idle')`
 
 Emitted when the process or current thread becomes idle after suspension. After all handlers have run, the event loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `Bare.resume()` to cancel the suspension.
@@ -155,10 +159,6 @@ Emitted when the process or current thread becomes idle after suspension. After 
 #### `Bare.on('resume')`
 
 Emitted when the process or current thread resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
-
-#### `Bare.on('wakeup', deadline)`
-
-Emitted when the process or current thread wakes up during suspension. Once the process becomes idle, or if the process is not idle by the time `deadline` has passed, the process will suspend itself again and an `idle` event be emitted. A `wakeup` event listener may call `Bare.resume()` to resume the process.
 
 ### Lifecycle
 
@@ -170,6 +170,7 @@ stateDiagram
   Active --> Terminated: Bare.exit()
   Active --> Exiting
   Suspending --> Active: Bare.resume()
+  Suspending --> Awake: Bare.wakeup()
   Suspending --> Suspended: Bare.idle()
   Suspending --> Terminated: Bare.exit()
   Suspending --> Idle
@@ -259,13 +260,13 @@ Block and wait for the thread to exit.
 
 Suspend the thread. Equivalent to calling `Bare.suspend()` from within the thread.
 
-#### `thread.resume()`
-
-Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
-
 #### `thread.wakeup([deadline])`
 
 Wake the thread. Equivalent to calling `Bare.wakeup()` from within the thread.
+
+#### `thread.resume()`
+
+Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
 
 ### Embedding
 

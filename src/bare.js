@@ -103,19 +103,19 @@ class Bare extends EventEmitter {
     bare.suspend(linger)
   }
 
+  wakeup(deadline = 0) {
+    if (deadline <= 0) deadline = 0
+    else deadline = deadline & 0xffffffff
+
+    bare.wakeup(deadline)
+  }
+
   idle() {
     bare.idle()
   }
 
   resume() {
     bare.resume()
-  }
-
-  wakeup(deadline = 0) {
-    if (deadline <= 0) deadline = 0
-    else deadline = deadline & 0xffffffff
-
-    bare.wakeup(deadline)
   }
 
   [Symbol.for('bare.inspect')]() {
@@ -236,6 +236,14 @@ bare.onsuspend = function onsuspend(linger) {
   exports.emit('suspend', linger)
 }
 
+bare.onwakeup = function onwakeup(deadline) {
+  for (const thread of exports.Thread._threads) {
+    thread.wakeup(deadline)
+  }
+
+  exports.emit('wakeup', deadline)
+}
+
 bare.onidle = function onidle() {
   suspending = false
   suspended = true
@@ -252,14 +260,6 @@ bare.onresume = function onresume() {
   }
 
   exports.emit('resume')
-}
-
-bare.onwakeup = function onwakeup(deadline) {
-  for (const thread of exports.Thread._threads) {
-    thread.wakeup(deadline)
-  }
-
-  exports.emit('wakeup', deadline)
 }
 
 /**

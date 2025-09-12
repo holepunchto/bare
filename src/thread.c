@@ -211,16 +211,16 @@ done:
 }
 
 int
-bare_thread_resume(bare_thread_t *thread) {
+bare_thread_wakeup(bare_thread_t *thread, int deadline) {
   int err;
 
   uv_sem_wait(&thread->lock);
 
   if (thread->exited) goto done;
 
-  thread->runtime->suspending = false;
+  thread->runtime->deadline = deadline;
 
-  err = uv_async_send(&thread->runtime->signals.resume);
+  err = uv_async_send(&thread->runtime->signals.wakeup);
   assert(err == 0);
 
   uv_cond_signal(&thread->runtime->wake);
@@ -232,16 +232,16 @@ done:
 }
 
 int
-bare_thread_wakeup(bare_thread_t *thread, int deadline) {
+bare_thread_resume(bare_thread_t *thread) {
   int err;
 
   uv_sem_wait(&thread->lock);
 
   if (thread->exited) goto done;
 
-  thread->runtime->deadline = deadline;
+  thread->runtime->suspending = false;
 
-  err = uv_async_send(&thread->runtime->signals.wakeup);
+  err = uv_async_send(&thread->runtime->signals.resume);
   assert(err == 0);
 
   uv_cond_signal(&thread->runtime->wake);
