@@ -45,7 +45,8 @@ list(APPEND tests
   wakeup-on-suspend.js
   wakeup-on-wakeup.js
   wakeup-resume.js
-  wakeup-suspend.js
+  wakeup-resume-on-wakeup.js
+  wakeup-suspend-on-wakeup.js
 )
 
 foreach(file IN LISTS tests)

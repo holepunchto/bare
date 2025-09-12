@@ -38,8 +38,8 @@ struct bare_runtime_s {
 
   struct {
     uv_async_t suspend;
-    uv_async_t resume;
     uv_async_t wakeup;
+    uv_async_t resume;
     uv_async_t terminate;
   } signals;
 
@@ -77,14 +77,14 @@ struct bare_process_s {
     bare_suspend_cb suspend;
     void *suspend_data;
 
+    bare_wakeup_cb wakeup;
+    void *wakeup_data;
+
     bare_idle_cb idle;
     void *idle_data;
 
     bare_resume_cb resume;
     void *resume_data;
-
-    bare_wakeup_cb wakeup;
-    void *wakeup_data;
 
     bare_thread_cb thread;
     void *thread_data;

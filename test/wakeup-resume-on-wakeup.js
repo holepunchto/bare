@@ -6,23 +6,26 @@ let awake = false
 
 Bare.on('exit', () => {
   assert(suspended, 'Should have suspended')
+  assert(idled, 'Should have idled')
+  assert(awake, 'Should have woken up')
 })
   .on('suspend', () => {
     console.log('emit suspend')
     suspended = true
-    Bare.wakeup()
   })
   .on('idle', () => {
     console.log('emit idle')
-    Bare.resume()
+    idled = true
+    Bare.wakeup(100)
   })
   .on('resume', () => {
     console.log('emit resume')
     assert(suspended)
   })
-  .on('wakeup', (deadline) => {
+  .on('wakeup', () => {
     console.log('emit wakeup')
     awake = true
+    Bare.resume()
   })
 
 Bare.suspend()
