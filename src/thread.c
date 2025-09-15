@@ -93,7 +93,8 @@ bare_thread__entry(void *opaque) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_call_function(env, global, fn, 1, (js_value_t *[]) {data}, NULL);
+  err = js_call_function(env, global, fn, 1, (js_value_t *[]) {data}, NULL);
+  (void) err;
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -102,7 +103,8 @@ bare_thread__entry(void *opaque) {
     runtime->process->callbacks.thread((bare_t *) runtime->process, env, runtime->process->callbacks.thread_data);
   }
 
-  bare_runtime_load(runtime, thread->filename, source, NULL);
+  err = bare_runtime_load(runtime, thread->filename, source, NULL);
+  (void) err;
 
   err = bare_runtime_run(runtime);
   assert(err == 0);
@@ -150,7 +152,8 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   err = uv_thread_create_ex(&thread->id, &options, bare_thread__entry, (void *) thread);
 
   if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    assert(err == 0);
 
     uv_sem_destroy(&thread->lock);
 
@@ -182,7 +185,8 @@ bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
   free(thread);
 
   if (err < 0) {
-    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+    assert(err == 0);
 
     return -1;
   }
