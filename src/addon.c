@@ -34,7 +34,7 @@ bare_addon__on_init(void) {
   assert(err == 0);
 
 #if defined(_WIN32)
-  bare_addon_lib.handle = GetModuleHandleW(NULL);
+  bare_addon__lib.handle = GetModuleHandleW(NULL);
 #else
   bare_addon__lib.handle = dlopen(NULL, RTLD_LAZY);
 #endif
