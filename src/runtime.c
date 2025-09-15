@@ -1268,6 +1268,8 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
 
+  bare_addon_teardown();
+
   return 0;
 }
 

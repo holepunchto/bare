@@ -50,20 +50,7 @@ bare_addon__on_teardown(void *data) {
 
   uv_mutex_lock(&bare_addon__lock);
 
-  bool unloaded = --addon->refs == 0;
-
-  if (unloaded) {
-    uv_dlclose(&addon->lib);
-
-    if (addon->previous) addon->previous->next = addon->next;
-    else bare_addon__dynamic = addon->next;
-
-    if (addon->next) addon->next->previous = addon->previous;
-
-    free(addon->name);
-    free(addon->resolved);
-    free(addon);
-  }
+  addon->refs--;
 
   uv_mutex_unlock(&bare_addon__lock);
 }
@@ -267,6 +254,37 @@ err:
   uv_dlclose(&lib);
 
   return NULL;
+}
+
+void
+
+bare_addon_teardown(void) {
+  uv_once(&bare_addon__guard, bare_addon__on_init);
+
+  uv_mutex_lock(&bare_addon__lock);
+
+  bare_addon_t *next = bare_addon__dynamic;
+
+  while (next) {
+    bare_addon_t *addon = next;
+
+    next = addon->next;
+
+    if (addon->refs) continue;
+
+    uv_dlclose(&addon->lib);
+
+    if (addon->previous) addon->previous->next = addon->next;
+    else bare_addon__dynamic = addon->next;
+
+    if (addon->next) addon->next->previous = addon->previous;
+
+    free(addon->name);
+    free(addon->resolved);
+    free(addon);
+  }
+
+  uv_mutex_unlock(&bare_addon__lock);
 }
 
 uv_lib_t *
