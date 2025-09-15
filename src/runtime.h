@@ -1,6 +1,7 @@
 #ifndef BARE_RUNTIME_H
 #define BARE_RUNTIME_H
 
+#include <js.h>
 #include <uv.h>
 
 #include "types.h"

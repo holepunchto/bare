@@ -8,14 +8,14 @@
 #include "runtime.h"
 #include "types.h"
 
-#define bare_option(options, min_version, field) \
-  (options && options->version >= min_version ? options->field : bare_default_options.field)
+#define bare__option(options, min_version, field) \
+  (options && options->version >= min_version ? options->field : bare__default_options.field)
 
 struct bare_s {
   bare_process_t process;
 };
 
-static const bare_options_t bare_default_options = {
+static const bare_options_t bare__default_options = {
   .version = 0,
   .memory_limit = 0,
 };
@@ -39,9 +39,9 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
   process->runtime = malloc(sizeof(bare_runtime_t));
 
-  process->options = bare_default_options;
+  process->options = bare__default_options;
 
-  process->options.memory_limit = bare_option(options, 0, memory_limit);
+  process->options.memory_limit = bare__option(options, 0, memory_limit);
 
   process->platform = platform;
   process->argc = argc;
@@ -75,7 +75,9 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
 int
 bare_teardown(bare_t *bare, int *exit_code) {
-  int err = bare_runtime_teardown(bare->process.runtime, exit_code);
+  int err;
+
+  err = bare_runtime_teardown(bare->process.runtime, exit_code);
   if (err < 0) return err;
 
   free(bare);
@@ -85,12 +87,19 @@ bare_teardown(bare_t *bare, int *exit_code) {
 
 int
 bare_exit(bare_t *bare, int exit_code) {
-  return bare_runtime_exit(bare->process.runtime, exit_code);
+  int err;
+
+  err = bare_runtime_exit(bare->process.runtime, exit_code);
+  if (err < 0) return err;
+
+  return 0;
 }
 
 int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
-  return bare_runtime_load(
+  int err;
+
+  err = bare_runtime_load(
     bare->process.runtime,
     filename,
     (bare_source_t) {
@@ -102,27 +111,42 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
     },
     result
   );
+  if (err < 0) return err;
+
+  return 0;
 }
 
 int
 bare_run(bare_t *bare) {
-  return bare_runtime_run(bare->process.runtime);
+  int err;
+
+  err = bare_runtime_run(bare->process.runtime);
+  if (err < 0) return err;
+
+  return 0;
 }
 
 int
 bare_suspend(bare_t *bare, int linger) {
+  int err;
+
   bare->process.runtime->linger = linger;
   bare->process.runtime->suspending = true;
 
-  return uv_async_send(&bare->process.runtime->signals.suspend);
+  err = uv_async_send(&bare->process.runtime->signals.suspend);
+  if (err < 0) return -1;
+
+  return 0;
 }
 
 int
 bare_wakeup(bare_t *bare, int deadline) {
+  int err;
+
   bare->process.runtime->deadline = deadline;
 
-  int err = uv_async_send(&bare->process.runtime->signals.wakeup);
-  if (err < 0) return err;
+  err = uv_async_send(&bare->process.runtime->signals.wakeup);
+  if (err < 0) return -1;
 
   uv_cond_signal(&bare->process.runtime->wake);
 
@@ -131,10 +155,12 @@ bare_wakeup(bare_t *bare, int deadline) {
 
 int
 bare_resume(bare_t *bare) {
+  int err;
+
   bare->process.runtime->suspending = false;
 
-  int err = uv_async_send(&bare->process.runtime->signals.resume);
-  if (err < 0) return err;
+  err = uv_async_send(&bare->process.runtime->signals.resume);
+  if (err < 0) return -1;
 
   uv_cond_signal(&bare->process.runtime->wake);
 
@@ -143,8 +169,10 @@ bare_resume(bare_t *bare) {
 
 int
 bare_terminate(bare_t *bare) {
-  int err = uv_async_send(&bare->process.runtime->signals.terminate);
-  if (err < 0) return err;
+  int err;
+
+  err = uv_async_send(&bare->process.runtime->signals.terminate);
+  if (err < 0) return -1;
 
   uv_cond_signal(&bare->process.runtime->wake);
 

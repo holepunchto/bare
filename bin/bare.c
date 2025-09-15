@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <js.h>
 #include <log.h>
 #include <rlimit.h>
 #include <signal.h>
 #include <uv.h>
 
 #include "../include/bare.h"
+
 #include "bare.bundle.h"
 
 static uv_sem_t bare__platform_ready;

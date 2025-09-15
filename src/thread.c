@@ -14,7 +14,7 @@
 #include "types.h"
 
 static void
-bare_thread_entry(void *opaque) {
+bare_thread__entry(void *opaque) {
   int err;
 
   bare_thread_t *thread = (bare_thread_t *) opaque;
@@ -147,7 +147,7 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
     .stack_size = stack_size,
   };
 
-  err = uv_thread_create_ex(&thread->id, &options, bare_thread_entry, (void *) thread);
+  err = uv_thread_create_ex(&thread->id, &options, bare_thread__entry, (void *) thread);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));

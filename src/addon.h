@@ -1,8 +1,7 @@
 #ifndef BARE_ADDON_H
 #define BARE_ADDON_H
 
-#include <napi.h>
-#include <stdbool.h>
+#include <js.h>
 #include <uv.h>
 
 #include "types.h"
