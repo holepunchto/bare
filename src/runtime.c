@@ -229,9 +229,11 @@ bare_runtime__on_suspend(bare_runtime_t *runtime) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
+  int linger = runtime->linger;
+
   js_value_t *args[1];
 
-  err = js_create_int32(env, runtime->linger, &args[0]);
+  err = js_create_int32(env, linger, &args[0]);
   assert(err == 0);
 
   err = js_call_function(env, global, fn, 1, args, NULL);
@@ -239,6 +241,17 @@ bare_runtime__on_suspend(bare_runtime_t *runtime) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  bare_thread_t *threads = runtime->threads;
+
+  while (threads) {
+    bare_thread_t *thread = threads;
+
+    threads = thread->next;
+
+    err = bare_thread_suspend(thread, linger);
+    assert(err == 0);
+  }
 
   bare_runtime__invoke_callback_if_main_thread(runtime, suspend, runtime->linger);
 }
@@ -281,9 +294,11 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
+  int deadline = runtime->deadline;
+
   js_value_t *args[1];
 
-  err = js_create_int32(env, runtime->deadline, &args[0]);
+  err = js_create_int32(env, deadline, &args[0]);
   assert(err == 0);
 
   err = js_call_function(env, global, fn, 1, args, NULL);
@@ -291,6 +306,17 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  bare_thread_t *threads = runtime->threads;
+
+  while (threads) {
+    bare_thread_t *thread = threads;
+
+    threads = thread->next;
+
+    err = bare_thread_wakeup(thread, deadline);
+    assert(err == 0);
+  }
 
   bare_runtime__invoke_callback_if_main_thread(runtime, wakeup, runtime->deadline);
 }
@@ -393,6 +419,17 @@ bare_runtime__on_resume(bare_runtime_t *runtime) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  bare_thread_t *threads = runtime->threads;
+
+  while (threads) {
+    bare_thread_t *thread = threads;
+
+    threads = thread->next;
+
+    err = bare_thread_resume(thread);
+    assert(err == 0);
+  }
 
   bare_runtime__invoke_callback_if_main_thread(runtime, resume);
 }
@@ -1003,6 +1040,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   runtime->loop = loop;
   runtime->process = process;
+  runtime->threads = NULL;
 
   js_env_options_t options = {
     .version = 0,
@@ -1265,8 +1303,18 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
 
   uv_close((uv_handle_t *) &runtime->timeout, bare_runtime__on_handle_close);
 
+  bare_thread_t *threads = runtime->threads;
+
   err = uv_run(runtime->loop, UV_RUN_DEFAULT);
   assert(err == 0);
+
+  while (threads) {
+    bare_thread_t *thread = threads;
+
+    threads = thread->next;
+
+    bare_thread_teardown(thread);
+  }
 
   bare_addon_teardown();
 

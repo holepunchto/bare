@@ -29,6 +29,7 @@ struct bare_runtime_s {
   uv_loop_t *loop;
 
   bare_process_t *process;
+  bare_thread_t *threads;
 
   js_env_t *env;
   js_ref_t *exports;
@@ -127,6 +128,9 @@ struct bare_thread_s {
   bare_data_t data;
 
   bool exited;
+
+  bare_thread_t *previous;
+  bare_thread_t *next;
 };
 
 struct bare_addon_s {

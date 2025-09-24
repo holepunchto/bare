@@ -1,7 +1,5 @@
 const structuredClone = require('bare-structured-clone')
 
-bare.threads = new Set()
-
 module.exports = exports = class Thread {
   constructor(filename, opts, callback) {
     if (typeof filename === 'function') {
@@ -47,8 +45,6 @@ module.exports = exports = class Thread {
     }
 
     this._handle = bare.setupThread(filename, source, data, stackSize)
-
-    bare.threads.add(this)
   }
 
   get joined() {
@@ -59,8 +55,6 @@ module.exports = exports = class Thread {
     if (this._handle) bare.joinThread(this._handle)
 
     this._handle = null
-
-    bare.threads.delete(this)
   }
 
   suspend(linger = 0) {

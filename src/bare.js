@@ -216,29 +216,17 @@ bare.onexit = function onexit() {
 }
 
 bare.onteardown = function onteardown() {
-  try {
-    exports.emit('teardown')
-  } finally {
-    for (const thread of bare.threads) thread.join()
-  }
+  exports.emit('teardown')
 }
 
 bare.onsuspend = function onsuspend(linger) {
   suspending = true
 
-  try {
-    for (const thread of bare.threads) thread.suspend(linger)
-  } finally {
-    exports.emit('suspend', linger)
-  }
+  exports.emit('suspend', linger)
 }
 
 bare.onwakeup = function onwakeup(deadline) {
-  try {
-    for (const thread of bare.threads) thread.wakeup(deadline)
-  } finally {
-    exports.emit('wakeup', deadline)
-  }
+  exports.emit('wakeup', deadline)
 }
 
 bare.onidle = function onidle() {
@@ -252,11 +240,7 @@ bare.onresume = function onresume() {
   suspending = false
   suspended = false
 
-  try {
-    for (const thread of bare.threads) thread.resume()
-  } finally {
-    exports.emit('resume')
-  }
+  exports.emit('resume')
 }
 
 /**

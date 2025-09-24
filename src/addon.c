@@ -344,11 +344,10 @@ bare_module_register(bare_module_t *module) {
 
   bare_addon_t *addon = malloc(sizeof(bare_addon_t));
 
-  addon->next = NULL;
-  addon->previous = NULL;
-
   addon->name = module->name ? strdup(module->name) : NULL;
   addon->exports = module->exports;
+  addon->previous = NULL;
+  addon->next = NULL;
 
   if (is_dynamic) {
     addon->resolved = NULL;

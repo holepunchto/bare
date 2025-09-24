@@ -136,6 +136,8 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   thread->source = source;
   thread->data = data;
   thread->exited = false;
+  thread->previous = NULL;
+  thread->next = NULL;
 
   thread->runtime = malloc(sizeof(bare_runtime_t));
 
@@ -163,6 +165,12 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
     return -1;
   }
 
+  thread->next = runtime->threads;
+
+  if (thread->next) thread->next->previous = thread;
+
+  runtime->threads = thread;
+
   uv_sem_wait(&thread->lock);
 
   uv_sem_post(&thread->lock);
@@ -181,6 +189,11 @@ bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
   err = uv_thread_join(&thread->id);
 
   uv_sem_destroy(&thread->lock);
+
+  if (thread->previous) thread->previous->next = thread->next;
+  else runtime->threads = thread->next;
+
+  if (thread->next) thread->next->previous = thread->previous;
 
   free(thread);
 
@@ -254,6 +267,22 @@ done:
   uv_sem_post(&thread->lock);
 
   return 0;
+}
+
+void
+bare_thread_teardown(bare_thread_t *thread) {
+  int err;
+
+  err = uv_thread_join(&thread->id);
+  assert(err == 0);
+
+  uv_sem_destroy(&thread->lock);
+
+  if (thread->previous) thread->previous->next = thread->next;
+
+  if (thread->next) thread->next->previous = thread->previous;
+
+  free(thread);
 }
 
 #endif // BARE_THREAD_H
