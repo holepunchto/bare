@@ -3,3 +3,9 @@ leak:js_create_typed_function
 leak:js_create_external
 leak:js_create_module
 leak:js_create_synthetic_module
+
+leak:v8::internal::GCTracer::*
+
+# https://github.com/llvm/llvm-project/issues/115992
+leak:dyld::*
+leak:dyld4::*
