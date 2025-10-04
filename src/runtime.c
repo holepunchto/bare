@@ -728,8 +728,6 @@ bare_runtime__wakeup(js_env_t *env, js_callback_info_t *info) {
   err = uv_async_send(&runtime->signals.wakeup);
   assert(err == 0);
 
-  uv_cond_signal(&runtime->wake);
-
   return NULL;
 }
 
@@ -769,8 +767,6 @@ bare_runtime__resume(js_env_t *env, js_callback_info_t *info) {
 
   err = uv_async_send(&runtime->signals.resume);
   assert(err == 0);
-
-  uv_cond_signal(&runtime->wake);
 
   return NULL;
 }
@@ -1446,9 +1442,11 @@ bare_runtime_run(bare_runtime_t *runtime) {
       uv_mutex_lock(&runtime->lock);
 
       for (;;) {
-        uv_run(runtime->loop, UV_RUN_ONCE);
+        uv_run(runtime->loop, UV_RUN_NOWAIT);
 
         if (runtime->state == bare_runtime_state_awake) {
+          uv_mutex_unlock(&runtime->lock);
+
           uv_unref((uv_handle_t *) &runtime->signals.resume);
 
           err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, runtime->deadline, 0);
@@ -1463,15 +1461,13 @@ bare_runtime_run(bare_runtime_t *runtime) {
             runtime->state == bare_runtime_state_idle ||
             runtime->state == bare_runtime_state_awake
           ) {
-            uv_mutex_unlock(&runtime->lock);
-
             goto idle;
           }
 
           uv_ref((uv_handle_t *) &runtime->signals.resume);
-        }
 
-        if (runtime->state == bare_runtime_state_suspended) {
+          uv_mutex_lock(&runtime->lock);
+        } else if (runtime->state == bare_runtime_state_suspended) {
           uv_cond_wait(&runtime->wake, &runtime->lock);
         } else {
           break;
