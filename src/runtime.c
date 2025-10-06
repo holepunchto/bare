@@ -1049,6 +1049,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   runtime->state = bare_runtime_state_active;
   runtime->linger = 0;
+  runtime->deadline = 0;
 
   err = uv_mutex_init(&runtime->lock);
   assert(err == 0);
