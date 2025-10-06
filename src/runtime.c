@@ -1440,8 +1440,6 @@ bare_runtime_run(bare_runtime_t *runtime) {
     if (runtime->state == bare_runtime_state_suspending) {
     idle:
       bare_runtime__on_idle(runtime);
-
-      if (runtime->state == bare_runtime_state_terminated) goto terminated;
     } else {
       bare_runtime__on_before_exit(runtime);
     }
