@@ -134,6 +134,9 @@ bare_runtime__on_exit(bare_runtime_t *runtime) {
 
   runtime->state = bare_runtime_state_exiting;
 
+  err = uv_timer_stop(&runtime->timeout);
+  assert(err == 0);
+
   js_env_t *env = runtime->env;
 
   js_handle_scope_t *scope;
@@ -266,6 +269,20 @@ bare_runtime__on_suspend_signal(uv_async_t *handle) {
 }
 
 static inline void
+bare_runtime__on_wakeup_timeout(uv_timer_t *handle) {
+  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
+
+  if (
+    runtime->state != bare_runtime_state_suspending &&
+    runtime->state != bare_runtime_state_awake
+  ) return;
+
+  runtime->state = bare_runtime_state_idle;
+
+  uv_stop(runtime->loop);
+}
+
+static inline void
 bare_runtime__on_wakeup(bare_runtime_t *runtime) {
   int err;
 
@@ -276,6 +293,9 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
   ) return;
 
   runtime->state = bare_runtime_state_awake;
+
+  err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, runtime->deadline, 0);
+  assert(err == 0);
 
   js_env_t *env = runtime->env;
 
@@ -332,20 +352,6 @@ bare_runtime__on_wakeup_signal(uv_async_t *handle) {
 }
 
 static inline void
-bare_runtime__on_wakeup_timeout(uv_timer_t *handle) {
-  bare_runtime_t *runtime = (bare_runtime_t *) handle->data;
-
-  if (
-    runtime->state != bare_runtime_state_suspending &&
-    runtime->state != bare_runtime_state_awake
-  ) return;
-
-  runtime->state = bare_runtime_state_idle;
-
-  uv_stop(runtime->loop);
-}
-
-static inline void
 bare_runtime__on_idle(bare_runtime_t *runtime) {
   int err;
 
@@ -356,6 +362,9 @@ bare_runtime__on_idle(bare_runtime_t *runtime) {
   ) return;
 
   runtime->state = bare_runtime_state_suspended;
+
+  err = uv_timer_stop(&runtime->timeout);
+  assert(err == 0);
 
   js_env_t *env = runtime->env;
 
@@ -396,6 +405,9 @@ bare_runtime__on_resume(bare_runtime_t *runtime) {
   ) return;
 
   runtime->state = bare_runtime_state_active;
+
+  err = uv_timer_stop(&runtime->timeout);
+  assert(err == 0);
 
   js_env_t *env = runtime->env;
 
@@ -1450,14 +1462,8 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
           uv_unref((uv_handle_t *) &runtime->signals.resume);
 
-          err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, runtime->deadline, 0);
-          assert(err == 0);
-
           err = uv_run(runtime->loop, UV_RUN_DEFAULT);
           (void) err;
-
-          err = uv_timer_stop(&runtime->timeout);
-          assert(err == 0);
 
           if (
             runtime->state == bare_runtime_state_idle ||
