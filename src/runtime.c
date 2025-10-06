@@ -1285,7 +1285,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 }
 
 int
-bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
+bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code) {
   int err;
 
   bare_runtime__on_teardown(runtime, exit_code);
@@ -1425,7 +1425,7 @@ err:
 }
 
 int
-bare_runtime_run(bare_runtime_t *runtime) {
+bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
 
   do {
