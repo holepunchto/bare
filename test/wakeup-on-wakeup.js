@@ -18,7 +18,7 @@ Bare.on('exit', () => {
     if (idled) Bare.resume()
     else {
       idled = true
-      Bare.wakeup()
+      Bare.wakeup(100)
     }
   })
   .on('resume', () => {
@@ -28,7 +28,7 @@ Bare.on('exit', () => {
   .on('wakeup', (deadline) => {
     console.log('emit wakeup')
     if (awake++) return
-    Bare.wakeup()
+    Bare.wakeup(100)
   })
 
 Bare.suspend()

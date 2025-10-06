@@ -4,4 +4,4 @@ Bare.on('wakeup', () => {
   assert(false, 'Should not wake up')
 })
 
-Bare.wakeup()
+Bare.wakeup(100)

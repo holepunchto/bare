@@ -271,7 +271,8 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
 
   if (
     runtime->state != bare_runtime_state_suspending &&
-    runtime->state != bare_runtime_state_suspended
+    runtime->state != bare_runtime_state_suspended &&
+    runtime->state != bare_runtime_state_awake
   ) return;
 
   runtime->state = bare_runtime_state_awake;

@@ -16,7 +16,7 @@ Bare.on('exit', () => {
   .on('resume', () => {
     console.log('emit resume')
     assert(suspended)
-    Bare.wakeup()
+    Bare.wakeup(100)
   })
   .on('wakeup', (deadline) => {
     assert(false, 'Should not wake up')
