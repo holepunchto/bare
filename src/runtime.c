@@ -354,7 +354,7 @@ bare_runtime__on_idle(bare_runtime_t *runtime) {
     runtime->state != bare_runtime_state_awake
   ) return;
 
-  runtime->state = bare_runtime_state_idle;
+  runtime->state = bare_runtime_state_suspended;
 
   js_env_t *env = runtime->env;
 
@@ -1435,14 +1435,13 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
       if (runtime->state == bare_runtime_state_terminated) goto terminated;
 
-      runtime->state = bare_runtime_state_suspended;
-
       uv_ref((uv_handle_t *) &runtime->signals.resume);
 
       uv_mutex_lock(&runtime->lock);
 
       for (;;) {
-        uv_run(runtime->loop, UV_RUN_NOWAIT);
+        err = uv_run(runtime->loop, UV_RUN_NOWAIT);
+        (void) err;
 
         if (runtime->state == bare_runtime_state_awake) {
           uv_mutex_unlock(&runtime->lock);
@@ -1452,7 +1451,8 @@ bare_runtime_run(bare_runtime_t *runtime) {
           err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, runtime->deadline, 0);
           assert(err == 0);
 
-          uv_run(runtime->loop, UV_RUN_DEFAULT);
+          err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+          (void) err;
 
           err = uv_timer_stop(&runtime->timeout);
           assert(err == 0);
@@ -1483,7 +1483,8 @@ bare_runtime_run(bare_runtime_t *runtime) {
 
     if (runtime->state == bare_runtime_state_terminated) {
     terminated:
-      uv_run(runtime->loop, UV_RUN_NOWAIT);
+      err = uv_run(runtime->loop, UV_RUN_NOWAIT);
+      (void) err;
 
       break;
     }
