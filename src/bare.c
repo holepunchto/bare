@@ -79,7 +79,7 @@ bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
   int err;
 
   err = bare_runtime_teardown(bare->process.runtime, mode, exit_code);
-  if (err < 0) return err;
+  if (err != 0) return err;
 
   free(bare);
 
@@ -122,7 +122,7 @@ bare_run(bare_t *bare, uv_run_mode mode) {
   int err;
 
   err = bare_runtime_run(bare->process.runtime, mode);
-  if (err < 0) return err;
+  if (err != 0) return err;
 
   return 0;
 }
