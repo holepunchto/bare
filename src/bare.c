@@ -144,16 +144,10 @@ int
 bare_wakeup(bare_t *bare, int deadline) {
   int err;
 
-  uv_mutex_lock(&bare->process.runtime->lock);
-
   bare->process.runtime->deadline = deadline;
 
   err = uv_async_send(&bare->process.runtime->signals.wakeup);
   assert(err == 0);
-
-  uv_cond_signal(&bare->process.runtime->wake);
-
-  uv_mutex_unlock(&bare->process.runtime->lock);
 
   return 0;
 }
@@ -162,16 +156,10 @@ int
 bare_resume(bare_t *bare) {
   int err;
 
-  uv_mutex_lock(&bare->process.runtime->lock);
-
   bare->process.runtime->suspending = false;
 
   err = uv_async_send(&bare->process.runtime->signals.resume);
   assert(err == 0);
-
-  uv_cond_signal(&bare->process.runtime->wake);
-
-  uv_mutex_unlock(&bare->process.runtime->lock);
 
   return 0;
 }
@@ -180,14 +168,8 @@ int
 bare_terminate(bare_t *bare) {
   int err;
 
-  uv_mutex_lock(&bare->process.runtime->lock);
-
   err = uv_async_send(&bare->process.runtime->signals.terminate);
   assert(err == 0);
-
-  uv_cond_signal(&bare->process.runtime->wake);
-
-  uv_mutex_unlock(&bare->process.runtime->lock);
 
   return 0;
 }

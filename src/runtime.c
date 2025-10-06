@@ -502,10 +502,6 @@ bare_runtime__on_terminate_signal(uv_async_t *handle) {
 
 static inline void
 bare_runtime__on_free(bare_runtime_t *runtime) {
-  uv_mutex_destroy(&runtime->lock);
-
-  uv_cond_destroy(&runtime->wake);
-
   free(runtime);
 }
 
@@ -1067,12 +1063,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->linger = 0;
   runtime->deadline = 0;
 
-  err = uv_mutex_init(&runtime->lock);
-  assert(err == 0);
-
-  err = uv_cond_init(&runtime->wake);
-  assert(err == 0);
-
   runtime->active_handles = 0;
 
 #define V(signal) \
@@ -1452,35 +1442,6 @@ bare_runtime_run(bare_runtime_t *runtime) {
       bare_runtime__on_idle(runtime);
 
       if (runtime->state == bare_runtime_state_terminated) goto terminated;
-
-      uv_mutex_lock(&runtime->lock);
-
-      for (;;) {
-        err = uv_run(runtime->loop, UV_RUN_NOWAIT);
-        (void) err;
-
-        if (runtime->state == bare_runtime_state_awake) {
-          uv_mutex_unlock(&runtime->lock);
-
-          err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-          (void) err;
-
-          if (
-            runtime->state == bare_runtime_state_idle ||
-            runtime->state == bare_runtime_state_awake
-          ) {
-            goto idle;
-          }
-
-          uv_mutex_lock(&runtime->lock);
-        } else if (runtime->state == bare_runtime_state_suspended) {
-          uv_cond_wait(&runtime->wake, &runtime->lock);
-        } else {
-          break;
-        }
-      }
-
-      uv_mutex_unlock(&runtime->lock);
     } else {
       bare_runtime__on_before_exit(runtime);
     }

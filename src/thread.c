@@ -235,16 +235,10 @@ bare_thread_wakeup(bare_thread_t *thread, int deadline) {
 
   if (thread->exited) goto done;
 
-  uv_mutex_lock(&thread->runtime->lock);
-
   thread->runtime->deadline = deadline;
 
   err = uv_async_send(&thread->runtime->signals.wakeup);
   assert(err == 0);
-
-  uv_cond_signal(&thread->runtime->wake);
-
-  uv_mutex_unlock(&thread->runtime->lock);
 
 done:
   uv_sem_post(&thread->lock);
@@ -260,16 +254,10 @@ bare_thread_resume(bare_thread_t *thread) {
 
   if (thread->exited) goto done;
 
-  uv_mutex_lock(&thread->runtime->lock);
-
   thread->runtime->suspending = false;
 
   err = uv_async_send(&thread->runtime->signals.resume);
   assert(err == 0);
-
-  uv_cond_signal(&thread->runtime->wake);
-
-  uv_mutex_unlock(&thread->runtime->lock);
 
 done:
   uv_sem_post(&thread->lock);
