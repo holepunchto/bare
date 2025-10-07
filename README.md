@@ -128,7 +128,10 @@ If the process is exited explicitly, such as by calling `Bare.exit()` or as the 
 
 #### `Bare.on('exit', code)`
 
-Emitted before the process or current thread terminates. Additional work must not be scheduled from an `exit` event listener. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
+Emitted before the process or current thread terminates. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
+
+> [!CAUTION]
+> Additional work **MUST NOT** be scheduled from an `exit` event listener.
 
 #### `Bare.on('suspend', linger)`
 
