@@ -37,6 +37,7 @@ jobs:
           - os: macos-14
             platform: darwin
             arch: x64
+            flags: --sanitize address
           - os: macos-14
             platform: darwin
             arch: arm64
@@ -76,6 +77,8 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 20
         if: ${{ matrix.platform == 'linux' }}
+      - run: brew install llvm@20
+        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
       - run: choco install nasm
