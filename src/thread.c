@@ -106,7 +106,7 @@ bare_thread__entry(void *opaque) {
   err = bare_runtime_load(runtime, thread->filename, source, NULL);
   (void) err;
 
-  err = bare_runtime_run(runtime);
+  err = bare_runtime_run(runtime, UV_RUN_DEFAULT);
   assert(err == 0);
 
   free(thread->filename);
@@ -117,7 +117,7 @@ bare_thread__entry(void *opaque) {
 
   uv_sem_post(&thread->lock);
 
-  err = bare_runtime_teardown(thread->runtime, NULL);
+  err = bare_runtime_teardown(thread->runtime, UV_RUN_DEFAULT, NULL);
   assert(err == 0);
 
   err = uv_loop_close(&loop);

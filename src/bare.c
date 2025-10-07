@@ -74,11 +74,11 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 }
 
 int
-bare_teardown(bare_t *bare, int *exit_code) {
+bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
   int err;
 
-  err = bare_runtime_teardown(bare->process.runtime, exit_code);
-  if (err < 0) return err;
+  err = bare_runtime_teardown(bare->process.runtime, mode, exit_code);
+  if (err != 0) return err;
 
   free(bare);
 
@@ -117,11 +117,11 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
 }
 
 int
-bare_run(bare_t *bare) {
+bare_run(bare_t *bare, uv_run_mode mode) {
   int err;
 
-  err = bare_runtime_run(bare->process.runtime);
-  if (err < 0) return err;
+  err = bare_runtime_run(bare->process.runtime, mode);
+  if (err != 0) return err;
 
   return 0;
 }

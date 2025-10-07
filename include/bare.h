@@ -60,7 +60,7 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
  * this function returns.
  */
 int
-bare_teardown(bare_t *bare, int *exit_code);
+bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code);
 
 /**
  * Immediately terminate the process with an exit status of `exit_code`.
@@ -84,7 +84,7 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
  * Run the I/O event loop.
  */
 int
-bare_run(bare_t *bare);
+bare_run(bare_t *bare, uv_run_mode mode);
 
 /**
  * Suspend the process as soon as possible. Once the process has suspended

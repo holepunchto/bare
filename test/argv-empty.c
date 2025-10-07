@@ -24,11 +24,11 @@ main(int argc, char *argv[]) {
 
   bare_load(bare, "/test.js", &source, NULL);
 
-  e = bare_run(bare);
+  e = bare_run(bare, UV_RUN_DEFAULT);
   assert(e == 0);
 
   int exit_code;
-  e = bare_teardown(bare, &exit_code);
+  e = bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
   assert(e == 0);
 
   e = js_destroy_platform(platform);

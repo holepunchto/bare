@@ -1304,8 +1304,12 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 }
 
 int
-bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
+bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code) {
   int err;
+
+  bare_thread_t *threads = runtime->threads;
+
+  if (runtime->state == bare_runtime_state_exited) goto exited;
 
   bare_runtime__on_teardown(runtime, exit_code);
 
@@ -1326,10 +1330,12 @@ bare_runtime_teardown(bare_runtime_t *runtime, int *exit_code) {
 
   uv_close((uv_handle_t *) &runtime->timeout, bare_runtime__on_handle_close);
 
-  bare_thread_t *threads = runtime->threads;
+  runtime->state = bare_runtime_state_exited;
 
-  err = uv_run(runtime->loop, UV_RUN_DEFAULT);
-  assert(err == 0);
+exited:
+  err = uv_run(runtime->loop, mode);
+
+  if (err > 0) return err;
 
   while (threads) {
     bare_thread_t *thread = threads;
@@ -1444,17 +1450,17 @@ err:
 }
 
 int
-bare_runtime_run(bare_runtime_t *runtime) {
+bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
 
   do {
-    err = uv_run(runtime->loop, UV_RUN_DEFAULT);
+    err = uv_run(runtime->loop, mode);
 
     if (runtime->state == bare_runtime_state_terminated) goto terminated;
 
     if (runtime->state == bare_runtime_state_idle) goto idle;
 
-    assert(err == 0);
+    if (err > 0) return err;
 
     if (runtime->state == bare_runtime_state_suspending) {
     idle:

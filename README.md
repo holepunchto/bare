@@ -268,10 +268,10 @@ bare_setup(uv_default_loop(), platform, &env /* Optional */, argc, argv, options
 
 bare_load(bare, filename, source, &module /* Optional */);
 
-bare_run(bare);
+bare_run(bare, UV_RUN_DEFAULT);
 
 int exit_code;
-bare_teardown(bare, &exit_code);
+bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
 ```
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.

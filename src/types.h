@@ -23,6 +23,7 @@ typedef enum {
   bare_runtime_state_awake = 4,
   bare_runtime_state_terminated = 5,
   bare_runtime_state_exiting = 6,
+  bare_runtime_state_exited = 7,
 } bare_runtime_state_t;
 
 struct bare_runtime_s {
