@@ -87,5 +87,6 @@ jobs:
       - run: bare-make build
       - run: bare-make test
         env:
+          ASAN_OPTIONS: detect_leaks=1
           LSAN_OPTIONS: suppressions=test/leaks.txt
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
