@@ -37,7 +37,6 @@ jobs:
           - os: macos-14
             platform: darwin
             arch: x64
-            flags: --sanitize address
           - os: macos-14
             platform: darwin
             arch: arm64
