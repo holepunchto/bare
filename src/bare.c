@@ -49,7 +49,6 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
   process->callbacks.before_exit = NULL;
   process->callbacks.exit = NULL;
-  process->callbacks.teardown = NULL;
   process->callbacks.suspend = NULL;
   process->callbacks.wakeup = NULL;
   process->callbacks.idle = NULL;
@@ -186,14 +185,6 @@ int
 bare_on_exit(bare_t *bare, bare_exit_cb cb, void *data) {
   bare->process.callbacks.exit = cb;
   bare->process.callbacks.exit_data = data;
-
-  return 0;
-}
-
-int
-bare_on_teardown(bare_t *bare, bare_teardown_cb cb, void *data) {
-  bare->process.callbacks.teardown = cb;
-  bare->process.callbacks.teardown_data = data;
 
   return 0;
 }

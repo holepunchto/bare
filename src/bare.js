@@ -215,10 +215,6 @@ bare.onexit = function onexit() {
   exports.emit('exit', bare.exitCode)
 }
 
-bare.onteardown = function onteardown() {
-  exports.emit('teardown')
-}
-
 bare.onsuspend = function onsuspend(linger) {
   suspending = true
 
