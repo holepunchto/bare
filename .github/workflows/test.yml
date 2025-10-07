@@ -18,19 +18,19 @@ jobs:
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: android
             arch: x64
             flags: -D ANDROID_STL=c++_static
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: android
             arch: ia32
             flags: -D ANDROID_STL=c++_static
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: android
             arch: arm64
             flags: -D ANDROID_STL=c++_static
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: android
             arch: arm
             flags: -D ANDROID_STL=c++_static
