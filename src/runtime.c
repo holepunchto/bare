@@ -180,17 +180,6 @@ bare_runtime__on_teardown(bare_runtime_t *runtime, int *exit_code) {
   err = js_get_reference_value(env, runtime->exports, &exports);
   assert(err == 0);
 
-  js_value_t *fn;
-  err = js_get_named_property(env, exports, "onteardown", &fn);
-  assert(err == 0);
-
-  js_value_t *global;
-  err = js_get_global(env, &global);
-  assert(err == 0);
-
-  err = js_call_function(env, global, fn, 0, NULL, NULL);
-  (void) err;
-
   if (exit_code) {
     js_value_t *val;
     err = js_get_named_property(env, exports, "exitCode", &val);
@@ -202,8 +191,6 @@ bare_runtime__on_teardown(bare_runtime_t *runtime, int *exit_code) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
-
-  bare_runtime__invoke_callback_if_main_thread(runtime, teardown);
 }
 
 static inline void

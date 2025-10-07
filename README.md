@@ -130,20 +130,6 @@ If the process is exited explicitly, such as by calling `Bare.exit()` or as the 
 
 Emitted before the process or current thread terminates. Additional work must not be scheduled from an `exit` event listener. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
 
-#### `Bare.on('teardown')`
-
-Emitted after the process or current thread has terminated and before the JavaScript environment is torn down. Additional work must not be scheduled from a `teardown` event listener.
-
-> [!IMPORTANT]
->
-> ##### Teardown ordering
->
-> `teardown` listeners **SHOULD** be prepended to have the listeners run in last in, first out order:
->
-> ```js
-> Bare.prependListener('teardown', () => { ... })
-> ```
-
 #### `Bare.on('suspend', linger)`
 
 Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled. A `suspend` event listener may call `Bare.resume()` to cancel the suspension.

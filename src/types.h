@@ -69,9 +69,6 @@ struct bare_process_s {
     bare_exit_cb exit;
     void *exit_data;
 
-    bare_teardown_cb teardown;
-    void *teardown_data;
-
     bare_suspend_cb suspend;
     void *suspend_data;
 
