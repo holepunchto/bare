@@ -217,7 +217,7 @@ A reference to the current thread as a `ThreadProxy` object. Will be `null` on t
 
 #### `Thread.self.data`
 
-A copy of or, if shared, reference to the `data` buffer that was passed to the current thread on creation. Will be `null` if no buffer was passed.
+The data that was passed to the current thread on creation. Will be `null` if no data was passed.
 
 #### `const thread = new Thread([filename][, options][, callback])`
 
@@ -261,6 +261,10 @@ Wake the thread. Equivalent to calling `Bare.wakeup()` from within the thread.
 #### `thread.resume()`
 
 Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
+
+#### `thread.terminate()`
+
+Terminate the thread. Equivalent to calling `Bare.exit()` from within the thread.
 
 ### Embedding
 

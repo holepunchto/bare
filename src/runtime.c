@@ -991,6 +991,37 @@ bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  bare_runtime_t *runtime;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_thread_t *thread;
+  err = js_get_value_external(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  err = bare_thread_terminate(thread);
+  assert(err == 0);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
 bare_runtime__require(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1223,6 +1254,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("suspendThread", bare_runtime__suspend_thread);
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
+  V("terminateThread", bare_runtime__terminate_thread);
 #undef V
 
 #define V(name, bool) \

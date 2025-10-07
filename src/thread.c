@@ -265,6 +265,23 @@ done:
   return 0;
 }
 
+int
+bare_thread_terminate(bare_thread_t *thread) {
+  int err;
+
+  uv_sem_wait(&thread->lock);
+
+  if (thread->exited) goto done;
+
+  err = uv_async_send(&thread->runtime->signals.terminate);
+  assert(err == 0);
+
+done:
+  uv_sem_post(&thread->lock);
+
+  return 0;
+}
+
 void
 bare_thread_teardown(bare_thread_t *thread) {
   int err;

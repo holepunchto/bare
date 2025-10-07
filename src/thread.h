@@ -21,6 +21,9 @@ bare_thread_wakeup(bare_thread_t *thread, int deadline);
 int
 bare_thread_resume(bare_thread_t *thread);
 
+int
+bare_thread_terminate(bare_thread_t *thread);
+
 void
 bare_thread_teardown(bare_thread_t *thread);
 
