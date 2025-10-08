@@ -96,8 +96,10 @@ EXPORTS
 	js_get_element
 	js_get_env_loop
 	js_get_env_platform
+	js_get_error_location
 	js_get_filtered_property_names
 	js_get_global
+	js_get_heap_space_statistics
 	js_get_heap_statistics
 	js_get_module_name
 	js_get_module_namespace
@@ -191,8 +193,10 @@ EXPORTS
 	js_is_wrapped
 	js_new_instance
 	js_on_dynamic_import
+	js_on_dynamic_import_transitional
 	js_on_inspector_paused
 	js_on_inspector_response
+	js_on_inspector_response_transitional
 	js_on_uncaught_exception
 	js_on_unhandled_rejection
 	js_open_escapable_handle_scope
@@ -211,6 +215,7 @@ EXPORTS
 	js_run_module
 	js_run_script
 	js_send_inspector_request
+	js_send_inspector_request_transitional
 	js_set_array_elements
 	js_set_element
 	js_set_module_export
