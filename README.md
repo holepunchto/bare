@@ -422,12 +422,6 @@ Bare provides no standard library beyond the core JavaScript API available throu
 | [bare-zlib](https://github.com/holepunchto/bare-zlib)                         | Stream-based zlib bindings for JavaScript                                                | ![](https://img.shields.io/npm/v/bare-zlib)             |
 | [bare-zmq](https://github.com/holepunchto/bare-zmq)                           | Low-level ZeroMQ bindings for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-zmq)              |
 
-## FAQ
-
-### Why does Bare not support the JavaScript Internationalization API even when compiled with V8?
-
-Our V8 prebuilds strip the Internationalization API (<https://402.ecma-international.org/>) from JavaScript as it depends on the Internationalization Components for Unicode (ICU, <https://icu.unicode.org/>), which would add significant overhead to the binary size of Bare. In this aspect, Bare is comparable to Node.js compiled with the `--without-intl` flag (<https://nodejs.org/api/intl.html>). Embedders are of course free to bring along their own build of V8 with the Internationlization API enabled by disabling our prebuilds using the `BARE_PREBUILDS` option, see [Options](#options).
-
 ## License
 
 Apache-2.0
