@@ -14,6 +14,8 @@
 
 #include "types.h"
 
+typedef struct bare_addon_ref_s bare_addon_ref_t;
+
 static bare_addon_t *bare_addon__static = NULL;
 
 static bare_addon_t *bare_addon__dynamic = NULL;
@@ -25,6 +27,10 @@ static uv_mutex_t bare_addon__lock;
 static uv_lib_t bare_addon__lib;
 
 static uv_once_t bare_addon__guard = UV_ONCE_INIT;
+
+struct bare_addon_ref_s {
+  bare_addon_t *addon;
+};
 
 static void
 bare_addon__on_init(void) {
@@ -46,13 +52,15 @@ bare_addon__on_init(void) {
 
 static void
 bare_addon__on_teardown(void *data) {
-  bare_addon_t *addon = data;
+  bare_addon_ref_t *ref = data;
 
   uv_mutex_lock(&bare_addon__lock);
 
-  addon->refs--;
+  ref->addon->refs--;
 
   uv_mutex_unlock(&bare_addon__lock);
+
+  free(ref);
 }
 
 js_value_t *
@@ -165,6 +173,8 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_lock(&bare_addon__lock);
 
+  bare_addon_ref_t *ref;
+
   bare_addon_t *found = NULL;
   bare_addon_t *next = bare_addon__dynamic;
 
@@ -238,7 +248,10 @@ registered:
   found->lib = lib;
 
 done:
-  err = js_add_teardown_callback(runtime->env, bare_addon__on_teardown, found);
+  ref = malloc(sizeof(bare_addon_ref_t));
+  ref->addon = found;
+
+  err = js_add_teardown_callback(runtime->env, bare_addon__on_teardown, ref);
   assert(err == 0);
 
   uv_mutex_unlock(&bare_addon__lock);
@@ -257,7 +270,6 @@ err:
 }
 
 void
-
 bare_addon_teardown(void) {
   uv_once(&bare_addon__guard, bare_addon__on_init);
 
