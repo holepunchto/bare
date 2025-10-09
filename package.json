@@ -21,7 +21,7 @@
     "bare-console": "^6.0.0",
     "bare-events": "^2.0.0",
     "bare-hrtime": "^2.0.0",
-    "bare-inspector": "^4.0.1",
+    "bare-inspector": "^5.0.0",
     "bare-module": "^6.0.1",
     "bare-module-resolve": "^1.6.1",
     "bare-os": "^3.0.1",
