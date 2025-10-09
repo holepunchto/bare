@@ -12,9 +12,7 @@ if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
 
 const bare = command(
   'bare',
-  description(
-    'Evaluate a script or start a REPL session if no script is provided.'
-  ),
+  description('Evaluate a script or start a REPL session if no script is provided.'),
   flag('--version|-v', 'Print the Bare version'),
   flag('--eval|-e <script>', 'Evaluate an inline script'),
   flag('--print|-p <script>', 'Evaluate an inline script and print the result'),

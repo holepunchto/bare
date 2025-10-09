@@ -44,6 +44,6 @@
     "cmake-harden": "^1.1.2",
     "cmake-napi": "^1.0.7",
     "prettier": "^3.3.3",
-    "prettier-config-holepunch": "^1.0.0"
+    "prettier-config-holepunch": "^2.0.0"
   }
 }

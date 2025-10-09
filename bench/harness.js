@@ -101,12 +101,7 @@ function deviation(samples, m = mean(samples), v = variance(samples, m)) {
   return Math.sqrt(v)
 }
 
-function error(
-  samples,
-  m = mean(samples),
-  v = variance(samples, m),
-  d = deviation(samples, m, v)
-) {
+function error(samples, m = mean(samples), v = variance(samples, m), d = deviation(samples, m, v)) {
   return d / Math.sqrt(samples.length)
 }
 

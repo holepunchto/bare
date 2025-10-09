@@ -128,9 +128,7 @@ module.exports = exports = class Addon {
           }
         default:
           if (protocol.exists(resolution, constants.types.ADDON)) {
-            return protocol.postresolve(
-              protocol.addon ? protocol.addon(resolution) : resolution
-            )
+            return protocol.postresolve(protocol.addon ? protocol.addon(resolution) : resolution)
           }
       }
     }

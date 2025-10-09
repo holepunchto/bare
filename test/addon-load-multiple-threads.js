@@ -14,9 +14,7 @@ const thread = new Thread(__filename, () => {
   const { Addon, Thread } = Bare
 
   const addon = Addon.load(
-    url.pathToFileURL(
-      `./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`
-    )
+    url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
   )
 
   assert(addon.exports === 'Hello from addon')

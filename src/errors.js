@@ -13,11 +13,7 @@ exports.AddonError = class AddonError extends Error {
   }
 
   static ADDON_NOT_FOUND(msg, candidates = []) {
-    const err = new AddonError(
-      msg,
-      'ADDON_NOT_FOUND',
-      AddonError.ADDON_NOT_FOUND
-    )
+    const err = new AddonError(msg, 'ADDON_NOT_FOUND', AddonError.ADDON_NOT_FOUND)
 
     err.candidates = candidates
 
@@ -25,10 +21,6 @@ exports.AddonError = class AddonError extends Error {
   }
 
   static UNSUPPORTED_PROTOCOL(msg) {
-    return new AddonError(
-      msg,
-      'UNSUPPORTED_PROTOCOL',
-      AddonError.UNSUPPORTED_PROTOCOL
-    )
+    return new AddonError(msg, 'UNSUPPORTED_PROTOCOL', AddonError.UNSUPPORTED_PROTOCOL)
   }
 }
