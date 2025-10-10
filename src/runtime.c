@@ -30,6 +30,16 @@
     bare_runtime__invoke_callback(runtime, callback, ##__VA_ARGS__); \
   }
 
+static unsigned int bare__inherited_lowfd_mask = 0;
+
+void bare_set_inherited_lowfd_mask(unsigned int mask) {
+  bare__inherited_lowfd_mask = mask;
+}
+
+unsigned int bare_get_inherited_lowfd_mask(void) {
+  return bare__inherited_lowfd_mask;
+}
+
 static inline bool
 bare_runtime__is_main_thread(bare_runtime_t *runtime) {
   return runtime->process->runtime == runtime;
@@ -267,6 +277,87 @@ bare_runtime__on_wakeup_timeout(uv_timer_t *handle) {
   runtime->state = bare_runtime_state_idle;
 
   uv_stop(runtime->loop);
+}
+
+static void bare_detect_inherited_lowfd(void) {
+  unsigned int mask = 0;
+  for (int fd = 3; fd <= 9; ++fd) {
+    if (fcntl(fd, F_GETFD) != -1 || errno != EBADF) {
+      mask |= (1u << (fd - 3));
+    }
+  }
+  bare_set_inherited_lowfd_mask(mask);
+}
+
+void bare__runtime_init_lowfd(void) {
+  bare_detect_inherited_lowfd();
+}
+
+/**
+ * Implements `Bare.getInheritedLowFd(fd)`.
+ *
+ * It takes an integer `fd` and checks if it's a valid, available, 
+ * inherited file descriptor by checking the `bare__inherited_lowfd_mask`.
+ *
+ * If the fd is available (i.e., its corresponding bit in the mask is set),
+ * this function clears the bit to mark it as "consumed" and returns a JS
+ * object `{ fd: number }`.
+ *
+ * If the fd is out of range (not 3-9), invalid, or has already been consumed,
+ * it returns `null`.
+ */
+static js_value_t *
+bare_runtime__get_inherited_lowfd(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  if (argc != 1) {
+    js_value_t *null_val;
+    js_get_null(env, &null_val);
+    return null_val;
+  }
+
+  int32_t fd;
+  err = js_get_value_int32(env, argv[0], &fd);
+  if (err != 0) {
+    js_value_t *null_val;
+    js_get_null(env, &null_val);
+    return null_val;
+  }
+
+  if (fd < 3 || fd > 9) {
+    js_value_t *null_val;
+    js_get_null(env, &null_val);
+    return null_val;
+  }
+
+  unsigned int mask = bare_get_inherited_lowfd_mask();
+  unsigned int fd_mask = (1u << (fd - 3));
+
+  if ((mask & fd_mask) != 0) {
+    bare_set_inherited_lowfd_mask(mask & ~fd_mask);
+
+    js_value_t *result;
+    err = js_create_object(env, &result);
+    assert(err == 0);
+
+    js_value_t *fd_val;
+    err = js_create_int32(env, fd, &fd_val);
+    assert(err == 0);
+
+    err = js_set_named_property(env, result, "fd", fd_val);
+    assert(err == 0);
+
+    return result;
+  } else {
+    js_value_t *null_val;
+    js_get_null(env, &null_val);
+    return null_val;
+  }
 }
 
 static inline void
@@ -1242,6 +1333,20 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
   V("terminateThread", bare_runtime__terminate_thread);
+  V("getInheritedLowFd", bare_runtime__get_inherited_lowfd);  
+#undef V
+
+#define V(name, fn) \
+  { \
+    js_value_t *val; \
+    err = js_create_string_utf8(env, (utf8_t *) (fn), (size_t) -1, &val); \
+    assert(err == 0); \
+\
+  err = js_set_named_property(env, exports, name, val); \
+  assert(err == 0); \
+  }
+  
+  V("getInheritedLowFd", bare_runtime__get_inherited_lowfd);
 #undef V
 
 #define V(name, bool) \

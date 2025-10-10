@@ -53,6 +53,21 @@ class Bare extends EventEmitter {
     return bare.argv
   }
 
+  /**
+   * Get an inherited file descriptor.
+   *
+   * This is primarily used for systemd-style socket activation, where a parent
+   * process (like systemd) opens a socket and passes its file descriptor (fd)
+   * to the Bare process. This function allows the JavaScript application to
+   * retrieve that descriptor.
+   *
+   * The available fds are numbers between 3 and 9 (inclusive). Each fd can
+   * only be retrieved once. Subsequent calls for the same fd will return `null`.
+   */
+  get getInheritedLowFd () {
+    return (fd) => bare.getInheritedLowFd(fd)
+  }
+
   get pid() {
     return bare.pid
   }

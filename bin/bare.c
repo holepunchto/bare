@@ -1,7 +1,10 @@
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <js.h>
 #include <log.h>
 #include <rlimit.h>
+#include "../src/runtime.h"
 #include <signal.h>
 #include <uv.h>
 
@@ -50,6 +53,8 @@ bare__on_platform_thread(void *data) {
 int
 main(int argc, char *argv[]) {
   int err;
+
+  bare__runtime_init_lowfd();
 
 #ifdef SIGPIPE
   signal(SIGPIPE, SIG_IGN);

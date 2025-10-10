@@ -63,6 +63,8 @@ struct bare_process_s {
   int argc;
   const char **argv;
 
+  unsigned int inherited_lowfds_mask;
+
   struct {
     bare_before_exit_cb before_exit;
     void *before_exit_data;

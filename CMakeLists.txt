@@ -310,6 +310,7 @@ target_link_libraries(
 )
 
 add_subdirectory(bin)
+add_subdirectory(examples)
 
 install(TARGETS bare_static bare_shared)
 
