@@ -1,9 +1,11 @@
 const assert = require('bare-assert')
 
 let suspended = false
+let awake = false
 
 Bare.on('exit', () => {
   assert(suspended, 'Should have suspended')
+  assert(awake, 'Should have woken up')
 })
   .on('suspend', () => {
     console.log('emit suspend')
