@@ -28,6 +28,7 @@
     "bare-path": "^3.0.0",
     "bare-queue-microtask": "^1.0.0",
     "bare-repl": "^6.0.1",
+    "bare-signals": "^4.0.4",
     "bare-structured-clone": "^1.0.2",
     "bare-timers": "^3.0.0",
     "bare-tty": "^5.0.0",

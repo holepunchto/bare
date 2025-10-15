@@ -2,6 +2,7 @@ const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
 const path = require('bare-path')
+const Signal = require('bare-signals')
 const { description, command, flag, arg, rest, bail } = require('paparam')
 
 const parentURL = url.pathToFileURL(os.cwd())
@@ -60,11 +61,12 @@ const bare = command(
 
     let server = null
 
-    if (flags.inspect) {
-      const inspector = require('bare-inspector')
-
-      server = new inspector.Server(9229, { path: args.filename || os.cwd() })
-      server.unref()
+    if (flags.inspect) inspect()
+    else {
+      const signal = new Signal('SIGUSR1')
+      signal.unref()
+      signal.start()
+      signal.on('signal', inspect)
     }
 
     if (flags.eval) {
@@ -85,6 +87,15 @@ const bare = command(
         if (server === null) Bare.exit()
         else server.close(() => Bare.exit())
       })
+
+    function inspect() {
+      if (server !== null) return
+
+      const inspector = require('bare-inspector')
+
+      server = new inspector.Server(9229, { path: args.filename || os.cwd() })
+      server.unref()
+    }
   }
 )
 
