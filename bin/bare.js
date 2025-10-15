@@ -65,8 +65,7 @@ const bare = command(
     else {
       const signal = new Signal('SIGUSR1')
       signal.unref()
-      signal.start()
-      signal.on('signal', inspect)
+      signal.on('signal', inspect).start()
     }
 
     if (flags.eval) {
