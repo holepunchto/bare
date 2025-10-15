@@ -4,6 +4,7 @@
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "require": "./index.cjs",
       "import": "./index.mjs"
     }
@@ -14,6 +15,7 @@
   "files": [
     "index.cjs",
     "index.mjs",
+    "index.d.ts",
     "bin"
   ],
   "repository": {
@@ -28,5 +30,37 @@
   "homepage": "https://github.com/holepunchto/bare",
   "dependencies": {
     "bare-runtime": "1.23.4"
+  },
+  "peerDependencies": {
+    "bare-buffer": "*",
+    "bare-console": "*",
+    "bare-events": "*",
+    "bare-queue-microtask": "*",
+    "bare-structured-clone": "*",
+    "bare-timers": "*",
+    "bare-url": "*"
+  },
+  "peerDependenciesMeta": {
+    "bare-buffer": {
+      "optional": true
+    },
+    "bare-console": {
+      "optional": true
+    },
+    "bare-events": {
+      "optional": true
+    },
+    "bare-queue-microtask": {
+      "optional": true
+    },
+    "bare-structured-clone": {
+      "optional": true
+    },
+    "bare-timers": {
+      "optional": true
+    },
+    "bare-url": {
+      "optional": true
+    }
   }
 }
