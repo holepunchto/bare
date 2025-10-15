@@ -60,6 +60,7 @@ declare namespace Addon {
 
 interface ThreadOptions {
   data?: unknown
+  transfer?: unknown[]
   source?: string | Buffer
   encoding?: BufferEncoding
   stackSize?: number

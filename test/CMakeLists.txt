@@ -36,6 +36,7 @@ list(APPEND tests
   thread-join.js
   thread-source.js
   thread-shared-data.js
+  thread-transfer-data.js
   timeout.js
   timeout-clear.js
   wakeup.js

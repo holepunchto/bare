@@ -26,12 +26,12 @@ module.exports = exports = class Thread {
       }
     }
 
-    let { data = null, source = null, encoding = 'utf8', stackSize = 0 } = opts
+    let { data = null, source = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
 
     if (typeof source === 'string') source = Buffer.from(source, encoding)
 
     if (data !== null) {
-      const serialized = structuredClone.serialize(data)
+      const serialized = structuredClone.serializeWithTransfer(data, transfer)
 
       const state = { start: 0, end: 0, buffer: null }
 
@@ -113,5 +113,5 @@ bare.onthread = function onthread(data) {
 
   const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
 
-  exports.self.data = structuredClone.deserialize(structuredClone.decode(state))
+  exports.self.data = structuredClone.deserializeWithTransfer(structuredClone.decode(state))
 }

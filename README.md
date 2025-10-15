@@ -218,6 +218,8 @@ Options include:
 {
   // Optional data to pass to the thread
   data: null,
+  // Optional transfer list
+  transfer: [],
   // Optional file source, will be read from `filename` if neither `source` nor `callback` are provided
   source: string | Buffer,
   // Optional source encoding if `source` is a string
