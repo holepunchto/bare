@@ -5,6 +5,8 @@ const path = require('bare-path')
 const Signal = require('bare-signals')
 const { description, command, flag, arg, rest, bail } = require('paparam')
 
+const { SIGUSR1 } = Signal.constants
+
 const parentURL = url.pathToFileURL(os.cwd())
 
 if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
@@ -62,8 +64,8 @@ const bare = command(
     let server = null
 
     if (flags.inspect) inspect()
-    else {
-      const signal = new Signal('SIGUSR1')
+    else if (SIGUSR1) {
+      const signal = new Signal(SIGUSR1)
       signal.unref()
       signal.on('signal', inspect).start()
     }
