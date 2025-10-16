@@ -24,7 +24,7 @@ set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dep
 fetch_package("github:libuv/libuv@1.51.0")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#2fc7d59")
+fetch_package("github:holepunchto/libutf#6b1a36f")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   mirror_drive(
