@@ -1,5 +1,5 @@
 exports.AddonError = class AddonError extends Error {
-  constructor(msg, code, fn = AddonError) {
+  constructor(msg, fn = AddonError, code = fn.name) {
     super(`${code}: ${msg}`)
     this.code = code
 
@@ -12,15 +12,17 @@ exports.AddonError = class AddonError extends Error {
     return 'AddonError'
   }
 
-  static ADDON_NOT_FOUND(msg, candidates = []) {
-    const err = new AddonError(msg, 'ADDON_NOT_FOUND', AddonError.ADDON_NOT_FOUND)
+  static ADDON_NOT_FOUND(msg, specifier, referrer = null, candidates = []) {
+    const err = new AddonError(msg, AddonError.ADDON_NOT_FOUND)
 
+    err.specifier = specifier
+    err.referrer = referrer
     err.candidates = candidates
 
     return err
   }
 
   static UNSUPPORTED_PROTOCOL(msg) {
-    return new AddonError(msg, 'UNSUPPORTED_PROTOCOL', AddonError.UNSUPPORTED_PROTOCOL)
+    return new AddonError(msg, AddonError.UNSUPPORTED_PROTOCOL)
   }
 }

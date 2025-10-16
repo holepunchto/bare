@@ -85,6 +85,12 @@ module.exports = exports = class Addon {
   static resolve(specifier, parentURL, opts = {}) {
     const self = Addon
 
+    if (typeof specifier !== 'string') {
+      throw new TypeError(
+        `Specifier must be a string. Received type ${typeof specifier} (${specifier})`
+      )
+    }
+
     const {
       referrer = null,
       protocol = referrer ? referrer._protocol : self._protocol,
@@ -140,7 +146,7 @@ module.exports = exports = class Addon {
       message += '\n' + candidates.map((url) => '- ' + url.href).join('\n')
     }
 
-    throw AddonError.ADDON_NOT_FOUND(message, candidates)
+    throw AddonError.ADDON_NOT_FOUND(message, specifier, parentURL, candidates)
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, constants.types.JSON)) {
