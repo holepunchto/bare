@@ -1319,6 +1319,9 @@ bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code)
   err = js_destroy_env(runtime->env);
   assert(err == 0);
 
+  err = uv_run(runtime->loop, UV_RUN_NOWAIT);
+  (void) err;
+
 #define V(signal) \
   uv_close((uv_handle_t *) &runtime->signals.signal, bare_runtime__on_handle_close);
 
@@ -1471,9 +1474,6 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
     if (runtime->state == bare_runtime_state_terminated) {
     terminated:
-      err = uv_run(runtime->loop, UV_RUN_NOWAIT);
-      (void) err;
-
       break;
     }
   } while (uv_loop_alive(runtime->loop));
