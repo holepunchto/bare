@@ -9,7 +9,7 @@
 
 #include "bare.bundle.h"
 
-static uv_sem_t bare__platform_ready;
+static uv_barrier_t bare__platform_ready;
 static uv_async_t bare__platform_shutdown;
 static js_platform_t *bare__platform;
 
@@ -32,7 +32,7 @@ bare__on_platform_thread(void *data) {
   err = js_create_platform(&loop, NULL, &bare__platform);
   assert(err == 0);
 
-  uv_sem_post(&bare__platform_ready);
+  uv_barrier_wait(&bare__platform_ready);
 
   err = uv_run(&loop, UV_RUN_DEFAULT);
   assert(err == 0);
@@ -65,16 +65,16 @@ main(int argc, char *argv[]) {
 
   argv = uv_setup_args(argc, argv);
 
-  err = uv_sem_init(&bare__platform_ready, 0);
+  err = uv_barrier_init(&bare__platform_ready, 2);
   assert(err == 0);
 
   uv_thread_t thread;
   err = uv_thread_create(&thread, bare__on_platform_thread, NULL);
   assert(err == 0);
 
-  uv_sem_wait(&bare__platform_ready);
+  uv_barrier_wait(&bare__platform_ready);
 
-  uv_sem_destroy(&bare__platform_ready);
+  uv_barrier_destroy(&bare__platform_ready);
 
   bare_t *bare;
   err = bare_setup(loop, bare__platform, NULL, argc, (const char **) argv, NULL, &bare);
