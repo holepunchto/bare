@@ -32,10 +32,6 @@ const EventEmitter = require('bare-events')
  * Declare the Bare object.
  */
 
-let suspending = false
-let suspended = false
-let exiting = false
-
 class Bare extends EventEmitter {
   get platform() {
     return bare.platform
@@ -65,18 +61,6 @@ class Bare extends EventEmitter {
     bare.exitCode = code & 0xff
   }
 
-  get suspending() {
-    return suspending
-  }
-
-  get suspended() {
-    return suspended
-  }
-
-  get exiting() {
-    return exiting
-  }
-
   get version() {
     return 'v' + bare.versions.bare
   }
@@ -86,8 +70,6 @@ class Bare extends EventEmitter {
   }
 
   exit(code = bare.exitCode) {
-    exiting = true
-
     bare.exitCode = code & 0xff
     bare.terminate()
 
@@ -128,9 +110,6 @@ class Bare extends EventEmitter {
       argv: this.argv,
       pid: this.pid,
       exitCode: this.exitCode,
-      suspending: this.suspending,
-      suspended: this.suspended,
-      exiting: this.exiting,
       version: this.version,
       versions: this.versions
     }
@@ -210,14 +189,10 @@ bare.onbeforeexit = function onbeforeexit() {
 }
 
 bare.onexit = function onexit() {
-  exiting = true
-
   exports.emit('exit', bare.exitCode)
 }
 
 bare.onsuspend = function onsuspend(linger) {
-  suspending = true
-
   exports.emit('suspend', linger)
 }
 
@@ -226,16 +201,10 @@ bare.onwakeup = function onwakeup(deadline) {
 }
 
 bare.onidle = function onidle() {
-  suspending = false
-  suspended = true
-
   exports.emit('idle')
 }
 
 bare.onresume = function onresume() {
-  suspending = false
-  suspended = false
-
   exports.emit('resume')
 }
 
