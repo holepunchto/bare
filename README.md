@@ -118,7 +118,7 @@ If the process is exited explicitly, such as by calling `Bare.exit()` or as the 
 
 Emitted when the process or current thread exits. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
 
-> [!CAUTION]
+> [!CAUTION]  
 > Additional work **MUST NOT** be scheduled from an `exit` event listener.
 
 #### `Bare.on('suspend', linger)`
@@ -168,6 +168,9 @@ stateDiagram
 
 The `Bare.Addon` namespace provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
 
+> [!NOTE]  
+> This is an advanced API that users should never have to interact with directly.
+
 #### `const addon = Addon.load(url[, options])`
 
 Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
@@ -183,6 +186,9 @@ Options are reserved.
 ### `Bare.Thread`
 
 The `Bare.Thread` namespace provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
+
+> [!NOTE]  
+> This is an advanced API that users should never have to interact with directly.
 
 #### `Thread.isMainThread`
 
