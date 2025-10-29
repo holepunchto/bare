@@ -108,6 +108,8 @@ module.exports = exports = class Addon {
 
     const candidates = []
 
+    let cause
+
     for (const resolution of resolve(
       resolved,
       parentURL,
@@ -129,8 +131,9 @@ module.exports = exports = class Addon {
         case 'linked:':
           try {
             return Addon.load(resolution, opts).url
-          } catch {
-            continue
+          } catch (err) {
+            cause = err
+            break
           }
         default:
           if (protocol.exists(resolution, constants.types.ADDON)) {
@@ -146,7 +149,7 @@ module.exports = exports = class Addon {
       message += '\n' + candidates.map((url) => '- ' + url.href).join('\n')
     }
 
-    throw AddonError.ADDON_NOT_FOUND(message, specifier, parentURL, candidates)
+    throw AddonError.ADDON_NOT_FOUND(message, specifier, parentURL, candidates, cause)
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, constants.types.JSON)) {
