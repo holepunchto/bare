@@ -34,33 +34,6 @@ bare_thread__entry(void *opaque) {
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
-  bare_source_t source;
-
-  switch (thread->source.type) {
-  case bare_source_none:
-  default:
-    source.type = bare_source_none;
-    break;
-
-  case bare_source_buffer:
-    source.type = bare_source_arraybuffer;
-
-    js_value_t *arraybuffer;
-
-    void *data;
-    err = js_create_arraybuffer(env, thread->source.buffer.len, &data, &arraybuffer);
-    assert(err == 0);
-
-    memcpy(data, thread->source.buffer.base, thread->source.buffer.len);
-
-    err = js_create_reference(env, arraybuffer, 1, &source.arraybuffer);
-    assert(err == 0);
-    break;
-
-  case bare_source_arraybuffer:
-    abort();
-  }
-
   js_value_t *data;
 
   switch (thread->data.type) {
@@ -103,7 +76,7 @@ bare_thread__entry(void *opaque) {
     runtime->process->callbacks.thread((bare_t *) runtime->process, env, runtime->process->callbacks.thread_data);
   }
 
-  err = bare_runtime_load(runtime, thread->filename, source, NULL);
+  err = bare_runtime_load(runtime, thread->filename, thread->source, NULL);
   (void) err;
 
   err = bare_runtime_run(runtime, UV_RUN_DEFAULT);

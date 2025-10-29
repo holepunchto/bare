@@ -796,13 +796,13 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   bare_source_t source = {bare_source_none};
   bool has_source;
 
-  err = js_is_typedarray(env, argv[1], &has_source);
+  err = js_is_sharedarraybuffer(env, argv[1], &has_source);
   assert(err == 0);
 
   if (has_source) {
-    source.type = bare_source_buffer;
+    source.type = bare_source_sharedarraybuffer;
 
-    err = js_get_typedarray_info(env, argv[1], NULL, (void **) &source.buffer.base, (size_t *) &source.buffer.len, NULL, NULL);
+    err = js_get_sharedarraybuffer_backing_store(env, argv[1], &source.backing_store);
     assert(err == 0);
   }
 
@@ -1424,11 +1424,11 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
     assert(err == 0);
     break;
 
-  case bare_source_arraybuffer:
-    err = js_get_reference_value(env, source.arraybuffer, &args[1]);
+  case bare_source_sharedarraybuffer:
+    err = js_create_sharedarraybuffer_with_backing_store(env, source.backing_store, NULL, NULL, &args[1]);
     assert(err == 0);
 
-    err = js_delete_reference(env, source.arraybuffer);
+    err = js_release_arraybuffer_backing_store(env, source.backing_store);
     assert(err == 0);
     break;
   }

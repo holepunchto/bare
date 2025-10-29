@@ -91,12 +91,12 @@ struct bare_source_s {
   enum {
     bare_source_none,
     bare_source_buffer,
-    bare_source_arraybuffer,
+    bare_source_sharedarraybuffer,
   } type;
 
   union {
     uv_buf_t buffer;
-    js_ref_t *arraybuffer;
+    js_arraybuffer_backing_store_t *backing_store;
   };
 };
 

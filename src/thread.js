@@ -28,7 +28,19 @@ module.exports = exports = class Thread {
 
     let { data = null, source = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
 
-    if (typeof source === 'string') source = Buffer.from(source, encoding)
+    if (typeof source === 'string') {
+      const copy = new SharedArrayBuffer(Buffer.byteLength(source, encoding))
+
+      Buffer.from(copy).write(source, encoding)
+
+      source = copy
+    } else if (source !== null) {
+      const copy = new SharedArrayBuffer(source.byteLength)
+
+      Buffer.from(copy).set(source)
+
+      source = copy
+    }
 
     if (data !== null) {
       const serialized = structuredClone.serializeWithTransfer(data, transfer)
