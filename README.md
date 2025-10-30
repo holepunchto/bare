@@ -171,17 +171,33 @@ The `Bare.Addon` namespace provides support for loading native addons, which are
 > [!NOTE]  
 > This is an advanced API that users should never have to interact with directly.
 
-#### `const addon = Addon.load(url[, options])`
+#### `Addon.cache`
 
-Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
+The global cache of loaded addons.
 
-Options are reserved.
+#### `Addon.host`
+
+The target triplet identifying the current addon host.
 
 #### `const url = Addon.resolve(specifier, parentURL[, options])`
 
 Resolve a native addon specifier by searching for a static native addon or dynamic object library matching `specifier` imported from `parentURL`.
 
 Options are reserved.
+
+#### `const addon = Addon.load(url[, options])`
+
+Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
+
+Options are reserved.
+
+#### `addon.url`
+
+The WHATWG `URL` identifier of the addon.
+
+#### `addon.exports`
+
+The exports of the addon.
 
 ### `Bare.Thread`
 
