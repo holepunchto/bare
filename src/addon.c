@@ -17,15 +17,11 @@
 typedef struct bare_addon_ref_s bare_addon_ref_t;
 
 static bare_addon_t *bare_addon__static = NULL;
-
 static bare_addon_t *bare_addon__dynamic = NULL;
-
 static bare_addon_t **bare_addon__pending = &bare_addon__static;
 
 static uv_mutex_t bare_addon__lock;
-
 static uv_lib_t bare_addon__lib;
-
 static uv_once_t bare_addon__guard = UV_ONCE_INIT;
 
 struct bare_addon_ref_s {

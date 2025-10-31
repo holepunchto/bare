@@ -7,15 +7,15 @@
 const addons = Object.create(null)
 
 bare.addon = function addon(href) {
-  let addon = addons[href]
+  let addon = addons[href] || null
 
-  if (addon) return addon
+  if (addon !== null) return addon.exports
 
-  addon = addons[href] = { handle: null, exports: {} }
+  addon = addons[href] = { exports: {} }
 
-  addon.handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
+  const handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
 
-  addon.exports = bare.initAddon(addon.handle, addon.exports)
+  addon.exports = bare.initAddon(handle, addon.exports)
 
   return addon.exports
 }
