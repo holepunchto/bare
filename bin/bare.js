@@ -63,39 +63,42 @@ const bare = command(
 
     let server = null
 
-    if (flags.inspect) inspect()
+    if (flags.inspect) inspect(loadModule)
     else if (SIGUSR1) {
       const signal = new Signal(SIGUSR1)
       signal.unref()
       signal.on('signal', inspect).start()
+      loadModule()
     }
 
-    if (flags.eval) {
-      return Module.load(parentURL, flags.eval)
+    function loadModule() {
+      if (flags.eval) {
+        return Module.load(parentURL, flags.eval)
+      }
+
+      if (flags.print) {
+        return Module.load(parentURL, `console.log(${flags.print})`)
+      }
+
+      if (args.filename) {
+        return Module.load(args.filename)
+      }
+
+      require('bare-repl')
+        .start()
+        .on('exit', () => {
+          if (server === null) Bare.exit()
+          else server.close(() => Bare.exit())
+        })
     }
 
-    if (flags.print) {
-      return Module.load(parentURL, `console.log(${flags.print})`)
-    }
-
-    if (args.filename) {
-      return Module.load(args.filename)
-    }
-
-    require('bare-repl')
-      .start()
-      .on('exit', () => {
-        if (server === null) Bare.exit()
-        else server.close(() => Bare.exit())
-      })
-
-    function inspect() {
+    function inspect(cb) {
       if (server !== null) return
 
       const inspector = require('bare-inspector')
 
       server = new inspector.Server(9229, { path: args.filename || os.cwd() })
-      server.unref()
+      server.on('Debugger.enable', cb)
     }
   }
 )
