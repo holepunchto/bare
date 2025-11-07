@@ -11,7 +11,7 @@ Bare.on('exit', () => {
     Bare.resume()
   })
   .on('idle', () => {
-    console.log('emit idle')
+    assert(false, 'Should not idle')
   })
   .on('resume', () => {
     console.log('emit resume')
