@@ -1,20 +1,14 @@
-const assert = require('bare-assert')
+const test = require('brittle')
 
-let suspended = false
+test('basic', function (t) {
+  t.plan(2)
 
-Bare.on('exit', () => {
-  assert(suspended, 'Should have suspended')
-})
-  .on('suspend', () => {
-    console.log('emit suspend')
-    suspended = true
+  Bare.on('suspend', () => {
+    t.pass('suspended')
     Bare.resume()
   })
-  .on('idle', () => {
-    assert(false, 'Should not idle')
-  })
-  .on('resume', () => {
-    console.log('emit resume')
-    assert(suspended)
-  })
-  .suspend()
+    .on('idle', () => t.fail('should not idle'))
+    .on('resume', () => t.pass('resumed'))
+    .on('wakeup', () => t.fail('should not wake up'))
+    .suspend()
+})
