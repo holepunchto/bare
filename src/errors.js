@@ -17,7 +17,10 @@ exports.AddonError = class AddonError extends Error {
   }
 
   static ADDON_NOT_FOUND(msg, specifier, referrer = null, candidates = [], cause) {
-    const err = new AddonError(msg, AddonError.ADDON_NOT_FOUND, { cause })
+    const opts = {}
+    if (cause) opts.cause = cause // Must only be present if provided
+
+    const err = new AddonError(msg, AddonError.ADDON_NOT_FOUND, opts)
 
     err.specifier = specifier
     err.referrer = referrer
