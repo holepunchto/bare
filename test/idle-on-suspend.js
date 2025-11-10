@@ -7,7 +7,7 @@ test('basic', function (t) {
 
   Bare.on('suspend', () => {
     t.pass('suspended')
-    timer = setTimeout(() => assert(false), 10000)
+    timer = setTimeout(() => t.fail('should not execute the timer callback'), 10000)
     Bare.idle()
   })
     .on('idle', () => {
