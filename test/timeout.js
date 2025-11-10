@@ -1,10 +1,20 @@
-const assert = require('bare-assert')
+const test = require('brittle')
 
-const start = Date.now()
+test('basic', function (t) {
+  t.plan(1)
 
-setTimeout(() => {
-  const elapsed = Date.now() - start
-  const diff = Math.abs(200 - elapsed)
+  const start = Date.now()
 
-  assert(diff < 50, 'Difference should be +-50 ms')
-}, 200)
+  setTimeout(() => {
+    const elapsed = Date.now() - start
+    const diff = Math.abs(200 - elapsed)
+
+    t.ok(diff < 50, 'Difference should be +-50 ms')
+  }, 200)
+})
+
+test('clear', function (t) {
+  const id = setTimeout(() => t.fail('Should have been cancelled'), 200)
+
+  clearTimeout(id)
+})
