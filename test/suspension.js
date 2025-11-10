@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('suspend + resume', async (t) => {
+test('suspend + resume', function (t) {
   t.plan(2)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -26,6 +26,26 @@ test('suspend + resume with linger', function (t) {
   Bare.resume()
 
   t.teardown(() => resetListeners())
+})
+
+test('suspend + resume with thread', function (t) {
+  t.plan(1)
+
+  const { Thread } = Bare
+
+  const thread = new Thread(() => {
+    Bare.on('suspend', () => console.log('suspended'))
+      .on('idle', () => {
+        console.log('idled')
+        Bare.resume()
+      })
+      .on('resume', () => console.log('resumed'))
+  })
+
+  thread.suspend()
+  thread.join()
+
+  t.pass()
 })
 
 test('suspend + resume on suspend', function (t) {

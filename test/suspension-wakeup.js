@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('wakeup', async (t) => {
+test('basic', async (t) => {
   t.plan(3)
 
   Bare.on('suspend', () => t.pass('suspended'))
