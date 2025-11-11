@@ -1,10 +1,9 @@
 const test = require('brittle')
 const path = require('bare-path')
 const url = require('bare-url')
-const assert = require('bare-assert')
 const { Addon, Thread } = Bare
 
-test('load', function (t) {
+test('load', (t) => {
   t.plan(1)
 
   const addon = Addon.load(
@@ -14,7 +13,7 @@ test('load', function (t) {
   t.is(addon.exports, 'Hello from addon')
 })
 
-test('resolve', function (t) {
+test('resolve', (t) => {
   t.plan(1)
 
   const resolved = Addon.resolve('.', url.pathToFileURL('./test/fixtures/addon/'))
@@ -25,7 +24,7 @@ test('resolve', function (t) {
   )
 })
 
-test('dependent', function (t) {
+test('dependent', (t) => {
   t.plan(2)
 
   const a = Addon.load(
@@ -39,7 +38,7 @@ test('dependent', function (t) {
   t.is(b.exports, 42)
 })
 
-test('scoped', function (t) {
+test('scoped', (t) => {
   t.plan(2)
 
   const resolution = Addon.resolve('.', url.pathToFileURL(`./test/fixtures/scoped-addon/`))
@@ -55,7 +54,7 @@ test('scoped', function (t) {
   t.is(addon.exports, 'Hello from scoped addon')
 })
 
-test('load multiple threads', function (t) {
+test('load multiple threads', (t) => {
   t.plan(2)
 
   const addon = Addon.load(

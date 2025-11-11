@@ -3,7 +3,7 @@ const path = require('bare-path')
 
 const { Thread } = Bare
 
-test('basic', function (t) {
+test('basic', (t) => {
   t.plan(2)
 
   t.ok(Thread.isMainThread)
@@ -15,7 +15,7 @@ test('basic', function (t) {
   t.pass()
 })
 
-test('thread join', function (t) {
+test('thread join', (t) => {
   t.plan(2)
 
   t.ok(Thread.isMainThread)
@@ -26,7 +26,7 @@ test('thread join', function (t) {
   t.pass()
 })
 
-test('thread source', function (t) {
+test('thread source', (t) => {
   t.plan(2)
 
   t.ok(Thread.isMainThread)
@@ -38,7 +38,7 @@ test('thread source', function (t) {
   t.pass()
 })
 
-test('thread shared data', function (t) {
+test('thread shared data', (t) => {
   t.plan(5)
 
   t.ok(Thread.isMainThread)
@@ -51,7 +51,7 @@ test('thread shared data', function (t) {
   for (let i = 0; i < data.byteLength; i++) t.is(data[i], i + 1)
 })
 
-test('thread transfer data', function (t) {
+test('thread transfer data', (t) => {
   t.plan(2)
 
   t.ok(Thread.isMainThread)

@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('basic', function (t) {
+test('basic', (t) => {
   t.plan(1)
 
   const start = Date.now()
@@ -13,7 +13,7 @@ test('basic', function (t) {
   }, 200)
 })
 
-test('clear', function (t) {
+test('clear', (t) => {
   const id = setTimeout(() => t.fail('Should have been cancelled'), 200)
 
   clearTimeout(id)

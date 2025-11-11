@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('idle on suspend', function (t) {
+test('idle on suspend', (t) => {
   t.plan(3)
 
   let timer
@@ -24,7 +24,7 @@ test('idle on suspend', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('idle on idle', function (t) {
+test('idle on idle', (t) => {
   t.plan(3)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -40,7 +40,7 @@ test('idle on idle', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('idle on resume', function (t) {
+test('idle on resume', (t) => {
   t.plan(3)
 
   Bare.on('suspend', () => t.pass('suspended'))

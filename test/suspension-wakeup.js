@@ -18,7 +18,7 @@ test('basic', async (t) => {
   })
 })
 
-test('wakeup on suspend', function (t) {
+test('wakeup on suspend', (t) => {
   t.plan(2)
 
   Bare.on('suspend', () => {
@@ -36,7 +36,7 @@ test('wakeup on suspend', function (t) {
   })
 })
 
-test('wakeup on release', function (t) {
+test('wakeup on release', (t) => {
   t.plan(2)
 
   Bare.on('suspend', () => {
@@ -57,7 +57,7 @@ test('wakeup on release', function (t) {
   })
 })
 
-test('wakeup on wakeup', function (t) {
+test('wakeup on wakeup', (t) => {
   t.plan(4)
 
   const [suspend, idle, wakeup] = [1, 2, 3]
@@ -87,7 +87,7 @@ test('wakeup on wakeup', function (t) {
   })
 })
 
-test('wakeup + suspend on wakeup', function (t) {
+test('wakeup + suspend on wakeup', (t) => {
   t.plan(3)
 
   let suspended
@@ -116,7 +116,7 @@ test('wakeup + suspend on wakeup', function (t) {
   })
 })
 
-test('wakeup + resume', function (t) {
+test('wakeup + resume', (t) => {
   t.plan(4)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -132,7 +132,7 @@ test('wakeup + resume', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('wakeup + resume on wakeup', function (t) {
+test('wakeup + resume on wakeup', (t) => {
   t.plan(4)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -150,7 +150,7 @@ test('wakeup + resume on wakeup', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('wakeup exceed deadline', function (t) {
+test('wakeup exceed deadline', (t) => {
   t.plan(6)
 
   const [suspend, resume, idle, wakeup] = [1, 2, 3, 4]
@@ -181,7 +181,7 @@ test('wakeup exceed deadline', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('wakeup before suspend', function (t) {
+test('wakeup before suspend', (t) => {
   Bare.on('wakeup', () => t.fail('should not wake up'))
 
   Bare.wakeup(100)

@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('suspend + resume', function (t) {
+test('suspend + resume', (t) => {
   t.plan(2)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -14,7 +14,7 @@ test('suspend + resume', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume with linger', function (t) {
+test('suspend + resume with linger', (t) => {
   t.plan(2)
 
   Bare.on('suspend', (linger) => t.is(linger, 1000, 'suspended with linger'))
@@ -28,7 +28,7 @@ test('suspend + resume with linger', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume with thread', function (t) {
+test('suspend + resume with thread', (t) => {
   t.plan(1)
 
   const { Thread } = Bare
@@ -48,7 +48,7 @@ test('suspend + resume with thread', function (t) {
   t.pass()
 })
 
-test('suspend + resume on suspend', function (t) {
+test('suspend + resume on suspend', (t) => {
   t.plan(2)
 
   Bare.on('suspend', () => {
@@ -63,7 +63,7 @@ test('suspend + resume on suspend', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume on idle', function (t) {
+test('suspend + resume on idle', (t) => {
   t.plan(3)
 
   Bare.on('suspend', () => t.pass('suspended'))
@@ -78,7 +78,7 @@ test('suspend + resume on idle', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume + suspend', function (t) {
+test('suspend + resume + suspend', (t) => {
   t.plan(5)
 
   const [suspend, resume, idle] = [1, 2, 3]
@@ -99,7 +99,7 @@ test('suspend + resume + suspend', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume + suspend with linger', function (t) {
+test('suspend + resume + suspend with linger', (t) => {
   t.plan(7)
 
   const [suspend, resume, idle] = [1, 2, 3]
@@ -123,7 +123,7 @@ test('suspend + resume + suspend with linger', function (t) {
   t.teardown(() => resetListeners())
 })
 
-test('suspend + resume + suspend on suspend', function (t) {
+test('suspend + resume + suspend on suspend', (t) => {
   t.plan(5)
 
   const [suspend, resume, idle] = [1, 2, 3]
