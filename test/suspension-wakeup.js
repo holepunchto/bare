@@ -66,8 +66,8 @@ test('wakeup on suspend', (t) => {
   }
 })
 
-test('wakeup on release', (t) => {
-  t.plan(2)
+test('wakeup on resume', (t) => {
+  t.plan(3)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
@@ -92,6 +92,7 @@ test('wakeup on release', (t) => {
   function onresume() {
     t.pass('resumed')
     Bare.wakeup(100)
+    setTimeout(() => t.pass('flushed'), 10) // Let the tick flush
   }
 
   function onwakeup() {
@@ -99,8 +100,8 @@ test('wakeup on release', (t) => {
   }
 })
 
-test.skip('wakeup on wakeup', (t) => {
-  t.plan(5)
+test('wakeup on wakeup', (t) => {
+  t.plan(6)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
@@ -133,12 +134,15 @@ test.skip('wakeup on wakeup', (t) => {
   function onwakeup() {
     t.pass('woke up')
     if (awake++) Bare.resume()
-    else Bare.wakeup(100)
+    else {
+      Bare.wakeup(100)
+      setTimeout(() => t.pass('flushed'), 10) // Let the tick flush
+    }
   }
 })
 
-test.skip('wakeup + suspend on wakeup', (t) => {
-  t.plan(3)
+test('wakeup + suspend on wakeup', (t) => {
+  t.plan(4)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
@@ -170,10 +174,11 @@ test.skip('wakeup + suspend on wakeup', (t) => {
   function onwakeup(deadline) {
     t.is(deadline, 100, 'woke up')
     Bare.suspend()
+    setTimeout(() => Bare.resume(), 10) // Let the tick flush
   }
 })
 
-test.skip('wakeup + resume', (t) => {
+test('wakeup + resume', (t) => {
   t.plan(4)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
@@ -206,7 +211,7 @@ test.skip('wakeup + resume', (t) => {
   }
 })
 
-test.skip('wakeup + resume on wakeup', (t) => {
+test('wakeup + resume on wakeup', (t) => {
   t.plan(4)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
@@ -239,7 +244,7 @@ test.skip('wakeup + resume on wakeup', (t) => {
   }
 })
 
-test.skip('wakeup exceed deadline', (t) => {
+test('wakeup exceed deadline', (t) => {
   t.plan(5)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
