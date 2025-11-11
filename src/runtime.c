@@ -458,7 +458,13 @@ bare_runtime__on_signal(uv_async_t *handle) {
   int linger = runtime->linger;
   int deadline = runtime->deadline;
 
-  typeof(runtime->transitions) transitions;
+  struct {
+    bool suspend;
+    bool resuspend;
+    bool wakeup;
+    bool resume;
+    bool terminate;
+  } transitions;
 
   memcpy(&transitions, &runtime->transitions, sizeof(runtime->transitions));
 
