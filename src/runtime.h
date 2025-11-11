@@ -7,6 +7,18 @@
 #include "types.h"
 
 int
+bare_runtime_suspend(bare_runtime_t *runtime, int linger);
+
+int
+bare_runtime_wakeup(bare_runtime_t *runtime, int deadline);
+
+int
+bare_runtime_resume(bare_runtime_t *runtime);
+
+int
+bare_runtime_terminate(bare_runtime_t *runtime);
+
+int
 bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *runtime);
 
 int

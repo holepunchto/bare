@@ -188,10 +188,7 @@ bare_thread_suspend(bare_thread_t *thread, int linger) {
 
   if (thread->exited) goto done;
 
-  thread->runtime->linger = linger;
-  thread->runtime->suspending = true;
-
-  err = uv_async_send(&thread->runtime->signals.suspend);
+  err = bare_runtime_suspend(thread->runtime, linger);
   assert(err == 0);
 
 done:
@@ -208,9 +205,7 @@ bare_thread_wakeup(bare_thread_t *thread, int deadline) {
 
   if (thread->exited) goto done;
 
-  thread->runtime->deadline = deadline;
-
-  err = uv_async_send(&thread->runtime->signals.wakeup);
+  err = bare_runtime_wakeup(thread->runtime, deadline);
   assert(err == 0);
 
 done:
@@ -227,9 +222,7 @@ bare_thread_resume(bare_thread_t *thread) {
 
   if (thread->exited) goto done;
 
-  thread->runtime->suspending = false;
-
-  err = uv_async_send(&thread->runtime->signals.resume);
+  err = bare_runtime_resume(thread->runtime);
   assert(err == 0);
 
 done:
@@ -246,7 +239,7 @@ bare_thread_terminate(bare_thread_t *thread) {
 
   if (thread->exited) goto done;
 
-  err = uv_async_send(&thread->runtime->signals.terminate);
+  err = bare_runtime_terminate(thread->runtime);
   assert(err == 0);
 
 done:
