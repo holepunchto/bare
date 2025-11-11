@@ -2,36 +2,30 @@ const test = require('brittle')
 const { Addon } = Bare
 
 test('cjs', (t) => {
-  t.plan(1)
-
   const mod = require('./fixtures/cjs')
 
   t.is(mod, 'Hello from CJS')
 })
 
-test('dynamic cjs', (t) => {
-  t.plan(1)
+test('dynamic cjs', async (t) => {
+  const { default: mod } = await import('./fixtures/cjs')
 
-  import('./fixtures/cjs').then(({ default: mod }) => t.is(mod, 'Hello from CJS'))
+  t.is(mod, 'Hello from CJS')
 })
 
 test('mjs', (t) => {
-  t.plan(1)
-
   const { default: mod } = require('./fixtures/esm')
 
   t.is(mod, 'Hello from ESM')
 })
 
-test('dynamic mjs', (t) => {
-  t.plan(1)
+test('dynamic mjs', async (t) => {
+  const { default: mod } = await import('./fixtures/esm')
 
-  import('./fixtures/esm').then(({ default: mod }) => t.is(mod, 'Hello from ESM'))
+  t.is(mod, 'Hello from ESM')
 })
 
 test('addon', (t) => {
-  t.plan(1)
-
   const mod = require(`./fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 
   t.is(mod, 'Hello from addon')

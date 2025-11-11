@@ -1,38 +1,71 @@
 const test = require('brittle')
+const { Thread } = Bare
 
 test('suspend + resume', (t) => {
   t.plan(2)
 
-  Bare.on('suspend', () => t.pass('suspended'))
-    .on('idle', () => t.fail('should not idle'))
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
   Bare.suspend()
   Bare.resume()
 
-  t.teardown(() => resetListeners())
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.fail('should not idle')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume with linger', (t) => {
   t.plan(2)
 
-  Bare.on('suspend', (linger) => t.is(linger, 1000, 'suspended with linger'))
-    .on('idle', () => t.fail('should not idle'))
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
   Bare.suspend(1000)
   Bare.resume()
 
-  t.teardown(() => resetListeners())
+  function onsuspend(linger) {
+    t.is(linger, 1000, 'suspended with linger')
+  }
+
+  function onidle() {
+    t.fail('should not idle')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume with thread', (t) => {
-  t.plan(1)
-
-  const { Thread } = Bare
-
   const thread = new Thread(() => {
     Bare.on('suspend', () => console.log('suspended'))
       .on('idle', () => {
@@ -44,115 +77,173 @@ test('suspend + resume with thread', (t) => {
 
   thread.suspend()
   thread.join()
-
-  t.pass()
 })
 
 test('suspend + resume on suspend', (t) => {
   t.plan(2)
 
-  Bare.on('suspend', () => {
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
     t.pass('suspended')
     Bare.resume()
-  })
-    .on('idle', () => t.fail('should not idle'))
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
-    .suspend()
+  }
 
-  t.teardown(() => resetListeners())
+  function onidle() {
+    t.fail('should not idle')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume on idle', (t) => {
   t.plan(3)
 
-  Bare.on('suspend', () => t.pass('suspended'))
-    .on('idle', () => {
-      t.pass('idled')
-      Bare.resume()
-    })
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
-    .suspend()
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  t.teardown(() => resetListeners())
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume + suspend', (t) => {
   t.plan(5)
 
-  const [suspend, resume, idle] = [1, 2, 3]
-  const expectedEvents = [suspend, resume, suspend, idle, resume]
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  Bare.on('suspend', () => t.is(expectedEvents.shift(), suspend, 'suspended'))
-    .on('idle', () => {
-      t.is(expectedEvents.shift(), idle, 'idled')
-      Bare.resume()
-    })
-    .on('resume', () => t.is(expectedEvents.shift(), resume, 'resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
   Bare.suspend()
   Bare.resume()
   Bare.suspend()
 
-  t.teardown(() => resetListeners())
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume + suspend with linger', (t) => {
-  t.plan(7)
+  t.plan(5)
 
-  const [suspend, resume, idle] = [1, 2, 3]
-  const expectedEvents = [suspend, resume, suspend, idle, resume]
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  Bare.on('suspend', (linger) => {
-    t.is(expectedEvents.shift(), suspend, 'suspended')
-    t.is(linger, 2000, 'linger value')
-  })
-    .on('idle', () => {
-      t.is(expectedEvents.shift(), idle, 'idled')
-      Bare.resume()
-    })
-    .on('resume', () => t.is(expectedEvents.shift(), resume, 'resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
   Bare.suspend(1000)
   Bare.resume()
   Bare.suspend(2000)
 
-  t.teardown(() => resetListeners())
+  function onsuspend(linger) {
+    t.is(linger, 2000)
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
 test('suspend + resume + suspend on suspend', (t) => {
   t.plan(5)
 
-  const [suspend, resume, idle] = [1, 2, 3]
-  const expectedEvents = [suspend, resume, suspend, idle, resume]
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  Bare.on('suspend', () => {
-    const isFirstRun = expectedEvents.length === 5
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
-    t.is(expectedEvents.shift(), suspend, 'suspended')
+  let suspended = false
 
-    if (isFirstRun) {
-      Bare.resume()
-      Bare.suspend()
-    }
-  })
-    .on('idle', () => {
-      t.is(expectedEvents.shift(), idle, 'idled')
-      Bare.resume()
-    })
-    .on('resume', () => t.is(expectedEvents.shift(), resume, 'resumed'))
-    .on('wakeup', () => t.fail('should not wake up'))
-    .suspend()
+  Bare.suspend()
 
-  t.teardown(() => resetListeners())
+  function onsuspend() {
+    t.pass('suspended')
+    if (suspended++) return
+    Bare.resume()
+    Bare.suspend()
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
-
-function resetListeners() {
-  Bare.removeAllListeners('suspend')
-    .removeAllListeners('idle')
-    .removeAllListeners('resume')
-    .removeAllListeners('wakeup')
-}

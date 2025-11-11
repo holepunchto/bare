@@ -4,8 +4,6 @@ const url = require('bare-url')
 const { Addon, Thread } = Bare
 
 test('load', (t) => {
-  t.plan(1)
-
   const addon = Addon.load(
     url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
   )
@@ -14,8 +12,6 @@ test('load', (t) => {
 })
 
 test('resolve', (t) => {
-  t.plan(1)
-
   const resolved = Addon.resolve('.', url.pathToFileURL('./test/fixtures/addon/'))
 
   t.is(
@@ -25,11 +21,10 @@ test('resolve', (t) => {
 })
 
 test('dependent', (t) => {
-  t.plan(2)
-
   const a = Addon.load(
     url.pathToFileURL(`./test/fixtures/dependent-addon/a/prebuilds/${Addon.host}/a.bare`)
   )
+
   const b = Addon.load(
     url.pathToFileURL(`./test/fixtures/dependent-addon/b/prebuilds/${Addon.host}/b.bare`)
   )
@@ -39,8 +34,6 @@ test('dependent', (t) => {
 })
 
 test('scoped', (t) => {
-  t.plan(2)
-
   const resolution = Addon.resolve('.', url.pathToFileURL(`./test/fixtures/scoped-addon/`))
 
   const expected = url.pathToFileURL(
@@ -55,8 +48,6 @@ test('scoped', (t) => {
 })
 
 test('load multiple threads', (t) => {
-  t.plan(2)
-
   const addon = Addon.load(
     url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
   )
@@ -76,6 +67,4 @@ test('load multiple threads', (t) => {
   })
 
   thread.join()
-
-  t.pass()
 })

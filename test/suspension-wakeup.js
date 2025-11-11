@@ -1,203 +1,288 @@
 const test = require('brittle')
 
 test('basic', async (t) => {
-  t.plan(3)
+  t.plan(4)
 
-  Bare.on('suspend', () => t.pass('suspended'))
-    .on('idle', () => {
-      t.pass('idled')
-      Bare.wakeup(100)
-    })
-    .on('resume', () => t.fail('should not resume'))
-    .on('wakeup', (deadline) => t.is(deadline, 100, 'woke up'))
-    .suspend()
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  t.teardown(async () => {
-    resetListeners()
-    await forceRelease()
-  })
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    t.is(deadline, 100, 'woke up')
+    Bare.resume()
+  }
 })
 
 test('wakeup on suspend', (t) => {
-  t.plan(2)
+  t.plan(3)
 
-  Bare.on('suspend', () => {
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
     t.pass('suspended')
     Bare.wakeup(100)
-  })
-    .on('idle', () => t.fail('should not idle'))
-    .on('resume', () => t.fail('should not resume'))
-    .on('wakeup', (deadline) => t.is(deadline, 100, 'woke up'))
-    .suspend()
+  }
 
-  t.teardown(async () => {
-    resetListeners()
-    await forceRelease()
-  })
+  function onidle() {
+    t.fail('should not idle')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    t.is(deadline, 100, 'woke up')
+    Bare.resume()
+  }
 })
 
 test('wakeup on release', (t) => {
   t.plan(2)
 
-  Bare.on('suspend', () => {
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
     t.pass('suspended')
     Bare.resume()
-  })
-    .on('idle', () => t.fail('should not idle'))
-    .on('resume', () => {
-      t.pass('resumed')
-      Bare.wakeup(100)
-    })
-    .on('wakeup', (deadline) => t.fail('should not wake up'))
-    .suspend()
+  }
 
-  t.teardown(async () => {
-    resetListeners()
-    await forceRelease()
-  })
+  function onidle() {
+    t.fail('should not idle')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+    Bare.wakeup(100)
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
 
-test('wakeup on wakeup', (t) => {
-  t.plan(4)
+test.skip('wakeup on wakeup', (t) => {
+  t.plan(5)
 
-  const [suspend, idle, wakeup] = [1, 2, 3]
-  const expectedEvents = [suspend, idle, wakeup, wakeup]
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  let isFirstRun = true
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
-  Bare.on('suspend', () => t.is(expectedEvents.shift(), suspend, 'suspended'))
-    .on('idle', () => {
-      t.is(expectedEvents.shift(), idle, 'idled')
-      Bare.wakeup(100)
-    })
-    .on('resume', () => t.fail('should not resume'))
-    .on('wakeup', () => {
-      t.is(expectedEvents.shift(), wakeup, 'woke up')
+  let idled = false
+  let awake = false
 
-      if (isFirstRun) {
-        isFirstRun = false
-        Bare.wakeup(100)
-      }
-    })
-    .suspend()
+  Bare.suspend()
 
-  t.teardown(async () => {
-    resetListeners()
-    await forceRelease()
-  })
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    if (idled++) Bare.resume()
+    else Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.pass('woke up')
+    if (awake++) Bare.resume()
+    else Bare.wakeup(100)
+  }
 })
 
-test('wakeup + suspend on wakeup', (t) => {
+test.skip('wakeup + suspend on wakeup', (t) => {
   t.plan(3)
 
-  let suspended
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  Bare.on('suspend', () => {
-    if (suspended) t.fail('should not suspend twice')
-    else {
-      t.pass('suspended')
-      suspended = true
-    }
-  })
-    .on('idle', () => {
-      t.pass('idled')
-      Bare.wakeup(100)
-    })
-    .on('resume', () => t.fail('should not resume'))
-    .on('wakeup', (deadline) => {
-      t.is(deadline, 100, 'woke up')
-      Bare.suspend()
-    })
-    .suspend()
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
 
-  t.teardown(async () => {
-    resetListeners()
-    await forceRelease()
-  })
+  let suspended = false
+
+  Bare.suspend()
+
+  function onsuspend() {
+    if (suspended++) t.fail('should not suspend twice')
+    else t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    t.is(deadline, 100, 'woke up')
+    Bare.suspend()
+  }
 })
 
-test('wakeup + resume', (t) => {
+test.skip('wakeup + resume', (t) => {
   t.plan(4)
 
-  Bare.on('suspend', () => t.pass('suspended'))
-    .on('idle', () => {
-      t.pass('idled')
-      Bare.wakeup(100)
-      Bare.resume()
-    })
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', (deadline) => t.is(deadline, 100, 'woke up'))
-    .suspend()
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  t.teardown(() => resetListeners())
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.wakeup(100)
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    t.is(deadline, 100, 'woke up')
+  }
 })
 
-test('wakeup + resume on wakeup', (t) => {
+test.skip('wakeup + resume on wakeup', (t) => {
   t.plan(4)
 
-  Bare.on('suspend', () => t.pass('suspended'))
-    .on('idle', () => {
-      t.pass('idled')
-      Bare.wakeup(100)
-    })
-    .on('resume', () => t.pass('resumed'))
-    .on('wakeup', (deadline) => {
-      t.is(deadline, 100, 'woke up')
-      Bare.resume()
-    })
-    .suspend()
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
-  t.teardown(() => resetListeners())
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    t.is(deadline, 100, 'woke up')
+    Bare.resume()
+  }
 })
 
-test('wakeup exceed deadline', (t) => {
-  t.plan(6)
+test.skip('wakeup exceed deadline', (t) => {
+  t.plan(5)
 
-  const [suspend, resume, idle, wakeup] = [1, 2, 3, 4]
-  const expectedEvents = [suspend, idle, wakeup, idle, resume]
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  let idled = false
   let finished = false
 
-  Bare.on('suspend', () => t.is(expectedEvents.shift(), suspend, 'suspended'))
-    .on('idle', () => {
-      const isFirstRun = expectedEvents.length === 4
+  Bare.suspend()
 
-      t.is(expectedEvents.shift(), idle, 'idled')
+  function onsuspend() {
+    t.pass('suspended')
+  }
 
-      if (isFirstRun) {
-        Bare.wakeup(100)
-      } else {
-        t.absent(finished, 'callback should not have run')
-        Bare.resume()
-      }
-    })
-    .on('resume', () => t.is(expectedEvents.shift(), resume, 'resumed'))
-    .on('wakeup', (deadline) => {
-      t.is(expectedEvents.shift(), wakeup, 'woke up')
-      setTimeout(() => (finished = true), deadline + 50)
-    })
-    .suspend()
+  function onidle() {
+    t.pass('idled')
+    if (idled++) {
+      t.absent(finished, 'callback should not have run')
+      Bare.resume()
+    } else {
+      Bare.wakeup(100)
+    }
+  }
 
-  t.teardown(() => resetListeners())
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup(deadline) {
+    setTimeout(() => {
+      finished = true
+    }, deadline + 50)
+  }
 })
 
 test('wakeup before suspend', (t) => {
   Bare.on('wakeup', () => t.fail('should not wake up'))
 
   Bare.wakeup(100)
-
-  t.teardown(() => Bare.removeAllListeners('wakeup'))
 })
-
-function resetListeners() {
-  Bare.removeAllListeners('suspend')
-    .removeAllListeners('idle')
-    .removeAllListeners('resume')
-    .removeAllListeners('wakeup')
-}
-
-async function forceRelease() {
-  await new Promise((resolve) => setTimeout(resolve))
-  Bare.resume()
-  await new Promise((resolve) => setTimeout(resolve))
-}

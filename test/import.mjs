@@ -1,27 +1,29 @@
 import test from 'brittle'
 const { Addon } = Bare
 
-import cjsMod from './fixtures/cjs'
-import mjsMod from './fixtures/esm'
+import cjs from './fixtures/cjs'
+import mjs from './fixtures/esm'
 
 test('cjs', (t) => {
-  t.is(cjsMod, 'Hello from CJS')
+  t.is(cjs, 'Hello from CJS')
 })
 
-test('dynamic cjs', (t) => {
+test('dynamic cjs', async (t) => {
   t.plan(1)
 
-  import('./fixtures/cjs').then(({ default: mod }) => t.is(mod, 'Hello from CJS'))
+  const { default: mod } = await import('./fixtures/cjs')
+
+  t.is(mod, 'Hello from CJS')
 })
 
 test('mjs', (t) => {
-  t.is(mjsMod, 'Hello from ESM')
+  t.is(mjs, 'Hello from ESM')
 })
 
-test('dynamic mjs', (t) => {
-  t.plan(1)
+test('dynamic mjs', async (t) => {
+  const { default: mod } = await import('./fixtures/esm')
 
-  import('./fixtures/esm').then(({ default: mod }) => t.is(mod, 'Hello from ESM'))
+  t.is(mod, 'Hello from ESM')
 })
 
 test('addon', async (t) => {
