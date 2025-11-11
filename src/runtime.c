@@ -194,7 +194,7 @@ bare_runtime__on_teardown(bare_runtime_t *runtime, int *exit_code) {
 }
 
 static inline void
-bare_runtime__on_suspend(bare_runtime_t *runtime) {
+bare_runtime__on_suspend(bare_runtime_t *runtime, int linger) {
   int err;
 
   if (runtime->state != bare_runtime_state_active) return;
@@ -219,8 +219,6 @@ bare_runtime__on_suspend(bare_runtime_t *runtime) {
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  int linger = runtime->linger;
-
   js_value_t *args[1];
 
   err = js_create_int32(env, linger, &args[0]);
@@ -243,7 +241,7 @@ bare_runtime__on_suspend(bare_runtime_t *runtime) {
     assert(err == 0);
   }
 
-  bare_runtime__invoke_callback_if_main_thread(runtime, suspend, runtime->linger);
+  bare_runtime__invoke_callback_if_main_thread(runtime, suspend, linger);
 }
 
 static inline void
@@ -261,7 +259,7 @@ bare_runtime__on_wakeup_timeout(uv_timer_t *handle) {
 }
 
 static inline void
-bare_runtime__on_wakeup(bare_runtime_t *runtime) {
+bare_runtime__on_wakeup(bare_runtime_t *runtime, int deadline) {
   int err;
 
   if (
@@ -274,7 +272,7 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
 
   uv_unref((uv_handle_t *) &runtime->signal);
 
-  err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, (uint64_t) runtime->deadline, 0);
+  err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, (uint64_t) deadline, 0);
   assert(err == 0);
 
   js_env_t *env = runtime->env;
@@ -294,8 +292,6 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
   js_value_t *global;
   err = js_get_global(env, &global);
   assert(err == 0);
-
-  int deadline = runtime->deadline;
 
   js_value_t *args[1];
 
@@ -319,7 +315,7 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime) {
     assert(err == 0);
   }
 
-  bare_runtime__invoke_callback_if_main_thread(runtime, wakeup, runtime->deadline);
+  bare_runtime__invoke_callback_if_main_thread(runtime, wakeup, deadline);
 }
 
 static inline void
@@ -459,6 +455,9 @@ bare_runtime__on_signal(uv_async_t *handle) {
 
   uv_mutex_lock(&runtime->lock);
 
+  int linger = runtime->linger;
+  int deadline = runtime->deadline;
+
   typeof(runtime->transitions) transitions;
 
   memcpy(&transitions, &runtime->transitions, sizeof(runtime->transitions));
@@ -469,14 +468,14 @@ bare_runtime__on_signal(uv_async_t *handle) {
 
   if (transitions.terminate) bare_runtime__on_terminate(runtime);
   else {
-    if (transitions.suspend) bare_runtime__on_suspend(runtime);
+    if (transitions.suspend) bare_runtime__on_suspend(runtime, linger);
 
-    if (transitions.wakeup) bare_runtime__on_wakeup(runtime);
+    if (transitions.wakeup) bare_runtime__on_wakeup(runtime, deadline);
 
     if (transitions.resume) {
       bare_runtime__on_resume(runtime);
 
-      if (transitions.resuspend) bare_runtime__on_suspend(runtime);
+      if (transitions.resuspend) bare_runtime__on_suspend(runtime, linger);
     }
   }
 }
