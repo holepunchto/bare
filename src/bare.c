@@ -87,19 +87,12 @@ bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
 
 int
 bare_exit(bare_t *bare, int exit_code) {
-  int err;
-
-  err = bare_runtime_exit(bare->process.runtime, exit_code);
-  if (err < 0) return err;
-
-  return 0;
+  return bare_runtime_exit(bare->process.runtime, exit_code);
 }
 
 int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
-  int err;
-
-  err = bare_runtime_load(
+  return bare_runtime_load(
     bare->process.runtime,
     filename,
     (bare_source_t) {
@@ -111,66 +104,31 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
     },
     result
   );
-  if (err < 0) return err;
-
-  return 0;
 }
 
 int
 bare_run(bare_t *bare, uv_run_mode mode) {
-  int err;
-
-  err = bare_runtime_run(bare->process.runtime, mode);
-  if (err != 0) return err;
-
-  return 0;
+  return bare_runtime_run(bare->process.runtime, mode);
 }
 
 int
 bare_suspend(bare_t *bare, int linger) {
-  int err;
-
-  bare->process.runtime->linger = linger;
-  bare->process.runtime->suspending = true;
-
-  err = uv_async_send(&bare->process.runtime->signals.suspend);
-  assert(err == 0);
-
-  return 0;
+  return bare_runtime_suspend(bare->process.runtime, linger);
 }
 
 int
 bare_wakeup(bare_t *bare, int deadline) {
-  int err;
-
-  bare->process.runtime->deadline = deadline;
-
-  err = uv_async_send(&bare->process.runtime->signals.wakeup);
-  assert(err == 0);
-
-  return 0;
+  return bare_runtime_wakeup(bare->process.runtime, deadline);
 }
 
 int
 bare_resume(bare_t *bare) {
-  int err;
-
-  bare->process.runtime->suspending = false;
-
-  err = uv_async_send(&bare->process.runtime->signals.resume);
-  assert(err == 0);
-
-  return 0;
+  return bare_runtime_resume(bare->process.runtime);
 }
 
 int
 bare_terminate(bare_t *bare) {
-  int err;
-
-  err = uv_async_send(&bare->process.runtime->signals.terminate);
-  assert(err == 0);
-
-  return 0;
+  return bare_runtime_terminate(bare->process.runtime);
 }
 
 int
