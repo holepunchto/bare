@@ -1,53 +1,19 @@
 list(APPEND tests
-  addon-load.js
-  addon-load-multiple-threads.js
-  addon-resolve.js
+  addon.js
   argv-empty.c
-  dependent-addon.js
   exit-on-before-exit.js
   exit-on-exit.js
   exit-on-idle.js
   exit-on-resume.js
   exit-on-suspend.js
-  idle-on-idle.js
-  idle-on-resume.js
-  idle-on-suspend.js
-  import-addon.cjs
-  import-addon.mjs
-  import-bundle.js
-  import-cjs.cjs
-  import-cjs.mjs
-  import-dynamic-cjs.cjs
-  import-dynamic-cjs.mjs
-  import-dynamic-mjs.cjs
-  import-dynamic-mjs.mjs
-  import-mjs.cjs
-  import-mjs.mjs
+  import.cjs
+  import.mjs
   restart.c
-  scoped-addon.js
-  suspend-resume.js
-  suspend-resume-on-idle.js
-  suspend-resume-on-suspend.js
-  suspend-resume-suspend.js
-  suspend-resume-suspend-on-suspend.js
-  suspend-resume-thread.js
-  suspend-resume-with-linger.js
+  suspension-idle.js
+  suspension-wakeup.js
+  suspension.js
   thread.js
-  thread-join.js
-  thread-source.js
-  thread-shared-data.js
-  thread-transfer-data.js
   timeout.js
-  timeout-clear.js
-  wakeup.js
-  wakeup-before-suspend.js
-  wakeup-exceed-deadline.js
-  wakeup-on-resume.js
-  wakeup-on-suspend.js
-  wakeup-on-wakeup.js
-  wakeup-resume.js
-  wakeup-resume-on-wakeup.js
-  wakeup-suspend-on-wakeup.js
 )
 
 foreach(file IN LISTS tests)
