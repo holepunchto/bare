@@ -178,6 +178,43 @@ test('wakeup + suspend on wakeup', (t) => {
   }
 })
 
+test('wakeup + suspend + resume on wakeup', (t) => {
+  t.plan(4)
+
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  let suspended = false
+
+  Bare.suspend()
+
+  function onsuspend() {
+    if (suspended++) t.fail('should not suspend twice')
+    else t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.pass('woke up')
+    Bare.suspend()
+    Bare.resume()
+  }
+})
+
 test('wakeup + resume', (t) => {
   t.plan(4)
 
