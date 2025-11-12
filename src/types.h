@@ -2,7 +2,6 @@
 #define BARE_TYPES_H
 
 #include <js.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <uv.h>
 
@@ -35,22 +34,24 @@ struct bare_runtime_s {
   js_env_t *env;
   js_ref_t *exports;
 
-  struct {
-    uv_async_t suspend;
-    uv_async_t wakeup;
-    uv_async_t resume;
-    uv_async_t terminate;
-  } signals;
-
+  uv_async_t signal;
   uv_timer_t timeout;
+  uv_mutex_t lock;
 
   int active_handles;
 
   bare_runtime_state_t state;
 
-  atomic_int linger;
-  atomic_int deadline;
-  atomic_bool suspending;
+  int linger;
+  int deadline;
+
+  struct {
+    bool suspend;
+    bool resuspend;
+    bool wakeup;
+    bool resume;
+    bool terminate;
+  } transitions;
 };
 
 struct bare_process_s {
