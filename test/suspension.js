@@ -247,3 +247,36 @@ test('suspend + resume + suspend on suspend', (t) => {
     t.fail('should not wake up')
   }
 })
+
+test('suspend on idle', (t) => {
+  t.plan(3)
+
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+    Bare.suspend()
+    Bare.resume()
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
+})

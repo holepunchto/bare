@@ -6,6 +6,7 @@ list(APPEND tests
   exit-on-idle.js
   exit-on-resume.js
   exit-on-suspend.js
+  exit-on-wakeup.js
   import.cjs
   import.mjs
   restart.c
