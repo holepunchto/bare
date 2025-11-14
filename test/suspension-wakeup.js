@@ -1,6 +1,6 @@
 const test = require('brittle')
 
-test('basic', async (t) => {
+test('wakeup on idle', async (t) => {
   t.plan(4)
 
   Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
@@ -281,6 +281,43 @@ test('wakeup + resume on wakeup', (t) => {
   }
 })
 
+test('wakeup + idle on wakeup', (t) => {
+  t.plan(5)
+
+  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
+
+  t.teardown(() =>
+    Bare.off('suspend', onsuspend)
+      .off('idle', onidle)
+      .off('resume', onresume)
+      .off('wakeup', onwakeup)
+  )
+
+  Bare.suspend()
+
+  let idled = 0
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+
+    if (idled++) Bare.resume()
+    else Bare.wakeup(100)
+  }
+
+  function onresume() {
+    t.pass('resumed')
+  }
+
+  function onwakeup() {
+    t.pass('woke up')
+    Bare.idle()
+  }
+})
+
 test('wakeup exceed deadline', (t) => {
   t.plan(5)
 
@@ -324,7 +361,13 @@ test('wakeup exceed deadline', (t) => {
 })
 
 test('wakeup before suspend', (t) => {
-  Bare.on('wakeup', () => t.fail('should not wake up'))
+  Bare.on('wakeup', onwakeup)
+
+  t.teardown(() => Bare.off('wakeup', onwakeup))
 
   Bare.wakeup(100)
+
+  function onwakeup() {
+    t.fail('should not wake up')
+  }
 })
