@@ -38,8 +38,6 @@ struct bare_runtime_s {
   uv_timer_t timeout;
   uv_mutex_t lock;
 
-  int active_handles;
-
   bare_runtime_state_t state;
 
   int linger;
@@ -55,7 +53,7 @@ struct bare_runtime_s {
 };
 
 struct bare_process_s {
-  bare_runtime_t *runtime;
+  bare_runtime_t runtime;
 
   bare_options_t options;
 
@@ -88,6 +86,10 @@ struct bare_process_s {
   } callbacks;
 };
 
+struct bare_s {
+  bare_process_t process;
+};
+
 struct bare_source_s {
   enum {
     bare_source_none,
@@ -113,15 +115,16 @@ struct bare_data_s {
 };
 
 struct bare_thread_s {
+  bare_process_t *process;
   bare_runtime_t *runtime;
 
   uv_thread_t id;
-  uv_sem_t lock;
+  uv_mutex_t lock;
+  uv_barrier_t *ready;
 
-  char *filename;
-
-  bare_source_t source;
-  bare_data_t data;
+  const char *filename;
+  bare_source_t *source;
+  bare_data_t *data;
 
   bool exited;
 
