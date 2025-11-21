@@ -12,7 +12,6 @@
 
 #include "runtime.h"
 #include "types.h"
-#include "uv/unix.h"
 
 #define bare_thread__invoke_callback(runtime, callback, ...) \
   if (runtime.process->callbacks.callback) { \
