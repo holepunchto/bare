@@ -8,64 +8,29 @@
 #include <utf.h>
 #include <uv.h>
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
+
+#ifndef thread_local
+#ifdef _WIN32
+#define thread_local __declspec(thread)
+#else
+#define thread_local _Thread_local
+#endif
 #endif
 
 #include "types.h"
 
-typedef struct bare_addon_ref_s bare_addon_ref_t;
-
 static bare_addon_t *bare_addon__static = NULL;
-static bare_addon_t *bare_addon__dynamic = NULL;
-static bare_addon_t **bare_addon__pending = &bare_addon__static;
-
-static uv_mutex_t bare_addon__lock;
-static uv_lib_t bare_addon__lib;
-static uv_once_t bare_addon__guard = UV_ONCE_INIT;
-
-struct bare_addon_ref_s {
-  bare_addon_t *addon;
-};
-
-static void
-bare_addon__on_init(void) {
-  int err;
-
-  err = uv_mutex_init_recursive(&bare_addon__lock);
-  assert(err == 0);
-
-#if defined(_WIN32)
-  bare_addon__lib.handle = GetModuleHandleW(NULL);
-#else
-  bare_addon__lib.handle = dlopen(NULL, RTLD_LAZY);
-#endif
-
-  bare_addon__lib.errmsg = NULL;
-
-  assert(bare_addon__lib.handle);
-}
-
-static void
-bare_addon__on_teardown(void *data) {
-  bare_addon_ref_t *ref = data;
-
-  uv_mutex_lock(&bare_addon__lock);
-
-  ref->addon->refs--;
-
-  uv_mutex_unlock(&bare_addon__lock);
-
-  free(ref);
-}
+static thread_local bare_addon_t *bare_addon__dynamic = NULL;
+static thread_local bare_addon_t **bare_addon__pending = &bare_addon__static;
+static thread_local uv_lib_t *bare_addon__pending_lib = NULL;
+static thread_local const char *bare_addon__pending_specifier = NULL;
 
 js_value_t *
 bare_addon_get_static(bare_runtime_t *runtime) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
   int err;
-
-  uv_mutex_lock(&bare_addon__lock);
 
   js_value_t *result;
   err = js_create_array(runtime->env, &result);
@@ -81,25 +46,19 @@ bare_addon_get_static(bare_runtime_t *runtime) {
     next = addon->next;
 
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, (size_t) -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->specifier, (size_t) -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);
     assert(err == 0);
   }
-
-  uv_mutex_unlock(&bare_addon__lock);
 
   return result;
 }
 
 js_value_t *
 bare_addon_get_dynamic(bare_runtime_t *runtime) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
   int err;
-
-  uv_mutex_lock(&bare_addon__lock);
 
   js_value_t *result;
   err = js_create_array(runtime->env, &result);
@@ -115,27 +74,20 @@ bare_addon_get_dynamic(bare_runtime_t *runtime) {
     next = addon->next;
 
     js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->resolved, (size_t) -1, &specifier);
+    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->specifier, (size_t) -1, &specifier);
     assert(err == 0);
 
     err = js_set_element(runtime->env, result, i++, specifier);
     assert(err == 0);
   }
 
-  uv_mutex_unlock(&bare_addon__lock);
-
   return result;
 }
 
 bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
   int err;
 
-  uv_mutex_lock(&bare_addon__lock);
-
-  bare_addon_t *found = NULL;
   bare_addon_t *next = bare_addon__static;
 
   while (next) {
@@ -143,35 +95,21 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 
     next = addon->next;
 
-    if (strcmp(specifier, addon->resolved) == 0) {
-      found = addon;
-      break;
+    if (strcmp(specifier, addon->specifier) == 0) {
+      return addon;
     }
   }
 
-  uv_mutex_unlock(&bare_addon__lock);
+  err = js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
+  assert(err == 0);
 
-  if (found == NULL) {
-    err = js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
-    assert(err == 0);
-
-    return NULL;
-  }
-
-  return found;
+  return NULL;
 }
 
 bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
   int err;
 
-  uv_mutex_lock(&bare_addon__lock);
-
-  bare_addon_ref_t *ref;
-
-  bare_addon_t *found = NULL;
   bare_addon_t *next = bare_addon__dynamic;
 
   while (next) {
@@ -179,23 +117,18 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
     next = addon->next;
 
-    if (strcmp(specifier, addon->resolved) == 0) {
-      found = addon;
-      break;
+    if (strcmp(specifier, addon->specifier) == 0) {
+      return addon;
     }
   }
 
-  if (found) {
-    found->refs++;
-
-    goto done;
-  }
-
-  bare_addon__pending = &bare_addon__dynamic;
-
   uv_lib_t lib;
 
-#if defined(_WIN32)
+  bare_addon__pending = &bare_addon__dynamic;
+  bare_addon__pending_lib = &lib;
+  bare_addon__pending_specifier = specifier;
+
+#ifdef _WIN32
   err = uv_dlopen(specifier, &lib);
 #else
   dlerror(); // Reset any previous error
@@ -213,50 +146,33 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   if (err < 0) goto err;
 
-  if (bare_addon__pending == NULL) goto registered; // Addon registered itself
+  if (bare_addon__pending) {
+    bare_module_name_cb name;
 
-  bare_module_name_cb name;
+    err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_NAME), (void **) &name);
 
-  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_NAME), (void **) &name);
+    if (err < 0) name = NULL;
 
-  if (err < 0) name = NULL;
+    bare_module_register_cb exports;
 
-  bare_module_register_cb exports;
+    err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &exports);
 
-  err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_REGISTER), (void **) &exports);
+    if (err < 0) {
+      err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &exports);
 
-  if (err < 0) {
-    err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &exports);
+      if (err < 0) goto err;
+    }
 
-    if (err < 0) goto err;
+    bare_module_register(&(bare_module_t) {
+      .version = BARE_MODULE_VERSION,
+      .name = name == NULL ? NULL : name(),
+      .exports = exports,
+    });
   }
 
-  bare_module_register(&(bare_module_t) {
-    .version = BARE_MODULE_VERSION,
-    .name = name == NULL ? NULL : name(),
-    .exports = exports,
-  });
-
-registered:
-  found = bare_addon__dynamic;
-
-  found->resolved = strdup(specifier);
-  found->lib = lib;
-
-done:
-  ref = malloc(sizeof(bare_addon_ref_t));
-  ref->addon = found;
-
-  err = js_add_teardown_callback(runtime->env, bare_addon__on_teardown, ref);
-  assert(err == 0);
-
-  uv_mutex_unlock(&bare_addon__lock);
-
-  return found;
+  return bare_addon__dynamic;
 
 err:
-  uv_mutex_unlock(&bare_addon__lock);
-
   err = js_throw_error(runtime->env, NULL, uv_dlerror(&lib));
   assert(err == 0);
 
@@ -267,47 +183,30 @@ err:
 
 void
 bare_addon_teardown(void) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
-  uv_mutex_lock(&bare_addon__lock);
-
   bare_addon_t *next = bare_addon__dynamic;
+
+  bare_addon__dynamic = NULL;
 
   while (next) {
     bare_addon_t *addon = next;
 
     next = addon->next;
 
-    if (addon->refs) continue;
-
     uv_dlclose(&addon->lib);
 
-    if (addon->previous) addon->previous->next = addon->next;
-    else bare_addon__dynamic = addon->next;
-
-    if (addon->next) addon->next->previous = addon->previous;
-
-    free(addon->name);
-    free(addon->resolved);
     free(addon);
   }
-
-  uv_mutex_unlock(&bare_addon__lock);
 }
 
 uv_lib_t *
 bare_module_find(const char *query) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
   size_t len = strlen(query);
 
   if (len > 5 && strcmp(&query[len - 5], ".bare") == 0) len -= 5;
 
-  uv_lib_t *result = NULL;
+  bare_addon_t *next;
 
-  uv_mutex_lock(&bare_addon__lock);
-
-  bare_addon_t *next = bare_addon__static;
+  next = bare_addon__static;
 
   while (next) {
     bare_addon_t *addon = next;
@@ -317,8 +216,7 @@ bare_module_find(const char *query) {
     const char *name = addon->name;
 
     if (name && strncmp(query, name, len) == 0) {
-      result = &addon->lib;
-      break;
+      return &addon->lib;
     }
   }
 
@@ -332,51 +230,75 @@ bare_module_find(const char *query) {
     const char *name = addon->name;
 
     if (name && strncmp(query, name, len) == 0) {
-      result = &addon->lib;
-      break;
+      return &addon->lib;
     }
   }
 
-  uv_mutex_unlock(&bare_addon__lock);
-
-  return result;
+  return NULL;
 }
 
 void
 bare_module_register(bare_module_t *module) {
-  uv_once(&bare_addon__guard, bare_addon__on_init);
-
-  uv_mutex_lock(&bare_addon__lock);
-
   bool is_dynamic = bare_addon__pending == &bare_addon__dynamic;
 
-  bare_addon_t *addon = malloc(sizeof(bare_addon_t));
+  bare_addon_t *addon;
 
-  addon->name = module->name ? strdup(module->name) : NULL;
-  addon->exports = module->exports;
-  addon->previous = NULL;
-  addon->next = NULL;
+  size_t len = sizeof(bare_addon_t);
 
   if (is_dynamic) {
-    addon->resolved = NULL;
-    addon->refs = 1;
+    size_t offset = 0;
+
+    if (module->name) len += offset = strlen(module->name) + 1 /* NULL */;
+
+    len += strlen(bare_addon__pending_specifier) + 1 /* NULL */;
+
+    addon = malloc(len);
+
+    if (module->name) {
+      addon->name = (char *) addon + sizeof(bare_addon_t);
+
+      strcpy(addon->name, module->name);
+    } else {
+      addon->name = NULL;
+    }
+
+    addon->specifier = (char *) addon + sizeof(bare_addon_t) + offset;
+
+    strcpy(addon->specifier, bare_addon__pending_specifier);
   } else {
     assert(module->name);
 
-    addon->resolved = strdup(module->name);
-    addon->refs = 0;
-    addon->lib = bare_addon__lib;
+    len += strlen(module->name) + 1 /* NULL */;
+
+    addon = malloc(len);
+
+    addon->name = addon->specifier = (char *) addon + sizeof(bare_addon_t);
+
+    strcpy(addon->name, module->name);
+
+    if (bare_addon__pending_lib == NULL) {
+      static uv_lib_t lib;
+
+#ifdef _WIN32
+      lib.handle = GetModuleHandleW(NULL);
+#else
+      lib.handle = dlopen(NULL, RTLD_LAZY);
+#endif
+      assert(lib.handle);
+
+      lib.errmsg = NULL;
+
+      bare_addon__pending_lib = &lib;
+    }
   }
 
+  addon->exports = module->exports;
+  addon->lib = *bare_addon__pending_lib;
   addon->next = *bare_addon__pending;
-
-  if (addon->next) addon->next->previous = addon;
 
   *bare_addon__pending = addon;
 
   if (is_dynamic) bare_addon__pending = NULL;
-
-  uv_mutex_unlock(&bare_addon__lock);
 }
 
 void
