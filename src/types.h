@@ -131,15 +131,12 @@ struct bare_thread_s {
 
 struct bare_addon_s {
   char *name;
-  char *resolved;
+  char *specifier;
 
   bare_module_register_cb exports;
 
-  int refs;
-
   uv_lib_t lib;
 
-  bare_addon_t *previous;
   bare_addon_t *next;
 };
 
