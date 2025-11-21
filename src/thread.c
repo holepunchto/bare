@@ -13,84 +13,92 @@
 #include "runtime.h"
 #include "types.h"
 
+#define bare_thread__invoke_callback(runtime, callback, ...) \
+  if (runtime.process->callbacks.callback) { \
+    runtime.process->callbacks.callback( \
+      (bare_t *) runtime.process, \
+      ##__VA_ARGS__, \
+      runtime.process->callbacks.callback##_data \
+    ); \
+  }
+
 static void
 bare_thread__entry(void *opaque) {
   int err;
 
-  bare_thread_t *thread = (bare_thread_t *) opaque;
+  bare_thread_t *thread = opaque;
 
-  bare_runtime_t *runtime = thread->runtime;
+  char *filename = strdup(thread->filename);
+  bare_source_t source = *thread->source;
+  bare_data_t data = *thread->data;
 
   uv_loop_t loop;
   err = uv_loop_init(&loop);
   assert(err == 0);
 
-  err = bare_runtime_setup(&loop, runtime->process, runtime);
+  bare_runtime_t runtime;
+  err = bare_runtime_setup(&loop, thread->process, &runtime);
   assert(err == 0);
 
-  js_env_t *env = runtime->env;
+  thread->runtime = &runtime;
+
+  js_env_t *env = runtime.env;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
-  js_value_t *data;
+  js_value_t *args[1];
 
-  switch (thread->data.type) {
+  switch (data.type) {
   case bare_data_none:
   default:
-    err = js_get_null(runtime->env, &data);
+    err = js_get_null(runtime.env, &args[0]);
     assert(err == 0);
     break;
 
   case bare_data_sharedarraybuffer:
-    err = js_create_sharedarraybuffer_with_backing_store(env, thread->data.backing_store, NULL, NULL, &data);
+    err = js_create_sharedarraybuffer_with_backing_store(env, data.backing_store, NULL, NULL, &args[0]);
     assert(err == 0);
 
-    err = js_release_arraybuffer_backing_store(env, thread->data.backing_store);
+    err = js_release_arraybuffer_backing_store(env, data.backing_store);
     assert(err == 0);
     break;
   }
 
-  uv_sem_post(&thread->lock);
+  uv_barrier_wait(thread->ready);
 
   js_value_t *exports;
-  err = js_get_reference_value(env, runtime->exports, &exports);
+  err = js_get_reference_value(env, runtime.exports, &exports);
   assert(err == 0);
 
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onthread", &fn);
   assert(err == 0);
 
-  js_value_t *global;
-  err = js_get_global(env, &global);
-  assert(err == 0);
-
-  err = js_call_function(env, global, fn, 1, (js_value_t *[]) {data}, NULL);
+  err = js_call_function(env, exports, fn, 1, args, NULL);
   (void) err;
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  if (runtime->process->callbacks.thread) {
-    runtime->process->callbacks.thread((bare_t *) runtime->process, env, runtime->process->callbacks.thread_data);
-  }
+  bare_thread__invoke_callback(runtime, thread, env);
 
-  err = bare_runtime_load(runtime, thread->filename, thread->source, NULL);
+  err = bare_runtime_load(&runtime, filename, source, NULL);
   (void) err;
 
-  err = bare_runtime_run(runtime, UV_RUN_DEFAULT);
+  free(filename);
+
+  err = bare_runtime_run(&runtime, UV_RUN_DEFAULT);
   assert(err == 0);
 
-  free(thread->filename);
-
-  uv_sem_wait(&thread->lock);
+  uv_mutex_lock(&thread->lock);
 
   thread->exited = true;
 
-  uv_sem_post(&thread->lock);
+  uv_mutex_unlock(&thread->lock);
 
-  err = bare_runtime_teardown(thread->runtime, UV_RUN_DEFAULT, NULL);
+  err = bare_runtime_teardown(&runtime, UV_RUN_DEFAULT, NULL);
   assert(err == 0);
 
   err = uv_loop_close(&loop);
@@ -105,19 +113,19 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
 
   bare_thread_t *thread = malloc(sizeof(bare_thread_t));
 
-  thread->filename = strdup(filename);
-  thread->source = source;
-  thread->data = data;
+  thread->process = runtime->process;
+  thread->filename = filename;
+  thread->source = &source;
+  thread->data = &data;
   thread->exited = false;
   thread->previous = NULL;
   thread->next = NULL;
 
-  thread->runtime = malloc(sizeof(bare_runtime_t));
-
-  thread->runtime->process = runtime->process;
-
-  err = uv_sem_init(&thread->lock, 0);
+  uv_barrier_t ready;
+  err = uv_barrier_init(&ready, 2);
   assert(err == 0);
+
+  thread->ready = &ready;
 
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
@@ -130,9 +138,8 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
     err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
     assert(err == 0);
 
-    uv_sem_destroy(&thread->lock);
+    uv_barrier_destroy(&ready);
 
-    free(thread->runtime);
     free(thread);
 
     return -1;
@@ -144,9 +151,10 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
 
   runtime->threads = thread;
 
-  uv_sem_wait(&thread->lock);
+  err = uv_mutex_init(&thread->lock);
+  assert(err == 0);
 
-  uv_sem_post(&thread->lock);
+  uv_barrier_wait(&ready);
 
   *result = thread;
 
@@ -161,7 +169,7 @@ bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
 
   err = uv_thread_join(&thread->id);
 
-  uv_sem_destroy(&thread->lock);
+  uv_mutex_destroy(&thread->lock);
 
   if (thread->previous) thread->previous->next = thread->next;
   else runtime->threads = thread->next;
@@ -184,7 +192,7 @@ int
 bare_thread_suspend(bare_thread_t *thread, int linger) {
   int err;
 
-  uv_sem_wait(&thread->lock);
+  uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
 
@@ -192,7 +200,7 @@ bare_thread_suspend(bare_thread_t *thread, int linger) {
   assert(err == 0);
 
 done:
-  uv_sem_post(&thread->lock);
+  uv_mutex_unlock(&thread->lock);
 
   return 0;
 }
@@ -201,7 +209,7 @@ int
 bare_thread_wakeup(bare_thread_t *thread, int deadline) {
   int err;
 
-  uv_sem_wait(&thread->lock);
+  uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
 
@@ -209,7 +217,7 @@ bare_thread_wakeup(bare_thread_t *thread, int deadline) {
   assert(err == 0);
 
 done:
-  uv_sem_post(&thread->lock);
+  uv_mutex_unlock(&thread->lock);
 
   return 0;
 }
@@ -218,7 +226,7 @@ int
 bare_thread_resume(bare_thread_t *thread) {
   int err;
 
-  uv_sem_wait(&thread->lock);
+  uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
 
@@ -226,7 +234,7 @@ bare_thread_resume(bare_thread_t *thread) {
   assert(err == 0);
 
 done:
-  uv_sem_post(&thread->lock);
+  uv_mutex_unlock(&thread->lock);
 
   return 0;
 }
@@ -235,7 +243,7 @@ int
 bare_thread_terminate(bare_thread_t *thread) {
   int err;
 
-  uv_sem_wait(&thread->lock);
+  uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
 
@@ -243,7 +251,7 @@ bare_thread_terminate(bare_thread_t *thread) {
   assert(err == 0);
 
 done:
-  uv_sem_post(&thread->lock);
+  uv_mutex_unlock(&thread->lock);
 
   return 0;
 }
@@ -255,7 +263,7 @@ bare_thread_teardown(bare_thread_t *thread) {
   err = uv_thread_join(&thread->id);
   assert(err == 0);
 
-  uv_sem_destroy(&thread->lock);
+  uv_mutex_destroy(&thread->lock);
 
   if (thread->previous) thread->previous->next = thread->next;
 

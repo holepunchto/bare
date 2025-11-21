@@ -11,10 +11,6 @@
 #define bare__option(options, min_version, field) \
   (options && options->version >= min_version ? options->field : bare__default_options.field)
 
-struct bare_s {
-  bare_process_t process;
-};
-
 static const bare_options_t bare__default_options = {
   .version = 0,
   .memory_limit = 0,
@@ -37,8 +33,6 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
   bare_process_t *process = &bare->process;
 
-  process->runtime = malloc(sizeof(bare_runtime_t));
-
   process->options = bare__default_options;
 
   process->options.memory_limit = bare__option(options, 0, memory_limit);
@@ -47,21 +41,14 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   process->argc = argc;
   process->argv = argv;
 
-  process->callbacks.before_exit = NULL;
-  process->callbacks.exit = NULL;
-  process->callbacks.suspend = NULL;
-  process->callbacks.wakeup = NULL;
-  process->callbacks.idle = NULL;
-  process->callbacks.resume = NULL;
-  process->callbacks.thread = NULL;
+  memset(&process->callbacks, 0, sizeof(process->callbacks));
 
-  bare_runtime_t *runtime = process->runtime;
+  bare_runtime_t *runtime = &process->runtime;
 
   err = bare_runtime_setup(loop, process, runtime);
 
   if (err < 0) {
-    free(process->runtime);
-    free(process);
+    free(bare);
 
     return err;
   }
@@ -77,7 +64,7 @@ int
 bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
   int err;
 
-  err = bare_runtime_teardown(bare->process.runtime, mode, exit_code);
+  err = bare_runtime_teardown(&bare->process.runtime, mode, exit_code);
   if (err != 0) return err;
 
   free(bare);
@@ -87,13 +74,13 @@ bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
 
 int
 bare_exit(bare_t *bare, int exit_code) {
-  return bare_runtime_exit(bare->process.runtime, exit_code);
+  return bare_runtime_exit(&bare->process.runtime, exit_code);
 }
 
 int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
   return bare_runtime_load(
-    bare->process.runtime,
+    &bare->process.runtime,
     filename,
     (bare_source_t) {
       .type = source ? bare_source_buffer : bare_source_none,
@@ -108,27 +95,27 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
 
 int
 bare_run(bare_t *bare, uv_run_mode mode) {
-  return bare_runtime_run(bare->process.runtime, mode);
+  return bare_runtime_run(&bare->process.runtime, mode);
 }
 
 int
 bare_suspend(bare_t *bare, int linger) {
-  return bare_runtime_suspend(bare->process.runtime, linger);
+  return bare_runtime_suspend(&bare->process.runtime, linger);
 }
 
 int
 bare_wakeup(bare_t *bare, int deadline) {
-  return bare_runtime_wakeup(bare->process.runtime, deadline);
+  return bare_runtime_wakeup(&bare->process.runtime, deadline);
 }
 
 int
 bare_resume(bare_t *bare) {
-  return bare_runtime_resume(bare->process.runtime);
+  return bare_runtime_resume(&bare->process.runtime);
 }
 
 int
 bare_terminate(bare_t *bare) {
-  return bare_runtime_terminate(bare->process.runtime);
+  return bare_runtime_terminate(&bare->process.runtime);
 }
 
 int
