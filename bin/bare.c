@@ -61,8 +61,6 @@ main(int argc, char *argv[]) {
   err = rlimit_set(rlimit_open_files, rlimit_infer);
   assert(err == 0);
 
-  uv_loop_t *loop = uv_default_loop();
-
   argv = uv_setup_args(argc, argv);
 
   err = uv_barrier_init(&bare__platform_ready, 2);
@@ -75,6 +73,8 @@ main(int argc, char *argv[]) {
   uv_barrier_wait(&bare__platform_ready);
 
   uv_barrier_destroy(&bare__platform_ready);
+
+  uv_loop_t *loop = uv_default_loop();
 
   bare_t *bare;
   err = bare_setup(loop, bare__platform, NULL, argc, (const char **) argv, NULL, &bare);
