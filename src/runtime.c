@@ -1426,7 +1426,7 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
     if (err > 0) return err;
 
-    if (runtime->state == bare_runtime_state_suspending) {
+    if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
     idle:
       bare_runtime__on_idle(runtime);
     } else {
