@@ -280,3 +280,31 @@ test('suspend on idle', (t) => {
     t.fail('should not wake up')
   }
 })
+
+test('suspend + suspend + resume on thread', async (t) => {
+  const thread = new Thread(() => {
+    const assert = require('bare-assert')
+
+    Bare.on('suspend', () => console.log('suspended'))
+      .on('idle', () => console.log('idled'))
+      .on('resume', () => Bare.off('exit', onexit))
+      .on('exit', onexit)
+
+    function onexit() {
+      assert(false, 'should not exit')
+    }
+  })
+
+  thread.suspend()
+  await sleep(100)
+
+  thread.suspend()
+  await sleep(100)
+
+  thread.resume()
+  thread.join()
+})
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
