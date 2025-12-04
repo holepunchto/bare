@@ -375,6 +375,8 @@ bare_runtime__on_resume(bare_runtime_t *runtime) {
 
   runtime->state = bare_runtime_state_active;
 
+  uv_unref((uv_handle_t *) &runtime->signal);
+
   err = uv_timer_stop(&runtime->timeout);
   assert(err == 0);
 
@@ -451,7 +453,7 @@ static void
 bare_runtime__on_signal(uv_async_t *handle) {
   bare_runtime_t *runtime = handle->data;
 
-  uv_unref((uv_handle_t *) handle);
+  if (runtime->state != bare_runtime_state_suspended) uv_unref((uv_handle_t *) handle);
 
   uv_mutex_lock(&runtime->lock);
 
