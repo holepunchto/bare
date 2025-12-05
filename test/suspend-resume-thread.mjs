@@ -1,10 +1,10 @@
-import t from './harness'
+import t from 'bare-tap'
 const { Thread } = Bare
 
 t.plan(1)
 
 const thread = new Thread(import.meta.url, async () => {
-  const { default: t } = await import('./harness')
+  const { default: t } = await import('bare-tap')
 
   t.plan(4)
 

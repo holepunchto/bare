@@ -1,5 +1,5 @@
 const url = require('bare-url')
-const t = require('./harness')
+const t = require('bare-tap')
 const { Addon } = Bare
 
 t.plan(2)

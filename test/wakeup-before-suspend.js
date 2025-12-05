@@ -1,4 +1,4 @@
-const t = require('./harness')
+const t = require('bare-tap')
 
 Bare.on('wakeup', onwakeup)
 

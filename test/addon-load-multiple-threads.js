@@ -1,5 +1,5 @@
 const url = require('bare-url')
-const t = require('./harness')
+const t = require('bare-tap')
 const { Addon, Thread } = Bare
 
 t.plan(2)
@@ -12,7 +12,7 @@ t.equal(addon.exports, 'Hello from addon')
 
 const thread = new Thread(__filename, () => {
   const url = require('bare-url')
-  const t = require('./harness')
+  const t = require('bare-tap')
   const { Addon } = Bare
 
   t.plan(1)

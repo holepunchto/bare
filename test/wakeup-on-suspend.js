@@ -1,4 +1,4 @@
-const t = require('./harness')
+const t = require('bare-tap')
 
 t.plan(3)
 

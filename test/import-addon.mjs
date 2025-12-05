@@ -1,4 +1,4 @@
-import t from './harness'
+import t from 'bare-tap'
 const { Addon } = Bare
 
 t.plan(1)
