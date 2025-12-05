@@ -6,9 +6,7 @@ const isSubtest = !Thread.isMainThread
 let planned = 0
 let assertions = 0
 
-Bare.once('exit', () => {
-  Bare.once('exit', () => assert(planned, assertions))
-})
+Bare.on('exit', () => assert.equal(assertions, planned))
 
 if (!isSubtest) console.log('TAP version 14')
 

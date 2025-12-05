@@ -1,6 +1,6 @@
 const t = require('./harness')
 
-t.plan(6)
+t.plan(5)
 
 Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('wakeup', onwakeup)
 
@@ -26,8 +26,5 @@ function onresume() {
 function onwakeup() {
   t.pass('woke up')
   if (awake++) Bare.resume()
-  else {
-    Bare.wakeup(100)
-    setTimeout(() => t.pass('flushed'), 10) // Let the tick flush
-  }
+  else Bare.wakeup(100)
 }

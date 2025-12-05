@@ -1,17 +1,35 @@
 import t from './harness'
 const { Thread } = Bare
 
-const thread = new Thread(() => {
-  Bare.on('suspend', () => console.log('suspended'))
-    .on('idle', () => console.log('idled'))
-    .on('resume', () => {
-      console.log('resumed')
-      Bare.off('exit', onexit)
-    })
-    .on('exit', onexit)
+t.plan(1)
+
+const thread = new Thread(import.meta.url, async () => {
+  const { default: t } = await import('./harness')
+
+  t.plan(4)
+
+  let resumed = false
+
+  Bare.on('suspend', onsuspend)
+    .on('idle', onidle)
+    .on('resume', onresume)
+    .prependListener('exit', onexit)
+
+  function onsuspend() {
+    t.pass('suspended')
+  }
+
+  function onidle() {
+    t.pass('idled')
+  }
+
+  function onresume() {
+    t.pass('resumed')
+    resumed = true
+  }
 
   function onexit() {
-    assert(false, 'should not exit')
+    t.ok(resumed, 'resumed before exit')
   }
 })
 
@@ -20,3 +38,4 @@ await t.sleep(100)
 
 thread.resume()
 thread.join()
+t.pass()

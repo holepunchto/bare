@@ -6,7 +6,7 @@ t.plan(1)
 const thread = new Thread(import.meta.url, async () => {
   const { default: t } = await import('./harness')
 
-  t.plan(5)
+  t.plan(6)
 
   let resumed = false
 
@@ -14,7 +14,7 @@ const thread = new Thread(import.meta.url, async () => {
     .on('idle', onidle)
     .on('wakeup', onwakeup)
     .on('resume', onresume)
-    .on('exit', onexit)
+    .prependListener('exit', onexit)
 
   function onsuspend() {
     t.pass('suspended')

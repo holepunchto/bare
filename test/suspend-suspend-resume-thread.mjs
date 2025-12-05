@@ -10,7 +10,10 @@ const thread = new Thread(import.meta.url, async () => {
 
   let resumed = false
 
-  Bare.on('suspend', onsuspend).on('idle', onidle).on('resume', onresume).on('exit', onexit)
+  Bare.on('suspend', onsuspend)
+    .on('idle', onidle)
+    .on('resume', onresume)
+    .prependListener('exit', onexit)
 
   function onsuspend() {
     t.pass('suspended')
