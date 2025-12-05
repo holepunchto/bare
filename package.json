@@ -36,9 +36,8 @@
     "paparam": "^1.1.2"
   },
   "devDependencies": {
-    "bare-assert": "^1.0.0",
+    "bare-assert": "^1.2.0",
     "bare-http1": "^4.0.0",
-    "brittle": "^3.19.0",
     "cmake-bare": "^1.1.7",
     "cmake-bare-bundle": "^2.0.0",
     "cmake-drive": "^1.1.1",

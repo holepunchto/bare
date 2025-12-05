@@ -1,6 +1,6 @@
-const assert = require('bare-assert')
+const t = require('../harness')
 const { Thread } = Bare
 
-assert(Thread.isMainThread === false)
-
-assert(Thread.self.data.equals(Buffer.from('hello world')))
+t.plan(2)
+t.notOk(Thread.isMainThread)
+t.ok(Thread.self.data.equals(Buffer.from('hello world')))
