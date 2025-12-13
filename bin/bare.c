@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <js.h>
-#include <log.h>
 #include <rlimit.h>
 #include <signal.h>
 #include <uv.h>
@@ -55,9 +54,6 @@ main(int argc, char *argv[]) {
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-  err = log_open("bare", 0);
-  assert(err == 0);
-
   err = rlimit_set(rlimit_open_files, rlimit_infer);
   assert(err == 0);
 
@@ -99,9 +95,6 @@ main(int argc, char *argv[]) {
   assert(err == 0);
 
   uv_thread_join(&thread);
-
-  err = log_close();
-  assert(err == 0);
 
   return exit_code;
 }
