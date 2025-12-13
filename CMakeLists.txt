@@ -107,6 +107,14 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         m
     )
+  elseif(target MATCHES "android")
+    find_library(log log)
+
+    target_link_libraries(
+      v8
+      INTERFACE
+        ${log}
+    )
   elseif(target MATCHES "darwin|ios")
     target_link_libraries(
       v8
