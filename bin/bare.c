@@ -57,6 +57,8 @@ main(int argc, char *argv[]) {
   err = rlimit_set(rlimit_open_files, rlimit_infer);
   assert(err == 0);
 
+  uv_disable_stdio_inheritance();
+
   argv = uv_setup_args(argc, argv);
 
   err = uv_barrier_init(&bare__platform_ready, 2);
