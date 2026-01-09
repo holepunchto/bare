@@ -41,10 +41,10 @@ const thread = new Thread(import.meta.url, async () => {
 })
 
 thread.suspend()
-await t.sleep(100)
+await t.sleep(200)
 
 thread.wakeup(1000)
-await t.sleep(100)
+await t.sleep(200)
 
 thread.resume()
 thread.join()
