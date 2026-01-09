@@ -157,7 +157,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#c8e4bc8")
+fetch_package("github:holepunchto/libnapi#3d7a8eb")
 
 add_bare_bundle(
   bare_bundle
@@ -204,7 +204,6 @@ target_include_directories(
   bare
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:js,INTERFACE_INCLUDE_DIRECTORIES>
   PUBLIC
     include
 )
@@ -213,19 +212,9 @@ target_link_libraries(
   bare
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
-    $<TARGET_PROPERTY:js,INTERFACE_LINK_LIBRARIES>
-  PRIVATE
-    $<TARGET_OBJECTS:utf>
-    $<TARGET_OBJECTS:url>
-    $<TARGET_OBJECTS:base64>
-    $<TARGET_OBJECTS:hex>
   PUBLIC
+    js
     napi
-  PRIVATE
-    utf
-    url
-    base64
-    hex
 )
 
 link_bare_module(bare bare-buffer)
