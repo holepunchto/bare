@@ -35,6 +35,7 @@ EXPORTS
 	napi_create_async_work
 	napi_create_bigint_int64
 	napi_create_bigint_uint64
+	napi_create_bigint_words
 	napi_create_buffer
 	napi_create_buffer_copy
 	napi_create_dataview
@@ -93,6 +94,7 @@ EXPORTS
 	napi_get_uv_event_loop
 	napi_get_value_bigint_int64
 	napi_get_value_bigint_uint64
+	napi_get_value_bigint_words
 	napi_get_value_bool
 	napi_get_value_date
 	napi_get_value_double

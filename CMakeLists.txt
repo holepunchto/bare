@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#e8631d3" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#20eccc3" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -31,7 +31,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
     PREFIX /${target}
-    CHECKOUT 793
+    CHECKOUT 806
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -157,7 +157,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#3d7a8eb")
+fetch_package("github:holepunchto/libnapi#83aa500")
 
 add_bare_bundle(
   bare_bundle
