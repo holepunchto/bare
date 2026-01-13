@@ -1,9 +1,6 @@
-const Module = require('bare-module')
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
-
-const { constants } = Module
 
 module.exports = exports = class Addon {
   constructor(url) {
@@ -31,10 +28,9 @@ module.exports = exports = class Addon {
     }
   }
 
-  static _protocol = Module._protocol
   static _cache = Object.create(null)
+
   static _builtins = bare.getStaticAddons()
-  static _conditions = Module._conditions
 
   static get cache() {
     return this._cache
@@ -83,6 +79,8 @@ module.exports = exports = class Addon {
   }
 
   static resolve(specifier, parentURL, opts = {}) {
+    const Module = require('bare-module')
+
     const self = Addon
 
     if (typeof specifier !== 'string') {
@@ -93,11 +91,11 @@ module.exports = exports = class Addon {
 
     const {
       referrer = null,
-      protocol = referrer ? referrer._protocol : self._protocol,
+      protocol = referrer ? referrer._protocol : Module._protocol,
       imports = referrer ? referrer._imports : null,
       resolutions = referrer ? referrer._resolutions : null,
       builtins = self._builtins,
-      conditions = referrer ? referrer._conditions : self._conditions
+      conditions = referrer ? referrer._conditions : Module._conditions
     } = opts
 
     const resolved = protocol.preresolve(specifier, parentURL)
@@ -119,7 +117,7 @@ module.exports = exports = class Addon {
         resolutions,
         builtins,
         extensions: ['.bare', '.node'],
-        engines: Bare.versions
+        engines: bare.versions
       },
       readPackage
     )) {
@@ -136,7 +134,7 @@ module.exports = exports = class Addon {
             break
           }
         default:
-          if (protocol.exists(resolution, constants.types.ADDON)) {
+          if (protocol.exists(resolution, Module.constants.types.ADDON)) {
             return protocol.postresolve(protocol.addon ? protocol.addon(resolution) : resolution)
           }
       }
@@ -152,7 +150,7 @@ module.exports = exports = class Addon {
     throw AddonError.ADDON_NOT_FOUND(message, specifier, parentURL, candidates, cause)
 
     function readPackage(packageURL) {
-      if (protocol.exists(packageURL, constants.types.JSON)) {
+      if (protocol.exists(packageURL, Module.constants.types.JSON)) {
         return Module.load(packageURL, { protocol })._exports
       }
 
