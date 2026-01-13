@@ -39,7 +39,7 @@
     "bare-http1": "^4.0.0",
     "bare-tap": "^1.0.0",
     "cmake-bare": "^1.1.7",
-    "cmake-bare-bundle": "^2.0.0",
+    "cmake-bare-bundle": "^3.0.0",
     "cmake-drive": "^1.1.1",
     "cmake-fetch": "^1.0.0",
     "cmake-harden": "^1.1.2",
