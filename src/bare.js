@@ -41,6 +41,7 @@ class Bare extends EventEmitter {
     return bare.arch
   }
 
+  /** @deprecated */
   get simulator() {
     return bare.simulator
   }
@@ -106,7 +107,6 @@ class Bare extends EventEmitter {
 
       platform: this.platform,
       arch: this.arch,
-      simulator: this.simulator,
       argv: this.argv,
       pid: this.pid,
       exitCode: this.exitCode,
