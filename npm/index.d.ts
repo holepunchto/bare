@@ -27,9 +27,6 @@ interface Bare extends EventEmitter<BareEvents> {
   readonly argv: string[]
   readonly pid: number
   exitCode: number
-  readonly suspending: boolean
-  readonly suspended: boolean
-  readonly exiting: boolean
   readonly version: string
   readonly versions: { readonly [package: string]: string }
 
