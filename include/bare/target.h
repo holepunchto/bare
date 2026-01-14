@@ -51,44 +51,33 @@
 
 #if defined(__APPLE__)
 #define BARE_SIMULATOR TARGET_OS_SIMULATOR
-#endif
-
-#ifndef BARE_SIMULATOR
+#else
 #define BARE_SIMULATOR 0
 #endif
 
 #if defined(__linux__)
 #if defined(__MUSL__)
-#define BARE_LIBC_MUSL 1
+#define BARE_LIBC "musl"
+#define BARE_LIBC_MUSL
 #if defined(__SOFTFP__)
 #define BARE_LIBC_MUSL_VARIANT "sf"
 #else
 #define BARE_LIBC_MUSL_VARIANT
 #endif
 #elif defined(__ANDROID__)
-#define BARE_LIBC_BIONIC 1
+#define BARE_LIBC "bionic"
+#define BARE_LIBC_BIONIC
 #else
-#define BARE_LIBC_GNU 1
+#define BARE_LIBC "gnu"
+#define BARE_LIBC_GNU
 #endif
-#endif
-
-#ifndef BARE_LIBC_GNU
-#define BARE_LIBC_GNU 0
-#endif
-
-#ifndef BARE_LIBC_BIONIC
-#define BARE_LIBC_BIONIC 0
-#endif
-
-#ifndef BARE_LIBC_MUSL
-#define BARE_LIBC_MUSL 0
 #endif
 
 #define BARE_TARGET_SYSTEM BARE_PLATFORM "-" BARE_ARCH
 
 #if BARE_SIMULATOR
 #define BARE_TARGET_ENVIRONMENT "-simulator"
-#elif BARE_LIBC_MUSL
+#elif defined(BARE_LIBC_MUSL)
 #define BARE_TARGET_ENVIRONMENT "-musl" BARE_LIBC_MUSL_VARIANT
 #else
 #define BARE_TARGET_ENVIRONMENT
