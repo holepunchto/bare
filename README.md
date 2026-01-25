@@ -351,16 +351,16 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 > [!NOTE]  
 > Development happens primarily on Apple hardware with Linux and Windows systems running as virtual machines.
 
-| Platform | Architecture | Version                              | Tier | Notes                       |
-| :------- | :----------- | :----------------------------------- | :--- | :-------------------------- |
-| Linux    | `arm64`      | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, OpenWrt 23.05 |
-| Linux    | `x64`        | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, OpenWrt 23.05 |
-| Linux    | `arm`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03  |
-| Linux    | `arm64`      | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03  |
-| Linux    | `ia32`       | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03  |
-| Linux    | `x64`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03  |
-| Linux    | `mips`       | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03               |
-| Linux    | `mipsel`     | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03               |
+| Platform | Architecture | Version                              | Tier | Notes                                  |
+| :------- | :----------- | :----------------------------------- | :--- | :------------------------------------- |
+| Linux    | `arm64`      | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
+| Linux    | `x64`        | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
+| Linux    | `arm`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `arm64`      | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `ia32`       | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `x64`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `mips`       | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
+| Linux    | `mipsel`     | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
 | Android  | `arm`        | >= 10                                | 1    |
 | Android  | `arm64`      | >= 10                                | 1    |
 | Android  | `ia32`       | >= 10                                | 1    |
@@ -368,7 +368,7 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | macOS    | `arm64`      | >= 12.0                              | 1    |
 | macOS    | `x64`        | >= 12.0                              | 1    |
 | iOS      | `arm64`      | >= 14.0                              | 1    |
-| iOS      | `x64`        | >= 14.0                              | 1    | Simulator only              |
+| iOS      | `x64`        | >= 14.0                              | 1    | Simulator only                         |
 | Windows  | `arm64`      | >= Windows 11                        | 1    |
 | Windows  | `x64`        | >= Windows 10                        | 1    |
 
