@@ -1,3 +1,5 @@
+const t = require('bare-tap')
+
 Bare.on('idle', onidle)
 
 Bare.idle()

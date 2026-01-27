@@ -1,3 +1,5 @@
+/* global bare */
+
 const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
