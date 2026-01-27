@@ -93,6 +93,9 @@ struct bare_module_s {
   bare_module_register_cb exports;
 };
 
+uv_lib_t *
+bare_module_find(const char *query);
+
 void
 bare_module_register(bare_module_t *module);
 
