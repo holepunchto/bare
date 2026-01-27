@@ -3,7 +3,8 @@
   "name": "bare",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "scripts": {
-    "test": "prettier . --check"
+    "format": "prettier --write .",
+    "lint": "prettier --check . && lunte"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
     "cmake-fetch": "^1.0.0",
     "cmake-harden": "^1.1.2",
     "cmake-napi": "^1.0.7",
+    "lunte": "^1.4.0",
     "prettier": "^3.3.3",
     "prettier-config-holepunch": "^2.0.0"
   }
