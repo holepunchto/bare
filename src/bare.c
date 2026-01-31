@@ -29,7 +29,15 @@ int
 bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result) {
   int err;
 
-  bare_t *bare = malloc(sizeof(bare_t));
+  size_t len = sizeof(bare_t);
+
+  len += (size_t) argc * sizeof(char *);
+
+  for (int i = 0; i < argc; i++) {
+    len += strlen(argv[i]) + 1 /* NULL */;
+  }
+
+  bare_t *bare = malloc(len);
 
   bare_process_t *process = &bare->process;
 
@@ -38,10 +46,22 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   process->options.memory_limit = bare__option(options, 0, memory_limit);
 
   process->platform = platform;
-  process->argc = argc;
-  process->argv = argv;
 
   memset(&process->callbacks, 0, sizeof(process->callbacks));
+
+  process->argc = argc;
+
+  char *storage = (char *) &process->argv[argc];
+
+  for (int i = 0; i < argc; i++) {
+    size_t len = strlen(argv[i]) + 1 /* NULL */;
+
+    memcpy(storage, argv[i], len);
+
+    process->argv[i] = storage;
+
+    storage += len;
+  }
 
   bare_runtime_t *runtime = &process->runtime;
 
