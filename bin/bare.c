@@ -2,6 +2,7 @@
 #include <js.h>
 #include <rlimit.h>
 #include <signal.h>
+#include <string.h>
 #include <uv.h>
 
 #include "../include/bare.h"
@@ -28,7 +29,9 @@ bare__on_platform_thread(void *data) {
   err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
   assert(err == 0);
 
-  err = js_create_platform(&loop, NULL, &bare__platform);
+  js_platform_options_t *options = (js_platform_options_t *) data;
+
+  err = js_create_platform(&loop, options, &bare__platform);
   assert(err == 0);
 
   uv_barrier_wait(&bare__platform_ready);
@@ -64,8 +67,16 @@ main(int argc, char *argv[]) {
   err = uv_barrier_init(&bare__platform_ready, 2);
   assert(err == 0);
 
+  js_platform_options_t options = {};
+
+  for (int i = 1; i < argc; i++) {
+    if (memcmp(argv[i], "--expose-gc", 11) == 0) {
+      options.expose_garbage_collection = true;
+    }
+  }
+
   uv_thread_t thread;
-  err = uv_thread_create(&thread, bare__on_platform_thread, NULL);
+  err = uv_thread_create(&thread, bare__on_platform_thread, (void *) &options);
   assert(err == 0);
 
   uv_barrier_wait(&bare__platform_ready);
