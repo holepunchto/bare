@@ -11,6 +11,7 @@
 
 static uv_barrier_t bare__platform_ready;
 static uv_async_t bare__platform_shutdown;
+static js_platform_options_t bare__platform_options;
 static js_platform_t *bare__platform;
 
 static void
@@ -29,9 +30,7 @@ bare__on_platform_thread(void *data) {
   err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
   assert(err == 0);
 
-  js_platform_options_t *options = (js_platform_options_t *) data;
-
-  err = js_create_platform(&loop, options, &bare__platform);
+  err = js_create_platform(&loop, &bare__platform_options, &bare__platform);
   assert(err == 0);
 
   uv_barrier_wait(&bare__platform_ready);
@@ -67,16 +66,14 @@ main(int argc, char *argv[]) {
   err = uv_barrier_init(&bare__platform_ready, 2);
   assert(err == 0);
 
-  js_platform_options_t options = {};
-
   for (int i = 1; i < argc; i++) {
-    if (memcmp(argv[i], "--expose-gc", 11) == 0) {
-      options.expose_garbage_collection = true;
+    if (strcmp(argv[i], "--expose-gc") == 0) {
+      bare__platform_options.expose_garbage_collection = true;
     }
   }
 
   uv_thread_t thread;
-  err = uv_thread_create(&thread, bare__on_platform_thread, (void *) &options);
+  err = uv_thread_create(&thread, bare__on_platform_thread, NULL);
   assert(err == 0);
 
   uv_barrier_wait(&bare__platform_ready);
