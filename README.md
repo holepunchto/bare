@@ -263,6 +263,13 @@ Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
 
 Terminate the thread. Equivalent to calling `Bare.exit()` from within the thread.
 
+### `Bare.IPC`
+
+The `Bare.IPC` namespace provides support for optional streaming communication between an embedder and JavaScript code. By default, its value is `null` indicating that streaming communication is not supported. If set by embedders, `Bare.IPC` is expected to be an instance of a <https://github.com/holepunchto/bare-stream> `Duplex` stream.
+
+> [!NOTE]  
+> This is an advanced API that users should never have to interact with directly.
+
 ### Embedding
 
 Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):

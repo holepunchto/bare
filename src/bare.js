@@ -147,6 +147,15 @@ exports.Thread = require('./thread')
 
 /**
  * Step 6:
+ * Register the IPC placeholder API. This is used by embedders that wish to
+ * provide bidirectional communication between the embedder code and the
+ * JavaScript code.
+ */
+
+exports.IPC = null
+
+/**
+ * Step 7:
  * Register the remaining global APIs. We prefer modules over making APIs
  * available in the global scope and do the latter to stay somewhat compatible
  * with other environments, such as Web and Node.js.
@@ -160,7 +169,7 @@ require('bare-url/global')
 require('bare-console/global')
 
 /**
- * Step 7:
+ * Step 8:
  * Register the native lifecycle hooks.
  */
 
@@ -209,7 +218,7 @@ bare.onresume = function onresume() {
 }
 
 /**
- * Step 8:
+ * Step 9:
  * Register the entry functions used by `bare_exit()` and `bare_load()`.
  */
 
