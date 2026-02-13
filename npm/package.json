@@ -1,6 +1,6 @@
 {
   "name": "bare",
-  "version": "1.26.0",
+  "version": "1.27.0",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "exports": {
     ".": {
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/holepunchto/bare",
   "dependencies": {
-    "bare-runtime": "1.26.0"
+    "bare-runtime": "1.27.0"
   },
   "peerDependencies": {
     "bare-buffer": "*",
