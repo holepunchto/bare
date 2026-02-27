@@ -1,3 +1,5 @@
+/* global bare */
+
 const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
