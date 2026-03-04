@@ -342,10 +342,11 @@ Bare provides a few compile options that can be configured to customize various 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
 
-| Option           | Default                    | Description                                             |
-| :--------------- | :------------------------- | :------------------------------------------------------ |
-| `BARE_ENGINE`    | `github:holepunchto/libjs` | The JavaScript engine to use                            |
-| `BARE_PREBUILDS` | `ON`                       | Enable prebuilds for supported third-party dependencies |
+| Option              | Default                    | Description                                             |
+| :------------------ | :------------------------- | :------------------------------------------------------ |
+| `BARE_ENGINE`       | `github:holepunchto/libjs` | The JavaScript engine to use                            |
+| `BARE_PREBUILDS`    | `ON`                       | Enable prebuilds for supported third-party dependencies |
+| `BARE_MEMORY_LIMIT` | `0`                        | The default memory limit of each JavaScript heap        |
 
 ## Platform support
 

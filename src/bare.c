@@ -13,7 +13,7 @@
 
 static const bare_options_t bare__default_options = {
   .version = 0,
-  .memory_limit = 0,
+  .memory_limit = BARE_MEMORY_LIMIT,
 };
 
 int

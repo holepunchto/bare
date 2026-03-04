@@ -21,6 +21,8 @@ set(BARE_ENGINE "github:holepunchto/libjs#fcd5004" CACHE STRING "The JavaScript 
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
+set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
+
 fetch_package("github:libuv/libuv@1.52.0")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
@@ -198,6 +200,12 @@ target_sources(
     src/thread.c
     src/thread.h
     src/types.h
+)
+
+target_compile_definitions(
+  bare
+  PRIVATE
+    BARE_MEMORY_LIMIT=${BARE_MEMORY_LIMIT}
 )
 
 target_include_directories(
