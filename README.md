@@ -38,7 +38,7 @@ Bare is built on top of <https://github.com/holepunchto/libjs>, which provides l
 
 1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
 2. A native addon system supporting both statically and dynamically linked addons.
-3. Light-weight thread support with synchronous joins and shared array buffer support.
+3. Light-weight threads with synchronous joins and `SharedArrayBuffer` support.
 
 Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succinct and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
 
@@ -425,9 +425,11 @@ Bare provides no standard library beyond the core JavaScript API available throu
 | [bare-rpc](https://github.com/holepunchto/bare-rpc)                           | <https://github.com/holepunchto/librpc> ABI compatible RPC for Bare                      | ![](https://img.shields.io/npm/v/bare-rpc)              |
 | [bare-semver](https://github.com/holepunchto/bare-semver)                     | Minimal semantic versioning library for Bare                                             | ![](https://img.shields.io/npm/v/bare-semver)           |
 | [bare-signals](https://github.com/holepunchto/bare-signals)                   | Native signal handling for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-signals)          |
+| [bare-storage](https://github.com/holepunchto/bare-storage)                   | Minimal, cross‑platform directory locator for Bare                                       | ![](https://img.shields.io/npm/v/bare-storage)          |
 | [bare-stream](https://github.com/holepunchto/bare-stream)                     | Streaming data for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-stream)           |
 | [bare-structured-clone](https://github.com/holepunchto/bare-structured-clone) | Structured cloning algorithm for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-structured-clone) |
 | [bare-subprocess](https://github.com/holepunchto/bare-subprocess)             | Native process spawning for JavaScript                                                   | ![](https://img.shields.io/npm/v/bare-subprocess)       |
+| [bare-tap](https://github.com/holepunchto/bare-tap)                           | Minimal TAP library for Bare                                                             | ![](https://img.shields.io/npm/v/bare-tap)              |
 | [bare-tcp](https://github.com/holepunchto/bare-tcp)                           | Native TCP sockets for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tcp)              |
 | [bare-thread](https://github.com/holepunchto/bare-thread)                     | Thread support for Bare                                                                  | ![](https://img.shields.io/npm/v/bare-thread)           |
 | [bare-timers](https://github.com/holepunchto/bare-timers)                     | Native timers for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-timers)           |
