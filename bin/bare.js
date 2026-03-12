@@ -20,6 +20,7 @@ const bare = command(
   flag('--eval|-e <script>', 'Evaluate an inline script'),
   flag('--print|-p <script>', 'Evaluate an inline script and print the result'),
   flag('--inspect', 'Activate the inspector'),
+  flag('--inspect-port <port>', 'Configure the port on which the inspector will run').default(9229),
   flag('--expose-gc', 'Expose garbage collection APIs'),
   arg('[filename]', 'The name of a script to evaluate'),
   rest('[...args]', 'Additional arguments made available to the script'),
@@ -93,9 +94,11 @@ const bare = command(
     function inspect() {
       if (server !== null) return
 
+      const port = parseInt(flags.inspectPort)
+
       const inspector = require('bare-inspector')
 
-      server = new inspector.Server(9229, { path: args.filename || os.cwd() })
+      server = new inspector.Server(port, { path: args.filename || os.cwd() })
       server.unref()
     }
   }

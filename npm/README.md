@@ -9,20 +9,22 @@ npm i -g bare
 ## Usage
 
 ```console
-bare [flags] <filename> [...args]
+bare [flags] [filename] [...args]
 
 Evaluate a script or start a REPL session if no script is provided.
 
 Arguments:
-  <filename>            The name of a script to evaluate
-  [...args]             Additional arguments made available to the script
+  [filename]              Optional. The name of a script to evaluate
+  [...args]               Additional arguments made available to the script
 
 Flags:
-  --version|-v          Print the Bare version
-  --eval|-e <script>    Evaluate an inline script
-  --print|-p <script>   Evaluate an inline script and print the result
-  --inspect             Activate the inspector
-  --help|-h             Show help
+  --version|-v            Print the Bare version
+  --eval|-e <script>      Evaluate an inline script
+  --print|-p <script>     Evaluate an inline script and print the result
+  --inspect               Activate the inspector
+  --inspect-port <port>   Configure the port on which the inspector will run (default: 9229)
+  --expose-gc             Expose garbage collection APIs
+  --help|-h               Show help
 ```
 
 The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
