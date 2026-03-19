@@ -77,7 +77,7 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 22
         if: ${{ matrix.platform == 'linux' }}
-      - run: brew upgrade llvm
+      - run: brew install llvm
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
