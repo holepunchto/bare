@@ -23,7 +23,7 @@ set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dep
 
 set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
 
-fetch_package("github:libuv/libuv@1.52.0")
+fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#6b1a36f")
