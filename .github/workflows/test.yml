@@ -75,8 +75,10 @@ jobs:
       - run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 21
+          sudo ./llvm.sh 22
         if: ${{ matrix.platform == 'linux' }}
+      - run: brew install llvm@20
+        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
       - run: choco install nasm
