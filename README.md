@@ -56,7 +56,7 @@ The identifier of the operating system for which Bare was compiled. The possible
 
 #### `Bare.arch`
 
-The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, `mips`, `mipsel`, and `x64`.
+The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, `mips`, `mipsel`, `riscv64`, and `x64`.
 
 #### `Bare.argv`
 
@@ -365,10 +365,12 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | :------- | :----------- | :----------------------------------- | :--- | :------------------------------------- |
 | Linux    | `arm64`      | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
 | Linux    | `x64`        | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
+| Linux    | `riscv64`    | >= Linux 6.8, >= GNU C Library 2.39  | 2    | Ubuntu 24.04, Debian 13                |
 | Linux    | `arm`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `arm64`      | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `ia32`       | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `x64`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `riscv64`    | >= Linux 6.6, >= musl 1.2            | 2    | Alpine 3.20                            |
 | Linux    | `mips`       | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
 | Linux    | `mipsel`     | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
 | Android  | `arm`        | >= 10                                | 1    |
