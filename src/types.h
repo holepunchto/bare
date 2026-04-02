@@ -59,9 +59,6 @@ struct bare_process_s {
 
   js_platform_t *platform;
 
-  int argc;
-  const char **argv;
-
   struct {
     bare_before_exit_cb before_exit;
     void *before_exit_data;
@@ -84,6 +81,9 @@ struct bare_process_s {
     bare_thread_cb thread;
     void *thread_data;
   } callbacks;
+
+  int argc;
+  char *argv[];
 };
 
 struct bare_s {

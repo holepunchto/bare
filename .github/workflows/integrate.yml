@@ -1,4 +1,4 @@
-name: Test
+name: Integrate
 on:
   push:
     branches:
@@ -34,23 +34,23 @@ jobs:
             platform: android
             arch: arm
             flags: -D ANDROID_STL=c++_static
-          - os: macos-14
+          - os: macos-15-intel
             platform: darwin
             arch: x64
             flags: --sanitize address
-          - os: macos-14
+          - os: macos-15
             platform: darwin
             arch: arm64
             flags: --sanitize address
-          - os: macos-14
+          - os: macos-15
             platform: ios
             arch: arm64
-          - os: macos-14
+          - os: macos-15
             platform: ios
             arch: arm64
             tags: -simulator
             flags: --simulator
-          - os: macos-14
+          - os: macos-15
             platform: ios
             arch: x64
             tags: -simulator
@@ -58,34 +58,36 @@ jobs:
           - os: windows-2022
             platform: win32
             arch: x64
-          - os: windows-2022
+          - os: windows-11-arm
             platform: win32
             arch: arm64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      - uses: actions/cache@v5
         with:
           path: build/_drive
           key: corestore-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
       - run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 20
+          sudo ./llvm.sh 22
         if: ${{ matrix.platform == 'linux' }}
+      - run: brew install llvm@20
+        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
       - run: choco install nasm
         if: ${{ matrix.platform == 'win32' }}
-      - run: npm install -g bare-make
+      - run: npm install --global bare-make
       - run: npm install
       - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
       - run: bare-make build
       - run: bare-make test
         env:
           LSAN_OPTIONS: suppressions=test/leaks.txt
-        if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
+        if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}

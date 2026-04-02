@@ -14,20 +14,22 @@ npm i -g bare
 ## Usage
 
 ```console
-bare [flags] <filename> [...args]
+bare [flags] [filename] [...args]
 
 Evaluate a script or start a REPL session if no script is provided.
 
 Arguments:
-  <filename>            The name of a script to evaluate
-  [...args]             Additional arguments made available to the script
+  [filename]              Optional. The name of a script to evaluate
+  [...args]               Additional arguments made available to the script
 
 Flags:
-  --version|-v          Print the Bare version
-  --eval|-e <script>    Evaluate an inline script
-  --print|-p <script>   Evaluate an inline script and print the result
-  --inspect             Activate the inspector
-  --help|-h             Show help
+  --version|-v            Print the Bare version
+  --eval|-e <script>      Evaluate an inline script
+  --print|-p <script>     Evaluate an inline script and print the result
+  --inspect               Activate the inspector
+  --inspect-port <port>   Configure the port on which the inspector will run (default: 9229)
+  --expose-gc             Expose garbage collection APIs
+  --help|-h               Show help
 ```
 
 The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
@@ -38,7 +40,7 @@ Bare is built on top of <https://github.com/holepunchto/libjs>, which provides l
 
 1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
 2. A native addon system supporting both statically and dynamically linked addons.
-3. Light-weight thread support with synchronous joins and shared array buffer support.
+3. Light-weight threads with synchronous joins and `SharedArrayBuffer` support.
 
 Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succinct and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
 
@@ -54,7 +56,7 @@ The identifier of the operating system for which Bare was compiled. The possible
 
 #### `Bare.arch`
 
-The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, `mips`, `mipsel`, and `x64`.
+The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, `mips`, `mipsel`, `riscv64`, and `x64`.
 
 #### `Bare.argv`
 
@@ -263,6 +265,13 @@ Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
 
 Terminate the thread. Equivalent to calling `Bare.exit()` from within the thread.
 
+### `Bare.IPC`
+
+The `Bare.IPC` namespace provides support for optional streaming communication between an embedder and JavaScript code. By default, its value is `null` indicating that streaming communication is not supported. If set by embedders, `Bare.IPC` is expected to be an instance of a <https://github.com/holepunchto/bare-stream> `Duplex` stream.
+
+> [!NOTE]  
+> This is an advanced API that users should never have to interact with directly.
+
 ### Embedding
 
 Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):
@@ -335,10 +344,11 @@ Bare provides a few compile options that can be configured to customize various 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
 
-| Option           | Default                    | Description                                             |
-| :--------------- | :------------------------- | :------------------------------------------------------ |
-| `BARE_ENGINE`    | `github:holepunchto/libjs` | The JavaScript engine to use                            |
-| `BARE_PREBUILDS` | `ON`                       | Enable prebuilds for supported third-party dependencies |
+| Option              | Default                    | Description                                             |
+| :------------------ | :------------------------- | :------------------------------------------------------ |
+| `BARE_ENGINE`       | `github:holepunchto/libjs` | The JavaScript engine to use                            |
+| `BARE_PREBUILDS`    | `ON`                       | Enable prebuilds for supported third-party dependencies |
+| `BARE_MEMORY_LIMIT` | `0`                        | The default memory limit of each JavaScript heap        |
 
 ## Platform support
 
@@ -355,10 +365,12 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | :------- | :----------- | :----------------------------------- | :--- | :------------------------------------- |
 | Linux    | `arm64`      | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
 | Linux    | `x64`        | >= Linux 5.15, >= GNU C Library 2.35 | 1    | Ubuntu 22.04, Debian 12, OpenWrt 23.05 |
+| Linux    | `riscv64`    | >= Linux 6.8, >= GNU C Library 2.39  | 2    | Ubuntu 24.04, Debian 13                |
 | Linux    | `arm`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `arm64`      | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `ia32`       | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
 | Linux    | `x64`        | >= Linux 5.10, >= musl 1.2           | 2    | Alpine 3.13, OpenWrt 22.03             |
+| Linux    | `riscv64`    | >= Linux 6.6, >= musl 1.2            | 2    | Alpine 3.20                            |
 | Linux    | `mips`       | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
 | Linux    | `mipsel`     | >= Linux 5.10, >= musl 1.2           | 2    | OpenWrt 22.03                          |
 | Android  | `arm`        | >= 10                                | 1    |
@@ -417,9 +429,11 @@ Bare provides no standard library beyond the core JavaScript API available throu
 | [bare-rpc](https://github.com/holepunchto/bare-rpc)                           | <https://github.com/holepunchto/librpc> ABI compatible RPC for Bare                      | ![](https://img.shields.io/npm/v/bare-rpc)              |
 | [bare-semver](https://github.com/holepunchto/bare-semver)                     | Minimal semantic versioning library for Bare                                             | ![](https://img.shields.io/npm/v/bare-semver)           |
 | [bare-signals](https://github.com/holepunchto/bare-signals)                   | Native signal handling for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-signals)          |
+| [bare-storage](https://github.com/holepunchto/bare-storage)                   | Minimal, cross‑platform directory locator for Bare                                       | ![](https://img.shields.io/npm/v/bare-storage)          |
 | [bare-stream](https://github.com/holepunchto/bare-stream)                     | Streaming data for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-stream)           |
 | [bare-structured-clone](https://github.com/holepunchto/bare-structured-clone) | Structured cloning algorithm for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-structured-clone) |
 | [bare-subprocess](https://github.com/holepunchto/bare-subprocess)             | Native process spawning for JavaScript                                                   | ![](https://img.shields.io/npm/v/bare-subprocess)       |
+| [bare-tap](https://github.com/holepunchto/bare-tap)                           | Minimal TAP library for Bare                                                             | ![](https://img.shields.io/npm/v/bare-tap)              |
 | [bare-tcp](https://github.com/holepunchto/bare-tcp)                           | Native TCP sockets for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tcp)              |
 | [bare-thread](https://github.com/holepunchto/bare-thread)                     | Thread support for Bare                                                                  | ![](https://img.shields.io/npm/v/bare-thread)           |
 | [bare-timers](https://github.com/holepunchto/bare-timers)                     | Native timers for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-timers)           |

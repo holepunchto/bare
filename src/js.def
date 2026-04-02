@@ -80,6 +80,8 @@ EXPORTS
 	js_destroy_platform
 	js_detach_arraybuffer
 	js_detach_context_from_inspector
+	js_disable_garbage_collection_tracking
+	js_enable_garbage_collection_tracking
 	js_enter_context
 	js_escape_handle
 	js_exit_context

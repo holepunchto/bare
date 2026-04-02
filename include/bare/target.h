@@ -39,6 +39,9 @@
 #elif defined(__i386__) || defined(_M_IX86)
 #define BARE_ARCH "ia32"
 #define BARE_ARCH_IA32
+#elif defined(__riscv) && __riscv_xlen == 64
+#define BARE_ARCH "riscv64"
+#define BARE_ARCH_RISCV64
 #elif defined(__MIPSEB__)
 #define BARE_ARCH "mips"
 #define BARE_ARCH_MIPS

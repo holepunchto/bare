@@ -17,21 +17,23 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#20eccc3" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#fcd5004" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
-fetch_package("github:libuv/libuv@1.51.0")
+set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
+
+fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#6b1a36f")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   mirror_drive(
-    SOURCE qogbhqbcxknrpeotyz7hk4x3mxuf6d9mhb1dxm6ms5sdn6hh1uso
+    SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
     PREFIX /${target}
-    CHECKOUT 806
+    CHECKOUT 40
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -198,6 +200,12 @@ target_sources(
     src/thread.c
     src/thread.h
     src/types.h
+)
+
+target_compile_definitions(
+  bare
+  PRIVATE
+    BARE_MEMORY_LIMIT=${BARE_MEMORY_LIMIT}
 )
 
 target_include_directories(
