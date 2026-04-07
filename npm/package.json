@@ -28,14 +28,12 @@
     "url": "https://github.com/holepunchto/bare/issues"
   },
   "homepage": "https://github.com/holepunchto/bare",
-  "optionalDependencies": {
-    "bare-runtime": "1.28.3"
-  },
   "peerDependencies": {
     "bare-buffer": "*",
     "bare-console": "*",
     "bare-events": "*",
     "bare-queue-microtask": "*",
+    "bare-runtime": "*",
     "bare-structured-clone": "*",
     "bare-timers": "*",
     "bare-url": "*"
