@@ -1,6 +1,6 @@
 {
   "name": "bare",
-  "version": "1.28.1",
+  "version": "1.28.2",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "exports": {
     ".": {
@@ -28,8 +28,8 @@
     "url": "https://github.com/holepunchto/bare/issues"
   },
   "homepage": "https://github.com/holepunchto/bare",
-  "dependencies": {
-    "bare-runtime": "1.28.1"
+  "optionalDependencies": {
+    "bare-runtime": "1.28.2"
   },
   "peerDependencies": {
     "bare-buffer": "*",
