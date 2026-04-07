@@ -309,6 +309,10 @@ add_subdirectory(bin)
 
 install(TARGETS bare_static bare_shared)
 
+install(FILES include/bare.h include/node_api.h DESTINATION include)
+
+install(DIRECTORY include/bare DESTINATION include)
+
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
 
