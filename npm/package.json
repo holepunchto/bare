@@ -1,6 +1,6 @@
 {
   "name": "bare",
-  "version": "1.28.3",
+  "version": "1.28.4",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
   "exports": {
     ".": {
