@@ -2,6 +2,9 @@
   "private": true,
   "name": "bare",
   "description": "Small and modular JavaScript runtime for desktop and mobile",
+  "workspaces": [
+    "npm"
+  ],
   "scripts": {
     "format": "prettier --write .",
     "lint": "prettier --check . && lunte"
