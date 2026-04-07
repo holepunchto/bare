@@ -1,2 +1,9 @@
 bench/
 build/
+
+# https://github.com/holepunchto/lunte/issues/17
+npm/index.d.ts
+
+# https://github.com/holepunchto/lunte/issues/16
+src/bare.js
+src/thread.js
