@@ -29,9 +29,11 @@ fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#6b1a36f")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
+  set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
+
   mirror_drive(
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
-    DESTINATION ${PROJECT_SOURCE_DIR}/prebuilds
+    DESTINATION "${prebuilds}"
     PREFIX /${target}
     CHECKOUT 40
   )
@@ -41,7 +43,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   find_library(
     c++
     NAMES c++ libc++
-    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
+    PATHS "${prebuilds}/${target}"
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -85,7 +87,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   find_library(
     v8
     NAMES v8 libv8
-    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
+    PATHS "${prebuilds}/${target}"
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
@@ -136,7 +138,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   find_library(
     js
     NAMES js libjs
-    PATHS ${PROJECT_SOURCE_DIR}/prebuilds/${target}
+    PATHS "${prebuilds}/${target}"
     REQUIRED
     NO_DEFAULT_PATH
     NO_CMAKE_FIND_ROOT_PATH
