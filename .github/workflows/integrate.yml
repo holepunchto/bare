@@ -70,29 +70,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/setup-llvm@v1
+      - uses: holepunchto/actions/setup-nasm@v1
+      - uses: holepunchto/actions/compile-prebuilds@v1
         with:
-          node-version: lts/*
-      - uses: actions/cache@v5
-        with:
-          path: build/_drive
-          key: corestore-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
-      - run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
-        if: ${{ matrix.platform == 'linux' }}
-      - run: brew install llvm@20
-        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
-      - run: choco upgrade llvm
-        if: ${{ matrix.platform == 'win32' }}
-      - run: choco install nasm
-        if: ${{ matrix.platform == 'win32' }}
-      - run: npm install --global bare-make
-      - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
-      - run: bare-make build
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          flags: ${{ matrix.flags }}
+          tags: ${{ matrix.tags}}
       - run: bare-make test
         env:
           LSAN_OPTIONS: suppressions=test/leaks.txt

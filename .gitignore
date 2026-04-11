@@ -1,10 +1,9 @@
-node_modules
-build
-prebuilds
-install
-sandbox
-corestore
-*.js.h
+build/
+install/
+prebuilds/
+sandbox/
+node_modules/
 *.bundle
 *.bundle.h
 *.d
+*.js.h
