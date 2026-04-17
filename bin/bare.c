@@ -14,6 +14,10 @@ static uv_async_t bare__platform_shutdown;
 static js_platform_options_t bare__platform_options;
 static js_platform_t *bare__platform;
 
+#if defined(BARE_PLATFORM_LINUX)
+static bool bare__enable_io_uring = false;
+#endif
+
 static void
 bare__on_platform_shutdown(uv_async_t *handle) {
   uv_close((uv_handle_t *) handle, NULL);
@@ -26,6 +30,13 @@ bare__on_platform_thread(void *data) {
   uv_loop_t loop;
   err = uv_loop_init(&loop);
   assert(err == 0);
+
+#if defined(BARE_PLATFORM_LINUX)
+  if (bare__enable_io_uring) {
+    err = uv_loop_configure(&loop, UV_LOOP_USE_IO_URING_SQPOLL);
+    assert(err == 0);
+  }
+#endif
 
   err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
   assert(err == 0);
@@ -70,6 +81,12 @@ main(int argc, char *argv[]) {
     if (strcmp(argv[i], "--expose-gc") == 0) {
       bare__platform_options.expose_garbage_collection = true;
     }
+
+#if defined(BARE_PLATFORM_LINUX)
+    if (strcmp(argv[i], "--enable-io-uring") == 0) {
+      bare__enable_io_uring = true;
+    }
+#endif
   }
 
   uv_thread_t thread;
@@ -81,6 +98,13 @@ main(int argc, char *argv[]) {
   uv_barrier_destroy(&bare__platform_ready);
 
   uv_loop_t *loop = uv_default_loop();
+
+#if defined(BARE_PLATFORM_LINUX)
+  if (bare__enable_io_uring) {
+    err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
+    assert(err == 0);
+  }
+#endif
 
   bare_t *bare;
   err = bare_setup(loop, bare__platform, NULL, argc, (const char **) argv, NULL, &bare);

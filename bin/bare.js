@@ -22,6 +22,7 @@ const bare = command(
   flag('--inspect', 'Activate the inspector'),
   flag('--inspect-port <port>', 'Configure the port on which the inspector will run').default(9229),
   flag('--expose-gc', 'Expose garbage collection APIs'),
+  flag('--enable-io-uring', 'Enable io_uring to handle asynchronous file system operations'),
   arg('[filename]', 'The name of a script to evaluate'),
   rest('[...args]', 'Additional arguments made available to the script'),
   bail((bail) => {
