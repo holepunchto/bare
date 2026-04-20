@@ -15,7 +15,7 @@ static js_platform_options_t bare__platform_options;
 static js_platform_t *bare__platform;
 
 #if defined(BARE_PLATFORM_LINUX)
-static bool bare__enable_io_uring = false;
+static bool bare__use_io_uring = false;
 #endif
 
 static void
@@ -32,7 +32,7 @@ bare__on_platform_thread(void *data) {
   assert(err == 0);
 
 #if defined(BARE_PLATFORM_LINUX)
-  if (bare__enable_io_uring) {
+  if (bare__use_io_uring) {
     err = uv_loop_configure(&loop, UV_LOOP_USE_IO_URING_SQPOLL);
     assert(err == 0);
   }
@@ -81,13 +81,16 @@ main(int argc, char *argv[]) {
     if (strcmp(argv[i], "--expose-gc") == 0) {
       bare__platform_options.expose_garbage_collection = true;
     }
+  }
 
 #if defined(BARE_PLATFORM_LINUX)
-    if (strcmp(argv[i], "--enable-io-uring") == 0) {
-      bare__enable_io_uring = true;
-    }
-#endif
+  char *bare__use_io_uring_env_var;
+  bare__use_io_uring_env_var = getenv("BARE_USE_IO_URING");
+
+  if (enable_io_uring_env_var != NULL && strcmp(bare__use_io_uring_env_var, "1") == 0) {
+    bare__use_io_uring = true;
   }
+#endif
 
   uv_thread_t thread;
   err = uv_thread_create(&thread, bare__on_platform_thread, NULL);
@@ -100,7 +103,7 @@ main(int argc, char *argv[]) {
   uv_loop_t *loop = uv_default_loop();
 
 #if defined(BARE_PLATFORM_LINUX)
-  if (bare__enable_io_uring) {
+  if (bare__use_io_uring) {
     err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
     assert(err == 0);
   }
