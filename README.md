@@ -384,12 +384,6 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | Windows  | `arm64`      | >= Windows 11                        | 1    |
 | Windows  | `x64`        | >= Windows 10                        | 1    |
 
-## Environment variables
-
-#### `BARE_USE_IO_URING`
-
-Enable io_uring to handle asynchronous file system operations. Linux only.
-
 ## Modules
 
 Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare.

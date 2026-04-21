@@ -14,10 +14,6 @@ static uv_async_t bare__platform_shutdown;
 static js_platform_options_t bare__platform_options;
 static js_platform_t *bare__platform;
 
-#if defined(BARE_PLATFORM_LINUX)
-static bool bare__use_io_uring = false;
-#endif
-
 static void
 bare__on_platform_shutdown(uv_async_t *handle) {
   uv_close((uv_handle_t *) handle, NULL);
@@ -30,13 +26,6 @@ bare__on_platform_thread(void *data) {
   uv_loop_t loop;
   err = uv_loop_init(&loop);
   assert(err == 0);
-
-#if defined(BARE_PLATFORM_LINUX)
-  if (bare__use_io_uring) {
-    err = uv_loop_configure(&loop, UV_LOOP_USE_IO_URING_SQPOLL);
-    assert(err == 0);
-  }
-#endif
 
   err = uv_async_init(&loop, &bare__platform_shutdown, bare__on_platform_shutdown);
   assert(err == 0);
@@ -83,15 +72,6 @@ main(int argc, char *argv[]) {
     }
   }
 
-#if defined(BARE_PLATFORM_LINUX)
-  char *bare__use_io_uring_env_var;
-  bare__use_io_uring_env_var = getenv("BARE_USE_IO_URING");
-
-  if (enable_io_uring_env_var != NULL && strcmp(bare__use_io_uring_env_var, "1") == 0) {
-    bare__use_io_uring = true;
-  }
-#endif
-
   uv_thread_t thread;
   err = uv_thread_create(&thread, bare__on_platform_thread, NULL);
   assert(err == 0);
@@ -103,9 +83,17 @@ main(int argc, char *argv[]) {
   uv_loop_t *loop = uv_default_loop();
 
 #if defined(BARE_PLATFORM_LINUX)
-  if (bare__use_io_uring) {
-    err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
-    assert(err == 0);
+  {
+    char *env_key = "BARE_USE_IO_URING";
+    size_t env_value_len = 2; // bit value + null terminator
+    char *env_value = malloc(env_value_len);
+
+    if (uv_os_getenv(env_key, env_value, &env_value_len) == 0 && strcmp(env_value, "1") == 0) {
+      err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
+      assert(err == 0);
+    }
+
+    free(env_value);
   }
 #endif
 
