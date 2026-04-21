@@ -86,14 +86,12 @@ main(int argc, char *argv[]) {
   {
     char *env_key = "BARE_USE_IO_URING";
     size_t env_value_len = 2; // bit value + null terminator
-    char *env_value = malloc(env_value_len);
+    char env_value[env_value_len];
 
     if (uv_os_getenv(env_key, env_value, &env_value_len) == 0 && strcmp(env_value, "1") == 0) {
       err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
       assert(err == 0);
     }
-
-    free(env_value);
   }
 #endif
 
