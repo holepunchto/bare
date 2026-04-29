@@ -123,8 +123,8 @@ struct bare_thread_s {
   uv_barrier_t ready;
 
   const char *filename;
-  bare_source_t *source;
-  bare_data_t *data;
+  bare_source_t source;
+  bare_data_t data;
 
   bool exited;
 

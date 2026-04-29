@@ -29,8 +29,8 @@ bare_thread__entry(void *opaque) {
   bare_thread_t *thread = opaque;
 
   char *filename = strdup(thread->filename);
-  bare_source_t source = *thread->source;
-  bare_data_t data = *thread->data;
+  bare_source_t source = thread->source;
+  bare_data_t data = thread->data;
 
   uv_loop_t loop;
   err = uv_loop_init(&loop);
@@ -115,8 +115,8 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
 
   thread->process = runtime->process;
   thread->filename = filename;
-  thread->source = &source;
-  thread->data = &data;
+  thread->source = source;
+  thread->data = data;
   thread->exited = false;
   thread->previous = NULL;
   thread->next = NULL;
