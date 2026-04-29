@@ -120,7 +120,7 @@ struct bare_thread_s {
 
   uv_thread_t id;
   uv_mutex_t lock;
-  uv_barrier_t *ready;
+  uv_barrier_t ready;
 
   const char *filename;
   bare_source_t *source;

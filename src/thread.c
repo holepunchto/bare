@@ -66,7 +66,7 @@ bare_thread__entry(void *opaque) {
     break;
   }
 
-  uv_barrier_wait(thread->ready);
+  uv_barrier_wait(&thread->ready);
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime.exports, &exports);
@@ -121,11 +121,8 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   thread->previous = NULL;
   thread->next = NULL;
 
-  uv_barrier_t ready;
-  err = uv_barrier_init(&ready, 2);
+  err = uv_barrier_init(&thread->ready, 2);
   assert(err == 0);
-
-  thread->ready = &ready;
 
   uv_thread_options_t options = {
     .flags = UV_THREAD_HAS_STACK_SIZE,
@@ -138,7 +135,7 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
     err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
     assert(err == 0);
 
-    uv_barrier_destroy(&ready);
+    uv_barrier_destroy(&thread->ready);
 
     free(thread);
 
@@ -154,7 +151,9 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   err = uv_mutex_init(&thread->lock);
   assert(err == 0);
 
-  uv_barrier_wait(&ready);
+  uv_barrier_wait(&thread->ready);
+
+  uv_barrier_destroy(&thread->ready);
 
   *result = thread;
 
