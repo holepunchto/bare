@@ -28,7 +28,6 @@ bare_thread__entry(void *opaque) {
 
   bare_thread_t *thread = opaque;
 
-  char *filename = strdup(thread->filename);
   bare_source_t source = thread->source;
   bare_data_t data = thread->data;
 
@@ -84,10 +83,12 @@ bare_thread__entry(void *opaque) {
 
   bare_thread__invoke_callback(runtime, thread, env);
 
-  err = bare_runtime_load(&runtime, filename, source, NULL);
+  err = bare_runtime_load(&runtime, thread->filename, source, NULL);
   (void) err;
 
-  free(filename);
+  free(thread->filename);
+
+  thread->filename = NULL;
 
   err = bare_runtime_run(&runtime, UV_RUN_DEFAULT);
   assert(err == 0);
@@ -114,7 +115,7 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   bare_thread_t *thread = malloc(sizeof(bare_thread_t));
 
   thread->process = runtime->process;
-  thread->filename = filename;
+  thread->filename = strdup(filename);
   thread->source = source;
   thread->data = data;
   thread->exited = false;
@@ -137,6 +138,7 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
 
     uv_barrier_destroy(&thread->ready);
 
+    free(thread->filename);
     free(thread);
 
     return -1;
