@@ -11,6 +11,10 @@ add_executable(bare_bin
   bare.bundle.h
 )
 
+if(WIN32)
+  target_sources(bare_bin PRIVATE bare.manifest)
+endif()
+
 set_target_properties(
   bare_bin
   PROPERTIES
