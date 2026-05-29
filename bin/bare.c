@@ -82,6 +82,19 @@ main(int argc, char *argv[]) {
 
   uv_loop_t *loop = uv_default_loop();
 
+#if defined(BARE_PLATFORM_LINUX)
+  {
+    char *env_key = "BARE_USE_IO_URING";
+    size_t env_value_len = 2; // bit value + null terminator
+    char env_value[env_value_len];
+
+    if (uv_os_getenv(env_key, env_value, &env_value_len) == 0 && strcmp(env_value, "1") == 0) {
+      err = uv_loop_configure(loop, UV_LOOP_USE_IO_URING_SQPOLL);
+      assert(err == 0);
+    }
+  }
+#endif
+
   bare_t *bare;
   err = bare_setup(loop, bare__platform, NULL, argc, (const char **) argv, NULL, &bare);
   assert(err == 0);
