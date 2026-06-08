@@ -2,6 +2,7 @@ const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
 const path = require('bare-path')
+const Pipe = require('bare-pipe')
 const Signal = require('bare-signals')
 const { description, command, flag, arg, rest, bail } = require('paparam')
 
@@ -11,6 +12,13 @@ const parentURL = url.pathToFileURL(os.cwd())
 
 if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
   parentURL.pathname += '/'
+}
+
+const channelFd = Number(os.getEnv('BARE_CHANNEL_FD'))
+const channelMode = os.getEnv('BARE_CHANNEL_SERIALIZATION_MODE')
+
+if (Number.isFinite(channelFd) && channelMode === 'binary') {
+  Bare.IPC = new Pipe(channelFd, { ipc: true })
 }
 
 const bare = command(

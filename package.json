@@ -30,6 +30,7 @@
     "bare-module-resolve": "^1.6.1",
     "bare-os": "^3.0.1",
     "bare-path": "^3.0.0",
+    "bare-pipe": "^4.2.1",
     "bare-queue-microtask": "^1.0.0",
     "bare-repl": "^6.0.1",
     "bare-signals": "^4.0.4",
