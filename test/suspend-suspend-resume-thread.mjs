@@ -34,10 +34,10 @@ const thread = new Thread(import.meta.url, async () => {
 })
 
 thread.suspend()
-await t.sleep(200)
+await t.sleep(500)
 
 thread.suspend()
-await t.sleep(200)
+await t.sleep(500)
 
 thread.resume()
 thread.join()
