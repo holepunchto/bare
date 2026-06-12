@@ -163,7 +163,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
       if (err < 0) goto err;
     }
 
-    bare_module_register(&(bare_module_t){
+    bare_module_register(&(bare_module_t) {
       .version = BARE_MODULE_VERSION,
       .name = name == NULL ? NULL : name(),
       .exports = exports,
@@ -201,7 +201,6 @@ bare_addon_unload_dynamic(bare_runtime_t *runtime, bare_addon_t *addon) {
 
   return false;
 }
-
 
 void
 bare_addon_teardown(void) {
@@ -327,7 +326,7 @@ void
 napi_module_register(napi_module *module) {
   assert(module->nm_version == NAPI_MODULE_VERSION);
 
-  bare_module_register(&(bare_module_t){
+  bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
     .name = module->nm_filename,
     .exports = module->nm_register_func,

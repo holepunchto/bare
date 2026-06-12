@@ -2,9 +2,7 @@ const url = require('bare-url')
 const t = require('bare-tap')
 const { Addon } = Bare
 
-const fileURL = url.pathToFileURL(
-  `./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`
-)
+const fileURL = url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 
 t.plan(8)
 

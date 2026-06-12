@@ -84,9 +84,7 @@ module.exports = exports = class Addon {
     const self = Addon
 
     if (url.protocol === 'builtin:') {
-      throw AddonError.UNSUPPORTED_PROTOCOL(
-        `Cannot unload builtin addon '${url.href}'`
-      )
+      throw AddonError.UNSUPPORTED_PROTOCOL(`Cannot unload builtin addon '${url.href}'`)
     }
 
     const cache = self._cache
