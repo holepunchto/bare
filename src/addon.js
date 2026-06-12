@@ -80,6 +80,28 @@ module.exports = exports = class Addon {
     return addon
   }
 
+  static unload(url) {
+    const self = Addon
+
+    if (url.protocol === 'builtin:') {
+      throw AddonError.UNSUPPORTED_PROTOCOL(
+        `Cannot unload builtin addon '${url.href}'`
+      )
+    }
+
+    const cache = self._cache
+
+    const addon = cache[url.href] || null
+
+    if (addon === null) return false
+
+    const removed = bare.unloadDynamicAddon(addon._handle)
+
+    delete cache[url.href]
+
+    return removed
+  }
+
   static resolve(specifier, parentURL, opts = {}) {
     const Module = require('bare-module')
 

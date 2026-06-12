@@ -181,6 +181,28 @@ err:
   return NULL;
 }
 
+bool
+bare_addon_unload_dynamic(bare_runtime_t *runtime, bare_addon_t *addon) {
+  bare_addon_t **link = &bare_addon__dynamic;
+
+  while (*link) {
+    if (*link == addon) {
+      *link = addon->next;
+
+      uv_dlclose(&addon->lib);
+
+      free(addon);
+
+      return true;
+    }
+
+    link = &(*link)->next;
+  }
+
+  return false;
+}
+
+
 void
 bare_addon_teardown(void) {
   bare_addon_t *next = bare_addon__dynamic;

@@ -189,6 +189,12 @@ Load a static or dynamic native addon identified by `url`. If `url` is not a sta
 
 Options are reserved.
 
+#### `const unloaded = Addon.unload(url)`
+
+Unload a dynamically loaded native addon identified by `url`, closing its dynamic library, freeing the runtime's bookkeeping for it, and dropping the cached `Addon` instance so the same `url` can be loaded again afterwards. Returns `true` if an addon was unloaded and `false` if none was loaded for `url`. Throws if `url` identifies a `builtin:` addon, as static addons are compiled into the binary and cannot be unloaded.
+
+This is a low-level primitive. After the dynamic library is closed, any JavaScript still holding the addon's `exports` is holding function pointers into code that no longer exists, and calling them will crash. The caller must guarantee that no live references to the addon's `exports` remain. The dynamic addon list is per-runtime, so `unload` must be called on the same runtime that loaded the addon.
+
 #### `addon.url`
 
 The WHATWG `URL` identifier of the addon.
