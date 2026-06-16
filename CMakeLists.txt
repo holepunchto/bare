@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#fcd5004" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#a1f0c5" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -26,7 +26,7 @@ set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScrip
 fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#6b1a36f")
+fetch_package("github:holepunchto/libutf#7a4e608")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
@@ -35,7 +35,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 40
+    CHECKOUT 81
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
