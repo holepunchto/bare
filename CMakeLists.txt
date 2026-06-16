@@ -131,6 +131,23 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         winmm
     )
+
+    # Our MSVC toolchain links via lld-link directly, bypassing the Clang driver
+    # that would normally append the compiler-rt builtins. Link them explicitly.
+    execute_process(
+      COMMAND "${CMAKE_C_COMPILER}"
+        --target=${CMAKE_C_COMPILER_TARGET}
+        --rtlib=compiler-rt
+        --print-libgcc-file-name
+      OUTPUT_VARIABLE compiler_rt_builtins
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    target_link_libraries(
+      v8
+      INTERFACE
+        "${compiler_rt_builtins}"
+    )
   endif()
 
   add_library(js STATIC IMPORTED GLOBAL)
