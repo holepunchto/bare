@@ -197,7 +197,6 @@ EXPORTS
 	js_is_wrapped
 	js_new_instance
 	js_on_dynamic_import
-	js_on_dynamic_import_transitional
 	js_on_inspector_paused
 	js_on_inspector_response
 	js_on_uncaught_exception
