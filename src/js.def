@@ -96,14 +96,17 @@ EXPORTS
 	js_get_boolean
 	js_get_callback_info
 	js_get_dataview_info
+	js_get_default_module_id
 	js_get_element
 	js_get_env_loop
 	js_get_env_platform
 	js_get_error_location
 	js_get_filtered_property_names
+	js_get_function_id
 	js_get_global
 	js_get_heap_space_statistics
 	js_get_heap_statistics
+	js_get_module_id
 	js_get_module_name
 	js_get_module_namespace
 	js_get_named_property
