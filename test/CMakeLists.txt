@@ -4,6 +4,7 @@ list(APPEND tests
   addon-load-scoped.js
   addon-load.js
   addon-resolve.js
+  addon-resolve-cache.js
   argv-empty.c
   exit-on-before-exit.js
   exit-on-exit.js

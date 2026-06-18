@@ -93,6 +93,7 @@ module.exports = exports = class Addon {
 
     const {
       referrer = null,
+      cache = referrer ? referrer._cache : Object.create(null),
       protocol = referrer ? referrer._protocol : Module._protocol,
       imports = referrer ? referrer._imports : null,
       resolutions = referrer ? referrer._resolutions : null,
@@ -153,7 +154,7 @@ module.exports = exports = class Addon {
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, Module.constants.types.JSON)) {
-        return Module.load(packageURL, { protocol })._exports
+        return Module.load(packageURL, { protocol, cache })._exports
       }
 
       return null
