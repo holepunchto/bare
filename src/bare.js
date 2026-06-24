@@ -241,5 +241,5 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null)
+  return Module.load(url, source ? Buffer.from(source) : null, { cache: Object.create(null) })
 }
