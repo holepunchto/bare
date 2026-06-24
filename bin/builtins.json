@@ -19,5 +19,6 @@
   { "addon": "bare-tls" },
   { "addon": "bare-tty" },
   { "addon": "bare-type" },
+  { "addon": "bare-type-stripper" },
   { "addon": "bare-url" }
 ]

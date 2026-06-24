@@ -27,6 +27,8 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
+  import-cts.cts
+  import-mts.mts
   restart.c
   suspend-idle.js
   suspend-on-idle.js
@@ -73,7 +75,7 @@ foreach(file IN LISTS tests)
     )
 
     set(command ${test})
-  elseif(file MATCHES "\.(c|m)?js$")
+  elseif(file MATCHES "\.(c|m)?[jt]s$")
     set(command bare_bin test/${file})
   endif()
 

@@ -255,6 +255,7 @@ link_bare_module(bare bare-structured-clone)
 link_bare_module(bare bare-system-logger)
 link_bare_module(bare bare-timers)
 link_bare_module(bare bare-type)
+link_bare_module(bare bare-type-stripper)
 link_bare_module(bare bare-url)
 
 add_library(bare_shared SHARED)
