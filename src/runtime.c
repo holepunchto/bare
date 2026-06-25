@@ -1355,8 +1355,8 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   js_env_t *env = runtime->env;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
+  js_escapable_handle_scope_t *scope;
+  err = js_open_escapable_handle_scope(env, &scope);
   assert(err == 0);
 
   js_value_t *exports;
@@ -1398,15 +1398,19 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   }
 
   err = js_call_function(env, global, load, 2, args, result);
-  (void) err;
 
-  err = js_close_handle_scope(env, scope);
+  if (err == 0 && result != NULL) {
+    err = js_escape_handle(env, scope, *result, result);
+    assert(err == 0);
+  }
+
+  err = js_close_escapable_handle_scope(env, scope);
   assert(err == 0);
 
   return 0;
 
 err:
-  err = js_close_handle_scope(env, scope);
+  err = js_close_escapable_handle_scope(env, scope);
   assert(err == 0);
 
   return -1;
