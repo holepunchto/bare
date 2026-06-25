@@ -15,9 +15,9 @@ bare.addon = function addon(href) {
 
   addon = addons[href] = { exports: {} }
 
-  const handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
+  bare.loadStaticAddon(addon, href.replace(/^builtin:/, ''))
 
-  addon.exports = bare.initAddon(handle, addon.exports)
+  addon.exports = bare.initAddon(addon, addon.exports)
 
   return addon.exports
 }
