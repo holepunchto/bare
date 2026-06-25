@@ -4,11 +4,16 @@ const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
+const host = bare.host
+const builtins = bare.getStaticAddons()
+
+const defaultConditions = ['bare', 'node', ...host.split('-')]
+const defaultCache = Object.create(null)
+
 module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
     this._exports = {}
-    this._handle = null
 
     Object.preventExtensions(this)
   }
@@ -30,39 +35,31 @@ module.exports = exports = class Addon {
     }
   }
 
-  static _cache = Object.create(null)
-
-  static _builtins = bare.getStaticAddons()
-
   static get cache() {
-    return this._cache
+    return defaultCache
   }
 
   static get host() {
-    return bare.host
+    return host
   }
 
   static load(url, opts /* reserved */) {
-    const self = Addon
-
-    const cache = self._cache
-
-    let addon = cache[url.href] || null
+    let addon = defaultCache[url.href] || null
 
     if (addon !== null) return addon
 
-    addon = cache[url.href] = new Addon(url)
+    addon = defaultCache[url.href] = new Addon(url)
 
     try {
       switch (url.protocol) {
         case 'builtin:':
-          addon._handle = bare.loadStaticAddon(url.pathname)
+          bare.loadStaticAddon(addon, url.pathname)
           break
         case 'linked:':
-          addon._handle = bare.loadDynamicAddon(url.pathname)
+          bare.loadDynamicAddon(addon, url.pathname)
           break
         case 'file:':
-          addon._handle = bare.loadDynamicAddon(fileURLToPath(url))
+          bare.loadDynamicAddon(addon, fileURLToPath(url))
           break
         default:
           throw AddonError.UNSUPPORTED_PROTOCOL(
@@ -70,9 +67,9 @@ module.exports = exports = class Addon {
           )
       }
 
-      addon._exports = bare.initAddon(addon._handle, addon._exports)
+      addon._exports = bare.initAddon(addon, addon._exports)
     } catch (err) {
-      delete cache[url.href]
+      delete defaultCache[url.href]
 
       throw err
     }
@@ -83,8 +80,6 @@ module.exports = exports = class Addon {
   static resolve(specifier, parentURL, opts = {}) {
     const Module = require('bare-module')
 
-    const self = Addon
-
     if (typeof specifier !== 'string') {
       throw new TypeError(
         `Specifier must be a string. Received type ${typeof specifier} (${specifier})`
@@ -93,12 +88,10 @@ module.exports = exports = class Addon {
 
     const {
       referrer = null,
-      cache = referrer ? referrer._cache : Object.create(null),
-      protocol = referrer ? referrer._protocol : Module._protocol,
-      imports = referrer ? referrer._imports : null,
-      resolutions = referrer ? referrer._resolutions : null,
-      builtins = self._builtins,
-      conditions = referrer ? referrer._conditions : Module._conditions
+      protocol = referrer ? referrer.protocol : Module.protocol,
+      imports = referrer ? referrer.imports : null,
+      resolutions = referrer ? referrer.resolutions : null,
+      conditions = referrer ? referrer.conditions : defaultConditions
     } = opts
 
     const resolved = protocol.preresolve(specifier, parentURL)
@@ -115,10 +108,10 @@ module.exports = exports = class Addon {
       resolved,
       parentURL,
       {
-        conditions: ['addon', ...conditions],
-        host: self.host,
-        resolutions,
+        host,
         builtins,
+        resolutions,
+        conditions: ['addon', ...conditions],
         extensions: ['.bare', '.node'],
         engines: bare.versions
       },
@@ -154,7 +147,7 @@ module.exports = exports = class Addon {
 
     function readPackage(packageURL) {
       if (protocol.exists(packageURL, Module.constants.types.JSON)) {
-        return Module.load(packageURL, { protocol, cache })._exports
+        return Module.load(packageURL, { protocol, referrer }).exports
       }
 
       return null

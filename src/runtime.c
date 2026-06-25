@@ -516,42 +516,25 @@ static js_value_t *
 bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
   assert(err == 0);
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
-  if (node == NULL) goto err;
+  if (node == NULL) return NULL;
 
-  js_value_t *handle;
-  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, handle, &handle);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return handle;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -561,42 +544,25 @@ static js_value_t *
 bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
   assert(err == 0);
 
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
-  if (node == NULL) goto err;
+  if (node == NULL) return NULL;
 
-  js_value_t *handle;
-  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, handle, &handle);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return handle;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -619,7 +585,7 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_addon_t *node;
-  err = js_get_value_external(env, argv[0], (void **) &node);
+  err = js_unwrap(env, argv[0], (void **) &node);
   assert(err == 0);
 
   js_value_t *exports = argv[1];
@@ -755,72 +721,55 @@ static js_value_t *
 bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  size_t argc = 4;
-  js_value_t *argv[4];
+  size_t argc = 5;
+  js_value_t *argv[5];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 4);
+  assert(argc == 5);
 
   utf8_t filename[4096];
-  err = js_get_value_string_utf8(env, argv[0], filename, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], filename, 4096, NULL);
   assert(err == 0);
 
   bare_source_t source = {bare_source_none};
   bool has_source;
 
-  err = js_is_sharedarraybuffer(env, argv[1], &has_source);
+  err = js_is_sharedarraybuffer(env, argv[2], &has_source);
   assert(err == 0);
 
   if (has_source) {
     source.type = bare_source_sharedarraybuffer;
 
-    err = js_get_sharedarraybuffer_backing_store(env, argv[1], &source.backing_store);
+    err = js_get_sharedarraybuffer_backing_store(env, argv[2], &source.backing_store);
     assert(err == 0);
   }
 
   bare_data_t data = {bare_data_none};
   bool has_data;
 
-  err = js_is_sharedarraybuffer(env, argv[2], &has_data);
+  err = js_is_sharedarraybuffer(env, argv[3], &has_data);
   assert(err == 0);
 
   if (has_data) {
     data.type = bare_data_sharedarraybuffer;
 
-    err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
+    err = js_get_sharedarraybuffer_backing_store(env, argv[3], &data.backing_store);
     assert(err == 0);
   }
 
   uint32_t stack_size;
-  err = js_get_value_uint32(env, argv[3], &stack_size);
+  err = js_get_value_uint32(env, argv[4], &stack_size);
   assert(err == 0);
 
   bare_thread_t *thread;
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
-  if (err < 0) goto err;
+  if (err < 0) return NULL;
 
-  js_value_t *result;
-  err = js_create_external(env, (void *) thread, NULL, NULL, &result);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, result, &result);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return result;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) thread, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -845,7 +794,7 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   bare_thread_join(runtime, thread);
@@ -875,7 +824,7 @@ bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   int32_t linger;
@@ -910,7 +859,7 @@ bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   int32_t deadline;
@@ -945,7 +894,7 @@ bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   err = bare_thread_resume(thread);
@@ -976,7 +925,7 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   err = bare_thread_terminate(thread);
