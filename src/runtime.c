@@ -1355,9 +1355,15 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   js_env_t *env = runtime->env;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
+  void *scope;
+
+  if (result) {
+    err = js_open_escapable_handle_scope(env, (js_escapable_handle_scope_t **) &scope);
+    assert(err == 0);
+  } else {
+    err = js_open_handle_scope(env, (js_handle_scope_t **) &scope);
+    assert(err == 0);
+  }
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
@@ -1399,19 +1405,29 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   err = js_call_function(env, global, load, 2, args, result);
 
-  if (err == 0 && result != NULL) {
-    err = js_escape_handle(env, scope, *result, result);
+  if (result && err == 0) {
+    err = js_escape_handle(env, (js_escapable_handle_scope_t *) scope, *result, result);
     assert(err == 0);
   }
 
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
+  if (result) {
+    err = js_close_escapable_handle_scope(env, (js_escapable_handle_scope_t *) scope);
+    assert(err == 0);
+  } else {
+    err = js_close_handle_scope(env, (js_handle_scope_t *) scope);
+    assert(err == 0);
+  }
 
   return 0;
 
 err:
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
+  if (result) {
+    err = js_close_escapable_handle_scope(env, (js_escapable_handle_scope_t *) scope);
+    assert(err == 0);
+  } else {
+    err = js_close_handle_scope(env, (js_handle_scope_t *) scope);
+    assert(err == 0);
+  }
 
   return -1;
 }
