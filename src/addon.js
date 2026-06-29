@@ -14,8 +14,6 @@ module.exports = exports = class Addon {
   constructor(url) {
     this._url = url
     this._exports = {}
-
-    Object.preventExtensions(this)
   }
 
   get url() {
