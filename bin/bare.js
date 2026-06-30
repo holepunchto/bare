@@ -80,20 +80,22 @@ const bare = command(
       signal.on('signal', inspect).start()
     }
 
+    const cache = Object.create(null)
+
     if (flags.eval) {
-      return Module.load(parentURL, flags.eval)
+      return Module.load(parentURL, flags.eval, { cache })
     }
 
     if (flags.print) {
-      return Module.load(parentURL, `console.log(${flags.print})`)
+      return Module.load(parentURL, `console.log(${flags.print})`, { cache })
     }
 
     if (args.filename) {
-      return Module.load(args.filename)
+      return Module.load(args.filename, { cache })
     }
 
     require('bare-repl')
-      .start()
+      .start({ useGlobal: true })
       .on('exit', () => {
         if (server === null) Bare.exit()
         else server.close(() => Bare.exit())

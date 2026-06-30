@@ -10,5 +10,6 @@
   { "addon": "bare-system-logger" },
   { "addon": "bare-timers" },
   { "addon": "bare-type" },
+  { "addon": "bare-type-stripper" },
   { "addon": "bare-url" }
 ]

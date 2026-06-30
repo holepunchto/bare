@@ -15,9 +15,9 @@ bare.addon = function addon(href) {
 
   addon = addons[href] = { exports: {} }
 
-  const handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
+  bare.loadStaticAddon(addon, href.replace(/^builtin:/, ''))
 
-  addon.exports = bare.initAddon(handle, addon.exports)
+  addon.exports = bare.initAddon(addon, addon.exports)
 
   return addon.exports
 }
@@ -241,5 +241,5 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null)
+  return Module.load(url, source ? Buffer.from(source) : null, { cache: Object.create(null) })
 }
