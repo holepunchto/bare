@@ -1491,5 +1491,10 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_runtime__on_exit(runtime);
 
+  // Drain handles closed during the exit event (e.g. process-scoped resources
+  // such as Bare.IPC) so they release before bare_run() returns rather than
+  // lingering until bare_teardown(). Bounded: a single non-blocking iteration.
+  uv_run(runtime->loop, UV_RUN_NOWAIT);
+
   return 0;
 }
