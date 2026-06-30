@@ -41,6 +41,7 @@
     "paparam": "^1.1.2"
   },
   "devDependencies": {
+    "bare-fs": "^4.7.2",
     "bare-http1": "^4.0.0",
     "bare-tap": "^1.0.0",
     "cmake-bare": "^1.1.7",
