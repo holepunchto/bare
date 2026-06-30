@@ -6,6 +6,10 @@ list(APPEND tests
   addon-resolve.js
   addon-resolve-cache.js
   argv-empty.c
+  exit-enqueue-immediate.js
+  exit-enqueue-readfile.js
+  exit-enqueue-timeout.js
+  exit-flush-microtask.js
   exit-on-before-exit.js
   exit-on-exit.js
   exit-on-idle.js
