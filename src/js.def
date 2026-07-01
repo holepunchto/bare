@@ -44,6 +44,8 @@ EXPORTS
 	js_create_int64
 	js_create_module
 	js_create_object
+	js_create_object_with_properties
+	js_create_object_with_prototype
 	js_create_platform
 	js_create_promise
 	js_create_property_key_latin1
@@ -74,6 +76,7 @@ EXPORTS
 	js_delete_named_property
 	js_delete_property
 	js_delete_reference
+	js_delete_script
 	js_destroy_context
 	js_destroy_env
 	js_destroy_inspector
@@ -87,6 +90,7 @@ EXPORTS
 	js_exit_context
 	js_fatal_exception
 	js_finish_deferred_teardown_callback
+	js_freeze
 	js_get_and_clear_last_exception
 	js_get_array_elements
 	js_get_array_length
@@ -122,6 +126,8 @@ EXPORTS
 	js_get_property_names
 	js_get_prototype
 	js_get_reference_value
+	js_get_script_id
+	js_get_script_name
 	js_get_sharedarraybuffer_backing_store
 	js_get_sharedarraybuffer_info
 	js_get_string_view
@@ -206,6 +212,9 @@ EXPORTS
 	js_on_unhandled_rejection
 	js_open_escapable_handle_scope
 	js_open_handle_scope
+	js_prepare_script
+	js_queue_microtask
+	js_queue_microtask_with_callback
 	js_ref_threadsafe_function
 	js_reference_ref
 	js_reference_unref
@@ -218,13 +227,16 @@ EXPORTS
 	js_request_garbage_collection
 	js_resolve_deferred
 	js_run_module
+	js_run_prepared_script
 	js_run_script
+	js_seal
 	js_send_inspector_request
 	js_set_array_elements
 	js_set_element
 	js_set_module_export
 	js_set_named_property
 	js_set_property
+	js_set_prototype
 	js_strict_equals
 	js_symbol_for
 	js_terminate_execution
