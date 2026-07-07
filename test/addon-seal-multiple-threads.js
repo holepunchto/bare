@@ -9,8 +9,10 @@ t.equal(Addon.sealed, true)
 
 const thread = new Thread(__filename, () => {
   const url = require('bare-url')
-  const t = require('bare-tap')
+  const tap = require('bare-tap')
   const { Addon } = Bare
+
+  const t = tap.subtest()
 
   t.plan(2)
 

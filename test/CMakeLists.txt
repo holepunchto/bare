@@ -7,6 +7,7 @@ list(APPEND tests
   addon-resolve-cache.js
   addon-seal.js
   addon-seal-multiple-threads.js
+  addon-seal-preloaded-multiple-threads.js
   argv-empty.c
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
