@@ -569,6 +569,24 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
+  bare_addon_seal();
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__get_addons_sealed(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_addon_sealed(), &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1046,6 +1064,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->process = process;
   runtime->threads = NULL;
 
+  bare_addon_setup();
+
   js_env_options_t options = {
     .version = 0,
     .memory_limit = process->options.memory_limit,
@@ -1193,6 +1213,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("loadStaticAddon", bare_runtime__load_static_addon);
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
   V("initAddon", bare_runtime__init_addon);
+  V("sealAddons", bare_runtime__seal_addons);
+  V("addonsSealed", bare_runtime__get_addons_sealed);
 
   V("terminate", bare_runtime__terminate);
   V("abort", bare_runtime__abort);

@@ -41,6 +41,14 @@ module.exports = exports = class Addon {
     return host
   }
 
+  static get sealed() {
+    return bare.addonsSealed()
+  }
+
+  static seal() {
+    bare.sealAddons()
+  }
+
   static load(url, opts /* reserved */) {
     let addon = defaultCache[url.href] || null
 
