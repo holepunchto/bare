@@ -8,7 +8,7 @@ const { description, command, flag, arg, rest, bail } = require('paparam')
 
 const { SIGUSR1 } = Signal.constants
 
-const parentURL = url.pathToFileURL(os.cwd())
+const parentURL = url.pathToFileURL('.')
 
 if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
   parentURL.pathname += '/'
@@ -108,7 +108,7 @@ const bare = command(
 
       const inspector = require('bare-inspector')
 
-      server = new inspector.Server(port, { path: args.filename || os.cwd() })
+      server = new inspector.Server(port, { path: args.filename || path.resolve('.') })
       server.unref()
     }
   }

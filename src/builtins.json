@@ -5,7 +5,7 @@
   { "addon": "bare-logger" },
   { "addon": "bare-module" },
   { "addon": "bare-module-lexer" },
-  { "addon": "bare-os" },
+  { "addon": "bare-path" },
   { "addon": "bare-structured-clone" },
   { "addon": "bare-system-logger" },
   { "addon": "bare-timers" },
