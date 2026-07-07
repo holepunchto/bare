@@ -34,6 +34,8 @@ target_link_libraries(
 link_bare_module(bare_bin bare-crypto)
 link_bare_module(bare_bin bare-dns)
 link_bare_module(bare_bin bare-inspector)
+link_bare_module(bare_bin bare-os)
+link_bare_module(bare_bin bare-path)
 link_bare_module(bare_bin bare-pipe)
 link_bare_module(bare_bin bare-repl)
 link_bare_module(bare_bin bare-signals)
