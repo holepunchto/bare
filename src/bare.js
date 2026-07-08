@@ -227,6 +227,7 @@ bare.onresume = function onresume() {
 const Module = require('bare-module')
 const { startsWithWindowsDriveLetter } = require('bare-module-resolve')
 const URL = require('bare-url')
+const protocol = require('./protocol')
 
 bare.exit = exports.exit
 
@@ -241,5 +242,8 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null, { cache: Object.create(null) })
+  return Module.load(url, source ? Buffer.from(source) : null, {
+    protocol,
+    cache: Object.create(null)
+  })
 }

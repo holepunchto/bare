@@ -60,8 +60,9 @@ module.exports = exports = class Addon {
           bare.loadDynamicAddon(addon, fileURLToPath(url))
           break
         default:
-          throw AddonError.UNSUPPORTED_PROTOCOL(
-            `Unsupported protocol '${url.protocol}' for addon '${url.href}'`
+          throw AddonError.UNKNOWN_PROTOCOL(
+            `Unknown protocol '${url.protocol}' for addon '${url.href}'`,
+            url
           )
       }
 
@@ -69,7 +70,9 @@ module.exports = exports = class Addon {
     } catch (err) {
       delete defaultCache[url.href]
 
-      throw err
+      if (err instanceof AddonError) throw err
+
+      throw AddonError.CANNOT_LOAD(`Cannot load addon '${url.href}'`, url, err)
     }
 
     return addon
@@ -77,6 +80,8 @@ module.exports = exports = class Addon {
 
   static resolve(specifier, parentURL, opts = {}) {
     const Module = require('bare-module')
+
+    const defaultProtocol = require('./protocol')
 
     if (typeof specifier !== 'string') {
       throw new TypeError(
@@ -86,7 +91,7 @@ module.exports = exports = class Addon {
 
     const {
       referrer = null,
-      protocol = referrer ? referrer.protocol : Module.protocol,
+      protocol = referrer ? referrer.protocol : defaultProtocol,
       imports = referrer ? referrer.imports : null,
       resolutions = referrer ? referrer.resolutions : null,
       conditions = referrer ? referrer.conditions : defaultConditions

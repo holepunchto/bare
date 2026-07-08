@@ -938,6 +938,165 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uint32_t mode;
+  err = js_get_value_uint32(env, argv[1], &mode);
+  assert(err == 0);
+
+  uv_fs_t req;
+  uv_fs_stat(runtime->loop, &req, (char *) path, NULL);
+
+  uv_stat_t *st = req.result < 0 ? NULL : req.ptr;
+
+  js_value_t *result;
+  err = js_get_boolean(env, st && st->st_mode & mode, &result);
+  assert(err == 0);
+
+  uv_fs_req_cleanup(&req);
+
+  return result;
+}
+
+static js_value_t *
+bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uv_fs_t req;
+  uv_fs_realpath(runtime->loop, &req, (char *) path, NULL);
+
+  int res = (int) req.result;
+
+  if (res < 0) {
+    uv_fs_req_cleanup(&req);
+    err = res;
+    goto err;
+  }
+
+  js_value_t *result;
+  err = js_create_string_utf8(env, (utf8_t *) req.ptr, (size_t) -1, &result);
+  assert(err == 0);
+
+  uv_fs_req_cleanup(&req);
+
+  return result;
+
+err:
+  err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uv_loop_t *loop = runtime->loop;
+
+  uv_fs_t req;
+  uv_fs_open(loop, &req, (char *) path, UV_FS_O_RDONLY, 0, NULL);
+
+  int fd = (int) req.result;
+  uv_fs_req_cleanup(&req);
+
+  if (fd < 0) {
+    err = fd;
+    goto err;
+  }
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+  uv_stat_t *st = req.ptr;
+
+  size_t len = st->st_size;
+  char *base;
+
+  js_value_t *result;
+  err = js_create_arraybuffer(env, len, (void **) &base, &result);
+  assert(err == 0);
+
+  uv_buf_t buffer = uv_buf_init(base, (unsigned int) len);
+
+  uv_fs_req_cleanup(&req);
+
+  int64_t read = 0;
+
+  while (true) {
+    uv_fs_read(loop, &req, fd, &buffer, 1, read, NULL);
+
+    int res = (int) req.result;
+    uv_fs_req_cleanup(&req);
+
+    if (res < 0) {
+      uv_fs_close(loop, &req, fd, NULL);
+      uv_fs_req_cleanup(&req);
+      err = res;
+      goto err;
+    }
+
+    buffer.base += res;
+    buffer.len -= (size_t) res;
+
+    read += res;
+    if (res == 0 || read == len) break;
+  }
+
+  uv_fs_close(loop, &req, fd, NULL);
+  uv_fs_req_cleanup(&req);
+
+  return result;
+
+err:
+  err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
 bare_runtime__require(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1207,6 +1366,10 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
   V("terminateThread", bare_runtime__terminate_thread);
+
+  V("exists", bare_runtime__exists);
+  V("realpath", bare_runtime__realpath);
+  V("read", bare_runtime__read);
 #undef V
 
 #define V(name, bool) \
@@ -1220,6 +1383,20 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   }
 
   V("isMainThread", bare_runtime__is_main_thread(runtime));
+#undef V
+
+#define V(name, n) \
+  { \
+    js_value_t *val; \
+    err = js_create_uint32(env, n, &val); \
+    assert(err == 0); \
+\
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
+  }
+
+  V("FILE", S_IFREG);
+  V("DIR", S_IFDIR);
 #undef V
 
   js_value_t *global;
