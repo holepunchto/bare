@@ -4,16 +4,37 @@ const resolve = require('bare-addon-resolve')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
+const engines = bare.versions
 const host = bare.host
 const builtins = bare.getStaticAddons()
 
-const defaultConditions = ['bare', 'node', ...host.split('-')]
-const defaultCache = Object.create(null)
+const conditions = ['bare', 'node', 'addon', ...host.split('-')]
+const extensions = ['.bare', '.node']
+const cache = Object.create(null)
 
 module.exports = exports = class Addon {
   constructor(url) {
+    const { protocol } = url
+
+    if (protocol !== 'builtin:' && protocol !== 'linked:' && protocol !== 'file:') {
+      throw AddonError.UNKNOWN_PROTOCOL(
+        `Unknown protocol '${protocol}' for addon '${url.href}'`,
+        url
+      )
+    }
+
+    const loader = protocol === 'builtin:' ? bare.loadStaticAddon : bare.loadDynamicAddon
+
+    const path = protocol === 'file:' ? fileURLToPath(url) : url.pathname
+
+    try {
+      loader(this, path)
+    } catch (err) {
+      throw AddonError.CANNOT_LOAD(`Cannot load addon '${url.href}'`, url, err)
+    }
+
     this._url = url
-    this._exports = {}
+    this._exports = bare.initAddon(this, {})
   }
 
   get url() {
@@ -33,54 +54,28 @@ module.exports = exports = class Addon {
     }
   }
 
-  static get cache() {
-    return defaultCache
-  }
-
   static get host() {
     return host
   }
 
-  static load(url, opts /* reserved */) {
-    let addon = defaultCache[url.href] || null
+  /** @deprecated */
+  static get cache() {
+    return cache
+  }
+
+  /** @deprecated */
+  static load(url) {
+    let addon = cache[url.href] || null
 
     if (addon !== null) return addon
 
-    addon = defaultCache[url.href] = new Addon(url)
-
-    try {
-      switch (url.protocol) {
-        case 'builtin:':
-          bare.loadStaticAddon(addon, url.pathname)
-          break
-        case 'linked:':
-          bare.loadDynamicAddon(addon, url.pathname)
-          break
-        case 'file:':
-          bare.loadDynamicAddon(addon, fileURLToPath(url))
-          break
-        default:
-          throw AddonError.UNKNOWN_PROTOCOL(
-            `Unknown protocol '${url.protocol}' for addon '${url.href}'`,
-            url
-          )
-      }
-
-      addon._exports = bare.initAddon(addon, addon._exports)
-    } catch (err) {
-      delete defaultCache[url.href]
-
-      if (err instanceof AddonError) throw err
-
-      throw AddonError.CANNOT_LOAD(`Cannot load addon '${url.href}'`, url, err)
-    }
+    addon = cache[url.href] = new Addon(url)
 
     return addon
   }
 
+  /** @deprecated */
   static resolve(specifier, parentURL, opts = {}) {
-    const Module = require('bare-module')
-
     const defaultProtocol = require('./protocol')
 
     if (typeof specifier !== 'string') {
@@ -92,32 +87,17 @@ module.exports = exports = class Addon {
     const {
       referrer = null,
       protocol = referrer ? referrer.protocol : defaultProtocol,
-      imports = referrer ? referrer.imports : null,
-      resolutions = referrer ? referrer.resolutions : null,
-      conditions = referrer ? referrer.conditions : defaultConditions
+      resolutions = referrer ? referrer.resolutions : null
     } = opts
-
-    const resolved = protocol.preresolve(specifier, parentURL)
-
-    const [resolution] = protocol.resolve(resolved, parentURL, imports)
-
-    if (resolution) return protocol.postresolve(resolution, parentURL)
 
     const candidates = []
 
     let cause
 
     for (const resolution of resolve(
-      resolved,
+      specifier,
       parentURL,
-      {
-        host,
-        builtins,
-        resolutions,
-        conditions: ['addon', ...conditions],
-        extensions: ['.bare', '.node'],
-        engines: bare.versions
-      },
+      { host, builtins, resolutions, conditions, extensions, engines },
       readPackage
     )) {
       candidates.push(resolution)
@@ -127,14 +107,14 @@ module.exports = exports = class Addon {
           return resolution
         case 'linked:':
           try {
-            return Addon.load(resolution, opts).url
+            return Addon.load(resolution).url
           } catch (err) {
             cause = err
             break
           }
         default:
-          if (protocol.exists(resolution, Module.constants.types.ADDON)) {
-            return protocol.postresolve(protocol.addon ? protocol.addon(resolution) : resolution)
+          if (defaultProtocol.exists(resolution)) {
+            return defaultProtocol.postresolve(resolution)
           }
       }
     }
@@ -149,8 +129,14 @@ module.exports = exports = class Addon {
     throw AddonError.ADDON_NOT_FOUND(message, specifier, parentURL, candidates, cause)
 
     function readPackage(packageURL) {
-      if (protocol.exists(packageURL, Module.constants.types.JSON)) {
-        return Module.load(packageURL, { protocol, referrer }).exports
+      if (protocol.exists(packageURL)) {
+        const source = protocol.read(packageURL)
+
+        try {
+          return JSON.parse(source)
+        } catch {
+          return null
+        }
       }
 
       return null

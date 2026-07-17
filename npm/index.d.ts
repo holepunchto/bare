@@ -36,9 +36,10 @@ interface Bare extends EventEmitter<BareEvents> {
   wakeup(deadline?: number): void
   idle(): void
   resume(): void
+}
 
-  Addon: typeof Addon
-  Thread: typeof Thread
+declare namespace Bare {
+  export { Addon, Thread }
 }
 
 interface Addon {
@@ -46,13 +47,18 @@ interface Addon {
   readonly exports: unknown
 }
 
-declare class Addon {}
+declare class Addon {
+  constructor(url: URL)
+}
 
 declare namespace Addon {
-  export const cache: { readonly [href: string]: Addon }
   export const host: string
+  /** @deprecated */
+  export const cache: { readonly [href: string]: Addon }
 
+  /** @deprecated */
   export function load(url: URL): Addon
+  /** @deprecated */
   export function resolve(specifier: string, parentURL?: URL): URL
 }
 
@@ -81,11 +87,16 @@ declare class Thread {
 
 declare namespace Thread {
   interface ThreadProxy {
-    readonly data: any
+    readonly data: unknown
   }
 
   export const isMainThread: boolean
   export const self: ThreadProxy | null
+
+  /** @deprecated */
+  export function create(options?: ThreadOptions): Thread
+  /** @deprecated */
+  export function create(filename: string, options?: ThreadOptions): Thread
 }
 
 declare const Bare: Bare

@@ -4,7 +4,7 @@ const { Addon, Thread } = Bare
 
 t.plan(2)
 
-const addon = Addon.load(
+const addon = new Addon(
   url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 )
 
@@ -17,7 +17,7 @@ const thread = new Thread(__filename, () => {
 
   t.plan(1)
 
-  const addon = Addon.load(
+  const addon = new Addon(
     url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
   )
 
