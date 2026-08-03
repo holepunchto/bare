@@ -59,8 +59,12 @@ const bare = command(
 
     const argv = []
 
+    const protocol = module.protocol
+
     if (args.filename) {
-      args.filename = Module.resolve(path.resolve(args.filename), parentURL)
+      args.filename = Module.resolve(path.resolve(args.filename), parentURL, {
+        protocol
+      })
 
       argv.push(url.fileURLToPath(args.filename))
     }
@@ -83,15 +87,18 @@ const bare = command(
     const cache = Object.create(null)
 
     if (flags.eval) {
-      return Module.load(parentURL, flags.eval, { cache })
+      return Module.load(parentURL, flags.eval, { protocol, cache })
     }
 
     if (flags.print) {
-      return Module.load(parentURL, `console.log(${flags.print})`, { cache })
+      return Module.load(parentURL, `console.log(${flags.print})`, {
+        protocol,
+        cache
+      })
     }
 
     if (args.filename) {
-      return Module.load(args.filename, { cache })
+      return Module.load(args.filename, { protocol, cache })
     }
 
     require('bare-repl')
