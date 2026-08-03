@@ -105,6 +105,7 @@ module.exports = exports = class Thread {
     }
   }
 
+  /** @deprecated */
   static create(filename, opts, callback) {
     return new Thread(filename, opts, callback)
   }
