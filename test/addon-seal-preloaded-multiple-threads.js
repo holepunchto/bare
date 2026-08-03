@@ -5,7 +5,7 @@ const { Addon, Thread } = Bare
 t.plan(2)
 
 // Load the addon before sealing so it is resident in the process-wide registry.
-const addon = Addon.load(
+const addon = new Addon(
   url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
 )
 
@@ -25,7 +25,7 @@ const thread = new Thread(__filename, () => {
   // The addon is already resident in the process-wide registry, so loading it
   // on a freshly spawned thread succeeds via a cache hit even though addon
   // loading is sealed.
-  const addon = Addon.load(
+  const addon = new Addon(
     url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
   )
 

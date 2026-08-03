@@ -21,7 +21,7 @@ const thread = new Thread(__filename, () => {
   t.equal(Addon.sealed, true)
 
   try {
-    Addon.load(url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`))
+    new Addon(url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`))
 
     t.fail('addon load should throw on a sealed thread')
   } catch {
