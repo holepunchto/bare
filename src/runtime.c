@@ -489,30 +489,6 @@ bare_runtime__on_signal(uv_async_t *handle) {
 }
 
 static js_value_t *
-bare_runtime__get_static_addons(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  bare_runtime_t *runtime;
-
-  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
-  assert(err == 0);
-
-  return bare_addon_get_static(runtime);
-}
-
-static js_value_t *
-bare_runtime__get_dynamic_addons(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  bare_runtime_t *runtime;
-
-  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
-  assert(err == 0);
-
-  return bare_addon_get_dynamic(runtime);
-}
-
-static js_value_t *
 bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1286,13 +1262,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("host", BARE_HOST);
 #undef V
 
-  js_value_t *simulator;
-  err = js_get_boolean(env, BARE_SIMULATOR, &simulator);
-  assert(err == 0);
-
-  err = js_set_named_property(env, exports, "simulator", simulator);
-  assert(err == 0);
-
   js_value_t *pid;
   err = js_create_int32(env, uv_os_getpid(), &pid);
   assert(err == 0);
@@ -1347,8 +1316,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
     assert(err == 0); \
   }
 
-  V("getStaticAddons", bare_runtime__get_static_addons);
-  V("getDynamicAddons", bare_runtime__get_dynamic_addons);
   V("loadStaticAddon", bare_runtime__load_static_addon);
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
   V("initAddon", bare_runtime__init_addon);

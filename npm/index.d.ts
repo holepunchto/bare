@@ -23,8 +23,6 @@ interface BareEvents extends EventMap {
 interface Bare extends EventEmitter<BareEvents> {
   readonly platform: 'android' | 'darwin' | 'ios' | 'linux' | 'win32'
   readonly arch: 'arm' | 'arm64' | 'ia32' | 'x64' | 'mips' | 'mipsel'
-  /** @deprecated */
-  readonly simulator: boolean
   readonly argv: string[]
   readonly pid: number
   exitCode: number
@@ -53,13 +51,6 @@ declare class Addon {
 
 declare namespace Addon {
   export const host: string
-  /** @deprecated */
-  export const cache: { readonly [href: string]: Addon }
-
-  /** @deprecated */
-  export function load(url: URL): Addon
-  /** @deprecated */
-  export function resolve(specifier: string, parentURL?: URL): URL
 }
 
 interface ThreadOptions {
@@ -92,11 +83,6 @@ declare namespace Thread {
 
   export const isMainThread: boolean
   export const self: ThreadProxy | null
-
-  /** @deprecated */
-  export function create(options?: ThreadOptions): Thread
-  /** @deprecated */
-  export function create(filename: string, options?: ThreadOptions): Thread
 }
 
 declare const Bare: Bare
