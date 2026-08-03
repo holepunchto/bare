@@ -169,10 +169,6 @@ The `Bare.Addon` namespace provides support for loading native addons, which are
 > [!NOTE]  
 > This is an advanced API that users should never have to interact with directly.
 
-#### `Addon.cache`
-
-The global cache of loaded addons.
-
 #### `Addon.host`
 
 The target triplet identifying the current addon host.
@@ -181,23 +177,15 @@ The target triplet identifying the current addon host.
 
 Whether addon loading has been sealed with `Addon.seal()`.
 
-#### `const url = Addon.resolve(specifier, parentURL[, options])`
-
-Resolve a native addon specifier by searching for a static native addon or dynamic object library matching `specifier` imported from `parentURL`.
-
-Options are reserved.
-
-#### `const addon = Addon.load(url[, options])`
-
-Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
-
-Options are reserved.
-
 #### `Addon.seal()`
 
 Seal addon loading. Once sealed, no further dynamic addons can be loaded by the current thread or any other thread, now or in the future; attempting to do so throws. Statically linked addons are compiled in and remain available.
 
 This is a one-way, process-wide operation and cannot be undone. It is intended for embedders that wish to load a fixed set of trusted addons up front and then prevent any further native code from being introduced, such as when establishing a sandbox.
+
+#### `const addon = new Addon(url)`
+
+Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
 
 #### `addon.url`
 
@@ -246,10 +234,6 @@ Options include:
   stackSize: 0
 }
 ```
-
-#### `const thread = Thread.create([filename][, options][, callback])`
-
-Convenience method for the `new Thread()` constructor
 
 #### `thread.joined`
 

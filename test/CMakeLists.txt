@@ -1,13 +1,13 @@
 list(APPEND tests
-  addon-load-dependent.js
-  addon-load-multiple-threads.js
-  addon-load-scoped.js
-  addon-load.js
-  addon-resolve.js
-  addon-resolve-cache.js
+  addon-dependent.js
+  addon-invalid-file-url.js
+  addon-multiple-threads.js
+  addon-multiple.js
+  addon-scoped.js
   addon-seal.js
   addon-seal-multiple-threads.js
   addon-seal-preloaded-multiple-threads.js
+  addon.js
   argv-empty.c
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
