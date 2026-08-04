@@ -76,6 +76,13 @@ foreach(file IN LISTS tests)
   if(file MATCHES "\.c$")
     add_executable(${test} ${file})
 
+    set_target_properties(
+      ${test}
+      PROPERTIES
+      ENABLE_EXPORTS ON
+      WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+
     target_link_libraries(
       ${test}
       PRIVATE
