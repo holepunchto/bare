@@ -5,6 +5,7 @@
 
 #include "../include/bare.h"
 
+#include "addon.h"
 #include "runtime.h"
 #include "types.h"
 
@@ -46,6 +47,8 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   process->options.memory_limit = bare__option(options, 0, memory_limit);
 
   process->platform = platform;
+
+  process->sealed = false;
 
   memset(&process->callbacks, 0, sizeof(process->callbacks));
 
@@ -95,6 +98,13 @@ bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code) {
 int
 bare_exit(bare_t *bare, int exit_code) {
   return bare_runtime_exit(&bare->process.runtime, exit_code);
+}
+
+int
+bare_seal(bare_t *bare) {
+  bare_addon_seal(&bare->process);
+
+  return 0;
 }
 
 int

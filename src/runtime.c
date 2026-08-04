@@ -570,17 +570,29 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
-  bare_addon_seal();
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  bare_addon_seal(runtime->process);
 
   return NULL;
 }
 
 static js_value_t *
-bare_runtime__get_addons_sealed(js_env_t *env, js_callback_info_t *info) {
+bare_runtime__addons_sealed(js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
   js_value_t *result;
-  err = js_get_boolean(env, bare_addon_sealed(), &result);
+  err = js_get_boolean(env, bare_addon_sealed(runtime->process), &result);
   assert(err == 0);
 
   return result;
@@ -1223,8 +1235,6 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->process = process;
   runtime->threads = NULL;
 
-  bare_addon_setup();
-
   js_env_options_t options = {
     .version = 0,
     .memory_limit = process->options.memory_limit,
@@ -1373,7 +1383,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
   V("initAddon", bare_runtime__init_addon);
   V("sealAddons", bare_runtime__seal_addons);
-  V("addonsSealed", bare_runtime__get_addons_sealed);
+  V("addonsSealed", bare_runtime__addons_sealed);
 
   V("terminate", bare_runtime__terminate);
   V("abort", bare_runtime__abort);
@@ -1507,7 +1517,10 @@ exited:
     bare_thread_teardown(thread);
   }
 
-  bare_addon_teardown();
+  // Addons are owned by the process rather than the runtime that loaded them
+  // and may only be unloaded once the process itself is torn down, which
+  // happens after all its threads have been joined above.
+  if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
 
   return 0;
 }

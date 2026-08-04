@@ -7,6 +7,7 @@ list(APPEND tests
   addon-seal.js
   addon-seal-multiple-threads.js
   addon-seal-preloaded-multiple-threads.js
+  addon-seal-restart.c
   addon.js
   argv-empty.c
   exit-enqueue-immediate.js
