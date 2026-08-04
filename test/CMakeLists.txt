@@ -1,6 +1,7 @@
 list(APPEND tests
   addon-dependent.js
   addon-invalid-file-url.js
+  addon-multiple-processes.c
   addon-multiple-threads.js
   addon-multiple.js
   addon-scoped.js
