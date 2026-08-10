@@ -26,7 +26,7 @@ set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScrip
 fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#7a4e608")
+fetch_package("github:holepunchto/libutf#a1ceca8")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
