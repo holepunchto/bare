@@ -1,4 +1,8 @@
 list(APPEND tests
+  addon-constructor.js
+  addon-constructor-multiple.js
+  addon-constructor-multiple-processes.c
+  addon-constructor-multiple-threads.js
   addon-dependent.js
   addon-invalid-file-url.js
   addon-multiple-processes.c

@@ -180,6 +180,11 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   bare_addon__pending_lib = &lib;
   bare_addon__pending_specifier = specifier;
 
+  // Snapshot the head of the list so that any addons registered from a
+  // constructor during the load, before the library handle is known, can be
+  // updated with the real handle once it is.
+  bare_addon_t *loaded = bare_addon__dynamic;
+
 #ifdef _WIN32
   err = uv_dlopen(specifier, &lib);
 #else
@@ -198,6 +203,13 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   if (err < 0) goto err;
 
+  // Addons that register from a constructor do so during `dlopen()`, before the
+  // library handle is known, so their handle is stale. Refresh any addons
+  // registered during the load with the now-known handle.
+  for (bare_addon_t *addon = bare_addon__dynamic; addon != loaded; addon = addon->next) {
+    addon->lib = lib;
+  }
+
   if (bare_addon__pending) {
     bare_module_name_cb name;
 
@@ -211,15 +223,33 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
     if (err < 0) {
       err = uv_dlsym(&lib, BARE_STRING(NAPI_MODULE_SYMBOL_REGISTER), (void **) &exports);
-
-      if (err < 0) goto err;
     }
 
-    bare_module_register(&(bare_module_t){
-      .version = BARE_MODULE_VERSION,
-      .name = name == NULL ? NULL : name(),
-      .exports = exports,
-    });
+    if (err < 0) {
+      // The library exposes no registration symbol. This happens for addons
+      // that register from a constructor rather than from a known symbol. Reuse
+      // the registration captured when the library was first loaded, identified
+      // by its shared library handle.
+      bare_addon_t *resident = bare_addon__dynamic;
+
+      while (resident && resident->lib.handle != lib.handle) {
+        resident = resident->next;
+      }
+
+      if (resident == NULL) goto err;
+
+      bare_module_register(&(bare_module_t){
+        .version = BARE_MODULE_VERSION,
+        .name = resident->name,
+        .exports = resident->exports,
+      });
+    } else {
+      bare_module_register(&(bare_module_t){
+        .version = BARE_MODULE_VERSION,
+        .name = name == NULL ? NULL : name(),
+        .exports = exports,
+      });
+    }
   }
 
   next = bare_addon__dynamic;
