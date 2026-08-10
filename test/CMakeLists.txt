@@ -13,6 +13,8 @@ list(APPEND tests
   addon-seal-multiple-threads.js
   addon-seal-preloaded-multiple-threads.js
   addon-seal-restart.c
+  addon-teardown.c
+  addon-teardown-multiple-processes.c
   addon.js
   argv-empty.c
   exit-enqueue-immediate.js
@@ -72,6 +74,16 @@ list(APPEND tests
   wakeup-suspend-resume-on-wakeup.js
   wakeup-with-linger-thread.mjs
 )
+
+if(WIN32)
+  list(APPEND skipped_tests
+    # The teardown addon observes being unloaded through a destructor that
+    # records it in a host symbol resolved at load time. This excludes Windows,
+    # where a prebuilt addon can only import the symbols Bare itself exports.
+    addon-teardown.c
+    addon-teardown-multiple-processes.c
+  )
+endif()
 
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)
