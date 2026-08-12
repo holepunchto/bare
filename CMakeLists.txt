@@ -278,6 +278,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
@@ -311,6 +312,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
