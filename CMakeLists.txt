@@ -74,9 +74,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # debug builds and vice versa.
         #
         # Keyed on Debug rather than Release so that it stays the complement of
-        # the /DEFAULTLIB above. Keying on Release excluded the release CRT from
-        # RelWithDebInfo and MinSizeRel, which link against it, leaving every CRT
-        # symbol undefined.
+        # the /DEFAULTLIB above.
         /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
     )
   else()
