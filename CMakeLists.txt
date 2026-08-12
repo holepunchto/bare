@@ -72,7 +72,10 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # The imported static library always links the release version of the
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
-        /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
+        #
+        # Keyed on Debug rather than Release so that it stays the complement of
+        # the /DEFAULTLIB above.
+        /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
     )
   else()
     target_compile_options(
