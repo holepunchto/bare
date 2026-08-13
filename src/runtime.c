@@ -41,6 +41,12 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
 
   bare_runtime_t *runtime = data;
 
+  // A rethrowing `uncaughtException` handler would otherwise re-enter this
+  // callback with no recursion bound.
+  if (runtime->handling_uncaught_exception) abort();
+
+  runtime->handling_uncaught_exception = true;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -61,6 +67,8 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
 
   err = js_call_function(env, global, fn, 1, args, NULL);
   (void) err;
+
+  runtime->handling_uncaught_exception = false;
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1214,6 +1222,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   assert(err == 0);
 
   runtime->state = bare_runtime_state_active;
+  runtime->handling_uncaught_exception = false;
   runtime->linger = 0;
   runtime->deadline = 0;
 

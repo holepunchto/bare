@@ -40,6 +40,8 @@ struct bare_runtime_s {
 
   bare_runtime_state_t state;
 
+  bool handling_uncaught_exception;
+
   int linger;
   int deadline;
 
