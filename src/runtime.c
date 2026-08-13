@@ -41,8 +41,7 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
 
   bare_runtime_t *runtime = data;
 
-  // A rethrowing `uncaughtException` handler would otherwise re-enter this
-  // callback with no recursion bound.
+  // A rethrowing handler re-enters this callback with no recursion bound
   if (runtime->handling_uncaught_exception) abort();
 
   runtime->handling_uncaught_exception = true;
