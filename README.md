@@ -173,6 +173,18 @@ The `Bare.Addon` namespace provides support for loading native addons, which are
 
 The target triplet identifying the current addon host.
 
+#### `Addon.sealed`
+
+Whether addon loading has been sealed with `Addon.seal()`.
+
+#### `Addon.seal()`
+
+Seal addon loading. Once sealed, no further dynamic addons can be loaded by the current thread or any other thread of the process, now or in the future; attempting to do so throws. Statically linked addons are compiled in and remain available.
+
+This is a one-way operation that cannot be undone for the lifetime of the process. It is intended for embedders that wish to load a fixed set of trusted addons up front and then prevent any further native code from being introduced, such as when establishing a sandbox.
+
+The seal applies to the process alone. Embedders running several Bare processes within the same operating system process may seal each of them independently, and sealing one has no effect on the addons the others may load. Addons are likewise owned by the process that loaded them and are unloaded when it is torn down.
+
 #### `const addon = new Addon(url)`
 
 Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.

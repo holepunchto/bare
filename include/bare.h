@@ -69,6 +69,21 @@ int
 bare_exit(bare_t *bare, int exit_code);
 
 /**
+ * Seal addon loading for the process. Once sealed, the process may not load
+ * any further dynamic addons on any of its threads, now or in the future;
+ * attempting to do so throws. Statically linked addons are compiled in and
+ * remain available.
+ *
+ * The seal applies to the process alone and is lifted when it is torn down.
+ * Other processes running in the same operating system process are unaffected
+ * and may continue to load addons of their own.
+ *
+ * Equivalent to `Bare.Addon.seal()`.
+ */
+int
+bare_seal(bare_t *bare);
+
+/**
  * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk. If `source` is provided, its contents

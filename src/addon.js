@@ -58,6 +58,14 @@ module.exports = exports = class Addon {
     return host
   }
 
+  static get sealed() {
+    return bare.addonsSealed()
+  }
+
+  static seal() {
+    bare.sealAddons()
+  }
+
   /** @deprecated */
   static get cache() {
     return cache

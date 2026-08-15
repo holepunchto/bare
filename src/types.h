@@ -59,6 +59,8 @@ struct bare_process_s {
 
   js_platform_t *platform;
 
+  bool sealed;
+
   struct {
     bare_before_exit_cb before_exit;
     void *before_exit_data;
@@ -137,6 +139,10 @@ struct bare_addon_s {
   char *specifier;
 
   bare_module_register_cb exports;
+
+  // The process that loaded the addon, or `NULL` if the addon was statically
+  // linked and therefore isn't owned by any single process.
+  bare_process_t *owner;
 
   uv_lib_t lib;
 

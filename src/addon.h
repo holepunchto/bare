@@ -2,6 +2,7 @@
 #define BARE_ADDON_H
 
 #include <js.h>
+#include <stdbool.h>
 #include <uv.h>
 
 #include "types.h"
@@ -19,6 +20,12 @@ bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier);
 
 void
-bare_addon_teardown(void);
+bare_addon_seal(bare_process_t *process);
+
+bool
+bare_addon_sealed(bare_process_t *process);
+
+void
+bare_addon_teardown(bare_process_t *process);
 
 #endif // BARE_ADDON_H

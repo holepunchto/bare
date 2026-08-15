@@ -1,9 +1,20 @@
 list(APPEND tests
+  addon-constructor.js
+  addon-constructor-multiple.js
+  addon-constructor-multiple-processes.c
+  addon-constructor-multiple-threads.js
   addon-dependent.js
   addon-invalid-file-url.js
+  addon-multiple-processes.c
   addon-multiple-threads.js
   addon-multiple.js
   addon-scoped.js
+  addon-seal.js
+  addon-seal-multiple-threads.js
+  addon-seal-preloaded-multiple-threads.js
+  addon-seal-restart.c
+  addon-teardown.c
+  addon-teardown-multiple-processes.c
   addon.js
   argv-empty.c
   exit-enqueue-immediate.js
@@ -83,6 +94,16 @@ list(APPEND aborted_tests
   unhandled-rejection-throw-in-listener.js
 )
 
+if(WIN32)
+  list(APPEND skipped_tests
+    # The teardown addon observes being unloaded through a destructor that
+    # records it in a host symbol resolved at load time. This excludes Windows,
+    # where a prebuilt addon can only import the symbols Bare itself exports.
+    addon-teardown.c
+    addon-teardown-multiple-processes.c
+  )
+endif()
+
 foreach(file IN LISTS tests)
   get_filename_component(name ${file} NAME_WE)
 
@@ -90,6 +111,13 @@ foreach(file IN LISTS tests)
 
   if(file MATCHES "\.c$")
     add_executable(${test} ${file})
+
+    set_target_properties(
+      ${test}
+      PROPERTIES
+      ENABLE_EXPORTS ON
+      WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
 
     target_link_libraries(
       ${test}
