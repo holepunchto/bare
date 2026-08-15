@@ -61,6 +61,16 @@ list(APPEND tests
   thread-source.js
   thread-transfer-data.js
   thread.js
+  uncaught-exception-multiple.js
+  uncaught-exception-no-listener.js
+  uncaught-exception-thread.js
+  uncaught-exception-throw-in-listener.js
+  uncaught-exception-throw-in-microtask.js
+  uncaught-exception.js
+  unhandled-rejection-no-listener.js
+  unhandled-rejection-throw-in-listener-handled.js
+  unhandled-rejection-throw-in-listener.js
+  unhandled-rejection.js
   wakeup-before-suspend.js
   wakeup-exceed-deadline.js
   wakeup-idle-on-wakeup.js
@@ -73,6 +83,15 @@ list(APPEND tests
   wakeup-suspend-on-wakeup.js
   wakeup-suspend-resume-on-wakeup.js
   wakeup-with-linger-thread.mjs
+)
+
+# Tests that are expected to terminate the process rather than exit cleanly.
+
+list(APPEND aborted_tests
+  uncaught-exception-no-listener.js
+  uncaught-exception-throw-in-listener.js
+  unhandled-rejection-no-listener.js
+  unhandled-rejection-throw-in-listener.js
 )
 
 if(WIN32)
@@ -107,8 +126,21 @@ foreach(file IN LISTS tests)
     )
 
     set(command ${test})
+    set(program $<TARGET_FILE:${test}>)
+    set(arguments "")
   elseif(file MATCHES "\.(c|m)?[jt]s$")
     set(command bare_bin test/${file})
+    set(program $<TARGET_FILE:bare_bin>)
+    set(arguments test/${file})
+  endif()
+
+  if(${file} IN_LIST aborted_tests)
+    set(command
+      ${CMAKE_COMMAND}
+      -D "program=${program}"
+      -D "arguments=${arguments}"
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/abort.cmake
+    )
   endif()
 
   add_test(
@@ -131,3 +163,10 @@ foreach(file IN LISTS tests)
     )
   endif()
 endforeach()
+
+set_tests_properties(
+  uncaught-exception-throw-in-listener.js
+  unhandled-rejection-throw-in-listener.js
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Uncaught Error: from listener"
+)

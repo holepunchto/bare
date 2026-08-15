@@ -26,7 +26,7 @@ set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScrip
 fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#7a4e608")
+fetch_package("github:holepunchto/libutf#a1ceca8")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
@@ -72,7 +72,10 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # The imported static library always links the release version of the
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
-        /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
+        #
+        # Keyed on Debug rather than Release so that it stays the complement of
+        # the /DEFAULTLIB above.
+        /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
     )
   else()
     target_compile_options(
@@ -275,6 +278,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
@@ -308,6 +312,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 

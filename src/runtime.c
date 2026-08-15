@@ -41,6 +41,18 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
 
   bare_runtime_t *runtime = data;
 
+  // The exception may still be pending if it was raised while unwinding a
+  // nested call into JavaScript, in which case the calls below would all fail.
+  bool pending;
+  err = js_is_exception_pending(env, &pending);
+  assert(err == 0);
+
+  if (pending) {
+    js_value_t *ignore;
+    err = js_get_and_clear_last_exception(env, &ignore);
+    assert(err == 0);
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
