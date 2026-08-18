@@ -2,15 +2,23 @@ const Module = require('bare-module')
 const os = require('bare-os')
 const url = require('bare-url')
 const path = require('bare-path')
+const Pipe = require('bare-pipe')
 const Signal = require('bare-signals')
 const { description, command, flag, arg, rest, bail } = require('paparam')
 
 const { SIGUSR1 } = Signal.constants
 
-const parentURL = url.pathToFileURL(os.cwd())
+const parentURL = url.pathToFileURL('.')
 
 if (parentURL.pathname[parentURL.pathname.length - 1] !== '/') {
   parentURL.pathname += '/'
+}
+
+const channelFd = Number(os.getEnv('BARE_CHANNEL_FD'))
+const channelMode = os.getEnv('BARE_CHANNEL_SERIALIZATION_MODE')
+
+if (Number.isFinite(channelFd) && channelMode === 'binary') {
+  Bare.IPC = new Pipe(channelFd, { ipc: true })
 }
 
 const bare = command(
@@ -51,8 +59,12 @@ const bare = command(
 
     const argv = []
 
+    const protocol = module.protocol
+
     if (args.filename) {
-      args.filename = Module.resolve(path.resolve(args.filename), parentURL)
+      args.filename = Module.resolve(path.resolve(args.filename), parentURL, {
+        protocol
+      })
 
       argv.push(url.fileURLToPath(args.filename))
     }
@@ -72,20 +84,25 @@ const bare = command(
       signal.on('signal', inspect).start()
     }
 
+    const cache = Object.create(null)
+
     if (flags.eval) {
-      return Module.load(parentURL, flags.eval)
+      return Module.load(parentURL, flags.eval, { protocol, cache })
     }
 
     if (flags.print) {
-      return Module.load(parentURL, `console.log(${flags.print})`)
+      return Module.load(parentURL, `console.log(${flags.print})`, {
+        protocol,
+        cache
+      })
     }
 
     if (args.filename) {
-      return Module.load(args.filename)
+      return Module.load(args.filename, { protocol, cache })
     }
 
     require('bare-repl')
-      .start()
+      .start({ useGlobal: true })
       .on('exit', () => {
         if (server === null) Bare.exit()
         else server.close(() => Bare.exit())
@@ -98,7 +115,7 @@ const bare = command(
 
       const inspector = require('bare-inspector')
 
-      server = new inspector.Server(port, { path: args.filename || os.cwd() })
+      server = new inspector.Server(port, { path: args.filename || path.resolve('.') })
       server.unref()
     }
   }

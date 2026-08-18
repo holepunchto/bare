@@ -9,6 +9,7 @@
   { "addon": "bare-module" },
   { "addon": "bare-module-lexer" },
   { "addon": "bare-os" },
+  { "addon": "bare-path" },
   { "addon": "bare-pipe" },
   { "addon": "bare-repl" },
   { "addon": "bare-signals" },
@@ -19,5 +20,6 @@
   { "addon": "bare-tls" },
   { "addon": "bare-tty" },
   { "addon": "bare-type" },
+  { "addon": "bare-type-stripper" },
   { "addon": "bare-url" }
 ]

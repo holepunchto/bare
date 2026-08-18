@@ -4,11 +4,11 @@ const { Addon } = Bare
 
 t.plan(2)
 
-const a = Addon.load(
+const a = new Addon(
   url.pathToFileURL(`./test/fixtures/dependent-addon/a/prebuilds/${Addon.host}/a.bare`)
 )
 
-const b = Addon.load(
+const b = new Addon(
   url.pathToFileURL(`./test/fixtures/dependent-addon/b/prebuilds/${Addon.host}/b.bare`)
 )
 

@@ -11,6 +11,10 @@ add_executable(bare_bin
   bare.bundle.h
 )
 
+if(WIN32)
+  target_sources(bare_bin PRIVATE bare.manifest)
+endif()
+
 set_target_properties(
   bare_bin
   PROPERTIES
@@ -30,6 +34,8 @@ target_link_libraries(
 link_bare_module(bare_bin bare-crypto)
 link_bare_module(bare_bin bare-dns)
 link_bare_module(bare_bin bare-inspector)
+link_bare_module(bare_bin bare-os)
+link_bare_module(bare_bin bare-path)
 link_bare_module(bare_bin bare-pipe)
 link_bare_module(bare_bin bare-repl)
 link_bare_module(bare_bin bare-signals)

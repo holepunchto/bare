@@ -41,6 +41,18 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
 
   bare_runtime_t *runtime = data;
 
+  // The exception may still be pending if it was raised while unwinding a
+  // nested call into JavaScript, in which case the calls below would all fail.
+  bool pending;
+  err = js_is_exception_pending(env, &pending);
+  assert(err == 0);
+
+  if (pending) {
+    js_value_t *ignore;
+    err = js_get_and_clear_last_exception(env, &ignore);
+    assert(err == 0);
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -516,42 +528,25 @@ static js_value_t *
 bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
   assert(err == 0);
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
-  if (node == NULL) goto err;
+  if (node == NULL) return NULL;
 
-  js_value_t *handle;
-  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, handle, &handle);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return handle;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -561,42 +556,25 @@ static js_value_t *
 bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  js_value_t *argv[1];
-  size_t argc = 1;
+  js_value_t *argv[2];
+  size_t argc = 2;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[0], specifier, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
   assert(err == 0);
 
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
-  if (node == NULL) goto err;
+  if (node == NULL) return NULL;
 
-  js_value_t *handle;
-  err = js_create_external(runtime->env, node, NULL, NULL, &handle);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, handle, &handle);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return handle;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -619,7 +597,7 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_addon_t *node;
-  err = js_get_value_external(env, argv[0], (void **) &node);
+  err = js_unwrap(env, argv[0], (void **) &node);
   assert(err == 0);
 
   js_value_t *exports = argv[1];
@@ -755,72 +733,55 @@ static js_value_t *
 bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
-  size_t argc = 4;
-  js_value_t *argv[4];
+  size_t argc = 5;
+  js_value_t *argv[5];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 4);
+  assert(argc == 5);
 
   utf8_t filename[4096];
-  err = js_get_value_string_utf8(env, argv[0], filename, 4096, NULL);
+  err = js_get_value_string_utf8(env, argv[1], filename, 4096, NULL);
   assert(err == 0);
 
   bare_source_t source = {bare_source_none};
   bool has_source;
 
-  err = js_is_sharedarraybuffer(env, argv[1], &has_source);
+  err = js_is_sharedarraybuffer(env, argv[2], &has_source);
   assert(err == 0);
 
   if (has_source) {
     source.type = bare_source_sharedarraybuffer;
 
-    err = js_get_sharedarraybuffer_backing_store(env, argv[1], &source.backing_store);
+    err = js_get_sharedarraybuffer_backing_store(env, argv[2], &source.backing_store);
     assert(err == 0);
   }
 
   bare_data_t data = {bare_data_none};
   bool has_data;
 
-  err = js_is_sharedarraybuffer(env, argv[2], &has_data);
+  err = js_is_sharedarraybuffer(env, argv[3], &has_data);
   assert(err == 0);
 
   if (has_data) {
     data.type = bare_data_sharedarraybuffer;
 
-    err = js_get_sharedarraybuffer_backing_store(env, argv[2], &data.backing_store);
+    err = js_get_sharedarraybuffer_backing_store(env, argv[3], &data.backing_store);
     assert(err == 0);
   }
 
   uint32_t stack_size;
-  err = js_get_value_uint32(env, argv[3], &stack_size);
+  err = js_get_value_uint32(env, argv[4], &stack_size);
   assert(err == 0);
 
   bare_thread_t *thread;
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
-  if (err < 0) goto err;
+  if (err < 0) return NULL;
 
-  js_value_t *result;
-  err = js_create_external(env, (void *) thread, NULL, NULL, &result);
-  assert(err == 0);
-
-  err = js_escape_handle(env, scope, result, &result);
-  assert(err == 0);
-
-  err = js_close_escapable_handle_scope(env, scope);
-  assert(err == 0);
-
-  return result;
-
-err:
-  err = js_close_escapable_handle_scope(env, scope);
+  err = js_wrap(env, argv[0], (void *) thread, NULL, NULL, NULL);
   assert(err == 0);
 
   return NULL;
@@ -845,7 +806,7 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   bare_thread_join(runtime, thread);
@@ -875,7 +836,7 @@ bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   int32_t linger;
@@ -910,7 +871,7 @@ bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   int32_t deadline;
@@ -945,7 +906,7 @@ bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   err = bare_thread_resume(thread);
@@ -976,13 +937,172 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_thread_t *thread;
-  err = js_get_value_external(env, argv[0], (void **) &thread);
+  err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
 
   err = bare_thread_terminate(thread);
   assert(err == 0);
 
   err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[2];
+  size_t argc = 2;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uint32_t mode;
+  err = js_get_value_uint32(env, argv[1], &mode);
+  assert(err == 0);
+
+  uv_fs_t req;
+  uv_fs_stat(runtime->loop, &req, (char *) path, NULL);
+
+  uv_stat_t *st = req.result < 0 ? NULL : req.ptr;
+
+  js_value_t *result;
+  err = js_get_boolean(env, st && st->st_mode & mode, &result);
+  assert(err == 0);
+
+  uv_fs_req_cleanup(&req);
+
+  return result;
+}
+
+static js_value_t *
+bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uv_fs_t req;
+  uv_fs_realpath(runtime->loop, &req, (char *) path, NULL);
+
+  int res = (int) req.result;
+
+  if (res < 0) {
+    uv_fs_req_cleanup(&req);
+    err = res;
+    goto err;
+  }
+
+  js_value_t *result;
+  err = js_create_string_utf8(env, (utf8_t *) req.ptr, (size_t) -1, &result);
+  assert(err == 0);
+
+  uv_fs_req_cleanup(&req);
+
+  return result;
+
+err:
+  err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t path[4096];
+  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
+  assert(err == 0);
+
+  uv_loop_t *loop = runtime->loop;
+
+  uv_fs_t req;
+  uv_fs_open(loop, &req, (char *) path, UV_FS_O_RDONLY, 0, NULL);
+
+  int fd = (int) req.result;
+  uv_fs_req_cleanup(&req);
+
+  if (fd < 0) {
+    err = fd;
+    goto err;
+  }
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+  uv_stat_t *st = req.ptr;
+
+  size_t len = st->st_size;
+  char *base;
+
+  js_value_t *result;
+  err = js_create_arraybuffer(env, len, (void **) &base, &result);
+  assert(err == 0);
+
+  uv_buf_t buffer = uv_buf_init(base, (unsigned int) len);
+
+  uv_fs_req_cleanup(&req);
+
+  int64_t read = 0;
+
+  while (true) {
+    uv_fs_read(loop, &req, fd, &buffer, 1, read, NULL);
+
+    int res = (int) req.result;
+    uv_fs_req_cleanup(&req);
+
+    if (res < 0) {
+      uv_fs_close(loop, &req, fd, NULL);
+      uv_fs_req_cleanup(&req);
+      err = res;
+      goto err;
+    }
+
+    buffer.base += res;
+    buffer.len -= (size_t) res;
+
+    read += res;
+    if (res == 0 || read == len) break;
+  }
+
+  uv_fs_close(loop, &req, fd, NULL);
+  uv_fs_req_cleanup(&req);
+
+  return result;
+
+err:
+  err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
   assert(err == 0);
 
   return NULL;
@@ -1258,6 +1378,10 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
   V("terminateThread", bare_runtime__terminate_thread);
+
+  V("exists", bare_runtime__exists);
+  V("realpath", bare_runtime__realpath);
+  V("read", bare_runtime__read);
 #undef V
 
 #define V(name, bool) \
@@ -1271,6 +1395,20 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   }
 
   V("isMainThread", bare_runtime__is_main_thread(runtime));
+#undef V
+
+#define V(name, n) \
+  { \
+    js_value_t *val; \
+    err = js_create_uint32(env, n, &val); \
+    assert(err == 0); \
+\
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
+  }
+
+  V("FILE", S_IFREG);
+  V("DIR", S_IFDIR);
 #undef V
 
   js_value_t *global;
@@ -1406,9 +1544,15 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 
   js_env_t *env = runtime->env;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
+  void *scope;
+
+  if (result) {
+    err = js_open_escapable_handle_scope(env, (js_escapable_handle_scope_t **) &scope);
+    assert(err == 0);
+  } else {
+    err = js_open_handle_scope(env, (js_handle_scope_t **) &scope);
+    assert(err == 0);
+  }
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
@@ -1449,16 +1593,30 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   }
 
   err = js_call_function(env, global, load, 2, args, result);
-  (void) err;
 
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
+  if (result && err == 0) {
+    err = js_escape_handle(env, (js_escapable_handle_scope_t *) scope, *result, result);
+    assert(err == 0);
+  }
+
+  if (result) {
+    err = js_close_escapable_handle_scope(env, (js_escapable_handle_scope_t *) scope);
+    assert(err == 0);
+  } else {
+    err = js_close_handle_scope(env, (js_handle_scope_t *) scope);
+    assert(err == 0);
+  }
 
   return 0;
 
 err:
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
+  if (result) {
+    err = js_close_escapable_handle_scope(env, (js_escapable_handle_scope_t *) scope);
+    assert(err == 0);
+  } else {
+    err = js_close_handle_scope(env, (js_handle_scope_t *) scope);
+    assert(err == 0);
+  }
 
   return -1;
 }

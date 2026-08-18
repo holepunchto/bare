@@ -15,9 +15,9 @@ bare.addon = function addon(href) {
 
   addon = addons[href] = { exports: {} }
 
-  const handle = bare.loadStaticAddon(href.replace(/^builtin:/, ''))
+  bare.loadStaticAddon(addon, href.replace(/^builtin:/, ''))
 
-  addon.exports = bare.initAddon(handle, addon.exports)
+  addon.exports = bare.initAddon(addon, addon.exports)
 
   return addon.exports
 }
@@ -176,7 +176,11 @@ require('bare-console/global')
  */
 
 bare.onuncaughtexception = function onuncaughtexception(err) {
-  if (exports.emit('uncaughtException', err)) return
+  try {
+    if (exports.emit('uncaughtException', err)) return
+  } catch (e) {
+    err = e
+  }
 
   try {
     console.error(`Uncaught %o`, err)
@@ -186,7 +190,11 @@ bare.onuncaughtexception = function onuncaughtexception(err) {
 }
 
 bare.onunhandledrejection = function onunhandledrejection(reason, promise) {
-  if (exports.emit('unhandledRejection', reason, promise)) return
+  try {
+    if (exports.emit('unhandledRejection', reason, promise)) return
+  } catch (e) {
+    return bare.onuncaughtexception(e)
+  }
 
   try {
     console.error(`Uncaught (in promise) %o`, reason)
@@ -227,6 +235,7 @@ bare.onresume = function onresume() {
 const Module = require('bare-module')
 const { startsWithWindowsDriveLetter } = require('bare-module-resolve')
 const URL = require('bare-url')
+const protocol = require('./protocol')
 
 bare.exit = exports.exit
 
@@ -241,5 +250,8 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null)
+  return Module.load(url, source ? Buffer.from(source) : null, {
+    protocol,
+    cache: Object.create(null)
+  })
 }

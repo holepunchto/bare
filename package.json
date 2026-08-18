@@ -29,10 +29,11 @@
     "bare-module": "^6.1.3",
     "bare-module-resolve": "^1.6.1",
     "bare-os": "^3.0.1",
-    "bare-path": "^3.0.0",
+    "bare-path": "^3.1.0",
+    "bare-pipe": "^4.2.1",
     "bare-queue-microtask": "^1.0.0",
     "bare-repl": "^6.0.1",
-    "bare-signals": "^4.0.4",
+    "bare-signals": "^5.0.0",
     "bare-structured-clone": "^1.0.2",
     "bare-timers": "^3.0.0",
     "bare-tty": "^5.0.0",
@@ -40,6 +41,7 @@
     "paparam": "^1.1.2"
   },
   "devDependencies": {
+    "bare-fs": "^4.7.2",
     "bare-http1": "^4.0.0",
     "bare-tap": "^1.0.0",
     "cmake-bare": "^1.1.7",

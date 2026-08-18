@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#fcd5004" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#56f14ed" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -26,7 +26,7 @@ set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScrip
 fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#6b1a36f")
+fetch_package("github:holepunchto/libutf#a1ceca8")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
@@ -35,7 +35,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 40
+    CHECKOUT 146
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -72,7 +72,10 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # The imported static library always links the release version of the
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
-        /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
+        #
+        # Keyed on Debug rather than Release so that it stays the complement of
+        # the /DEFAULTLIB above.
+        /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
     )
   else()
     target_compile_options(
@@ -131,6 +134,23 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         winmm
     )
+
+    # Our MSVC toolchain links via lld-link directly, bypassing the Clang driver
+    # that would normally append the compiler-rt builtins. Link them explicitly.
+    execute_process(
+      COMMAND "${CMAKE_C_COMPILER}"
+        --target=${CMAKE_C_COMPILER_TARGET}
+        --rtlib=compiler-rt
+        --print-libgcc-file-name
+      OUTPUT_VARIABLE compiler_rt_builtins
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    target_link_libraries(
+      v8
+      INTERFACE
+        "${compiler_rt_builtins}"
+    )
   endif()
 
   add_library(js STATIC IMPORTED GLOBAL)
@@ -161,7 +181,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#83aa500")
+fetch_package("github:holepunchto/libnapi#60e6881")
 
 add_bare_bundle(
   bare_bundle
@@ -233,11 +253,12 @@ link_bare_module(bare bare-inspect)
 link_bare_module(bare bare-logger)
 link_bare_module(bare bare-module)
 link_bare_module(bare bare-module-lexer)
-link_bare_module(bare bare-os)
+link_bare_module(bare bare-path)
 link_bare_module(bare bare-structured-clone)
 link_bare_module(bare bare-system-logger)
 link_bare_module(bare bare-timers)
 link_bare_module(bare bare-type)
+link_bare_module(bare bare-type-stripper)
 link_bare_module(bare bare-url)
 
 add_library(bare_shared SHARED)
@@ -257,6 +278,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
@@ -290,6 +312,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
