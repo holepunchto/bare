@@ -26,6 +26,7 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
+  module-find-hijack.c
   restart.c
   suspend-idle.js
   suspend-on-idle.js
@@ -96,3 +97,11 @@ foreach(file IN LISTS tests)
     )
   endif()
 endforeach()
+
+# module-find-hijack resolves `hijacked` through a uv_dlopen(NULL, ...) handle,
+# so the test must export its own symbols.
+set_target_properties(
+  module_find_hijack
+  PROPERTIES
+  ENABLE_EXPORTS ON
+)
