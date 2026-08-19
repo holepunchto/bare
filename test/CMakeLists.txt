@@ -137,6 +137,15 @@ foreach(file IN LISTS tests)
   endif()
 endforeach()
 
+# module-find-pin loads a dynamic addon, which imports the runtime's symbols, so
+# the test must export them for the addon to resolve against.
+set_target_properties(
+  module_find_pin
+  PROPERTIES
+  ENABLE_EXPORTS ON
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
+)
+
 set_tests_properties(
   uncaught-exception-throw-in-listener.js
   unhandled-rejection-throw-in-listener.js

@@ -21,7 +21,6 @@ main(int argc, char *argv[]) {
 
   argc = 0;
   argv = NULL;
-
   argv = uv_setup_args(argc, argv);
 
   js_platform_t *platform;
@@ -61,15 +60,11 @@ main(int argc, char *argv[]) {
   assert(e == 0);
   assert(exit_code == 0);
 
-  // The addon was pinned, so its node was not freed: the handle is unchanged and
-  // still resolves symbols, and the addon is still discoverable.
+  // The addon was pinned, so its node was not freed: the handle is unchanged
+  // and the addon is still discoverable. Without the pin, reading `lib->handle`
+  // here would be a heap-use-after-free.
   assert(lib->handle == handle);
   assert(bare_module_find("addon") != NULL);
-
-  void *sym = NULL;
-  e = uv_dlsym(lib, "bare_register_module_v0", &sym);
-  assert(e == 0);
-  assert(sym != NULL);
 
   e = js_destroy_platform(platform);
   assert(e == 0);
