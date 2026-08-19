@@ -31,7 +31,7 @@ list(APPEND tests
   import-dynamic-mjs.mjs
   import-mjs.cjs
   import-mjs.mjs
-  module-find-hijack.c
+  module-find-pin.c
   import-cts.cts
   import-mts.mts
   restart.c
@@ -136,14 +136,6 @@ foreach(file IN LISTS tests)
     )
   endif()
 endforeach()
-
-# module-find-hijack resolves `hijacked` through a uv_dlopen(NULL, ...) handle,
-# so the test must export its own symbols.
-set_target_properties(
-  module_find_hijack
-  PROPERTIES
-  ENABLE_EXPORTS ON
-)
 
 set_tests_properties(
   uncaught-exception-throw-in-listener.js

@@ -163,7 +163,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
       if (err < 0) goto err;
     }
 
-    bare_module_register(&(bare_module_t){
+    bare_module_register(&(bare_module_t) {
       .version = BARE_MODULE_VERSION,
       .name = name == NULL ? NULL : name(),
       .exports = exports,
@@ -183,18 +183,23 @@ err:
 
 void
 bare_addon_teardown(void) {
-  bare_addon_t *next = bare_addon__dynamic;
+  bare_addon_t **link = &bare_addon__dynamic;
 
-  bare_addon__dynamic = NULL;
+  while (*link) {
+    bare_addon_t *addon = *link;
 
-  while (next) {
-    bare_addon_t *addon = next;
+    // Addons handed out by `bare_module_find()` are pinned: their handle may
+    // still be referenced (win32 delay-load), so keep them alive. Everything
+    // else is unloaded and freed.
+    if (addon->pinned) {
+      link = &addon->next;
+    } else {
+      *link = addon->next;
 
-    next = addon->next;
+      uv_dlclose(&addon->lib);
 
-    uv_dlclose(&addon->lib);
-
-    free(addon);
+      free(addon);
+    }
   }
 }
 
@@ -230,6 +235,10 @@ bare_module_find(const char *query) {
     const char *name = addon->name;
 
     if (name && strncmp(query, name, len) == 0) {
+      // Pin the addon: the returned handle outlives this call and must remain
+      // valid, so the addon may no longer be unloaded on teardown.
+      addon->pinned = true;
+
       return &addon->lib;
     }
   }
@@ -294,6 +303,7 @@ bare_module_register(bare_module_t *module) {
 
   addon->exports = module->exports;
   addon->lib = *bare_addon__pending_lib;
+  addon->pinned = false;
   addon->next = *bare_addon__pending;
 
   *bare_addon__pending = addon;
@@ -305,7 +315,7 @@ void
 napi_module_register(napi_module *module) {
   assert(module->nm_version == NAPI_MODULE_VERSION);
 
-  bare_module_register(&(bare_module_t){
+  bare_module_register(&(bare_module_t) {
     .version = BARE_MODULE_VERSION,
     .name = module->nm_filename,
     .exports = module->nm_register_func,
