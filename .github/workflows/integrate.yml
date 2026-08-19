@@ -81,7 +81,7 @@ jobs:
           arch: ${{ matrix.arch }}
           flags: ${{ matrix.flags }}
           tags: ${{ matrix.tags}}
-      - run: bare-make test --verbose
+      - run: bare-make test
         env:
           LSAN_OPTIONS: suppressions=test/leaks.txt
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}
