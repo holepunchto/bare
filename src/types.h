@@ -140,6 +140,10 @@ struct bare_addon_s {
 
   uv_lib_t lib;
 
+  // Set once `bare_module_find()` hands out a reference to `lib`. Pinned addons
+  // are kept alive across teardown so the returned handle cannot dangle.
+  bool pinned;
+
   bare_addon_t *next;
 };
 
