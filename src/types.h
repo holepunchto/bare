@@ -146,6 +146,12 @@ struct bare_addon_s {
 
   uv_lib_t lib;
 
+  // Whether the addon holds the reference to `lib` that loading it took. A
+  // library that depends on another may register several addons against a
+  // single load, all of them sharing the one reference, so only one of them may
+  // release it again.
+  bool unloads;
+
   bare_addon_t *next;
 };
 

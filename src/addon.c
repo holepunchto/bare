@@ -22,10 +22,10 @@
 
 #include "types.h"
 
-// Static addons are registered before any process is set up and remain
-// available for as long as the operating system process lives. They're
-// therefore neither owned by any single process nor affected by its seal and
-// the list needs no locking.
+// Static addons are compiled into the binary and remain available for as long
+// as the operating system process lives. They're therefore neither owned by any
+// single process nor affected by its seal. The list is still guarded, as an
+// addon may register at any point, including while a process is running.
 static bare_addon_t *bare_addon__static = NULL;
 
 // Dynamic addons are tracked in a single list spanning every process with each
@@ -56,7 +56,8 @@ static uv_mutex_t bare_addon__loading;
 
 static uv_once_t bare_addon__guard = UV_ONCE_INIT;
 
-static thread_local bare_addon_t **bare_addon__pending = &bare_addon__static;
+// Set for as long as a load is in flight on the thread. Registrations are
+// attributed to the load while it is, and to the binary itself when it isn't.
 static thread_local bare_process_t *bare_addon__pending_owner = NULL;
 static thread_local uv_lib_t *bare_addon__pending_lib = NULL;
 static thread_local const char *bare_addon__pending_specifier = NULL;
@@ -101,9 +102,13 @@ js_value_t *
 bare_addon_get_static(bare_runtime_t *runtime) {
   int err;
 
+  uv_once(&bare_addon__guard, bare_addon__on_init);
+
   js_value_t *result;
   err = js_create_array(runtime->env, &result);
   assert(err == 0);
+
+  uv_mutex_lock(&bare_addon__lock);
 
   bare_addon_t *next = bare_addon__static;
 
@@ -121,6 +126,8 @@ bare_addon_get_static(bare_runtime_t *runtime) {
     err = js_set_element(runtime->env, result, i++, specifier);
     assert(err == 0);
   }
+
+  uv_mutex_unlock(&bare_addon__lock);
 
   return result;
 }
@@ -163,6 +170,10 @@ bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   int err;
 
+  uv_once(&bare_addon__guard, bare_addon__on_init);
+
+  uv_mutex_lock(&bare_addon__lock);
+
   bare_addon_t *next = bare_addon__static;
 
   while (next) {
@@ -171,9 +182,13 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
     next = addon->next;
 
     if (strcmp(specifier, addon->specifier) == 0) {
+      uv_mutex_unlock(&bare_addon__lock);
+
       return addon;
     }
   }
+
+  uv_mutex_unlock(&bare_addon__lock);
 
   err = js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
   assert(err == 0);
@@ -228,7 +243,6 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   // Discard anything left staged by a load that failed before it could publish.
   bare_addon__staging = NULL;
 
-  bare_addon__pending = &bare_addon__staging;
   bare_addon__pending_owner = process;
   bare_addon__pending_lib = &lib;
   bare_addon__pending_specifier = specifier;
@@ -258,7 +272,9 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
     addon->lib = lib;
   }
 
-  if (bare_addon__pending) {
+  // Nothing staged means the library registers from a known symbol rather than
+  // from a constructor.
+  if (bare_addon__staging == NULL) {
     bare_module_name_cb name;
 
     err = uv_dlsym(&lib, BARE_STRING(BARE_MODULE_SYMBOL_NAME), (void **) &name);
@@ -312,6 +328,12 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
     }
   }
 
+  // Only one of the staged addons may release the reference that the load took,
+  // however many of them registered against it.
+  assert(bare_addon__staging);
+
+  bare_addon__staging->unloads = true;
+
   // Publish the staged addons now that their handles are known, keeping the
   // order they registered in.
   next = bare_addon__staging;
@@ -332,11 +354,19 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   bare_addon__staging = NULL;
 
+  bare_addon__pending_owner = NULL;
+  bare_addon__pending_lib = NULL;
+  bare_addon__pending_specifier = NULL;
+
   uv_mutex_unlock(&bare_addon__loading);
 
   return next;
 
 err:
+  bare_addon__pending_owner = NULL;
+  bare_addon__pending_lib = NULL;
+  bare_addon__pending_specifier = NULL;
+
   uv_mutex_unlock(&bare_addon__loading);
 
   err = js_throw_error(runtime->env, NULL, uv_dlerror(&lib));
@@ -426,7 +456,7 @@ bare_addon_teardown(bare_process_t *process) {
 
     unloading = addon->next;
 
-    uv_dlclose(&addon->lib);
+    if (addon->unloads) uv_dlclose(&addon->lib);
 
     free(addon);
   }
@@ -541,7 +571,11 @@ bare_addon__module(bare_module_register_cb exports) {
 
 void
 bare_module_register(bare_module_t *module) {
-  bool is_dynamic = bare_addon__pending == &bare_addon__staging;
+  uv_once(&bare_addon__guard, bare_addon__on_init);
+
+  // A registration belongs to the load in flight on the thread, if there is
+  // one. Anything registering outside a load is statically linked.
+  bool is_dynamic = bare_addon__pending_owner != NULL;
 
   bare_addon_t *addon;
 
@@ -589,11 +623,25 @@ bare_module_register(bare_module_t *module) {
                  ? *bare_addon__pending_lib
                  : bare_addon__module(module->exports);
 
-  addon->next = *bare_addon__pending;
+  // The load takes the reference and hands it to whichever addon it publishes
+  // first, so a registration never holds one of its own.
+  addon->unloads = false;
 
-  *bare_addon__pending = addon;
+  if (is_dynamic) {
+    // Staged on the thread, so no lock; the load publishes them once their
+    // handles are known.
+    addon->next = bare_addon__staging;
 
-  if (is_dynamic) bare_addon__pending = NULL;
+    bare_addon__staging = addon;
+  } else {
+    uv_mutex_lock(&bare_addon__lock);
+
+    addon->next = bare_addon__static;
+
+    bare_addon__static = addon;
+
+    uv_mutex_unlock(&bare_addon__lock);
+  }
 }
 
 void

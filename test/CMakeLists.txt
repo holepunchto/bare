@@ -11,6 +11,7 @@ list(APPEND tests
   addon-multiple-processes.c
   addon-multiple-threads.js
   addon-multiple.js
+  addon-register-after-load.c
   addon-scoped.js
   addon-seal.js
   addon-seal-multiple-threads.js

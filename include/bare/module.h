@@ -128,8 +128,7 @@ bare_module_find(const char *query);
  * module registered at any other time is registered as a statically linked
  * addon, which is owned by no process, is available to every process, including
  * a sealed one, and stays registered for as long as the operating system
- * process lives. Statically linked addons must be registered before the first
- * process is set up.
+ * process lives.
  *
  * A library must register no more than one module.
  *
