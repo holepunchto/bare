@@ -3,8 +3,12 @@ const { Thread } = Bare
 
 t.plan(1)
 
-const thread = new Thread(import.meta.url, async () => {
+const ready = new Int32Array(new SharedArrayBuffer(4))
+
+const thread = new Thread(import.meta.url, { data: ready.buffer }, async () => {
   const { default: tap } = await import('bare-tap')
+
+  const ready = new Int32Array(Bare.Thread.self.data)
 
   const t = tap.subtest()
 
@@ -17,6 +21,11 @@ const thread = new Thread(import.meta.url, async () => {
     .on('wakeup', onwakeup)
     .on('resume', onresume)
     .prependListener('exit', onexit)
+
+  Atomics.store(ready, 0, 1)
+  Atomics.notify(ready, 0)
+
+  Atomics.wait(ready, 0, 1)
 
   function onsuspend() {
     t.pass('suspended')
@@ -40,7 +49,13 @@ const thread = new Thread(import.meta.url, async () => {
   }
 })
 
+Atomics.wait(ready, 0, 0)
+
 thread.suspend()
+
+Atomics.store(ready, 0, 2)
+Atomics.notify(ready, 0)
+
 await t.sleep(500)
 
 thread.wakeup(1000)
