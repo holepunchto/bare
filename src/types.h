@@ -29,12 +29,6 @@ struct bare_runtime_s {
   uv_loop_t *loop;
 
   bare_process_t *process;
-
-  // The process that was attached to the thread before this runtime was set up
-  // and that is attached again once it's torn down. This is `NULL` unless an
-  // embedder sets up more than one process on the same thread.
-  bare_process_t *previous;
-
   bare_thread_t *threads;
 
   js_env_t *env;

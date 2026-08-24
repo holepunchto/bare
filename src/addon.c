@@ -45,11 +45,11 @@ static thread_local bare_process_t *bare_addon__pending_owner = NULL;
 static thread_local uv_lib_t *bare_addon__pending_lib = NULL;
 static thread_local const char *bare_addon__pending_specifier = NULL;
 
-// The process running on this thread, if any. `bare_module_find()` is called
-// from the Windows delay load hook when an addon first calls into one of its
-// dependencies, which may happen at any point after the addon was loaded, so
-// the process asking can't be inferred from the call site and is instead
-// tracked for as long as a runtime is set up on the thread.
+// The process whose runtime is currently executing on this thread, if any.
+// `bare_module_find()` is called from the Windows delay load hook when an addon
+// first calls into one of its dependencies, which may happen at any point after
+// the addon was loaded, so the process asking can't be inferred from the call
+// site and is instead tracked for as long as a runtime is entered.
 static thread_local bare_process_t *bare_addon__current = NULL;
 
 static void
@@ -60,18 +60,18 @@ bare_addon__on_init(void) {
   assert(err == 0);
 }
 
-void
+bare_process_t *
 bare_addon_attach(bare_runtime_t *runtime) {
-  runtime->previous = bare_addon__current;
+  bare_process_t *previous = bare_addon__current;
 
   bare_addon__current = runtime->process;
+
+  return previous;
 }
 
 void
-bare_addon_detach(bare_runtime_t *runtime) {
-  bare_addon__current = runtime->previous;
-
-  runtime->previous = NULL;
+bare_addon_detach(bare_process_t *previous) {
+  bare_addon__current = previous;
 }
 
 js_value_t *

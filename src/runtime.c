@@ -1247,7 +1247,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->process = process;
   runtime->threads = NULL;
 
-  bare_addon_attach(runtime);
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   js_env_options_t options = {
     .version = 0,
@@ -1488,6 +1488,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
+  bare_addon_detach(previous);
+
   return 0;
 }
 
@@ -1496,6 +1498,8 @@ bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code)
   int err;
 
   bare_thread_t *threads = runtime->threads;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   if (runtime->state == bare_runtime_state_exited) goto exited;
 
@@ -1521,7 +1525,7 @@ bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code)
 exited:
   err = uv_run(runtime->loop, mode);
 
-  if (err > 0) return err;
+  if (err > 0) goto done;
 
   while (threads) {
     bare_thread_t *thread = threads;
@@ -1536,9 +1540,12 @@ exited:
   // happens after all its threads have been joined above.
   if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
 
-  bare_addon_detach(runtime);
+  err = 0;
 
-  return 0;
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }
 
 int
@@ -1582,6 +1589,8 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   int err;
 
   js_env_t *env = runtime->env;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   void *scope;
 
@@ -1646,6 +1655,8 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return 0;
 
 err:
@@ -1657,12 +1668,16 @@ err:
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return -1;
 }
 
 int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   do {
     err = uv_run(runtime->loop, mode);
@@ -1671,7 +1686,7 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
     if (runtime->state == bare_runtime_state_idle) goto idle;
 
-    if (err > 0) return err;
+    if (err > 0) goto done;
 
     if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
     idle:
@@ -1688,5 +1703,10 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_runtime__on_exit(runtime);
 
-  return 0;
+  err = 0;
+
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }
