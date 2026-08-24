@@ -20,6 +20,12 @@ bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier);
 
 void
+bare_addon_attach(bare_runtime_t *runtime);
+
+void
+bare_addon_detach(bare_runtime_t *runtime);
+
+void
 bare_addon_seal(bare_process_t *process);
 
 bool

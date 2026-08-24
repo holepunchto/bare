@@ -28,10 +28,10 @@
 // the list needs no locking.
 static bare_addon_t *bare_addon__static = NULL;
 
-// Dynamic addons are tracked in a single process-wide list with each addon
-// recording the process that loaded it. The list is shared so that
-// `bare_module_find()` can resolve addons from any thread, but ownership is
-// what governs which addons a process may itself load and unload.
+// Dynamic addons are tracked in a single list spanning every process with each
+// addon recording the process that loaded it. The list is shared so that an
+// addon can be resolved from any thread of the process that loaded it, but
+// ownership is what governs which addons a process may load, unload and find.
 static bare_addon_t *bare_addon__dynamic = NULL;
 
 // The lock guards both the dynamic addon list and the seal of every process.
@@ -45,12 +45,33 @@ static thread_local bare_process_t *bare_addon__pending_owner = NULL;
 static thread_local uv_lib_t *bare_addon__pending_lib = NULL;
 static thread_local const char *bare_addon__pending_specifier = NULL;
 
+// The process running on this thread, if any. `bare_module_find()` is called
+// from the Windows delay load hook when an addon first calls into one of its
+// dependencies, which may happen at any point after the addon was loaded, so
+// the process asking can't be inferred from the call site and is instead
+// tracked for as long as a runtime is set up on the thread.
+static thread_local bare_process_t *bare_addon__current = NULL;
+
 static void
 bare_addon__on_init(void) {
   int err;
 
   err = uv_mutex_init_recursive(&bare_addon__lock);
   assert(err == 0);
+}
+
+void
+bare_addon_attach(bare_runtime_t *runtime) {
+  runtime->previous = bare_addon__current;
+
+  bare_addon__current = runtime->process;
+}
+
+void
+bare_addon_detach(bare_runtime_t *runtime) {
+  bare_addon__current = runtime->previous;
+
+  runtime->previous = NULL;
 }
 
 js_value_t *
@@ -324,6 +345,21 @@ bare_addon_teardown(bare_process_t *process) {
   uv_mutex_unlock(&bare_addon__lock);
 }
 
+// Addons are named `<name>@<version>` and may be looked up by a truncated
+// version, which is how the delay loader on Windows resolves an addon by its
+// major version alone. The truncation must fall on a version component boundary
+// so that `foo@1` matches `foo@1.2.3` without also matching `foo@10.0.0`.
+static inline bool
+bare_addon__matches(const char *query, size_t len, const char *name) {
+  if (name == NULL) return false;
+
+  // A match over the first `len` characters implies that the name is at least
+  // that long, so indexing it by `len` is safe.
+  if (strncmp(query, name, len) != 0) return false;
+
+  return name[len] == '\0' || name[len] == '.';
+}
+
 uv_lib_t *
 bare_module_find(const char *query) {
   uv_once(&bare_addon__guard, bare_addon__on_init);
@@ -334,6 +370,9 @@ bare_module_find(const char *query) {
 
   bare_addon_t *next;
 
+  // Statically linked addons are compiled into the binary and stay loaded for
+  // as long as the operating system process, so they're available to every
+  // process and need no ownership check.
   next = bare_addon__static;
 
   while (next) {
@@ -341,18 +380,22 @@ bare_module_find(const char *query) {
 
     next = addon->next;
 
-    const char *name = addon->name;
-
-    if (name && strncmp(query, name, len) == 0) {
+    if (bare_addon__matches(query, len, addon->name)) {
       return &addon->lib;
     }
   }
 
+  // Dynamically loaded addons are only matched for the process that loaded
+  // them. The caller is handed a library that it may hold on to indefinitely
+  // and only the owning process can say how long the library stays loaded.
+  // Matching across processes would also hand a sealed process an addon that it
+  // never loaded itself.
+  bare_process_t *process = bare_addon__current;
+
+  if (process == NULL) return NULL;
+
   uv_mutex_lock(&bare_addon__lock);
 
-  // Addons are matched irrespective of their owner as the module lookup is a
-  // property of the operating system process rather than any single Bare
-  // process.
   next = bare_addon__dynamic;
 
   while (next) {
@@ -360,9 +403,9 @@ bare_module_find(const char *query) {
 
     next = addon->next;
 
-    const char *name = addon->name;
+    if (addon->owner != process) continue;
 
-    if (name && strncmp(query, name, len) == 0) {
+    if (bare_addon__matches(query, len, addon->name)) {
       uv_mutex_unlock(&bare_addon__lock);
 
       return &addon->lib;

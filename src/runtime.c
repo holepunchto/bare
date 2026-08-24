@@ -1247,6 +1247,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->process = process;
   runtime->threads = NULL;
 
+  bare_addon_attach(runtime);
+
   js_env_options_t options = {
     .version = 0,
     .memory_limit = process->options.memory_limit,
@@ -1533,6 +1535,8 @@ exited:
   // and may only be unloaded once the process itself is torn down, which
   // happens after all its threads have been joined above.
   if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
+
+  bare_addon_detach(runtime);
 
   return 0;
 }
