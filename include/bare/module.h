@@ -115,6 +115,30 @@ struct bare_module_s {
 uv_lib_t *
 bare_module_find(const char *query);
 
+/**
+ * Register a module with Bare. This is called by the `BARE_MODULE()` macro,
+ * either from a library constructor or from the `bare_register_module_v0`
+ * symbol that Bare looks up once the library has been loaded, and is not
+ * normally called directly.
+ *
+ * Whether the module is registered as a dynamic or as a statically linked addon
+ * depends on what the calling thread is doing. A module registered while the
+ * thread is loading a dynamic addon becomes that addon and is owned by the
+ * process performing the load, which unloads it again when it is torn down. A
+ * module registered at any other time is registered as a statically linked
+ * addon, which is owned by no process, is available to every process, including
+ * a sealed one, and stays registered for as long as the operating system
+ * process lives. Statically linked addons must be registered before the first
+ * process is set up.
+ *
+ * A library must register no more than one module.
+ *
+ * `version` must be set to `BARE_MODULE_VERSION`. `name` is what
+ * `bare_module_find()` matches against and is required for a statically linked
+ * addon; a dynamic addon may leave it `NULL`, in which case it can only be
+ * addressed by the specifier it was loaded from. The module is copied and need
+ * not outlive the call.
+ */
 void
 bare_module_register(bare_module_t *module);
 
