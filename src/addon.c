@@ -73,6 +73,23 @@ static thread_local bare_addon_t *bare_addon__staging = NULL;
 // site and is instead tracked for as long as a runtime is entered.
 static thread_local bare_process_t *bare_addon__current = NULL;
 
+#ifndef _WIN32
+// The global symbol scope of the program, which is where the code of a
+// statically linked addon is found on platforms that have a runpath.
+static uv_lib_t bare_addon__self;
+
+static uv_once_t bare_addon__self_guard = UV_ONCE_INIT;
+
+static void
+bare_addon__on_self_init(void) {
+  bare_addon__self.handle = dlopen(NULL, RTLD_LAZY);
+
+  assert(bare_addon__self.handle);
+
+  bare_addon__self.errmsg = NULL;
+}
+#endif
+
 static void
 bare_addon__on_init(void) {
   int err;
@@ -567,7 +584,9 @@ bare_addon__module(bare_module_register_cb exports) {
   // runpath, so the global scope of the program is handle enough.
   (void) exports;
 
-  lib.handle = dlopen(NULL, RTLD_LAZY);
+  uv_once(&bare_addon__self_guard, bare_addon__on_self_init);
+
+  lib = bare_addon__self;
 #endif
 
   assert(lib.handle);
