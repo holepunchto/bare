@@ -1,4 +1,5 @@
 list(APPEND tests
+  addon-concurrent-threads.js
   addon-constructor.js
   addon-constructor-multiple.js
   addon-constructor-multiple-processes.c
