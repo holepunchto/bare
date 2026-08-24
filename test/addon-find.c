@@ -2,6 +2,7 @@
 #include <bare.h>
 #include <js.h>
 #include <stddef.h>
+#include <uv.h>
 
 // Find statically registered addons by name. An addon may be found by a
 // truncated version so that it can be looked up by its major version alone,
@@ -16,6 +17,11 @@ bare_test__exports(js_env_t *env, js_value_t *exports) {
   return exports;
 }
 
+// Exported by the test so that it can be resolved through the library of an
+// addon that was linked into it.
+void
+bare_test_find_symbol(void) {}
+
 static void
 bare_test__register(const char *name) {
   bare_module_register(&(bare_module_t){
@@ -27,6 +33,8 @@ bare_test__register(const char *name) {
 
 int
 main(void) {
+  int e;
+
   // Statically linked addons register before any process is set up.
   bare_test__register("find-one@1.2.3");
   bare_test__register("find-ten@10.0.0");
@@ -63,6 +71,16 @@ main(void) {
 
   // Neither does a query that is nothing but the suffix.
   assert(bare_module_find(".bare") == NULL);
+
+  // The library of a statically linked addon is the module that its code was
+  // linked into rather than the executable by assumption, so the symbols of
+  // that module resolve through it.
+  uv_lib_t *lib = bare_module_find("find-one@1");
+
+  void *symbol;
+  e = uv_dlsym(lib, "bare_test_find_symbol", &symbol);
+  assert(e == 0);
+  assert(symbol == (void *) bare_test_find_symbol);
 
   return 0;
 }

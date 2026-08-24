@@ -504,6 +504,41 @@ bare_module_find(const char *query) {
   return NULL;
 }
 
+// The module that carries an addon's code. For a statically linked addon that's
+// whichever binary it was linked into, which is the executable when Bare is
+// linked statically but the shared library that Bare lives in when an embedder
+// bundles its addons alongside it. It's resolved from the address of the
+// callback the addon registers rather than assumed to be the executable, as
+// looking an addon up has to yield the module that actually exports its
+// symbols.
+static inline uv_lib_t
+bare_addon__module(bare_module_register_cb exports) {
+  uv_lib_t lib = {.handle = NULL, .errmsg = NULL};
+
+#ifdef _WIN32
+  HMODULE module;
+
+  // The reference count is left alone as the handle is never closed again.
+  BOOL ok = GetModuleHandleExW(
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+    (LPCWSTR) exports,
+    &module
+  );
+
+  lib.handle = ok ? module : GetModuleHandleW(NULL);
+#else
+  // Nothing resolves symbols through this handle on platforms that have a
+  // runpath, so the global scope of the program is handle enough.
+  (void) exports;
+
+  lib.handle = dlopen(NULL, RTLD_LAZY);
+#endif
+
+  assert(lib.handle);
+
+  return lib;
+}
+
 void
 bare_module_register(bare_module_t *module) {
   bool is_dynamic = bare_addon__pending == &bare_addon__staging;
@@ -542,26 +577,18 @@ bare_module_register(bare_module_t *module) {
     addon->name = addon->specifier = (char *) addon + sizeof(bare_addon_t);
 
     strcpy(addon->name, module->name);
-
-    if (bare_addon__pending_lib == NULL) {
-      static uv_lib_t lib;
-
-#ifdef _WIN32
-      lib.handle = GetModuleHandleW(NULL);
-#else
-      lib.handle = dlopen(NULL, RTLD_LAZY);
-#endif
-      assert(lib.handle);
-
-      lib.errmsg = NULL;
-
-      bare_addon__pending_lib = &lib;
-    }
   }
 
   addon->exports = module->exports;
   addon->owner = is_dynamic ? bare_addon__pending_owner : NULL;
-  addon->lib = *bare_addon__pending_lib;
+
+  // A dynamic addon is registered while its library loads and so takes the
+  // handle of that library. A statically linked addon has no load of its own
+  // and is resolved to the module it was linked into instead.
+  addon->lib = is_dynamic
+                 ? *bare_addon__pending_lib
+                 : bare_addon__module(module->exports);
+
   addon->next = *bare_addon__pending;
 
   *bare_addon__pending = addon;
