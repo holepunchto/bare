@@ -487,6 +487,8 @@ bare_module_find(const char *query) {
 
   bare_addon_t *next;
 
+  uv_mutex_lock(&bare_addon__lock);
+
   // Statically linked addons are compiled into the binary and stay loaded for
   // as long as the operating system process, so they're available to every
   // process and need no ownership check.
@@ -498,6 +500,8 @@ bare_module_find(const char *query) {
     next = addon->next;
 
     if (bare_addon__matches(query, len, addon->name)) {
+      uv_mutex_unlock(&bare_addon__lock);
+
       return &addon->lib;
     }
   }
@@ -509,9 +513,11 @@ bare_module_find(const char *query) {
   // never loaded itself.
   bare_process_t *process = bare_addon__current;
 
-  if (process == NULL) return NULL;
+  if (process == NULL) {
+    uv_mutex_unlock(&bare_addon__lock);
 
-  uv_mutex_lock(&bare_addon__lock);
+    return NULL;
+  }
 
   next = bare_addon__dynamic;
 
