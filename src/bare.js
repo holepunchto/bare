@@ -43,11 +43,6 @@ class Bare extends EventEmitter {
     return bare.arch
   }
 
-  /** @deprecated */
-  get simulator() {
-    return bare.simulator
-  }
-
   get argv() {
     return bare.argv
   }

@@ -28,62 +28,6 @@ static thread_local bare_addon_t **bare_addon__pending = &bare_addon__static;
 static thread_local uv_lib_t *bare_addon__pending_lib = NULL;
 static thread_local const char *bare_addon__pending_specifier = NULL;
 
-js_value_t *
-bare_addon_get_static(bare_runtime_t *runtime) {
-  int err;
-
-  js_value_t *result;
-  err = js_create_array(runtime->env, &result);
-  assert(err == 0);
-
-  bare_addon_t *next = bare_addon__static;
-
-  uint32_t i = 0;
-
-  while (next) {
-    bare_addon_t *addon = next;
-
-    next = addon->next;
-
-    js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->specifier, (size_t) -1, &specifier);
-    assert(err == 0);
-
-    err = js_set_element(runtime->env, result, i++, specifier);
-    assert(err == 0);
-  }
-
-  return result;
-}
-
-js_value_t *
-bare_addon_get_dynamic(bare_runtime_t *runtime) {
-  int err;
-
-  js_value_t *result;
-  err = js_create_array(runtime->env, &result);
-  assert(err == 0);
-
-  bare_addon_t *next = bare_addon__dynamic;
-
-  uint32_t i = 0;
-
-  while (next) {
-    bare_addon_t *addon = next;
-
-    next = addon->next;
-
-    js_value_t *specifier;
-    err = js_create_string_utf8(runtime->env, (utf8_t *) addon->specifier, (size_t) -1, &specifier);
-    assert(err == 0);
-
-    err = js_set_element(runtime->env, result, i++, specifier);
-    assert(err == 0);
-  }
-
-  return result;
-}
-
 bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   int err;
