@@ -257,8 +257,9 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_lib_t lib;
 
-  // Discard anything left staged by a load that failed before it could publish.
-  bare_addon__staging = NULL;
+  // Every load leaves the thread with nothing staged, whether it published its
+  // addons or freed them.
+  assert(bare_addon__staging == NULL);
 
   bare_addon__pending_owner = process;
   bare_addon__pending_lib = &lib;
@@ -380,6 +381,16 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   return next;
 
 err:
+  // Free anything staged by a constructor that ran before the load failed, as
+  // it will never be published.
+  while (bare_addon__staging) {
+    bare_addon_t *addon = bare_addon__staging;
+
+    bare_addon__staging = addon->next;
+
+    free(addon);
+  }
+
   bare_addon__pending_owner = NULL;
   bare_addon__pending_lib = NULL;
   bare_addon__pending_specifier = NULL;
