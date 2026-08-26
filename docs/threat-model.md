@@ -107,7 +107,7 @@ We are **not** defending against:
 
 After the seal there are only three ways native code can get in, and this is the whole list.
 
-**1. A bug in the seal itself.** Races between sealing and loading, thread startup order, the constructor and `napi_module_register` paths, and cache reuse across processes.
+**1. A bug in the seal itself.** Races between sealing and loading, thread startup order, the constructor and `bare_module_register()` paths, and cache reuse across processes.
 
 **2. The two exceptions above**, if they turn out to be reachable without native code or wider than we described.
 
