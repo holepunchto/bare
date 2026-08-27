@@ -44,6 +44,10 @@ Bare is built on top of <https://github.com/holepunchto/libjs>, which provides l
 
 Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succinct and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
 
+## Security
+
+Bare is designed to be embedded alongside code the embedder may not fully trust, and `Bare.Addon.seal()` is the mechanism for freezing the set of native code a process may load. What that does and does not promise is written down in [`docs/threat-model.md`](docs/threat-model.md), which embedders should read before running untrusted JavaScript.
+
 ## API
 
 ### `Bare`
@@ -184,6 +188,8 @@ Seal addon loading. Once sealed, no further dynamic addons can be loaded by the 
 This is a one-way operation that cannot be undone for the lifetime of the process. It is intended for embedders that wish to load a fixed set of trusted addons up front and then prevent any further native code from being introduced, such as when establishing a sandbox.
 
 The seal applies to the process alone. Embedders running several Bare processes within the same operating system process may seal each of them independently, and sealing one has no effect on the addons the others may load. Addons are likewise owned by the process that loaded them and are unloaded when it is torn down.
+
+For what sealing guarantees, what it deliberately leaves alone, and what embedders are expected to do on top of it, see [`docs/threat-model.md`](docs/threat-model.md).
 
 #### `const addon = new Addon(url)`
 
