@@ -8,7 +8,7 @@ What follows says what Bare promises, what it does not promise, and which of the
 
 ## What counts
 
-Bare is a library, and embedders are the ones using it. The `bare` command is a toy for developers; it never seals and it promises nothing, so you can ignore it here.
+Bare is a library, and embedders are the ones using it. The `bare` CLI is a toy for developers; it never seals and it promises nothing, so you can ignore it here.
 
 - **Counts:** `src/`, the public headers, and the `Bare` namespace.
 - **Does not count:** `bin/`, the `bare-*` modules, and addon code.
@@ -27,7 +27,7 @@ Bare has no walls inside it. What it has instead is a moment in time.
 
 **Before the seal.** The power is on, and every piece of code in the process is fully trusted and can do whatever native code can do. Bare promises nothing here, so nothing that happens in this phase is a bug.
 
-**The seal.** The embedder calls `bare_seal()` and the power turns off for good. It cannot be turned back on, it applies to every thread including ones made later, and it only lifts when the process is torn down.
+**The seal.** The embedder calls `Addon.seal()` and the power turns off for good. It cannot be turned back on, it applies to every thread including ones made later, and it only lifts when the process is torn down.
 
 Seal early, before any untrusted code has run. If untrusted code goes first it may already have loaded whatever it wanted, and the seal will have come too late to matter.
 
@@ -37,7 +37,7 @@ Sealing waits for any load that is already running, even on another thread. Load
 
 ## The promise
 
-After `bare_seal()` returns, Bare will not bring any new native code into the process. Only what was already there stays. The two exceptions below are the only exceptions.
+After `Addon.seal()` returns, Bare will not bring any new native code into the process. Only what was already there stays. The two exceptions below are the only exceptions.
 
 Said another way, sealed JavaScript cannot get more power than it was given through anything Bare offers.
 
@@ -115,10 +115,10 @@ After the seal there are only three ways native code can get in, and this is the
 
 The risky spots are wherever we read data an attacker controls:
 
-- structured clone
-- thread transfer lists
-- module and addon resolution
-- data races on `SharedArrayBuffer`
+- Structured clone
+- Thread transfer lists
+- Module and addon resolution
+- Data races on `SharedArrayBuffer`
 - V8 and `libuv` themselves
 
 Turning powers off does nothing about memory bugs, and only an OS sandbox does, which is why the next section makes one a requirement.
@@ -140,8 +140,7 @@ All of these work with no addons at all, and none of them are bugs.
 - `Bare.exit()`, which kills the process or the thread
 - `Bare.suspend()` and `Bare.idle()`, which jam the loop
 - Making threads and using lots of memory
-- `SharedArrayBuffer` plus fast timers, which gives side channels against
-  anything sharing the address space, including your own app
+- `SharedArrayBuffer` plus fast timers, which gives side channels against anything sharing the address space, including your own app
 
 If you need to stop any of this, the seal will not do it for you and you will have to use the OS.
 
