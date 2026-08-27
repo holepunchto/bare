@@ -10,8 +10,8 @@ What follows says what Bare promises, what it does not promise, and which of the
 
 Bare is a library, and embedders are the ones using it. The `bare` CLI is a toy for developers; it never seals and it promises nothing, so you can ignore it here.
 
-- **Counts:** `src/`, the public headers, and the `Bare` namespace.
-- **Does not count:** `bin/`, the `bare-*` modules, and addon code.
+- **Counts:** `src/`, the public headers, the `Bare` namespace, and the addons listed in `src/builtins.json`.
+- **Does not count:** `bin/`, `bare-*` modules that are not compiled in, and addon code.
 
 ## The one power
 
@@ -19,7 +19,23 @@ Bare gives out a single power, which is the power to load a native addon.
 
 That one power is special because it hands you every other power. An addon can read files, open sockets, and start programs, so whoever can load addons can do anything at all.
 
-Everything else in Bare is harmless on its own. The module system, threads, and the lifecycle events never reach the outside world by themselves. So this whole document is about one power and about how to take it away.
+Everything else in Bare is harmless on its own. Threads and the lifecycle events never reach the outside world by themselves, and the module system reaches only as far as the protocol it was handed. So this whole document is about one power and about how to take it away.
+
+## The module protocol
+
+Modules have to be read from somewhere, and only Bare knows how. `bare_load()` hands that protocol to the module it loads, which is the embedder's own entry point, so the filesystem goes to the embedder and to nobody else.
+
+Nothing else hands it out. `bare-module` has no store of its own, so code loaded without a protocol reads nothing at all.
+
+A protocol travels with the module graph it was given to. Load untrusted code with one of your own and it reaches only as far as that one:
+
+```js
+Module.load(url, source, { protocol: restricted })
+```
+
+Pass a referrer and it gets yours instead, so pass a protocol too when the code is untrusted.
+
+The reach of the module system is the embedder's to pick. The CLI hands on its own, which is why `bare` can read the disk.
 
 ## Before and after
 
@@ -27,7 +43,9 @@ Bare has no walls inside it. What it has instead is a moment in time.
 
 **Before the seal.** The power is on, and every piece of code in the process is fully trusted and can do whatever native code can do. Bare promises nothing here, so nothing that happens in this phase is a bug.
 
-**The seal.** The embedder calls `Addon.seal()` and the power turns off for good. It cannot be turned back on, it applies to every thread including ones made later, and it only lifts when the process is torn down.
+**The seal.** The embedder calls `bare_seal()`, or JavaScript calls `Addon.seal()`, and the power turns off for good. It cannot be turned back on, it applies to every thread including ones made later, and it only lifts when the process is torn down.
+
+The seal covers one Bare process. A sibling in the same OS process is not sealed by it, and an unsealed sibling can still pull native code into the memory you share. So seal every process you set up, or the unsealed ones speak for all of them.
 
 Seal early, before any untrusted code has run. If untrusted code goes first it may already have loaded whatever it wanted, and the seal will have come too late to matter.
 
@@ -37,20 +55,20 @@ Sealing waits for any load that is already running, even on another thread. Load
 
 ## The promise
 
-After `Addon.seal()` returns, Bare will not bring any new native code into the process. Only what was already there stays. The two exceptions below are the only exceptions.
+After the seal returns, Bare will not bring any new native code into the process. Only what was already there stays. The two exceptions below are the only exceptions.
 
-Said another way, sealed JavaScript cannot get more power than it was given through anything Bare offers.
+Said another way, sealed JavaScript cannot get more native code than it was given through anything Bare offers.
 
 There are two things this does **not** mean:
 
 - New **JavaScript** can still show up. Modules keep loading and `Thread` still takes source and callbacks, which is fine, because the promise is only about native code.
-- `Addon.load()` does not always throw after the seal. If the process already owns that addon it simply hands it back, and since nothing new gets loaded, that is fine too.
+- `new Addon(url)` does not always throw after the seal. If the process already owns that addon it simply hands it back, and since nothing new gets loaded, that is fine too.
 
 ## The two exceptions
 
 ### Addons built into the binary
 
-Some addons are compiled in, which means they are always available to every process whether it has sealed or not.
+Some addons are compiled in, which means they are always available to every process whether it has sealed or not. `src/builtins.json` is the list for a default build.
 
 So whatever you compile in **is** your security policy, and you should pick it deliberately.
 
@@ -70,26 +88,26 @@ There is one more wrinkle. Seals lift when a process is torn down, but built-in 
 
 A **No** row cannot be the basis of a bug report.
 
-| Thing                     | Is it a wall? | Why                                                      |
-| ------------------------- | ------------- | -------------------------------------------------------- |
-| OS process                | Yes           | The OS does this, and Bare leans on it                   |
-| Before seal -> After seal | Yes           | The only wall Bare builds itself                         |
-| Bare process (`bare_t`)   | No            | It tracks who owns what, which is not the same as a wall |
-| Thread                    | No            | Memory is shared, and `SharedArrayBuffer` is always on   |
-| Realm                     | No            | Same heap, so objects cross freely                       |
-| Module graph              | No            | Every module can see the whole `Bare` namespace          |
-| Addon ABI                 | No            | Addons are native code and already have everything       |
-| Embedder <-> JavaScript   | Yes           | `Bare.IPC`, plus the options and env you pass in         |
-| V8 sandbox                | No            | Nice to have, but we do not rely on it                   |
+| Thing                     | Is it a wall? | Why                                                                              |
+| ------------------------- | ------------- | -------------------------------------------------------------------------------- |
+| OS process                | Yes           | The OS does this, and Bare leans on it                                           |
+| Before seal -> After seal | Yes           | The only wall Bare builds itself                                                 |
+| Bare process (`bare_t`)   | No            | Addons and the seal are tracked per process, but memory is shared                |
+| Thread                    | No            | Memory is shared, and `SharedArrayBuffer` is always on                           |
+| Realm                     | No            | Same heap, so objects cross freely                                               |
+| Module graph              | No            | Every module can see the whole `Bare` namespace, and a graph shares one protocol |
+| Addon ABI                 | No            | Addons are native code and already have everything                               |
+| Embedder <-> JavaScript   | Yes           | `Bare.IPC`, plus the options, `argv` and `env` you pass in                       |
+| V8 sandbox                | No            | Nice to have, but we do not rely on it                                           |
 
 Two Bare processes inside one OS process share memory and are not walled off from each other, so if you need two separate sets of powers you need two OS processes.
 
 ## What we trust
 
-- V8, through `libjs`
+- The JavaScript engine, through `libjs`
 - `libuv`
 - Bare's own C in `src/`
-- Every addon loaded before the seal, and every built-in addon
+- Every addon compiled into the binary, and every addon loaded before the seal
 - The embedder, including its options, its `argv`, its `env`, and whatever it hooks up to `Bare.IPC`
 - The OS and its loader
 
@@ -105,13 +123,15 @@ We are **not** defending against:
 
 ## What is actually left to worry about
 
-After the seal there are only three ways native code can get in, and this is the whole list.
+After the seal there are only four ways native code can get in, and this is the whole list.
 
 **1. A bug in the seal itself.** Races between sealing and loading, thread startup order, the constructor and `bare_module_register()` paths, and cache reuse across processes.
 
 **2. The two exceptions above**, if they turn out to be reachable without native code or wider than we described.
 
-**3. Memory bugs in our own C.** This is the big one, and it is also the one the seal cannot help with, because the attacker never asks for a power here. They just write one straight into memory.
+**3. A sibling Bare process that never sealed.** It shares the memory, so what it loads lands next to you. Sealing every process is the embedder's job.
+
+**4. Memory bugs in our own C.** This is the big one, and it is also the one the seal cannot help with, because the attacker never asks for a power here. They just write one straight into memory.
 
 The risky spots are wherever we read data an attacker controls:
 
@@ -119,24 +139,27 @@ The risky spots are wherever we read data an attacker controls:
 - Thread transfer lists
 - Module and addon resolution
 - Data races on `SharedArrayBuffer`
-- V8 and `libuv` themselves
+- The engine and `libuv` themselves
 
 Turning powers off does nothing about memory bugs, and only an OS sandbox does, which is why the next section makes one a requirement.
 
 ## What embedders must do
 
-Bare promises that the set of powers is **frozen**, but it does not promise that the set is **safe**. That part is yours to work out.
+Bare promises that the set of addons is **frozen**, but it does not promise that the set is **safe**. That part is yours to work out.
 
 **1. Check what your powers add up to.** Two safe powers can combine into an unsafe one. A bundle reader is fine on its own and a peer connection is fine on its own, but together they leak data, and neither addon author did anything wrong. So look at the whole set and assume someone is trying to abuse it. `Bare.IPC` counts as part of that set, and on mobile it talks straight to your app, so write the app side carefully.
 
-**2. Use an OS sandbox.** The seal does nothing about memory bugs, so if you are running untrusted JavaScript a sandbox is required rather than a bonus.
+**2. Mind what you hand on.** The protocol you were handed reaches the whole filesystem. Load untrusted code with one of your own, and pass it even when you pass a referrer.
 
-**3. Seal early.**
+**3. Use an OS sandbox.** The seal does nothing about memory bugs, so if you are running untrusted JavaScript a sandbox is required rather than a bonus.
+
+**4. Seal early, and seal every process.**
 
 ## Things that still work after the seal
 
 All of these work with no addons at all, and none of them are bugs.
 
+- Reading whatever the protocol the code was loaded with reaches
 - `Bare.exit()`, which kills the process or the thread
 - `Bare.suspend()` and `Bare.idle()`, which jam the loop
 - Making threads and using lots of memory
@@ -150,7 +173,7 @@ If you need to stop any of this, the seal will not do it for you and you will ha
 
 - Any way to get native code into a sealed process without already having native code
 - Any way to get more power than was granted, using a Bare interface
-- Memory bugs in `src/` that JavaScript can reach
+- Memory bugs that JavaScript can reach, in `src/` or in an addon we compile in
 - Anything that breaks the promise or the wall table
 
 **Not a bug:**
@@ -162,4 +185,4 @@ If you need to stop any of this, the seal will not do it for you and you will ha
 - Anything in `bin/`
 - Harm from powers the embedder chose to grant
 
-V8 and `libuv` bugs go upstream, and our job is to ship the fixes.
+Engine and `libuv` bugs go upstream, and our job is to ship the fixes.
