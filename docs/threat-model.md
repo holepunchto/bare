@@ -19,13 +19,13 @@ Bare gives out a single power, which is the power to load a native addon.
 
 That one power is special because it hands you every other power. An addon can read files, open sockets, and start programs, so whoever can load addons can do anything at all.
 
-Everything else in Bare is harmless on its own. Threads and the lifecycle events never reach the outside world by themselves, and the module system reaches only as far as the protocol it was handed. So this whole document is about one power and about how to take it away.
+Everything else in `src/` is harmless on its own. Threads and the lifecycle events never reach the outside world by themselves, and the module system reaches only as far as the protocol it was handed. The addons you compile in are another matter. So this whole document is about one power and about how to take it away.
 
 ## The module protocol
 
 Modules have to be read from somewhere, and only Bare knows how. `bare_load()` hands that protocol to the module it loads, which is the embedder's own entry point, so the filesystem goes to the embedder and to nobody else.
 
-Nothing else hands it out. `bare-module` has no store of its own, so code loaded without a protocol reads nothing at all.
+Nothing else hands it out. A protocol is the only way to reach a store, so code loaded without one reads nothing at all.
 
 A protocol travels with the module graph it was given to. Load untrusted code with one of your own and it reaches only as far as that one:
 
@@ -34,6 +34,8 @@ Module.load(url, source, { protocol: restricted })
 ```
 
 Pass a referrer and it gets yours instead, so pass a protocol too when the code is untrusted.
+
+Threads inherit nothing. A thread runs the source it was handed and no more, so spawning one is no way around the protocol you were given. To give a thread a module graph, gather it into a bundle first and hand that over.
 
 The reach of the module system is the embedder's to pick. The CLI hands on its own, which is why `bare` can read the disk.
 
@@ -97,7 +99,7 @@ A **No** row cannot be the basis of a bug report.
 | Realm                     | No            | Same heap, so objects cross freely                                               |
 | Module graph              | No            | Every module can see the whole `Bare` namespace, and a graph shares one protocol |
 | Addon ABI                 | No            | Addons are native code and already have everything                               |
-| Embedder <-> JavaScript   | Yes           | `Bare.IPC`, plus the options, `argv` and `env` you pass in                       |
+| Embedder <-> JavaScript   | Yes           | `Bare.IPC`, plus the options and `argv` you pass in                              |
 | V8 sandbox                | No            | Nice to have, but we do not rely on it                                           |
 
 Two Bare processes inside one OS process share memory and are not walled off from each other, so if you need two separate sets of powers you need two OS processes.
@@ -110,7 +112,7 @@ The `Bare` namespace is frozen. It cannot be deleted, replaced or added to, and 
 - `libuv`
 - Bare's own C in `src/`
 - Every addon compiled into the binary, and every addon loaded before the seal
-- The embedder, including its options, its `argv`, its `env`, and whatever it hooks up to `Bare.IPC`
+- The embedder, including its options, its `argv`, and whatever it hooks up to `Bare.IPC`
 - The OS and its loader
 
 ## Who we are defending against
@@ -139,7 +141,7 @@ The risky spots are wherever we read data an attacker controls:
 
 - Structured clone
 - Thread transfer lists
-- Module and addon resolution
+- Resolving, parsing and linking, which the module system does on code it may not trust
 - Data races on `SharedArrayBuffer`
 - `WebAssembly`, which hands the engine bytes to compile
 - The engine and `libuv` themselves

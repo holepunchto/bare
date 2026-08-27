@@ -83,7 +83,7 @@ bare_thread__entry(void *opaque) {
 
   bare_thread__invoke_callback(runtime, thread, env);
 
-  err = bare_runtime_load(&runtime, thread->filename, source, NULL);
+  err = bare_runtime_load_thread(&runtime, thread->filename, source);
   (void) err;
 
   free(thread->filename);

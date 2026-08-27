@@ -240,6 +240,20 @@ const protocol = require('./protocol')
 bare.exit = exports.exit
 
 bare.load = function load(filename, source) {
+  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+    protocol,
+    cache: Object.create(null)
+  })
+}
+
+bare.loadThread = function loadThread(filename, source) {
+  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+    protocol: new Module.Protocol(),
+    cache: Object.create(null)
+  })
+}
+
+function toURL(filename) {
   let url
 
   if (startsWithWindowsDriveLetter(filename)) {
@@ -250,10 +264,7 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null, {
-    protocol,
-    cache: Object.create(null)
-  })
+  return url
 }
 
 /**

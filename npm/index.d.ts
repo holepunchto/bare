@@ -62,10 +62,15 @@ declare namespace Addon {
   export function resolve(specifier: string, parentURL?: URL): URL
 }
 
+type ThreadSource = string | Buffer
+
+type ThreadCallback = (data: unknown) => unknown
+
 interface ThreadOptions {
   data?: unknown
   transfer?: unknown[]
-  source?: string | Buffer
+  /** @deprecated Pass the source after `filename` instead. */
+  source?: ThreadSource
   encoding?: BufferEncoding
   stackSize?: number
 }
@@ -81,8 +86,11 @@ interface Thread {
 }
 
 declare class Thread {
-  constructor(options?: ThreadOptions)
-  constructor(filename: string, options?: ThreadOptions)
+  constructor(callback: ThreadCallback)
+  constructor(options?: ThreadOptions, callback?: ThreadCallback)
+  constructor(filename: string, callback: ThreadCallback)
+  constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
+  constructor(filename: string, options?: ThreadOptions, callback?: ThreadCallback)
 }
 
 declare namespace Thread {
@@ -94,9 +102,19 @@ declare namespace Thread {
   export const self: ThreadProxy | null
 
   /** @deprecated */
-  export function create(options?: ThreadOptions): Thread
+  export function create(callback: ThreadCallback): Thread
   /** @deprecated */
-  export function create(filename: string, options?: ThreadOptions): Thread
+  export function create(options?: ThreadOptions, callback?: ThreadCallback): Thread
+  /** @deprecated */
+  export function create(filename: string, callback: ThreadCallback): Thread
+  /** @deprecated */
+  export function create(filename: string, source: ThreadSource, options?: ThreadOptions): Thread
+  /** @deprecated */
+  export function create(
+    filename: string,
+    options?: ThreadOptions,
+    callback?: ThreadCallback
+  ): Thread
 }
 
 declare const Bare: Bare

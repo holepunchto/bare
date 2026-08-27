@@ -31,6 +31,9 @@ int
 bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result);
 
 int
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source);
+
+int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode);
 
 #endif // BARE_RUNTIME_H

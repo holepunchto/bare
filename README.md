@@ -222,9 +222,14 @@ A reference to the current thread as a `ThreadProxy` object. Will be `null` on t
 
 The data that was passed to the current thread on creation. Will be `null` if no data was passed.
 
-#### `const thread = new Thread([filename][, options][, callback])`
+#### `const thread = new Thread([filename[, source]][, options][, callback])`
 
-Start a new thread that will run the contents of `filename`. If `callback` is provided, its function body will be treated as the contents of `filename` and invoked on the new thread with `Thread.self.data` passed as an argument.
+Start a new thread that will run `source`, which is a string or a `Buffer`. If `callback` is provided, its function body will be used as the source instead and invoked on the new thread with `Thread.self.data` passed as an argument.
+
+A thread is loaded through a protocol that reaches nothing, so it runs the source it was given and no more; `filename` names that source rather than locating it. Anything else the thread needs, including the modules it imports, must travel with it as `source` or `data`. To run a module graph on a thread, gather it into a <https://github.com/holepunchto/bare-bundle> first and pass the bundle as `source`, which is what <https://github.com/holepunchto/bare-thread> does.
+
+> [!IMPORTANT]  
+> A thread does not inherit the module protocol of whoever spawned it. Reading a graph off disk and handing it over is the spawner's job, so that a thread never reaches further than the code that started it.
 
 Options include:
 
@@ -234,8 +239,6 @@ Options include:
   data: null,
   // Optional transfer list
   transfer: [],
-  // Optional file source, will be read from `filename` if neither `source` nor `callback` are provided
-  source: string | Buffer,
   // Optional source encoding if `source` is a string
   encoding: 'utf8',
   // Optional stack size in bytes, pass 0 for default

@@ -1,5 +1,6 @@
 const path = require('bare-path')
 const t = require('bare-tap')
+const bundle = require('./helpers/bundle')
 const { Thread } = Bare
 
 t.plan(6)
@@ -9,7 +10,9 @@ const entry = path.join(__dirname, 'fixtures/thread-shared-data.js')
 
 const data = Buffer.from(new SharedArrayBuffer(4))
 
-const thread = new Thread(entry, { data: data.buffer })
+const thread = new Thread('bare:/thread.bundle', bundle(entry), {
+  data: data.buffer
+})
 
 thread.join()
 t.pass()

@@ -1584,8 +1584,8 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
   return 0;
 }
 
-int
-bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+static int
+bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filename, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1607,7 +1607,7 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   assert(err == 0);
 
   js_value_t *load;
-  err = js_get_named_property(env, exports, "load", &load);
+  err = js_get_named_property(env, exports, entry, &load);
   assert(err == 0);
 
   js_value_t *global;
@@ -1671,6 +1671,16 @@ err:
   bare_addon_detach(previous);
 
   return -1;
+}
+
+int
+bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+  return bare_runtime__load(runtime, "load", filename, source, result);
+}
+
+int
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source) {
+  return bare_runtime__load(runtime, "loadThread", filename, source, NULL);
 }
 
 int

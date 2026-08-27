@@ -1,5 +1,6 @@
 const url = require('bare-url')
 const t = require('bare-tap')
+const bundle = require('./helpers/bundle')
 const { Addon, Thread } = Bare
 
 // Load the same addons from several threads at once. The constructor addon in
@@ -12,28 +13,31 @@ const threads = []
 
 for (let i = 0; i < 8; i++) {
   threads.push(
-    new Thread(__filename, () => {
-      const url = require('bare-url')
-      const { Addon } = Bare
+    new Thread(
+      'bare:/thread.bundle',
+      bundle(__filename, () => {
+        const url = require('bare-url')
+        const { Addon } = Bare
 
-      const addon = new Addon(
-        url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
-      )
-
-      if (addon.exports !== 'Hello from addon') {
-        throw new Error('Addon was not loaded')
-      }
-
-      const constructor = new Addon(
-        url.pathToFileURL(
-          `./test/fixtures/constructor-addon/prebuilds/${Addon.host}/constructor-addon.bare`
+        const addon = new Addon(
+          url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`)
         )
-      )
 
-      if (constructor.exports !== 'Hello from constructor addon') {
-        throw new Error('Constructor addon was not loaded')
-      }
-    })
+        if (addon.exports !== 'Hello from addon') {
+          throw new Error('Addon was not loaded')
+        }
+
+        const constructor = new Addon(
+          url.pathToFileURL(
+            `./test/fixtures/constructor-addon/prebuilds/${Addon.host}/constructor-addon.bare`
+          )
+        )
+
+        if (constructor.exports !== 'Hello from constructor addon') {
+          throw new Error('Constructor addon was not loaded')
+        }
+      })
+    )
   )
 }
 

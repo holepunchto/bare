@@ -61,6 +61,7 @@ list(APPEND tests
   suspend-resume.js
   suspend-suspend-resume-thread.mjs
   thread-join.js
+  thread-no-protocol.js
   thread-shared-data.js
   thread-source.js
   thread-transfer-data.js

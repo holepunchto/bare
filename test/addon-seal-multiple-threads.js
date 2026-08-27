@@ -1,4 +1,6 @@
+const url = require('bare-url')
 const t = require('bare-tap')
+const bundle = require('./helpers/bundle')
 const { Addon, Thread } = Bare
 
 t.plan(2)
@@ -7,27 +9,31 @@ Addon.seal()
 
 t.equal(Addon.sealed, true)
 
-const thread = new Thread(__filename, () => {
-  const url = require('bare-url')
-  const tap = require('bare-tap')
-  const { Addon } = Bare
+const addonURL = url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`).href
 
-  const t = tap.subtest()
+// A thread reaches no further than what it was handed, so the addon URL travels
+// with it as data rather than being resolved on the thread.
+const thread = new Thread(
+  'bare:/thread.bundle',
+  bundle(__filename, (href) => {
+    const { Addon } = Bare
 
-  t.plan(2)
+    // The seal is process-global, so a freshly spawned thread must observe it
+    // and refuse to load addons too.
+    if (Addon.sealed !== true) throw new Error('Thread did not observe the seal')
 
-  // The seal is process-global, so a freshly spawned thread must observe it and
-  // refuse to load addons too.
-  t.equal(Addon.sealed, true)
+    try {
+      new Addon(new URL(href))
 
-  try {
-    new Addon(url.pathToFileURL(`./test/fixtures/addon/prebuilds/${Addon.host}/addon.bare`))
-
-    t.fail('addon load should throw on a sealed thread')
-  } catch {
-    t.pass('addon load throws on a sealed thread')
+      throw new Error('Addon load should throw on a sealed thread')
+    } catch (err) {
+      if (err.code !== 'CANNOT_LOAD') throw err
+    }
+  }),
+  {
+    data: addonURL
   }
-})
+)
 
 thread.join()
 t.pass()

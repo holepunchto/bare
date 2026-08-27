@@ -3,15 +3,18 @@
 const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
-  constructor(filename, opts, callback) {
-    if (typeof filename === 'function') {
-      callback = filename
-      filename = '<thread>'
-      opts = {}
-    } else if (typeof filename === 'object') {
+  constructor(filename, source, opts, callback) {
+    if (typeof filename !== 'string') {
       callback = opts
-      opts = filename
+      opts = source
+      source = filename
       filename = '<thread>'
+    }
+
+    if (!isSource(source)) {
+      callback = opts
+      opts = source
+      source = null
     }
 
     if (typeof opts === 'function') {
@@ -21,14 +24,13 @@ module.exports = exports = class Thread {
       opts = opts || {}
     }
 
-    if (callback) {
-      opts = {
-        ...opts,
-        source: `(${callback.toString()})(Bare.Thread.self.data)`
-      }
-    }
+    let { data = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
 
-    let { data = null, source = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
+    if (source === null && isSource(opts.source)) source = opts.source
+
+    if (callback) {
+      source = `(${callback.toString()})(Bare.Thread.self.data)`
+    }
 
     if (typeof source === 'string') {
       const copy = new SharedArrayBuffer(Buffer.byteLength(source, encoding))
@@ -106,8 +108,8 @@ module.exports = exports = class Thread {
   }
 
   /** @deprecated */
-  static create(filename, opts, callback) {
-    return new Thread(filename, opts, callback)
+  static create(filename, source, opts, callback) {
+    return new Thread(filename, source, opts, callback)
   }
 
   static get isMainThread() {
@@ -137,4 +139,8 @@ bare.onthread = function onthread(data) {
   const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
 
   exports.self.data = structuredClone.deserializeWithTransfer(structuredClone.decode(state))
+}
+
+function isSource(value) {
+  return typeof value === 'string' || ArrayBuffer.isView(value)
 }
