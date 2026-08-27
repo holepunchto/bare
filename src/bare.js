@@ -130,7 +130,7 @@ Object.defineProperty(global, 'Bare', {
   value: exports,
   enumerable: true,
   writable: false,
-  configurable: true
+  configurable: false
 })
 
 /**
@@ -255,3 +255,31 @@ bare.load = function load(filename, source) {
     cache: Object.create(null)
   })
 }
+
+/**
+ * Step 10:
+ * Lock down the namespace now that everything is in place.
+ */
+
+Object.defineProperties(exports, {
+  Addon: {
+    value: exports.Addon,
+    enumerable: true,
+    writable: false,
+    configurable: false
+  },
+  Thread: {
+    value: exports.Thread,
+    enumerable: true,
+    writable: false,
+    configurable: false
+  },
+  IPC: {
+    value: exports.IPC,
+    enumerable: true,
+    writable: true,
+    configurable: false
+  }
+})
+
+Object.preventExtensions(exports)

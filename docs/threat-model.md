@@ -62,7 +62,7 @@ Said another way, sealed JavaScript cannot get more native code than it was give
 There are two things this does **not** mean:
 
 - New **JavaScript** can still show up. Modules keep loading and `Thread` still takes source and callbacks, which is fine, because the promise is only about native code.
-- `new Addon(url)` does not always throw after the seal. If the process already owns that addon it simply hands it back, and since nothing new gets loaded, that is fine too.
+- `new Addon(url)` does not always throw after the seal. If the process already owns that addon it hands it back, so anything you loaded before sealing is there for the asking, by any code in the process that knows the path. Loading an addon **is** granting what it can do, and the seal freezes that set rather than keeping it to yourself.
 
 ## The two exceptions
 
@@ -82,7 +82,7 @@ So an addon that was loaded before the seal can register late and become built-i
 
 Still, note the wording carefully. It is native code that can do this rather than just the embedder, and native code is a much bigger group, so choose your addons with that in mind.
 
-There is one more wrinkle. Seals lift when a process is torn down, but built-in registrations never do, so the list only ever grows. A sealed process that starts late in a long-lived app inherits everything that was registered before it.
+There is one more wrinkle. Seals lift when a process is torn down, but built-in registrations never do, so the list only ever grows. A sealed process that starts late in a long-lived app inherits everything that was registered before it. The list is also keyed by name and the newest registration wins, so a late one under a name that is already taken takes it over for every process that looks it up afterwards. Names change hands, in other words, rather than the list simply getting longer.
 
 ## What is a wall and what is not
 
@@ -101,6 +101,8 @@ A **No** row cannot be the basis of a bug report.
 | V8 sandbox                | No            | Nice to have, but we do not rely on it                                           |
 
 Two Bare processes inside one OS process share memory and are not walled off from each other, so if you need two separate sets of powers you need two OS processes.
+
+The `Bare` namespace is frozen. It cannot be deleted, replaced or added to, and neither can `Bare.Addon` or `Bare.Thread`, so code cannot swap out what the rest of the realm reaches for. `Bare.IPC` stays writable because embedders set it.
 
 ## What we trust
 
@@ -139,6 +141,7 @@ The risky spots are wherever we read data an attacker controls:
 - Thread transfer lists
 - Module and addon resolution
 - Data races on `SharedArrayBuffer`
+- `WebAssembly`, which hands the engine bytes to compile
 - The engine and `libuv` themselves
 
 Turning powers off does nothing about memory bugs, and only an OS sandbox does, which is why the next section makes one a requirement.
@@ -147,7 +150,7 @@ Turning powers off does nothing about memory bugs, and only an OS sandbox does, 
 
 Bare promises that the set of addons is **frozen**, but it does not promise that the set is **safe**. That part is yours to work out.
 
-**1. Check what your powers add up to.** Two safe powers can combine into an unsafe one. A bundle reader is fine on its own and a peer connection is fine on its own, but together they leak data, and neither addon author did anything wrong. So look at the whole set and assume someone is trying to abuse it. `Bare.IPC` counts as part of that set, and on mobile it talks straight to your app, so write the app side carefully.
+**1. Check what your powers add up to.** Two safe powers can combine into an unsafe one. A bundle reader is fine on its own and a peer connection is fine on its own, but together they leak data, and neither addon author did anything wrong. So look at the whole set and assume someone is trying to abuse it. Every addon you load before sealing belongs to that set for all the code in the process, not just for the part of it that wanted the addon. `Bare.IPC` counts as part of that set, and on mobile it talks straight to your app, so write the app side carefully.
 
 **2. Mind what you hand on.** The protocol you were handed reaches the whole filesystem. Load untrusted code with one of your own, and pass it even when you pass a referrer.
 
@@ -157,11 +160,13 @@ Bare promises that the set of addons is **frozen**, but it does not promise that
 
 ## Things that still work after the seal
 
-All of these work with no addons at all, and none of them are bugs.
+All of these are there without loading a single addon, and none of them are bugs.
 
 - Reading whatever the protocol the code was loaded with reaches
 - `Bare.exit()`, which kills the process or the thread
 - `Bare.suspend()` and `Bare.idle()`, which jam the loop
+- Writing to `stdout`, `stderr` and the system log, which `console` does for you through the loggers a default build compiles in
+- `WebAssembly`, which turns bytes into code the engine runs, though it is handed no imports and so reaches nothing by itself
 - Making threads and using lots of memory
 - `SharedArrayBuffer` plus fast timers, which gives side channels against anything sharing the address space, including your own app
 
