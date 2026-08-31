@@ -120,7 +120,9 @@ struct bare_thread_s {
   bare_process_t *process;
   bare_runtime_t *runtime;
 
+  // Zero once the thread has been joined.
   uv_thread_t id;
+
   uv_mutex_t lock;
   uv_barrier_t ready;
 

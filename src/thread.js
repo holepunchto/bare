@@ -60,20 +60,14 @@ module.exports = exports = class Thread {
       structuredClone.encode(state, serialized)
     }
 
-    this._joined = false
-
     bare.setupThread(this, filename, source, data, stackSize)
   }
 
   get joined() {
-    return this._joined
+    return bare.threadJoined(this)
   }
 
   join() {
-    if (this._joined) return
-
-    this._joined = true
-
     bare.joinThread(this)
   }
 
@@ -81,22 +75,22 @@ module.exports = exports = class Thread {
     if (linger <= 0) linger = 0
     else linger = linger & 0xffffffff
 
-    if (!this._joined) bare.suspendThread(this, linger)
+    bare.suspendThread(this, linger)
   }
 
   wakeup(deadline = 0) {
     if (deadline <= 0) deadline = 0
     else deadline = deadline & 0xffffffff
 
-    if (!this._joined) bare.wakeupThread(this, deadline)
+    bare.wakeupThread(this, deadline)
   }
 
   resume() {
-    if (!this._joined) bare.resumeThread(this)
+    bare.resumeThread(this)
   }
 
   terminate() {
-    if (!this._joined) bare.terminateThread(this)
+    bare.terminateThread(this)
   }
 
   [Symbol.for('bare.inspect')]() {

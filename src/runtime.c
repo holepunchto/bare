@@ -759,6 +759,11 @@ bare_runtime__resume(js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static void
+bare_runtime__on_thread_finalize(js_env_t *env, void *data, void *finalize_hint) {
+  bare_thread_release((bare_runtime_t *) finalize_hint, (bare_thread_t *) data);
+}
+
 static js_value_t *
 bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -811,7 +816,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
-  err = js_wrap(env, argv[0], (void *) thread, NULL, NULL, NULL);
+  err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
   assert(err == 0);
 
   return NULL;
@@ -845,6 +850,29 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   return NULL;
+}
+
+static js_value_t *
+bare_runtime__thread_joined(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_thread_t *thread;
+  err = js_unwrap(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_thread_joined(thread), &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -1408,6 +1436,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   V("setupThread", bare_runtime__setup_thread);
   V("joinThread", bare_runtime__join_thread);
+  V("threadJoined", bare_runtime__thread_joined);
   V("suspendThread", bare_runtime__suspend_thread);
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
@@ -1497,8 +1526,6 @@ int
 bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code) {
   int err;
 
-  bare_thread_t *threads = runtime->threads;
-
   bare_process_t *previous = bare_addon_attach(runtime);
 
   if (runtime->state == bare_runtime_state_exited) goto exited;
@@ -1527,12 +1554,8 @@ exited:
 
   if (err > 0) goto done;
 
-  while (threads) {
-    bare_thread_t *thread = threads;
-
-    threads = thread->next;
-
-    bare_thread_teardown(thread);
+  while (runtime->threads) {
+    bare_thread_teardown(runtime, runtime->threads);
   }
 
   // Addons are owned by the process rather than the runtime that loaded them

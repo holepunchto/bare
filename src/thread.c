@@ -23,6 +23,17 @@
   }
 
 static void
+bare_thread__unlink(bare_runtime_t *runtime, bare_thread_t *thread) {
+  if (thread->previous) thread->previous->next = thread->next;
+  else runtime->threads = thread->next;
+
+  if (thread->next) thread->next->previous = thread->previous;
+
+  thread->previous = NULL;
+  thread->next = NULL;
+}
+
+static void
 bare_thread__entry(void *opaque) {
   int err;
 
@@ -162,22 +173,24 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
   return 0;
 }
 
+bool
+bare_thread_joined(bare_thread_t *thread) {
+  return thread->id == 0;
+}
+
 int
 bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
   int err;
+
+  if (bare_thread_joined(thread)) return 0;
 
   js_env_t *env = runtime->env;
 
   err = uv_thread_join(&thread->id);
 
+  thread->id = 0;
+
   uv_mutex_destroy(&thread->lock);
-
-  if (thread->previous) thread->previous->next = thread->next;
-  else runtime->threads = thread->next;
-
-  if (thread->next) thread->next->previous = thread->previous;
-
-  free(thread);
 
   if (err < 0) {
     err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -192,6 +205,8 @@ bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread) {
 int
 bare_thread_suspend(bare_thread_t *thread, int linger) {
   int err;
+
+  if (bare_thread_joined(thread)) return 0;
 
   uv_mutex_lock(&thread->lock);
 
@@ -210,6 +225,8 @@ int
 bare_thread_wakeup(bare_thread_t *thread, int deadline) {
   int err;
 
+  if (bare_thread_joined(thread)) return 0;
+
   uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
@@ -226,6 +243,8 @@ done:
 int
 bare_thread_resume(bare_thread_t *thread) {
   int err;
+
+  if (bare_thread_joined(thread)) return 0;
 
   uv_mutex_lock(&thread->lock);
 
@@ -244,6 +263,8 @@ int
 bare_thread_terminate(bare_thread_t *thread) {
   int err;
 
+  if (bare_thread_joined(thread)) return 0;
+
   uv_mutex_lock(&thread->lock);
 
   if (thread->exited) goto done;
@@ -258,17 +279,28 @@ done:
 }
 
 void
-bare_thread_teardown(bare_thread_t *thread) {
+bare_thread_release(bare_runtime_t *runtime, bare_thread_t *thread) {
+  if (!bare_thread_joined(thread)) return;
+
+  bare_thread__unlink(runtime, thread);
+
+  free(thread);
+}
+
+void
+bare_thread_teardown(bare_runtime_t *runtime, bare_thread_t *thread) {
   int err;
 
-  err = uv_thread_join(&thread->id);
-  assert(err == 0);
+  if (!bare_thread_joined(thread)) {
+    err = uv_thread_join(&thread->id);
+    assert(err == 0);
 
-  uv_mutex_destroy(&thread->lock);
+    thread->id = 0;
 
-  if (thread->previous) thread->previous->next = thread->next;
+    uv_mutex_destroy(&thread->lock);
+  }
 
-  if (thread->next) thread->next->previous = thread->previous;
+  bare_thread__unlink(runtime, thread);
 
   free(thread);
 }
