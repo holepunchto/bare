@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <utf.h>
@@ -76,13 +77,13 @@ static bool
 bare_runtime__check_type(js_env_t *env, js_value_t *value, const js_type_tag_t *tag, const char *name) {
   int err;
 
-  js_value_type_t type;
-  err = js_typeof(env, value, &type);
+  bool is_object;
+  err = js_is_object(env, value, &is_object);
   assert(err == 0);
 
   bool tagged = false;
 
-  if (type == js_object) {
+  if (is_object) {
     err = js_check_type_tag(env, value, tag, &tagged);
     assert(err == 0);
   }
@@ -98,6 +99,29 @@ bare_runtime__check_type(js_env_t *env, js_value_t *value, const js_type_tag_t *
 static inline bool
 bare_runtime__is_main_thread(bare_runtime_t *runtime) {
   return runtime == &runtime->process->runtime;
+}
+
+static void
+bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char *label) {
+  int err;
+
+  const char *description = "<unavailable>";
+
+  utf8_t buffer[1024];
+
+  js_value_t *string;
+  err = js_coerce_to_string(env, error, &string);
+
+  if (err == 0) {
+    err = js_get_value_string_utf8(env, string, buffer, sizeof(buffer), NULL);
+
+    if (err == 0) description = (char *) buffer;
+  }
+
+  fprintf(stderr, "%s %s\n", label, description);
+  fflush(stderr);
+
+  abort();
 }
 
 static void
@@ -130,6 +154,12 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
   err = js_get_named_property(env, exports, "onuncaughtexception", &fn);
   assert(err == 0);
 
+  bool is_function;
+  err = js_is_function(env, fn, &is_function);
+  assert(err == 0);
+
+  if (!is_function) bare_runtime__abort_with_exception(env, error, "Uncaught");
+
   js_value_t *global;
   err = js_get_global(env, &global);
   assert(err == 0);
@@ -160,6 +190,12 @@ bare_runtime__on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onunhandledrejection", &fn);
   assert(err == 0);
+
+  bool is_function;
+  err = js_is_function(env, fn, &is_function);
+  assert(err == 0);
+
+  if (!is_function) bare_runtime__abort_with_exception(env, reason, "Uncaught (in promise)");
 
   js_value_t *global;
   err = js_get_global(env, &global);
