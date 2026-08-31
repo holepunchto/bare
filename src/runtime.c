@@ -30,6 +30,71 @@
     bare_runtime__invoke_callback(runtime, callback, ##__VA_ARGS__); \
   }
 
+static const js_type_tag_t bare_runtime__thread_tag = {
+  .lower = 0x9d37d8154e8a4495,
+  .upper = 0x35018251aa364fdd,
+};
+
+static const js_type_tag_t bare_runtime__addon_tag = {
+  .lower = 0xb4e6c07f2a1d4830,
+  .upper = 0x6f9c53e8d7b24a11,
+};
+
+static bool
+bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *result, size_t len) {
+  int err;
+
+  bool is_string;
+  err = js_is_string(env, value, &is_string);
+  assert(err == 0);
+
+  if (!is_string) {
+    err = js_throw_type_error(env, NULL, "Value must be a string");
+    assert(err == 0);
+
+    return false;
+  }
+
+  size_t str_len;
+  err = js_get_value_string_utf8(env, value, NULL, 0, &str_len);
+  assert(err == 0);
+
+  if (str_len + 1 /* NULL */ > len) {
+    err = js_throw_error(env, uv_err_name(UV_ENAMETOOLONG), uv_strerror(UV_ENAMETOOLONG));
+    assert(err == 0);
+
+    return false;
+  }
+
+  err = js_get_value_string_utf8(env, value, result, len, NULL);
+  assert(err == 0);
+
+  return true;
+}
+
+static bool
+bare_runtime__check_type(js_env_t *env, js_value_t *value, const js_type_tag_t *tag, const char *name) {
+  int err;
+
+  js_value_type_t type;
+  err = js_typeof(env, value, &type);
+  assert(err == 0);
+
+  bool tagged = false;
+
+  if (type == js_object) {
+    err = js_check_type_tag(env, value, tag, &tagged);
+    assert(err == 0);
+  }
+
+  if (!tagged) {
+    err = js_throw_type_errorf(env, NULL, "Receiver must be %s", name);
+    assert(err == 0);
+  }
+
+  return tagged;
+}
+
 static inline bool
 bare_runtime__is_main_thread(bare_runtime_t *runtime) {
   return runtime == &runtime->process->runtime;
@@ -539,14 +604,16 @@ bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
   if (node == NULL) return NULL;
 
   err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
+  assert(err == 0);
+
+  err = js_add_type_tag(env, argv[0], &bare_runtime__addon_tag);
   assert(err == 0);
 
   return NULL;
@@ -567,14 +634,16 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
   if (node == NULL) return NULL;
 
   err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
+  assert(err == 0);
+
+  err = js_add_type_tag(env, argv[0], &bare_runtime__addon_tag);
   assert(err == 0);
 
   return NULL;
@@ -614,10 +683,6 @@ static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
-
   js_value_t *argv[2];
   size_t argc = 2;
 
@@ -625,6 +690,14 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__addon_tag, "an addon")) {
+    return NULL;
+  }
+
+  js_escapable_handle_scope_t *scope;
+  err = js_open_escapable_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_addon_t *node;
   err = js_unwrap(env, argv[0], (void **) &node);
@@ -779,8 +852,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 5);
 
   utf8_t filename[4096];
-  err = js_get_value_string_utf8(env, argv[1], filename, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], filename, sizeof(filename))) return NULL;
 
   bare_source_t source = {bare_source_none};
   bool has_source;
@@ -819,16 +891,15 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
   assert(err == 0);
 
+  err = js_add_type_tag(env, argv[0], &bare_runtime__thread_tag);
+  assert(err == 0);
+
   return NULL;
 }
 
 static js_value_t *
 bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
-
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
 
   bare_runtime_t *runtime;
 
@@ -839,6 +910,14 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -864,6 +943,10 @@ bare_runtime__thread_joined(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
   assert(err == 0);
@@ -879,10 +962,6 @@ static js_value_t *
 bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 2;
@@ -892,6 +971,14 @@ bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -914,10 +1001,6 @@ static js_value_t *
 bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 2;
@@ -927,6 +1010,14 @@ bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -949,10 +1040,6 @@ static js_value_t *
 bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 1;
@@ -962,6 +1049,14 @@ bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -980,10 +1075,6 @@ static js_value_t *
 bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 1;
@@ -993,6 +1084,14 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -1022,8 +1121,7 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uint32_t mode;
   err = js_get_value_uint32(env, argv[1], &mode);
@@ -1058,17 +1156,16 @@ bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uv_fs_t req;
   uv_fs_realpath(runtime->loop, &req, (char *) path, NULL);
 
-  int res = (int) req.result;
+  err = (int) req.result;
 
-  if (res < 0) {
+  if (err < 0) {
     uv_fs_req_cleanup(&req);
-    err = res;
+
     goto err;
   }
 
@@ -1102,23 +1199,33 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uv_loop_t *loop = runtime->loop;
 
   uv_fs_t req;
   uv_fs_open(loop, &req, (char *) path, UV_FS_O_RDONLY, 0, NULL);
 
-  int fd = (int) req.result;
+  err = (int) req.result;
+
   uv_fs_req_cleanup(&req);
 
-  if (fd < 0) {
-    err = fd;
+  if (err < 0) goto err;
+
+  int fd = err;
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+
+  err = (int) req.result;
+
+  if (err < 0) {
+    uv_fs_req_cleanup(&req);
+    uv_fs_close(loop, &req, fd, NULL);
+    uv_fs_req_cleanup(&req);
+
     goto err;
   }
 
-  uv_fs_fstat(loop, &req, fd, NULL);
   uv_stat_t *st = req.ptr;
 
   size_t len = st->st_size;
@@ -1137,15 +1244,18 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
   while (true) {
     uv_fs_read(loop, &req, fd, &buffer, 1, read, NULL);
 
-    int res = (int) req.result;
+    err = (int) req.result;
+
     uv_fs_req_cleanup(&req);
 
-    if (res < 0) {
+    if (err < 0) {
       uv_fs_close(loop, &req, fd, NULL);
       uv_fs_req_cleanup(&req);
-      err = res;
+
       goto err;
     }
+
+    int res = err;
 
     buffer.base += res;
     buffer.len -= (size_t) res;

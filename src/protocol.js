@@ -22,10 +22,14 @@ module.exports = new Module.Protocol({
   exists(url, type = 0) {
     switch (url.protocol) {
       case 'file:':
-        return bare.exists(
-          path.toNamespacedPath(fileURLToPath(url)),
-          type === Module.constants.types.ASSET ? bare.FILE | bare.DIR : bare.FILE
-        )
+        try {
+          return bare.exists(
+            path.toNamespacedPath(fileURLToPath(url)),
+            type === Module.constants.types.ASSET ? bare.FILE | bare.DIR : bare.FILE
+          )
+        } catch {
+          return false
+        }
       default:
         return false
     }
