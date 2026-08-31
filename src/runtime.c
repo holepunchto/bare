@@ -581,6 +581,36 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  bare_addon_seal(runtime->process);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__addons_sealed(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_addon_sealed(runtime->process), &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -729,6 +759,11 @@ bare_runtime__resume(js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static void
+bare_runtime__on_thread_finalize(js_env_t *env, void *data, void *finalize_hint) {
+  bare_thread_release((bare_runtime_t *) finalize_hint, (bare_thread_t *) data);
+}
+
 static js_value_t *
 bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -781,7 +816,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
-  err = js_wrap(env, argv[0], (void *) thread, NULL, NULL, NULL);
+  err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
   assert(err == 0);
 
   return NULL;
@@ -815,6 +850,29 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   return NULL;
+}
+
+static js_value_t *
+bare_runtime__thread_joined(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_thread_t *thread;
+  err = js_unwrap(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_thread_joined(thread), &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -1217,6 +1275,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->process = process;
   runtime->threads = NULL;
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   js_env_options_t options = {
     .version = 0,
     .memory_limit = process->options.memory_limit,
@@ -1364,6 +1424,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("loadStaticAddon", bare_runtime__load_static_addon);
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
   V("initAddon", bare_runtime__init_addon);
+  V("sealAddons", bare_runtime__seal_addons);
+  V("addonsSealed", bare_runtime__addons_sealed);
 
   V("terminate", bare_runtime__terminate);
   V("abort", bare_runtime__abort);
@@ -1374,6 +1436,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   V("setupThread", bare_runtime__setup_thread);
   V("joinThread", bare_runtime__join_thread);
+  V("threadJoined", bare_runtime__thread_joined);
   V("suspendThread", bare_runtime__suspend_thread);
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
@@ -1454,6 +1517,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
+  bare_addon_detach(previous);
+
   return 0;
 }
 
@@ -1461,7 +1526,7 @@ int
 bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code) {
   int err;
 
-  bare_thread_t *threads = runtime->threads;
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   if (runtime->state == bare_runtime_state_exited) goto exited;
 
@@ -1487,19 +1552,23 @@ bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code)
 exited:
   err = uv_run(runtime->loop, mode);
 
-  if (err > 0) return err;
+  if (err > 0) goto done;
 
-  while (threads) {
-    bare_thread_t *thread = threads;
-
-    threads = thread->next;
-
-    bare_thread_teardown(thread);
+  while (runtime->threads) {
+    bare_thread_teardown(runtime, runtime->threads);
   }
 
-  bare_addon_teardown();
+  // Addons are owned by the process rather than the runtime that loaded them
+  // and may only be unloaded once the process itself is torn down, which
+  // happens after all its threads have been joined above.
+  if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
 
-  return 0;
+  err = 0;
+
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }
 
 int
@@ -1538,11 +1607,13 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
   return 0;
 }
 
-int
-bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+static int
+bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filename, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   void *scope;
 
@@ -1559,7 +1630,7 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   assert(err == 0);
 
   js_value_t *load;
-  err = js_get_named_property(env, exports, "load", &load);
+  err = js_get_named_property(env, exports, entry, &load);
   assert(err == 0);
 
   js_value_t *global;
@@ -1607,6 +1678,8 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return 0;
 
 err:
@@ -1618,12 +1691,26 @@ err:
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return -1;
+}
+
+int
+bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+  return bare_runtime__load(runtime, "load", filename, source, result);
+}
+
+int
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source) {
+  return bare_runtime__load(runtime, "loadThread", filename, source, NULL);
 }
 
 int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   do {
     err = uv_run(runtime->loop, mode);
@@ -1632,7 +1719,7 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
     if (runtime->state == bare_runtime_state_idle) goto idle;
 
-    if (err > 0) return err;
+    if (err > 0) goto done;
 
     if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
     idle:
@@ -1649,5 +1736,10 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_runtime__on_exit(runtime);
 
-  return 0;
+  err = 0;
+
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }

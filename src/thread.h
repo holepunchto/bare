@@ -1,6 +1,7 @@
 #ifndef BARE_THREAD_H
 #define BARE_THREAD_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <uv.h>
 
@@ -11,6 +12,9 @@ bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t 
 
 int
 bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread);
+
+bool
+bare_thread_joined(bare_thread_t *thread);
 
 int
 bare_thread_suspend(bare_thread_t *thread, int linger);
@@ -25,6 +29,9 @@ int
 bare_thread_terminate(bare_thread_t *thread);
 
 void
-bare_thread_teardown(bare_thread_t *thread);
+bare_thread_release(bare_runtime_t *runtime, bare_thread_t *thread);
+
+void
+bare_thread_teardown(bare_runtime_t *runtime, bare_thread_t *thread);
 
 #endif // BARE_THREAD_H

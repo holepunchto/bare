@@ -59,6 +59,8 @@ struct bare_process_s {
 
   js_platform_t *platform;
 
+  bool sealed;
+
   struct {
     bare_before_exit_cb before_exit;
     void *before_exit_data;
@@ -118,7 +120,9 @@ struct bare_thread_s {
   bare_process_t *process;
   bare_runtime_t *runtime;
 
+  // Zero once the thread has been joined.
   uv_thread_t id;
+
   uv_mutex_t lock;
   uv_barrier_t ready;
 
@@ -138,7 +142,17 @@ struct bare_addon_s {
 
   bare_module_register_cb exports;
 
+  // The process that loaded the addon, or `NULL` if the addon was statically
+  // linked and therefore isn't owned by any single process.
+  bare_process_t *owner;
+
   uv_lib_t lib;
+
+  // Whether the addon holds the reference to `lib` that loading it took. A
+  // library that depends on another may register several addons against a
+  // single load, all of them sharing the one reference, so only one of them may
+  // release it again.
+  bool unloads;
 
   bare_addon_t *next;
 };
