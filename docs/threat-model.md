@@ -193,3 +193,53 @@ If you need to stop any of this, the seal will not do it for you and you will ha
 - Harm from powers the embedder chose to grant
 
 Engine and `libuv` bugs go upstream, and our job is to ship the fixes.
+
+## Common pitfalls
+
+These came out of a pass over the addons Bare compiles in. Nothing here is a new rule. It is one old rule turning up in the same few shapes, which is that a binding is reachable from JavaScript and the JavaScript in front of it is not a wall.
+
+Most of it is the fourth thing on the list of what is left to worry about, memory bugs in our own C. The rest is power handed out by accident. Anyone writing or reviewing an addon we compile in should read it, because a builtin's bugs are Bare's bugs.
+
+### At the boundary
+
+**Trusting the JavaScript wrapper.** The binding is an object like any other, and whoever holds it calls it directly, in any order, with anything. The checks on the JavaScript side are there for callers who meant well. A binding validates its own arguments or it is not validated.
+
+**Asserting on what JavaScript controls.** An assertion says this cannot happen. Input can always happen. Assert on it and a bad argument aborts the process, and in a release build the assertion is gone and the failure is ignored instead, so the code runs on a value it never got. Assert on engine calls that cannot fail once the input is checked. Raise for everything else.
+
+**No type tag on a native-backed object.** Without a tag, any object can be passed as the receiver, and the binding unwraps a pointer out of something that never had one. Tag every native-backed class. Check the tag at every entry point, and check it before the unwrap.
+
+**Turning three answers into two.** A check that can fail has three answers: yes, no, and could not tell. Fold the third into either of the others and you have answered without the evidence. You have also dropped an exception, and the next call trips over it. This is how an object that was never tagged passes for one that was.
+
+**Assuming a JavaScript hook is still a function.** Handlers hang off objects that JavaScript can write to. Check that what you are about to call is callable, and know where to go when it is not.
+
+### In the C
+
+**Checking bounds after the pointer is made.** `&buf[offset]` is already out of bounds by the time anything looks at `offset`. Slice first and hand back a checked pointer, so there is no unchecked one to reach for.
+
+**Checking bounds in a width that wraps.** Add in a width the sum cannot escape, and compare a start as a signed 64 bit value, so a position past the end cannot wrap back into range where `size_t` is narrower.
+
+**Two call paths for one function.** A typed callback and an untyped one are two C functions behind one JavaScript function, and the caller picks which runs. Check different things in each and the weaker one is the real one. Both need the same checks in the same order, so the same call fails the same way either way. A typed callback also runs without a handle scope and cannot raise at all, so it reports back and lets the untyped path raise.
+
+**Running JavaScript while holding a raw pointer.** A pointer into a string or a backing store is good until the next thing that can run JavaScript. A getter, a proxy trap, a `toString()`, an array read, an allocation that sets off a collection: any of them can move what you hold, free it, or detach it. Read everything first and make the values afterwards, or take a copy.
+
+**Reaching an attacker's object with plain property access.** `object.constructor`, `object[key]`, `Symbol.toStringTag` and `for...in` all run code the object chose. That is worst on a diagnostic path, where looking at a value is meant to cost nothing and `console` points it at anything at all. Read own property descriptors, and expect whatever you do call to throw.
+
+**Allocating to a size that came from JavaScript.** A length from JavaScript is a request rather than a size. Put a bound on it. Check it against the platform's own limits before you allocate, not after the allocation fails. Handle the failure, because an attacker can get there on purpose. Use `calloc()` for arrays of handles, so a half filled one does not read as garbage.
+
+**Leaking on the error path.** Nobody exercises the failure branch. A string view still held when an allocation fails, a handle never released, half a structure left behind. Give back what you took, in reverse.
+
+**Truncating into a fixed buffer.** Measure first and turn down what does not fit. Truncating turns one name into another name, and the decision after it is made about something the caller never passed.
+
+### In the design
+
+**Falling back to a default.** A default module loader stood in when a dynamic import had no referrer, which handed code a protocol nobody gave it. A fallback is a grant. When the lookup fails, fail.
+
+**Caches that carry power.** A module cache entry holds the loader that read it, protocol and builtins and all. Share one cache between loaders that do not reach as far as each other and the short one gets the long one's reach. Anything shared and keyed by name is a channel, so check that what comes out was put there by someone who reaches as far as you do.
+
+**Handing out raw addresses.** Backing stores and externals used to cross as pointers. That gives the address away, and it can be forged too, because a number is a number and a serialized value passes through JavaScript on its way between threads. Mint an opaque, random, single use token instead. Keep the mapping in the process, and check the type when the token comes back. Inspection follows the same rule: label an external, never print it.
+
+**A second one of something meant to be single.** An `init()` that could be called twice. A second module context in one environment. An internal object that got out into JavaScript. Each one is a second handle on state that was written believing it was alone. Take the slot once and turn down the next, and keep internals away from JavaScript to begin with.
+
+**Splicing a value into structured text.** Building a URL by putting a value into the serialized string let a value carrying a delimiter land in a component it was never meant to reach. Encode or turn down whatever would let it escape its component, then reparse and let the parser have the last word.
+
+**Keeping a capability nobody uses.** One addon carried a tagging capability with no callers. Unused surface is still surface, and it is the cheapest kind to remove.
