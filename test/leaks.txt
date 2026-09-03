@@ -1,3 +1,4 @@
+leak:js_add_finalizer
 leak:js_create_function
 leak:js_create_typed_function
 leak:js_create_external

@@ -91,22 +91,21 @@ const bare = command(
     }
 
     if (flags.print) {
-      return Module.load(parentURL, `console.log(${flags.print})`, {
-        protocol,
-        cache
-      })
+      return Module.load(parentURL, `console.log(${flags.print})`, { protocol, cache })
     }
 
     if (args.filename) {
       return Module.load(args.filename, { protocol, cache })
     }
 
-    require('bare-repl')
+    const repl = require('bare-repl')
       .start({ useGlobal: true })
       .on('exit', () => {
         if (server === null) Bare.exit()
         else server.close(() => Bare.exit())
       })
+
+    repl.context.require = Module.createRequire(parentURL, { protocol, cache })
 
     function inspect() {
       if (server !== null) return
