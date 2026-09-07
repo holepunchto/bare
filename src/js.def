@@ -16,8 +16,11 @@ EXPORTS
 	js_coerce_to_number
 	js_coerce_to_object
 	js_coerce_to_string
+	js_compile_function
+	js_compile_function_with_code_cache
 	js_connect_inspector
 	js_create_array
+	js_create_array_with_elements
 	js_create_array_with_length
 	js_create_arraybuffer
 	js_create_arraybuffer_with_backing_store
@@ -38,11 +41,14 @@ EXPORTS
 	js_create_external_string_utf16le
 	js_create_external_string_utf8
 	js_create_function
+	js_create_function_code_cache
 	js_create_function_with_source
 	js_create_inspector
 	js_create_int32
 	js_create_int64
 	js_create_module
+	js_create_module_code_cache
+	js_create_module_with_code_cache
 	js_create_object
 	js_create_object_with_properties
 	js_create_object_with_prototype
@@ -54,6 +60,7 @@ EXPORTS
 	js_create_range_error
 	js_create_reference
 	js_create_reference_error
+	js_create_script_code_cache
 	js_create_sharedarraybuffer
 	js_create_sharedarraybuffer_with_backing_store
 	js_create_string_latin1
@@ -116,6 +123,7 @@ EXPORTS
 	js_get_named_property
 	js_get_new_target
 	js_get_null
+	js_get_object_type
 	js_get_platform_identifier
 	js_get_platform_limits
 	js_get_platform_loop
@@ -159,9 +167,11 @@ EXPORTS
 	js_is_arraybuffer
 	js_is_async_function
 	js_is_bigint
+	js_is_bigint_object
 	js_is_bigint64array
 	js_is_biguint64array
 	js_is_boolean
+	js_is_boolean_object
 	js_is_dataview
 	js_is_date
 	js_is_delegate
@@ -184,6 +194,7 @@ EXPORTS
 	js_is_module_namespace
 	js_is_null
 	js_is_number
+	js_is_number_object
 	js_is_object
 	js_is_promise
 	js_is_proxy
@@ -192,7 +203,9 @@ EXPORTS
 	js_is_set_iterator
 	js_is_sharedarraybuffer
 	js_is_string
+	js_is_string_object
 	js_is_symbol
+	js_is_symbol_object
 	js_is_typedarray
 	js_is_uint16array
 	js_is_uint32
@@ -206,13 +219,17 @@ EXPORTS
 	js_is_wrapped
 	js_new_instance
 	js_on_dynamic_import
+	js_on_function_dynamic_import
 	js_on_inspector_paused
 	js_on_inspector_response
+	js_on_module_dynamic_import
+	js_on_script_dynamic_import
 	js_on_uncaught_exception
 	js_on_unhandled_rejection
 	js_open_escapable_handle_scope
 	js_open_handle_scope
 	js_prepare_script
+	js_prepare_script_with_code_cache
 	js_queue_microtask
 	js_queue_microtask_with_callback
 	js_ref_threadsafe_function
