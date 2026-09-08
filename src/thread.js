@@ -3,24 +3,23 @@
 const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
-  constructor(filename, source, opts, callback) {
-    if (typeof filename !== 'string') {
+  constructor(filename, source, opts) {
+    let callback = null
+
+    if (typeof source === 'function') {
+      callback = source
+      source = null
+    } else if (typeof opts === 'function') {
       callback = opts
       opts = source
-      source = filename
-      filename = '<thread>'
+      source = null
     }
 
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = {}
-    } else {
-      opts = opts || {}
-    }
+    opts = opts || {}
 
     let { data = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
 
-    if (callback) {
+    if (callback !== null) {
       source = `(${callback.toString()})(Bare.Thread.self.data)`
     }
 

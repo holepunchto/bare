@@ -76,8 +76,6 @@ interface Thread {
 
 declare class Thread {
   constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
-  constructor(callback: ThreadCallback)
-  constructor(options: ThreadOptions, callback: ThreadCallback)
   constructor(filename: string, callback: ThreadCallback)
   constructor(filename: string, options: ThreadOptions, callback: ThreadCallback)
 }
