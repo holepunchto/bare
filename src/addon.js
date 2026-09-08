@@ -92,11 +92,7 @@ module.exports = exports = class Addon {
       )
     }
 
-    const {
-      referrer = null,
-      protocol = referrer ? referrer.protocol : defaultProtocol,
-      resolutions = referrer ? referrer.resolutions : null
-    } = opts
+    const { referrer = null, protocol = referrer ? referrer.protocol : defaultProtocol } = opts
 
     const candidates = []
 
@@ -105,7 +101,7 @@ module.exports = exports = class Addon {
     for (const resolution of resolve(
       specifier,
       parentURL,
-      { host, builtins, resolutions, conditions, extensions, engines },
+      { host, builtins, conditions, extensions, engines },
       readPackage
     )) {
       candidates.push(resolution)
