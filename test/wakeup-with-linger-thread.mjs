@@ -1,46 +1,68 @@
 import t from 'bare-tap'
+import bundle from './helpers/bundle.js'
 const { Thread } = Bare
 
 t.plan(1)
 
-const thread = new Thread(import.meta.url, async () => {
-  const { default: tap } = await import('bare-tap')
+const ready = new Int32Array(new SharedArrayBuffer(4))
 
-  const t = tap.subtest()
+const thread = new Thread(
+  'bare:/thread.bundle',
+  bundle(new URL(import.meta.url), async () => {
+    const { default: tap } = await import('bare-tap')
 
-  t.plan(6)
+    const ready = new Int32Array(Bare.Thread.self.data)
 
-  let resumed = false
+    const t = tap.subtest()
 
-  Bare.on('suspend', onsuspend)
-    .on('idle', onidle)
-    .on('wakeup', onwakeup)
-    .on('resume', onresume)
-    .prependListener('exit', onexit)
+    t.plan(6)
 
-  function onsuspend() {
-    t.pass('suspended')
+    let resumed = false
+
+    Bare.on('suspend', onsuspend)
+      .on('idle', onidle)
+      .on('wakeup', onwakeup)
+      .on('resume', onresume)
+      .prependListener('exit', onexit)
+
+    Atomics.store(ready, 0, 1)
+    Atomics.notify(ready, 0)
+
+    Atomics.wait(ready, 0, 1)
+
+    function onsuspend() {
+      t.pass('suspended')
+    }
+
+    function onidle() {
+      t.pass('idled')
+    }
+
+    function onwakeup() {
+      t.pass('woke up')
+    }
+
+    function onresume() {
+      t.pass('resumed')
+      resumed = true
+    }
+
+    function onexit() {
+      t.ok(resumed, 'resumed before exit')
+    }
+  }),
+  {
+    data: ready.buffer
   }
+)
 
-  function onidle() {
-    t.pass('idled')
-  }
-
-  function onwakeup() {
-    t.pass('woke up')
-  }
-
-  function onresume() {
-    t.pass('resumed')
-    resumed = true
-  }
-
-  function onexit() {
-    t.ok(resumed, 'resumed before exit')
-  }
-})
+Atomics.wait(ready, 0, 0)
 
 thread.suspend()
+
+Atomics.store(ready, 0, 2)
+Atomics.notify(ready, 0)
+
 await t.sleep(500)
 
 thread.wakeup(1000)

@@ -53,10 +53,13 @@ declare namespace Addon {
   export const host: string
 }
 
+type ThreadSource = string | Buffer
+
+type ThreadCallback = (data: unknown) => unknown
+
 interface ThreadOptions {
   data?: unknown
   transfer?: unknown[]
-  source?: string | Buffer
   encoding?: BufferEncoding
   stackSize?: number
 }
@@ -72,8 +75,11 @@ interface Thread {
 }
 
 declare class Thread {
-  constructor(options?: ThreadOptions)
-  constructor(filename: string, options?: ThreadOptions)
+  constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
+  constructor(callback: ThreadCallback)
+  constructor(options: ThreadOptions, callback: ThreadCallback)
+  constructor(filename: string, callback: ThreadCallback)
+  constructor(filename: string, options: ThreadOptions, callback: ThreadCallback)
 }
 
 declare namespace Thread {

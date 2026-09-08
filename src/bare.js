@@ -125,7 +125,7 @@ Object.defineProperty(global, 'Bare', {
   value: exports,
   enumerable: true,
   writable: false,
-  configurable: true
+  configurable: false
 })
 
 /**
@@ -171,7 +171,11 @@ require('bare-console/global')
  */
 
 bare.onuncaughtexception = function onuncaughtexception(err) {
-  if (exports.emit('uncaughtException', err)) return
+  try {
+    if (exports.emit('uncaughtException', err)) return
+  } catch (e) {
+    err = e
+  }
 
   try {
     console.error(`Uncaught %o`, err)
@@ -181,7 +185,11 @@ bare.onuncaughtexception = function onuncaughtexception(err) {
 }
 
 bare.onunhandledrejection = function onunhandledrejection(reason, promise) {
-  if (exports.emit('unhandledRejection', reason, promise)) return
+  try {
+    if (exports.emit('unhandledRejection', reason, promise)) return
+  } catch (e) {
+    return bare.onuncaughtexception(e)
+  }
 
   try {
     console.error(`Uncaught (in promise) %o`, reason)
@@ -227,6 +235,20 @@ const protocol = require('./protocol')
 bare.exit = exports.exit
 
 bare.load = function load(filename, source) {
+  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+    protocol,
+    cache: Object.create(null)
+  })
+}
+
+bare.loadThread = function loadThread(filename, source) {
+  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+    protocol: new Module.Protocol(),
+    cache: Object.create(null)
+  })
+}
+
+function toURL(filename) {
   let url
 
   if (startsWithWindowsDriveLetter(filename)) {
@@ -237,8 +259,33 @@ bare.load = function load(filename, source) {
 
   if (url === null) url = URL.pathToFileURL(filename)
 
-  return Module.load(url, source ? Buffer.from(source) : null, {
-    protocol,
-    cache: Object.create(null)
-  })
+  return url
 }
+
+/**
+ * Step 10:
+ * Lock down the namespace now that everything is in place.
+ */
+
+Object.defineProperties(exports, {
+  Addon: {
+    value: exports.Addon,
+    enumerable: true,
+    writable: false,
+    configurable: false
+  },
+  Thread: {
+    value: exports.Thread,
+    enumerable: true,
+    writable: false,
+    configurable: false
+  },
+  IPC: {
+    value: exports.IPC,
+    enumerable: true,
+    writable: true,
+    configurable: false
+  }
+})
+
+Object.preventExtensions(exports)

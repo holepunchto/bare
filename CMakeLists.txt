@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#56f14ed" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#72de271" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -26,7 +26,7 @@ set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScrip
 fetch_package("github:libuv/libuv@1.52.1")
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#7a4e608")
+fetch_package("github:holepunchto/libutf#a1ceca8")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
@@ -35,7 +35,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 146
+    CHECKOUT 159
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -72,7 +72,10 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         # The imported static library always links the release version of the
         # static CRT; explicitly tell MSVC to not link the release version for
         # debug builds and vice versa.
-        /NODEFAULTLIB:libcmt$<$<CONFIG:Release>:d>
+        #
+        # Keyed on Debug rather than Release so that it stays the complement of
+        # the /DEFAULTLIB above.
+        /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
     )
   else()
     target_compile_options(
@@ -275,6 +278,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 
@@ -308,6 +312,7 @@ if(target MATCHES "win32")
       src/bare.def
       src/js.def
       src/napi.def
+      src/uv.def
   )
 endif()
 

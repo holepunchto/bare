@@ -50,4 +50,12 @@ module.exports = exports = class Addon {
   static get host() {
     return host
   }
+
+  static get sealed() {
+    return bare.addonsSealed()
+  }
+
+  static seal() {
+    bare.sealAddons()
+  }
 }

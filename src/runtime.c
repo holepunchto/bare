@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <utf.h>
@@ -30,9 +31,97 @@
     bare_runtime__invoke_callback(runtime, callback, ##__VA_ARGS__); \
   }
 
+static const js_type_tag_t bare_runtime__thread_tag = {
+  .lower = 0x9d37d8154e8a4495,
+  .upper = 0x35018251aa364fdd,
+};
+
+static const js_type_tag_t bare_runtime__addon_tag = {
+  .lower = 0xb4e6c07f2a1d4830,
+  .upper = 0x6f9c53e8d7b24a11,
+};
+
+static bool
+bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *result, size_t len) {
+  int err;
+
+  bool is_string;
+  err = js_is_string(env, value, &is_string);
+  assert(err == 0);
+
+  if (!is_string) {
+    err = js_throw_type_error(env, NULL, "Value must be a string");
+    assert(err == 0);
+
+    return false;
+  }
+
+  size_t str_len;
+  err = js_get_value_string_utf8(env, value, NULL, 0, &str_len);
+  assert(err == 0);
+
+  if (str_len + 1 /* NULL */ > len) {
+    err = js_throw_error(env, uv_err_name(UV_ENAMETOOLONG), uv_strerror(UV_ENAMETOOLONG));
+    assert(err == 0);
+
+    return false;
+  }
+
+  err = js_get_value_string_utf8(env, value, result, len, NULL);
+  assert(err == 0);
+
+  return true;
+}
+
+static bool
+bare_runtime__check_type(js_env_t *env, js_value_t *value, const js_type_tag_t *tag, const char *name) {
+  int err;
+
+  bool is_object;
+  err = js_is_object(env, value, &is_object);
+  assert(err == 0);
+
+  bool tagged = false;
+
+  if (is_object) {
+    err = js_check_type_tag(env, value, tag, &tagged);
+    assert(err == 0);
+  }
+
+  if (!tagged) {
+    err = js_throw_type_errorf(env, NULL, "Receiver must be %s", name);
+    assert(err == 0);
+  }
+
+  return tagged;
+}
+
 static inline bool
 bare_runtime__is_main_thread(bare_runtime_t *runtime) {
   return runtime == &runtime->process->runtime;
+}
+
+static void
+bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char *label) {
+  int err;
+
+  const char *description = "<unavailable>";
+
+  utf8_t buffer[1024];
+
+  js_value_t *string;
+  err = js_coerce_to_string(env, error, &string);
+
+  if (err == 0) {
+    err = js_get_value_string_utf8(env, string, buffer, sizeof(buffer), NULL);
+
+    if (err == 0) description = (char *) buffer;
+  }
+
+  fprintf(stderr, "%s %s\n", label, description);
+  fflush(stderr);
+
+  abort();
 }
 
 static void
@@ -40,6 +129,18 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
   int err;
 
   bare_runtime_t *runtime = data;
+
+  // The exception may still be pending if it was raised while unwinding a
+  // nested call into JavaScript, in which case the calls below would all fail.
+  bool pending;
+  err = js_is_exception_pending(env, &pending);
+  assert(err == 0);
+
+  if (pending) {
+    js_value_t *ignore;
+    err = js_get_and_clear_last_exception(env, &ignore);
+    assert(err == 0);
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -52,6 +153,12 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onuncaughtexception", &fn);
   assert(err == 0);
+
+  bool is_function;
+  err = js_is_function(env, fn, &is_function);
+  assert(err == 0);
+
+  if (!is_function) bare_runtime__abort_with_exception(env, error, "Uncaught");
 
   js_value_t *global;
   err = js_get_global(env, &global);
@@ -83,6 +190,12 @@ bare_runtime__on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value
   js_value_t *fn;
   err = js_get_named_property(env, exports, "onunhandledrejection", &fn);
   assert(err == 0);
+
+  bool is_function;
+  err = js_is_function(env, fn, &is_function);
+  assert(err == 0);
+
+  if (!is_function) bare_runtime__abort_with_exception(env, reason, "Uncaught (in promise)");
 
   js_value_t *global;
   err = js_get_global(env, &global);
@@ -503,14 +616,16 @@ bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
 
   if (node == NULL) return NULL;
 
   err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
+  assert(err == 0);
+
+  err = js_add_type_tag(env, argv[0], &bare_runtime__addon_tag);
   assert(err == 0);
 
   return NULL;
@@ -531,8 +646,7 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t specifier[4096];
-  err = js_get_value_string_utf8(env, argv[1], specifier, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
@@ -541,16 +655,45 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   err = js_wrap(env, argv[0], (void *) node, NULL, NULL, NULL);
   assert(err == 0);
 
+  err = js_add_type_tag(env, argv[0], &bare_runtime__addon_tag);
+  assert(err == 0);
+
   return NULL;
+}
+
+static js_value_t *
+bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  bare_addon_seal(runtime->process);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__addons_sealed(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_addon_sealed(runtime->process), &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
-
-  js_escapable_handle_scope_t *scope;
-  err = js_open_escapable_handle_scope(env, &scope);
-  assert(err == 0);
 
   js_value_t *argv[2];
   size_t argc = 2;
@@ -559,6 +702,14 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__addon_tag, "an addon")) {
+    return NULL;
+  }
+
+  js_escapable_handle_scope_t *scope;
+  err = js_open_escapable_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_addon_t *node;
   err = js_unwrap(env, argv[0], (void **) &node);
@@ -693,6 +844,11 @@ bare_runtime__resume(js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+static void
+bare_runtime__on_thread_finalize(js_env_t *env, void *data, void *finalize_hint) {
+  bare_thread_release((bare_runtime_t *) finalize_hint, (bare_thread_t *) data);
+}
+
 static js_value_t *
 bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -708,8 +864,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 5);
 
   utf8_t filename[4096];
-  err = js_get_value_string_utf8(env, argv[1], filename, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[1], filename, sizeof(filename))) return NULL;
 
   bare_source_t source = {bare_source_none};
   bool has_source;
@@ -745,7 +900,10 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
-  err = js_wrap(env, argv[0], (void *) thread, NULL, NULL, NULL);
+  err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
+  assert(err == 0);
+
+  err = js_add_type_tag(env, argv[0], &bare_runtime__thread_tag);
   assert(err == 0);
 
   return NULL;
@@ -754,10 +912,6 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
 static js_value_t *
 bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
-
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
 
   bare_runtime_t *runtime;
 
@@ -768,6 +922,14 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -782,12 +944,35 @@ bare_runtime__join_thread(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
+bare_runtime__thread_joined(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
+  assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  bare_thread_t *thread;
+  err = js_unwrap(env, argv[0], (void **) &thread);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_thread_joined(thread), &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
+bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
+  int err;
 
   bare_runtime_t *runtime;
 
@@ -798,6 +983,14 @@ bare_runtime__suspend_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -820,10 +1013,6 @@ static js_value_t *
 bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 2;
@@ -833,6 +1022,14 @@ bare_runtime__wakeup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 2);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -855,10 +1052,6 @@ static js_value_t *
 bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 1;
@@ -868,6 +1061,14 @@ bare_runtime__resume_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -886,10 +1087,6 @@ static js_value_t *
 bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
   bare_runtime_t *runtime;
 
   size_t argc = 1;
@@ -899,6 +1096,14 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   assert(argc == 1);
+
+  if (!bare_runtime__check_type(env, argv[0], &bare_runtime__thread_tag, "a thread")) {
+    return NULL;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
 
   bare_thread_t *thread;
   err = js_unwrap(env, argv[0], (void **) &thread);
@@ -928,8 +1133,7 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uint32_t mode;
   err = js_get_value_uint32(env, argv[1], &mode);
@@ -964,17 +1168,16 @@ bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uv_fs_t req;
   uv_fs_realpath(runtime->loop, &req, (char *) path, NULL);
 
-  int res = (int) req.result;
+  err = (int) req.result;
 
-  if (res < 0) {
+  if (err < 0) {
     uv_fs_req_cleanup(&req);
-    err = res;
+
     goto err;
   }
 
@@ -1008,23 +1211,33 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   utf8_t path[4096];
-  err = js_get_value_string_utf8(env, argv[0], path, 4096, NULL);
-  assert(err == 0);
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
 
   uv_loop_t *loop = runtime->loop;
 
   uv_fs_t req;
   uv_fs_open(loop, &req, (char *) path, UV_FS_O_RDONLY, 0, NULL);
 
-  int fd = (int) req.result;
+  err = (int) req.result;
+
   uv_fs_req_cleanup(&req);
 
-  if (fd < 0) {
-    err = fd;
+  if (err < 0) goto err;
+
+  int fd = err;
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+
+  err = (int) req.result;
+
+  if (err < 0) {
+    uv_fs_req_cleanup(&req);
+    uv_fs_close(loop, &req, fd, NULL);
+    uv_fs_req_cleanup(&req);
+
     goto err;
   }
 
-  uv_fs_fstat(loop, &req, fd, NULL);
   uv_stat_t *st = req.ptr;
 
   size_t len = st->st_size;
@@ -1043,15 +1256,18 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
   while (true) {
     uv_fs_read(loop, &req, fd, &buffer, 1, read, NULL);
 
-    int res = (int) req.result;
+    err = (int) req.result;
+
     uv_fs_req_cleanup(&req);
 
-    if (res < 0) {
+    if (err < 0) {
       uv_fs_close(loop, &req, fd, NULL);
       uv_fs_req_cleanup(&req);
-      err = res;
+
       goto err;
     }
+
+    int res = err;
 
     buffer.base += res;
     buffer.len -= (size_t) res;
@@ -1180,6 +1396,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->loop = loop;
   runtime->process = process;
   runtime->threads = NULL;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   js_env_options_t options = {
     .version = 0,
@@ -1319,6 +1537,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("loadStaticAddon", bare_runtime__load_static_addon);
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
   V("initAddon", bare_runtime__init_addon);
+  V("sealAddons", bare_runtime__seal_addons);
+  V("addonsSealed", bare_runtime__addons_sealed);
 
   V("terminate", bare_runtime__terminate);
   V("abort", bare_runtime__abort);
@@ -1329,6 +1549,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
 
   V("setupThread", bare_runtime__setup_thread);
   V("joinThread", bare_runtime__join_thread);
+  V("threadJoined", bare_runtime__thread_joined);
   V("suspendThread", bare_runtime__suspend_thread);
   V("wakeupThread", bare_runtime__wakeup_thread);
   V("resumeThread", bare_runtime__resume_thread);
@@ -1409,6 +1630,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
+  bare_addon_detach(previous);
+
   return 0;
 }
 
@@ -1416,7 +1639,7 @@ int
 bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code) {
   int err;
 
-  bare_thread_t *threads = runtime->threads;
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   if (runtime->state == bare_runtime_state_exited) goto exited;
 
@@ -1442,19 +1665,23 @@ bare_runtime_teardown(bare_runtime_t *runtime, uv_run_mode mode, int *exit_code)
 exited:
   err = uv_run(runtime->loop, mode);
 
-  if (err > 0) return err;
+  if (err > 0) goto done;
 
-  while (threads) {
-    bare_thread_t *thread = threads;
-
-    threads = thread->next;
-
-    bare_thread_teardown(thread);
+  while (runtime->threads) {
+    bare_thread_teardown(runtime, runtime->threads);
   }
 
-  bare_addon_teardown();
+  // Addons are owned by the process rather than the runtime that loaded them
+  // and may only be unloaded once the process itself is torn down, which
+  // happens after all its threads have been joined above.
+  if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
 
-  return 0;
+  err = 0;
+
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }
 
 int
@@ -1493,11 +1720,13 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
   return 0;
 }
 
-int
-bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+static int
+bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filename, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   void *scope;
 
@@ -1514,7 +1743,7 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
   assert(err == 0);
 
   js_value_t *load;
-  err = js_get_named_property(env, exports, "load", &load);
+  err = js_get_named_property(env, exports, entry, &load);
   assert(err == 0);
 
   js_value_t *global;
@@ -1562,6 +1791,8 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return 0;
 
 err:
@@ -1573,12 +1804,26 @@ err:
     assert(err == 0);
   }
 
+  bare_addon_detach(previous);
+
   return -1;
+}
+
+int
+bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
+  return bare_runtime__load(runtime, "load", filename, source, result);
+}
+
+int
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source) {
+  return bare_runtime__load(runtime, "loadThread", filename, source, NULL);
 }
 
 int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   do {
     err = uv_run(runtime->loop, mode);
@@ -1587,7 +1832,7 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
     if (runtime->state == bare_runtime_state_idle) goto idle;
 
-    if (err > 0) return err;
+    if (err > 0) goto done;
 
     if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
     idle:
@@ -1604,5 +1849,10 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_runtime__on_exit(runtime);
 
-  return 0;
+  err = 0;
+
+done:
+  bare_addon_detach(previous);
+
+  return err;
 }
