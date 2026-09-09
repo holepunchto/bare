@@ -410,9 +410,6 @@ err:
   return NULL;
 }
 
-// The seal is process-wide rather than specific to addons: it freezes the
-// context registry along with the addon list, so that one call establishes the
-// whole boundary and neither half can be sealed without the other.
 void
 bare_addon_seal(bare_process_t *process) {
   uv_once(&bare_addon__guard, bare_addon__on_init);
