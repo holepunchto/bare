@@ -9,6 +9,9 @@
 // Publish handles that only the embedder can produce and retrieve them from an
 // addon as it initialises, which is the point at which an addon needs them and
 // has nothing but the thread it runs on to identify the process that loaded it.
+//
+// Entries last for as long as the process, so a destructor only ever runs when
+// it is torn down.
 
 static int bare_test__value = 42;
 
@@ -31,6 +34,9 @@ bare_test__exports(js_env_t *env, js_value_t *exports) {
   bare_test__missing = bare_context_get("bare.test.missing.v1", &missing);
 
   assert(missing == NULL);
+
+  // A key may be tested for without retrieving it.
+  assert(bare_context_get("bare.test.value.v1", NULL) == 0);
 
   return exports;
 }
@@ -69,9 +75,11 @@ main(int argc, char *argv[]) {
   assert(e == 0);
 
   // No process is running on the thread, so there is nothing to resolve a
-  // lookup against.
+  // lookup against. That is reported apart from a missing key, which an addon
+  // would otherwise degrade over rather than notice it asked from the wrong
+  // thread.
   void *value = NULL;
-  assert(bare_context_get("bare.test.value.v1", &value) < 0);
+  assert(bare_context_get("bare.test.value.v1", &value) == -2);
   assert(value == NULL);
 
   bare_t *bare;
@@ -86,20 +94,8 @@ main(int argc, char *argv[]) {
   e = bare_context_set(bare, "bare.test.value.v1", NULL, NULL);
   assert(e < 0);
 
-  // Deleting an entry that was never published is an ordinary failure.
-  e = bare_context_delete(bare, "bare.test.missing.v1");
-  assert(e < 0);
-
-  // Published and deleted again before anything was loaded, which runs the
-  // destructor with the key it was published under.
-  e = bare_context_set(bare, "bare.test.transient.v1", &bare_test__value, bare_test__on_destroy);
-  assert(e == 0);
-
-  e = bare_context_delete(bare, "bare.test.transient.v1");
-  assert(e == 0);
-
-  assert(bare_test__destroyed == 1);
-  assert(strcmp(bare_test__destroyed_key, "bare.test.transient.v1") == 0);
+  // Nothing has been torn down, so no destructor has run.
+  assert(bare_test__destroyed == 0);
 
   // Run the script from within the working directory so that it may require the
   // modules it needs.
@@ -124,7 +120,7 @@ main(int argc, char *argv[]) {
   // nothing under a key that was never published.
   assert(bare_test__found == 0);
   assert(bare_test__observed == (void *) &bare_test__value);
-  assert(bare_test__missing < 0);
+  assert(bare_test__missing == -1);
 
   int exit_code = 0;
 
@@ -133,7 +129,7 @@ main(int argc, char *argv[]) {
   assert(exit_code == 0);
 
   // Tearing down the process destroys the entry that was still published.
-  assert(bare_test__destroyed == 2);
+  assert(bare_test__destroyed == 1);
   assert(strcmp(bare_test__destroyed_key, "bare.test.value.v1") == 0);
 
   e = js_destroy_platform(platform);

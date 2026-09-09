@@ -695,10 +695,6 @@ bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
 
-  // Sealed before the addons so that an addon still loading can't publish
-  // context that the seal was meant to have frozen.
-  bare_context_seal(runtime->process);
-
   bare_addon_seal(runtime->process);
 
   return NULL;

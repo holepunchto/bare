@@ -107,10 +107,6 @@ bare_exit(bare_t *bare, int exit_code) {
 
 int
 bare_seal(bare_t *bare) {
-  // Sealed before the addons so that an addon still loading can't publish
-  // context that the seal was meant to have frozen.
-  bare_context_seal(&bare->process);
-
   bare_addon_seal(&bare->process);
 
   return 0;

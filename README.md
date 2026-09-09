@@ -189,7 +189,7 @@ This is a one-way operation that cannot be undone for the lifetime of the proces
 
 The seal applies to the process alone. Embedders running several Bare processes within the same operating system process may seal each of them independently, and sealing one has no effect on the addons the others may load. Addons are likewise owned by the process that loaded them and are unloaded when it is torn down.
 
-Sealing also freezes the [context](#context) registry that embedders publish handles to, which may neither gain nor lose an entry once sealed.
+Sealing also freezes the [context](#context) registry that embedders publish handles to, after which nothing further may be published to it.
 
 For what sealing guarantees, what it deliberately leaves alone, and what embedders are expected to do on top of it, see [`docs/threat-model.md`](docs/threat-model.md).
 
@@ -304,7 +304,7 @@ If `source` is `NULL`, the contents of `filename` will instead be read at runtim
 
 Addons sometimes need a handle that only the embedder can produce, such as a `JavaVM *` on Android. As an addon is only ever passed a JavaScript environment and its exports, it has no route back to the embedder that started the process. The context registry provides that by having embedders publish opaque handles under agreed keys and addons retrieve them by key.
 
-Embedders publish with `bare_context_set()`, which takes an optional destructor that is called when the entry is deleted and for any entry still published when the process is torn down:
+Embedders publish with `bare_context_set()`, which takes an optional destructor that is called when the process is torn down. The destructor runs on the main thread once every thread has been joined and the JavaScript environment has been destroyed, so it is a place to release a handle rather than to run anything that needs the environment:
 
 ```c
 bare_t *bare;
@@ -330,11 +330,13 @@ addon_exports(js_env_t *env, js_value_t *exports) {
 }
 ```
 
-A missing key is an ordinary outcome rather than a fatal one, and addons are expected to degrade when the handle they wanted was not published.
+A missing key is an ordinary outcome rather than a fatal one, and addons are expected to degrade when the handle they wanted was not published. Being asked from the wrong thread is not, so the two are reported apart: an addon retrieving the handle from a thread of its own gets `-2` rather than a missing key it would otherwise degrade over silently and for good. Retrieve and stash the handle while the addon initialises if a thread of its own is going to need it.
 
-Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it was loaded. Publish everything the addons of the process need before the first `bare_load()`. Entries are immutable once published, so setting a key that is already taken fails rather than replacing it; delete it first with `bare_context_delete()` to replace it.
+Entries last for as long as the process and are immutable once published, which is what makes it safe to hand the pointer to an addon: setting a key that is already taken fails rather than replacing it, and there is no way to withdraw one, as an addon that has been handed a pointer has no way of hearing that it went away. An embedder that needs a handle to change publishes the change under a key of its own and lets the addon go looking.
 
-The registry is scoped to the Bare process, like addons are. Embedders running several Bare processes within the same operating system process publish to each of them separately, and an addon loaded by two of them sees what each published and nothing of the other. Sealing with `bare_seal()` or `Addon.seal()` freezes the registry along with the addons, after which it may neither gain nor lose an entry.
+Publish everything the addons of the process need before the first `bare_load()`. An addon only ever sees what was published before it was loaded, and addons are loaded when the module graph first reaches them rather than at a point the embedder can predict, so publishing any later does not merely risk being late: it is seen by some addons and not others, and by some threads and not others, depending on the shape of the graph. Nothing reports this, which is why the rule is to publish up front.
+
+The registry is scoped to the Bare process, like addons are. Embedders running several Bare processes within the same operating system process publish to each of them separately, and an addon loaded by two of them sees what each published and nothing of the other. Sealing with `bare_seal()` or `Addon.seal()` freezes the registry along with the addons, after which nothing further may be published. The seal is a single process-wide flag, so neither half can be sealed without the other.
 
 Keys are compared by their contents and are namespaced by whoever owns the handle, with the version in the key rather than in the value so that an addon needing a different contract asks for a different key. The `bare.` namespace is Bare's own and is where the handles that Bare and its addons agree on live; anyone else should pick a namespace of their own. The keys in use are listed in [`docs/context-keys.md`](docs/context-keys.md), which is also where a new one is written down.
 

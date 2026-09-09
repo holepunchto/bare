@@ -94,9 +94,11 @@ A handle is a power. Publishing one grants it to every addon in the process rath
 
 The registry is per process, like addons are. A sibling in the same OS process has its own and sees nothing of yours.
 
-The seal covers it. After `bare_seal()` or `Addon.seal()`, the registry can neither gain nor lose an entry, which is the same boundary the addons get and for the same reason: an addon that could publish a handle could feed it to another addon. So publish before you seal.
+The seal covers it. After `bare_seal()` or `Addon.seal()`, nothing further can be published, which is the same boundary the addons get and for the same reason: an addon that could publish a handle could feed it to another addon. It is one process-wide flag rather than two, so neither half can be sealed without the other. Publish before you seal.
 
-Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it loaded. Publish everything up front rather than in response to something the code asks for.
+Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it loaded. Publish everything up front rather than in response to something the code asks for, and note that publishing late is not merely late: addons load when the module graph first reaches them, so a handle published after `bare_load()` is seen by some addons and not others, with nothing reporting which.
+
+Nothing can be withdrawn either. An entry lasts for as long as the process, which is what makes it safe to hand a pointer to an addon, and it also means a handle you publish is a grant you cannot take back short of tearing the process down.
 
 ## What is a wall and what is not
 

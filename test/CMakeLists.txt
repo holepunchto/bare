@@ -24,6 +24,7 @@ list(APPEND tests
   context.c
   context-multiple-processes.c
   context-seal.c
+  context-thread.c
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
   exit-enqueue-timeout.js

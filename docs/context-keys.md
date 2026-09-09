@@ -12,6 +12,8 @@ This file is the registry for the `bare.` namespace, which is Bare's own and is 
 
 **A key never changes meaning.** Once it is listed, its type, what it points at and who owns it are fixed. Anything that needs a different contract is a different key, which is what the version suffix is for. Reusing a key with a new meaning breaks every addon built against the old one, silently, because a pointer is a pointer.
 
+**A key is published once and never withdrawn.** An entry lasts for as long as the process, so an addon that has been handed a pointer can hold it without asking again. A handle that has to change over the life of the process does not fit here; publish something the addon can ask through instead, and keep the changing part behind it.
+
 **Nothing is required.** A missing key is an ordinary outcome and consumers are expected to degrade rather than fail. An embedder that has no handle to publish publishes nothing.
 
 **Publish before the first `bare_load()`.** Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it was loaded.
@@ -38,7 +40,9 @@ The application context, which is what `getSystemService()` and the rest of the 
 
 The `Context` is published rather than any particular service derived from it, so that each addon can ask for what it needs without every service needing a key of its own. An addon that wants a `ConnectivityManager`, for example, derives one from this and pays a JNI hop for it.
 
-It must be a global reference, as the addon reading it runs on threads and at times the embedder does not control, and a local reference is only valid for the call it was made in. The destructor is where it is released, which ties its lifetime to the Bare process rather than to whichever call published it.
+It must be a global reference, as the addon reading it runs on threads and at times the embedder does not control, and a local reference is only valid for the call it was made in. The destructor is where it is released, which ties its lifetime to the Bare process rather than to whichever call published it. It runs after the JavaScript environment has been destroyed, so it must do nothing but release the reference.
+
+The application context is published rather than an `Activity`, which comes and goes over the life of the process and so cannot be a key.
 
 ## Adding a key
 

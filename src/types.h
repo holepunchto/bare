@@ -62,14 +62,12 @@ struct bare_process_s {
 
   bool sealed;
 
+  // Guarded by its own lock, as there is no cross-process lookup to serialise.
+  // The seal that freezes it is the process-wide `sealed` above.
   struct {
     uv_mutex_t lock;
 
     bare_context_t *entries;
-
-    // Sealed separately from the addons of the process so that both halves of
-    // the seal are established under the lock that guards what they freeze.
-    bool sealed;
   } context;
 
   struct {

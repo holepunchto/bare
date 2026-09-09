@@ -79,10 +79,10 @@ bare_exit(bare_t *bare, int exit_code);
  * Other processes running in the same operating system process are unaffected
  * and may continue to load addons of their own.
  *
- * Sealing also freezes the context registry of the process, which may neither
- * gain nor lose an entry once sealed. Publishing context is adjacent to loading
- * native code, as an addon that could publish a handle could feed it to another
- * addon, so one call establishes the whole boundary.
+ * Sealing also freezes the context registry of the process, which may not gain
+ * an entry once sealed. Publishing context is adjacent to loading native code,
+ * as an addon that could publish a handle could feed it to another addon, so
+ * one call establishes the whole boundary.
  *
  * Equivalent to `Bare.Addon.seal()`.
  */
@@ -94,11 +94,15 @@ bare_seal(bare_t *bare);
  * `bare_context_get()`. Use this to hand an addon a handle that only the
  * embedder can produce, such as a `JavaVM *` on Android.
  *
- * The registry stores the pointer and never interprets it. If `destroy` is
- * given it's called with the key and the value when the entry is deleted and
- * for any entry still present when the process is torn down. It runs once the
- * entry has been removed, must not call back into the registry, and is handed a
- * key that only stays alive for the duration of the call.
+ * The registry stores the pointer and never interprets it. An entry lasts for
+ * as long as the process, which is what makes it safe to hand the pointer to an
+ * addon: nothing can withdraw it while the addon is using it.
+ *
+ * If `destroy` is given it's called with the key and the value when the process
+ * is torn down. It runs on the main thread after every thread has been joined
+ * and after the JavaScript environment has been destroyed, so it must not call
+ * into the environment or back into the registry, and the key it's handed only
+ * stays alive for the duration of the call.
  *
  * Keys are compared by their contents and are namespaced by whoever owns the
  * handle, such as `bare.android.jvm.v1`. The `bare.` namespace is Bare's own
@@ -109,12 +113,18 @@ bare_seal(bare_t *bare);
  * for the keys in use and what each of them points at.
  *
  * Entries are immutable: setting a key that's already published fails rather
- * than replacing it, so an addon can't be left holding a pointer that the
- * embedder has since destroyed. Delete the key first to replace it.
+ * than replacing it. There is no way to withdraw or replace one, as an addon
+ * that has been handed a pointer has no way of hearing that it went away. An
+ * embedder that needs a handle to change publishes the change under a key of
+ * its own and lets the addon go looking.
  *
- * Addons are loaded by `bare_load()`, so an addon only sees what was published
- * before it was loaded. Publish everything the addons of the process need
- * before the first `bare_load()`.
+ * Publish everything the addons of the process need before the first
+ * `bare_load()`. An addon only ever sees what was published before it was
+ * loaded, and addons are loaded when the module graph first reaches them rather
+ * than at a point the embedder can predict, so publishing any later doesn't
+ * merely risk being late: it's seen by some addons and not others, and by some
+ * threads and not others, depending on the shape of the graph. Nothing reports
+ * this, which is why the rule is to publish up front.
  *
  * This half of the registry is for the embedder alone; addons hold no `bare_t *`
  * and are expected to use `bare_context_get()` only. The split is a convention
@@ -127,27 +137,24 @@ int
 bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destroy_cb destroy);
 
 /**
- * Delete the entry published under `key`, calling its destructor if it has one.
- *
- * Returns `-1` if no entry is published under the key or if the process has
- * been sealed.
- */
-int
-bare_context_delete(bare_t *bare, const char *key);
-
-/**
  * Retrieve the value published under `key` by the embedder of the process
  * running on the calling thread. This is the addon facing half of the registry
  * and takes no handle, as an addon has none; the process is instead the one
  * whose runtime the thread has entered, which is well defined for as long as
  * an addon can be called into, including while it initialises.
  *
- * A missing key is an ordinary outcome rather than a fatal one. An addon that
- * needs the handle after the calling thread has left the runtime, such as on a
- * thread of its own, must retrieve and stash it beforehand.
+ * A missing key is an ordinary outcome rather than a fatal one, and addons are
+ * expected to degrade rather than fail. Being asked from the wrong thread is
+ * not, so the two are reported apart: an addon that retrieves the handle from a
+ * thread of its own gets `-2` rather than a missing key it would otherwise
+ * degrade over silently and for good. Retrieve and stash the handle while the
+ * addon initialises if a thread of its own is going to need it.
  *
- * Returns `-1` if no entry is published under the key or if no process is
- * running on the thread, leaving `result` untouched.
+ * `result` may be `NULL` to test for a key without retrieving it, and is left
+ * untouched unless `0` is returned.
+ *
+ * Returns `-1` if no entry is published under the key, and `-2` if no process
+ * is running on the calling thread.
  */
 int
 bare_context_get(const char *key, void **result);

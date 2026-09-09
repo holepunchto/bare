@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <uv.h>
@@ -14,6 +13,9 @@
 // which several may share, and so lives on `bare_process_t` alongside the seal
 // that freezes it. It's looked up roughly once per addon per thread, so the
 // entries are held in a plain list rather than interned or hashed.
+//
+// An entry is only ever removed when the process is torn down, so nothing hands
+// out a pointer that another thread can destroy while it's in use.
 //
 // The lock is per process, as there is no cross-process lookup to serialise,
 // and non-recursive, as nothing reenters: a destructor runs once its entry has
@@ -45,16 +47,6 @@ bare_context_init(bare_process_t *process) {
   assert(err == 0);
 
   process->context.entries = NULL;
-  process->context.sealed = false;
-}
-
-void
-bare_context_seal(bare_process_t *process) {
-  uv_mutex_lock(&process->context.lock);
-
-  process->context.sealed = true;
-
-  uv_mutex_unlock(&process->context.lock);
 }
 
 void
@@ -84,9 +76,13 @@ bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destro
 
   bare_process_t *process = &bare->process;
 
+  // The seal is process-wide and owned by the addon list, which reads it under
+  // a lock of its own. Checking it before taking ours keeps the two apart.
+  if (bare_addon_sealed(process)) return -1;
+
   uv_mutex_lock(&process->context.lock);
 
-  if (process->context.sealed || *bare_context__find(process, key)) {
+  if (*bare_context__find(process, key)) {
     uv_mutex_unlock(&process->context.lock);
 
     return -1;
@@ -119,41 +115,17 @@ bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destro
 }
 
 int
-bare_context_delete(bare_t *bare, const char *key) {
-  if (key == NULL) return -1;
-
-  bare_process_t *process = &bare->process;
-
-  uv_mutex_lock(&process->context.lock);
-
-  bare_context_t *entry = NULL;
-
-  if (!process->context.sealed) {
-    bare_context_t **previous = bare_context__find(process, key);
-
-    entry = *previous;
-
-    if (entry) *previous = entry->next;
-  }
-
-  uv_mutex_unlock(&process->context.lock);
-
-  if (entry == NULL) return -1;
-
-  bare_context__destroy(entry);
-
-  return 0;
-}
-
-int
 bare_context_get(const char *key, void **result) {
   if (key == NULL) return -1;
 
   // An addon has no handle on the process that loaded it, so the lookup is
   // resolved against the process whose runtime the calling thread has entered.
+  // A thread that has entered none can't be answered at all, which is a
+  // different outcome from a key that was never published and is reported
+  // separately so that the two aren't mistaken for each other.
   bare_process_t *process = bare_addon_current();
 
-  if (process == NULL) return -1;
+  if (process == NULL) return -2;
 
   uv_mutex_lock(&process->context.lock);
 
