@@ -189,6 +189,8 @@ This is a one-way operation that cannot be undone for the lifetime of the proces
 
 The seal applies to the process alone. Embedders running several Bare processes within the same operating system process may seal each of them independently, and sealing one has no effect on the addons the others may load. Addons are likewise owned by the process that loaded them and are unloaded when it is torn down.
 
+Sealing also freezes the [context](#context) registry that embedders publish handles to, which may neither gain nor lose an entry once sealed.
+
 For what sealing guarantees, what it deliberately leaves alone, and what embedders are expected to do on top of it, see [`docs/threat-model.md`](docs/threat-model.md).
 
 #### `const addon = new Addon(url)`
@@ -297,6 +299,47 @@ bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
 ```
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
+
+### Context
+
+Addons sometimes need a handle that only the embedder can produce, such as a `JavaVM *` on Android. As an addon is only ever passed a JavaScript environment and its exports, it has no route back to the embedder that started the process. The context registry provides that by having embedders publish opaque handles under agreed keys and addons retrieve them by key.
+
+Embedders publish with `bare_context_set()`, which takes an optional destructor that is called when the entry is deleted and for any entry still published when the process is torn down:
+
+```c
+bare_t *bare;
+bare_setup(uv_default_loop(), platform, &env, argc, argv, options, &bare);
+
+bare_context_set(bare, "bare.android.jvm.v1", jvm, NULL);
+
+bare_load(bare, filename, source, NULL);
+```
+
+Addons retrieve with `bare_context_get()`, which takes no `bare_t *` as an addon holds none. The process is instead the one whose runtime the calling thread has entered, which is well defined for as long as an addon can be called into, including while it initialises:
+
+```c
+static js_value_t *
+addon_exports(js_env_t *env, js_value_t *exports) {
+  void *jvm;
+
+  if (bare_context_get("bare.android.jvm.v1", &jvm) == 0) {
+    // Use the handle, or stash it for a thread of our own.
+  }
+
+  return exports;
+}
+```
+
+A missing key is an ordinary outcome rather than a fatal one, and addons are expected to degrade when the handle they wanted was not published.
+
+Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it was loaded. Publish everything the addons of the process need before the first `bare_load()`. Entries are immutable once published, so setting a key that is already taken fails rather than replacing it; delete it first with `bare_context_delete()` to replace it.
+
+The registry is scoped to the Bare process, like addons are. Embedders running several Bare processes within the same operating system process publish to each of them separately, and an addon loaded by two of them sees what each published and nothing of the other. Sealing with `bare_seal()` or `Addon.seal()` freezes the registry along with the addons, after which it may neither gain nor lose an entry.
+
+Keys are compared by their contents and are namespaced by whoever owns the handle, with the version in the key rather than in the value so that an addon needing a different contract asks for a different key. The `bare.` namespace is Bare's own and is where the handles that Bare and its addons agree on live; anyone else should pick a namespace of their own.
+
+> [!NOTE]  
+> A handle is a power, and publishing one grants it to every addon in the process rather than to the one you had in mind. See [`docs/threat-model.md`](docs/threat-model.md) before publishing anything.
 
 ### Suspension
 

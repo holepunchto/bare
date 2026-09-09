@@ -13,6 +13,7 @@ typedef struct bare_source_s bare_source_t;
 typedef struct bare_data_s bare_data_t;
 typedef struct bare_thread_s bare_thread_t;
 typedef struct bare_addon_s bare_addon_t;
+typedef struct bare_context_s bare_context_t;
 
 typedef enum {
   bare_runtime_state_active = 0,
@@ -60,6 +61,16 @@ struct bare_process_s {
   js_platform_t *platform;
 
   bool sealed;
+
+  struct {
+    uv_mutex_t lock;
+
+    bare_context_t *entries;
+
+    // Sealed separately from the addons of the process so that both halves of
+    // the seal are established under the lock that guards what they freeze.
+    bool sealed;
+  } context;
 
   struct {
     bare_before_exit_cb before_exit;
@@ -155,6 +166,15 @@ struct bare_addon_s {
   bool unloads;
 
   bare_addon_t *next;
+};
+
+struct bare_context_s {
+  char *key;
+  void *value;
+
+  bare_context_destroy_cb destroy;
+
+  bare_context_t *next;
 };
 
 #endif // BARE_TYPES_H

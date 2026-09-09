@@ -1,3 +1,4 @@
 EXPORTS
+	bare_context_get
 	bare_module_find
 	bare_module_register

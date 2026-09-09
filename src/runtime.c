@@ -13,6 +13,7 @@
 
 #include "addon.h"
 #include "bare.js.h"
+#include "context.h"
 #include "runtime.h"
 #include "thread.h"
 #include "types.h"
@@ -693,6 +694,10 @@ bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, NULL, NULL, NULL, (void **) &runtime);
   assert(err == 0);
+
+  // Sealed before the addons so that an addon still loading can't publish
+  // context that the seal was meant to have frozen.
+  bare_context_seal(runtime->process);
 
   bare_addon_seal(runtime->process);
 
@@ -1706,8 +1711,13 @@ exited:
 
   // Addons are owned by the process rather than the runtime that loaded them
   // and may only be unloaded once the process itself is torn down, which
-  // happens after all its threads have been joined above.
-  if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
+  // happens after all its threads have been joined above. Its context outlives
+  // them, so that an addon can still read it as it unloads.
+  if (bare_runtime__is_main_thread(runtime)) {
+    bare_addon_teardown(runtime->process);
+
+    bare_context_teardown(runtime->process);
+  }
 
   err = 0;
 
