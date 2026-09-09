@@ -336,7 +336,7 @@ Addons are loaded by `bare_load()`, so an addon only ever sees what was publishe
 
 The registry is scoped to the Bare process, like addons are. Embedders running several Bare processes within the same operating system process publish to each of them separately, and an addon loaded by two of them sees what each published and nothing of the other. Sealing with `bare_seal()` or `Addon.seal()` freezes the registry along with the addons, after which it may neither gain nor lose an entry.
 
-Keys are compared by their contents and are namespaced by whoever owns the handle, with the version in the key rather than in the value so that an addon needing a different contract asks for a different key. The `bare.` namespace is Bare's own and is where the handles that Bare and its addons agree on live; anyone else should pick a namespace of their own.
+Keys are compared by their contents and are namespaced by whoever owns the handle, with the version in the key rather than in the value so that an addon needing a different contract asks for a different key. The `bare.` namespace is Bare's own and is where the handles that Bare and its addons agree on live; anyone else should pick a namespace of their own. The keys in use are listed in [`docs/context-keys.md`](docs/context-keys.md), which is also where a new one is written down.
 
 > [!NOTE]  
 > A handle is a power, and publishing one grants it to every addon in the process rather than to the one you had in mind. See [`docs/threat-model.md`](docs/threat-model.md) before publishing anything.

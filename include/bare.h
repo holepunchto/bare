@@ -105,7 +105,8 @@ bare_seal(bare_t *bare);
  * and is where the handles that Bare and its addons agree on live; anyone else
  * should pick a namespace of their own. Version the key rather than the value,
  * as an addon that needs a different contract can then ask for a different key.
- * The key is copied and need not outlive the call.
+ * The key is copied and need not outlive the call. See `docs/context-keys.md`
+ * for the keys in use and what each of them points at.
  *
  * Entries are immutable: setting a key that's already published fails rather
  * than replacing it, so an addon can't be left holding a pointer that the
