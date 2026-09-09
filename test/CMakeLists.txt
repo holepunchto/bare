@@ -22,6 +22,7 @@ list(APPEND tests
   addon.js
   argv-empty.c
   context.c
+  context-dynamic.c
   context-multiple-processes.c
   context-seal.c
   context-thread.c
