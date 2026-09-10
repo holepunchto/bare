@@ -54,7 +54,7 @@ const bare = command(
 
     Bare.exit(1)
   }),
-  () => {
+  async () => {
     const { args, flags, rest } = bare
 
     const argv = []
@@ -62,7 +62,7 @@ const bare = command(
     const protocol = module.protocol
 
     if (args.filename) {
-      args.filename = Module.resolve(path.resolve(args.filename), parentURL, {
+      args.filename = await Module.resolve(path.resolve(args.filename), parentURL, {
         protocol
       })
 
