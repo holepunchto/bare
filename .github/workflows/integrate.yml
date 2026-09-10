@@ -47,23 +47,23 @@ jobs:
             platform: android
             arch: arm
             flags: -D ANDROID_STL=c++_static
-          - os: macos-26-intel
+          - os: macos-15-intel
             platform: darwin
             arch: x64
             flags: --sanitize address
-          - os: macos-26
+          - os: macos-15
             platform: darwin
             arch: arm64
             flags: --sanitize address
-          - os: macos-26
+          - os: macos-15
             platform: ios
             arch: arm64
-          - os: macos-26
+          - os: macos-15
             platform: ios
             arch: arm64
             tags: -simulator
             flags: --simulator
-          - os: macos-26
+          - os: macos-15
             platform: ios
             arch: x64
             tags: -simulator
@@ -84,7 +84,7 @@ jobs:
           sudo ./llvm.sh 22
           rm llvm.sh
         if: ${{ runner.os == 'Linux' }}
-      - run: brew install llvm@22
+      - run: brew install llvm@20
         if: ${{ runner.os == 'macOS' }}
       - run: choco install llvm --version 22.1.8 --force
         if: ${{ runner.os == 'Windows' }}
