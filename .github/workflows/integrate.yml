@@ -47,23 +47,23 @@ jobs:
             platform: android
             arch: arm
             flags: -D ANDROID_STL=c++_static
-          - os: macos-15-intel
+          - os: macos-26-intel
             platform: darwin
             arch: x64
             flags: --sanitize address
-          - os: macos-15
+          - os: macos-26
             platform: darwin
             arch: arm64
             flags: --sanitize address
-          - os: macos-15
+          - os: macos-26
             platform: ios
             arch: arm64
-          - os: macos-15
+          - os: macos-26
             platform: ios
             arch: arm64
             tags: -simulator
             flags: --simulator
-          - os: macos-15
+          - os: macos-26
             platform: ios
             arch: x64
             tags: -simulator
