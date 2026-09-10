@@ -21,6 +21,11 @@ list(APPEND tests
   addon-teardown-multiple-processes.c
   addon.js
   argv-empty.c
+  context.c
+  context-dynamic.c
+  context-multiple-processes.c
+  context-seal.c
+  context-thread.c
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
   exit-enqueue-timeout.js

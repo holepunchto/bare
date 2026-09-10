@@ -13,6 +13,7 @@
 
 #include "addon.h"
 #include "bare.js.h"
+#include "context.h"
 #include "runtime.h"
 #include "thread.h"
 #include "types.h"
@@ -1706,8 +1707,13 @@ exited:
 
   // Addons are owned by the process rather than the runtime that loaded them
   // and may only be unloaded once the process itself is torn down, which
-  // happens after all its threads have been joined above.
-  if (bare_runtime__is_main_thread(runtime)) bare_addon_teardown(runtime->process);
+  // happens after all its threads have been joined above. Its context outlives
+  // them, so that an addon can still read it as it unloads.
+  if (bare_runtime__is_main_thread(runtime)) {
+    bare_addon_teardown(runtime->process);
+
+    bare_context_teardown(runtime->process);
+  }
 
   err = 0;
 
@@ -1722,6 +1728,8 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
   int err;
 
   js_env_t *env = runtime->env;
+
+  bare_process_t *previous = bare_addon_attach(runtime);
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1749,6 +1757,8 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  bare_addon_detach(previous);
 
   return 0;
 }

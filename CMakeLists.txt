@@ -217,6 +217,8 @@ target_sources(
     src/addon.h
     src/bare.c
     src/bare.js.h
+    src/context.c
+    src/context.h
     src/runtime.c
     src/runtime.h
     src/thread.c

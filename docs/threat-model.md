@@ -86,6 +86,20 @@ Still, note the wording carefully. It is native code that can do this rather tha
 
 There is one more wrinkle. Seals lift when a process is torn down, but built-in registrations never do, so the list only ever grows. A sealed process that starts late in a long-lived app inherits everything that was registered before it. The list is also keyed by name and the newest registration wins, so a late one under a name that is already taken takes it over for every process that looks it up afterwards. Names change hands, in other words, rather than the list simply getting longer.
 
+## Embedder context
+
+An embedder can publish opaque handles under agreed keys with `bare_context_set()`, and any addon of that process can read them back with `bare_context_get()`. It exists for handles only the embedder can produce, such as a `JavaVM *` on Android.
+
+A handle is a power. Publishing one grants it to every addon in the process rather than to the one you had in mind, because the registry is keyed by name and any addon that knows the key can ask. There is no per-addon grant and there is not going to be one, since native code is trusted anyway and an addon that can call `bare_context_get()` could reach a handle by other means.
+
+The registry is per process, like addons are. A sibling in the same OS process has its own and sees nothing of yours.
+
+The seal covers it. After `bare_seal()` or `Addon.seal()`, nothing further can be published, which is the same boundary the addons get and for the same reason: an addon that could publish a handle could feed it to another addon. It is one process-wide flag rather than two, so neither half can be sealed without the other. Publish before you seal.
+
+Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it loaded. Publish everything up front rather than in response to something the code asks for, and note that publishing late is not merely late: addons load when the module graph first reaches them, so a handle published after `bare_load()` is seen by some addons and not others, with nothing reporting which.
+
+Nothing can be withdrawn either. An entry lasts for as long as the process, which is what makes it safe to hand a pointer to an addon, and it also means a handle you publish is a grant you cannot take back short of tearing the process down.
+
 ## What is a wall and what is not
 
 A **No** row cannot be the basis of a bug report.
@@ -94,7 +108,7 @@ A **No** row cannot be the basis of a bug report.
 | ------------------------- | ------------- | -------------------------------------------------------------------------------- |
 | OS process                | Yes           | The OS does this, and Bare leans on it                                           |
 | Before seal -> After seal | Yes           | The only wall Bare builds itself                                                 |
-| Bare process (`bare_t`)   | No            | Addons and the seal are tracked per process, but memory is shared                |
+| Bare process (`bare_t`)   | No            | Addons, context and the seal are tracked per process, but memory is shared       |
 | Thread                    | No            | Memory is shared, and `SharedArrayBuffer` is always on                           |
 | Realm                     | No            | Same heap, so objects cross freely                                               |
 | Module graph              | No            | Every module can see the whole `Bare` namespace, and a graph shares one protocol |
@@ -154,7 +168,7 @@ Bare promises that the set of addons is **frozen**, but it does not promise that
 
 **1. Check what your powers add up to.** Two safe powers can combine into an unsafe one. A bundle reader is fine on its own and a peer connection is fine on its own, but together they leak data, and neither addon author did anything wrong. So look at the whole set and assume someone is trying to abuse it. Every addon you load before sealing belongs to that set for all the code in the process, not just for the part of it that wanted the addon. `Bare.IPC` counts as part of that set, and on mobile it talks straight to your app, so write the app side carefully.
 
-**2. Mind what you hand on.** The protocol you were handed reaches the whole filesystem. Load untrusted code with one of your own, and pass it even when you pass a referrer.
+**2. Mind what you hand on.** The protocol you were handed reaches the whole filesystem. Load untrusted code with one of your own, and pass it even when you pass a referrer. The same goes for anything you publish with `bare_context_set()`, which every addon in the process can read.
 
 **3. Use an OS sandbox.** The seal does nothing about memory bugs, so if you are running untrusted JavaScript a sandbox is required rather than a bonus.
 

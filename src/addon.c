@@ -115,6 +115,11 @@ bare_addon_detach(bare_process_t *previous) {
   bare_addon__current = previous;
 }
 
+bare_process_t *
+bare_addon_current(void) {
+  return bare_addon__current;
+}
+
 js_value_t *
 bare_addon_get_static(bare_runtime_t *runtime) {
   int err;
