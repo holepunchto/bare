@@ -6,8 +6,9 @@
 #include <uv.h>
 
 // Context is scoped to the Bare process rather than to the operating system
-// process, several of which may share one. An addon loaded by two processes
-// sees what each of them published and nothing of the other.
+// process, several of which may share one. Both processes are set up before
+// either loads the addon, so a registry that was shared would refuse the second
+// key as already published and hand the second process the first one's handle.
 
 static int bare_test__values[2] = {1, 2};
 
@@ -22,6 +23,19 @@ bare_test__exports(js_env_t *env, js_value_t *exports) {
   assert(e == 0);
 
   return exports;
+}
+
+static void
+bare_test__filename(const char *name, char *result, size_t len) {
+  int e;
+
+  size_t n = len;
+
+  e = uv_cwd(result, &n);
+  assert(e == 0);
+
+  e = snprintf(&result[n], len - n, "/%s", name);
+  assert(e > 0);
 }
 
 static const char *code =
@@ -47,40 +61,63 @@ main(int argc, char *argv[]) {
   e = js_create_platform(uv_default_loop(), NULL, &platform);
   assert(e == 0);
 
-  // Run the script from within the working directory so that it may require the
-  // modules it needs.
-  char filename[4096];
-  size_t len = sizeof(filename);
-
-  e = uv_cwd(filename, &len);
+  uv_loop_t loop;
+  e = uv_loop_init(&loop);
   assert(e == 0);
 
-  e = snprintf(&filename[len], sizeof(filename) - len, "/test.js");
-  assert(e > 0);
+  // The scripts are loaded from within the working directory so that they may
+  // require the modules they need. Each is given a distinct name as the module
+  // system will otherwise return the cached module rather than evaluate it
+  // again.
+  char first[4096], second[4096];
 
-  for (int i = 0; i < 2; i++) {
-    bare_t *bare;
-    e = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &bare);
-    assert(e == 0);
+  bare_test__filename("first.js", first, sizeof(first));
+  bare_test__filename("second.js", second, sizeof(second));
 
-    e = bare_context_set(bare, "bare.test.value.v1", &bare_test__values[i], NULL);
-    assert(e == 0);
+  uv_buf_t source = uv_buf_init((char *) code, strlen(code));
 
-    uv_buf_t source = uv_buf_init((char *) code, strlen(code));
+  bare_t *x;
+  e = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &x);
+  assert(e == 0);
 
-    e = bare_load(bare, filename, &source, NULL);
-    assert(e == 0);
+  bare_t *y;
+  e = bare_setup(&loop, platform, NULL, argc, (const char **) argv, NULL, &y);
+  assert(e == 0);
 
-    e = bare_run(bare, UV_RUN_DEFAULT);
-    assert(e == 0);
+  e = bare_context_set(x, "bare.test.value.v1", &bare_test__values[0], NULL);
+  assert(e == 0);
 
-    int exit_code = 0;
+  // Published while the first process still holds the same key, which only one
+  // registry per process makes room for.
+  e = bare_context_set(y, "bare.test.value.v1", &bare_test__values[1], NULL);
+  assert(e == 0);
 
-    e = bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
-    assert(e == 0);
-    assert(exit_code == 0);
-  }
+  e = bare_load(x, first, &source, NULL);
+  assert(e == 0);
 
+  e = bare_load(y, second, &source, NULL);
+  assert(e == 0);
+
+  e = bare_run(x, UV_RUN_DEFAULT);
+  assert(e == 0);
+
+  e = bare_run(y, UV_RUN_DEFAULT);
+  assert(e == 0);
+
+  int exit_code = 0;
+
+  e = bare_teardown(x, UV_RUN_DEFAULT, &exit_code);
+  assert(e == 0);
+  assert(exit_code == 0);
+
+  e = bare_teardown(y, UV_RUN_DEFAULT, &exit_code);
+  assert(e == 0);
+  assert(exit_code == 0);
+
+  e = uv_loop_close(&loop);
+  assert(e == 0);
+
+  // Each process resolved the handle it published for itself.
   assert(bare_test__loaded == 2);
 
   assert(bare_test__observed[0] == (void *) &bare_test__values[0]);

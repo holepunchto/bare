@@ -1729,6 +1729,8 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
 
   js_env_t *env = runtime->env;
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1755,6 +1757,8 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+
+  bare_addon_detach(previous);
 
   return 0;
 }

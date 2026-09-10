@@ -323,7 +323,7 @@ addon_exports(js_env_t *env, js_value_t *exports) {
   void *jvm;
 
   if (bare_context_get("bare.android.jvm.v1", &jvm) == 0) {
-    // Use the handle, or stash it for a thread of our own.
+    // Use the handle, or stash it on our per-environment state.
   }
 
   return exports;
@@ -331,6 +331,8 @@ addon_exports(js_env_t *env, js_value_t *exports) {
 ```
 
 A missing key is an ordinary outcome rather than a fatal one, and addons are expected to degrade when the handle they wanted was not published. Being asked from the wrong thread is not, so the two are reported apart: an addon retrieving the handle from a thread of its own gets `-2` rather than a missing key it would otherwise degrade over silently and for good. Retrieve and stash the handle while the addon initialises if a thread of its own is going to need it.
+
+Stash it in the state the addon builds for the environment it was initialised with, not in a file static. A static is one slot for the whole operating system process while context is published per Bare process, so an addon that caches a handle statically and is loaded by two of them keeps whichever initialised first and runs the other on a handle that was never published to it. Nothing reports this, as each lookup on its own answers correctly.
 
 Entries last for as long as the process and are immutable once published, which is what makes it safe to hand the pointer to an addon: setting a key that is already taken fails rather than replacing it, and there is no way to withdraw one, as an addon that has been handed a pointer has no way of hearing that it went away. An embedder that needs a handle to change publishes the change under a key of its own and lets the addon go looking.
 

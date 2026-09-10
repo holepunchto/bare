@@ -16,6 +16,8 @@ This file is the registry for the `bare.` namespace, which is Bare's own and is 
 
 **Nothing is required.** A missing key is an ordinary outcome and consumers are expected to degrade rather than fail. An embedder that has no handle to publish publishes nothing.
 
+**A consumer caches per environment, not per binary.** Handles are published per Bare process, and several of those can share one operating system process. An addon that caches what it retrieved in a file static, which is the shape a `uv_once` naturally takes, keeps one handle for all of them and runs every process after the first on a handle that was never published to it. Keep it on the state the addon builds for the environment it was initialised with.
+
 **Publish before the first `bare_load()`.** Addons are loaded by `bare_load()`, so an addon only ever sees what was published before it was loaded.
 
 ## `bare.android.jvm.v1`

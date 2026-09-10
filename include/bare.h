@@ -130,8 +130,8 @@ bare_seal(bare_t *bare);
  * and are expected to use `bare_context_get()` only. The split is a convention
  * rather than a boundary, and sealing the process is what closes the door.
  *
- * Returns `-1` if the key is already published, if the process has been sealed,
- * or if the entry couldn't be allocated.
+ * Returns `-1` if the key is `NULL` or already published, if the process has
+ * been sealed, or if the entry couldn't be allocated.
  */
 int
 bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destroy_cb destroy);
@@ -150,8 +150,16 @@ bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destro
  * degrade over silently and for good. Retrieve and stash the handle while the
  * addon initialises if a thread of its own is going to need it.
  *
+ * Stash it in the state the addon builds for the environment it was initialised
+ * with, not in a file static. A static is one slot for the whole operating
+ * system process while context is published per Bare process, so an addon that
+ * caches a handle statically and is loaded by two of them keeps whichever
+ * initialised first and runs the other on a handle that was never published to
+ * it. Nothing reports this, as each lookup on its own answers correctly.
+ *
  * `result` may be `NULL` to test for a key without retrieving it, and is left
- * untouched unless `0` is returned.
+ * untouched unless `0` is returned. A `NULL` key matches nothing and is
+ * reported as a key that was never published.
  *
  * Returns `-1` if no entry is published under the key, and `-2` if no process
  * is running on the calling thread.
