@@ -240,14 +240,14 @@ const protocol = require('./protocol')
 bare.exit = exports.exit
 
 bare.load = function load(filename, source) {
-  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+  return Module.loadSync(toURL(filename), source ? Buffer.from(source) : null, {
     protocol,
     cache: Object.create(null)
   })
 }
 
 bare.loadThread = function loadThread(filename, source) {
-  return Module.load(toURL(filename), source ? Buffer.from(source) : null, {
+  return Module.loadSync(toURL(filename), source ? Buffer.from(source) : null, {
     protocol: new Module.Protocol(),
     cache: Object.create(null)
   })

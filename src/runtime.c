@@ -1149,20 +1149,16 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  js_value_t *argv[2];
-  size_t argc = 2;
+  js_value_t *argv[1];
+  size_t argc = 1;
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 1);
 
   utf8_t path[4096];
   if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
-
-  uint32_t mode;
-  err = js_get_value_uint32(env, argv[1], &mode);
-  assert(err == 0);
 
   uv_fs_t req;
   uv_fs_stat(runtime->loop, &req, (char *) path, NULL);
@@ -1170,7 +1166,7 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
   uv_stat_t *st = req.result < 0 ? NULL : req.ptr;
 
   js_value_t *result;
-  err = js_get_boolean(env, st && st->st_mode & mode, &result);
+  err = js_get_boolean(env, st && (st->st_mode & S_IFREG), &result);
   assert(err == 0);
 
   uv_fs_req_cleanup(&req);
@@ -1303,6 +1299,86 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
 
   uv_fs_close(loop, &req, fd, NULL);
   uv_fs_req_cleanup(&req);
+
+  return result;
+
+err:
+  err = js_throw_error(env, uv_err_name(err), uv_strerror(err));
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_runtime__list(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t path[4096];
+  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
+
+  uv_fs_t req;
+  uv_fs_scandir(runtime->loop, &req, (char *) path, 0, NULL);
+
+  err = (int) req.result;
+
+  if (err < 0) {
+    uv_fs_req_cleanup(&req);
+
+    goto err;
+  }
+
+  js_value_t *names;
+  err = js_create_array(env, &names);
+  assert(err == 0);
+
+  js_value_t *types;
+  err = js_create_array(env, &types);
+  assert(err == 0);
+
+  uv_dirent_t entry;
+
+  for (uint32_t i = 0; uv_fs_scandir_next(&req, &entry) == 0; i++) {
+    js_value_t *name;
+    err = js_create_string_utf8(env, (const utf8_t *) entry.name, (size_t) -1, &name);
+
+    if (err < 0) {
+      uv_fs_req_cleanup(&req);
+
+      return NULL;
+    }
+
+    err = js_set_element(env, names, i, name);
+    assert(err == 0);
+
+    js_value_t *type;
+    err = js_create_uint32(env, (uint32_t) entry.type, &type);
+    assert(err == 0);
+
+    err = js_set_element(env, types, i, type);
+    assert(err == 0);
+  }
+
+  uv_fs_req_cleanup(&req);
+
+  js_value_t *result;
+  err = js_create_object(env, &result);
+  assert(err == 0);
+
+  err = js_set_named_property(env, result, "names", names);
+  assert(err == 0);
+
+  err = js_set_named_property(env, result, "types", types);
+  assert(err == 0);
 
   return result;
 
@@ -1592,6 +1668,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("exists", bare_runtime__exists);
   V("realpath", bare_runtime__realpath);
   V("read", bare_runtime__read);
+  V("list", bare_runtime__list);
 #undef V
 
 #define V(name, bool) \
@@ -1607,18 +1684,18 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("isMainThread", bare_runtime__is_main_thread(runtime));
 #undef V
 
-#define V(name, n) \
+#define V(name, value) \
   { \
     js_value_t *val; \
-    err = js_create_uint32(env, n, &val); \
+    err = js_create_uint32(env, value, &val); \
     assert(err == 0); \
 \
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
 
-  V("FILE", S_IFREG);
-  V("DIR", S_IFDIR);
+  V("DIRENT_FILE", UV_DIRENT_FILE);
+  V("DIRENT_DIR", UV_DIRENT_DIR);
 #undef V
 
   js_value_t *global;
