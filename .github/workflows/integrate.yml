@@ -78,7 +78,16 @@ jobs:
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/node-base@v1
-      - uses: holepunchto/actions/setup-llvm@v1
+      - run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+          rm llvm.sh
+        if: ${{ runner.os == 'Linux' }}
+      - run: brew install llvm@22
+        if: ${{ runner.os == 'macOS' }}
+      - run: choco install llvm --version 22.1.8 --force
+        if: ${{ runner.os == 'Windows' }}
       - uses: holepunchto/actions/setup-nasm@v1
       - uses: holepunchto/actions/compile-prebuilds@v1
         with:
