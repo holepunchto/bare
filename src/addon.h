@@ -19,6 +19,9 @@ bare_addon_attach(bare_runtime_t *runtime);
 void
 bare_addon_detach(bare_process_t *previous);
 
+bare_process_t *
+bare_addon_current(void);
+
 void
 bare_addon_seal(bare_process_t *process);
 

@@ -21,6 +21,12 @@ list(APPEND tests
   addon-teardown-multiple-processes.c
   addon.js
   argv-empty.c
+  asset-directory.js
+  context.c
+  context-dynamic.c
+  context-multiple-processes.c
+  context-seal.c
+  context-thread.c
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
   exit-enqueue-timeout.js
@@ -48,6 +54,7 @@ list(APPEND tests
   import-mjs.mjs
   import-cts.cts
   import-mts.mts
+  load-result.c
   restart.c
   suspend-idle.js
   suspend-on-idle.js

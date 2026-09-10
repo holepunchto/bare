@@ -6,6 +6,7 @@
 #include "../include/bare.h"
 
 #include "addon.h"
+#include "context.h"
 #include "runtime.h"
 #include "types.h"
 
@@ -50,6 +51,8 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
 
   process->sealed = false;
 
+  bare_context_init(process);
+
   memset(&process->callbacks, 0, sizeof(process->callbacks));
 
   process->argc = argc;
@@ -71,6 +74,8 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
   err = bare_runtime_setup(loop, process, runtime);
 
   if (err < 0) {
+    bare_context_teardown(process);
+
     free(bare);
 
     return err;

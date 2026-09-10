@@ -2,7 +2,7 @@ const Bundle = require('bare-bundle')
 const traverse = require('bare-module-traverse')
 const { pathToFileURL } = require('bare-url')
 
-const { protocol, imports, resolutions } = module
+const { protocol } = module
 
 module.exports = function bundle(entry, callback = null) {
   if (typeof entry === 'string') entry = pathToFileURL(entry)
@@ -11,11 +11,7 @@ module.exports = function bundle(entry, callback = null) {
 
   const bundle = new Bundle()
 
-  for (const dependency of traverse(
-    entry,
-    { imports, resolutions, resolve: traverse.resolve.bare },
-    readModule
-  )) {
+  for (const dependency of traverse(entry, { resolve: traverse.resolve.bare }, readModule)) {
     bundle.write(dependency.url.href, dependency.source, {
       main: dependency.url.href === entry.href,
       imports: dependency.imports
