@@ -23,8 +23,6 @@ interface BareEvents extends EventMap {
 interface Bare extends EventEmitter<BareEvents> {
   readonly platform: 'android' | 'darwin' | 'ios' | 'linux' | 'win32'
   readonly arch: 'arm' | 'arm64' | 'ia32' | 'x64' | 'mips' | 'mipsel'
-  /** @deprecated */
-  readonly simulator: boolean
   readonly argv: string[]
   readonly pid: number
   exitCode: number
@@ -53,13 +51,6 @@ declare class Addon {
 
 declare namespace Addon {
   export const host: string
-  /** @deprecated */
-  export const cache: { readonly [href: string]: Addon }
-
-  /** @deprecated */
-  export function load(url: URL): Addon
-  /** @deprecated */
-  export function resolve(specifier: string, parentURL?: URL): URL
 }
 
 type ThreadSource = string | Buffer
@@ -69,8 +60,6 @@ type ThreadCallback = (data: unknown) => unknown
 interface ThreadOptions {
   data?: unknown
   transfer?: unknown[]
-  /** @deprecated Pass the source after `filename` instead. */
-  source?: ThreadSource
   encoding?: BufferEncoding
   stackSize?: number
 }
@@ -86,11 +75,9 @@ interface Thread {
 }
 
 declare class Thread {
-  constructor(callback: ThreadCallback)
-  constructor(options?: ThreadOptions, callback?: ThreadCallback)
-  constructor(filename: string, callback: ThreadCallback)
   constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
-  constructor(filename: string, options?: ThreadOptions, callback?: ThreadCallback)
+  constructor(filename: string, callback: ThreadCallback)
+  constructor(filename: string, options: ThreadOptions, callback: ThreadCallback)
 }
 
 declare namespace Thread {
@@ -100,21 +87,6 @@ declare namespace Thread {
 
   export const isMainThread: boolean
   export const self: ThreadProxy | null
-
-  /** @deprecated */
-  export function create(callback: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(options?: ThreadOptions, callback?: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(filename: string, callback: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(filename: string, source: ThreadSource, options?: ThreadOptions): Thread
-  /** @deprecated */
-  export function create(
-    filename: string,
-    options?: ThreadOptions,
-    callback?: ThreadCallback
-  ): Thread
 }
 
 declare const Bare: Bare
