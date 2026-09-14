@@ -181,7 +181,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#60e6881")
+fetch_package("github:holepunchto/libnapi#b4c5a66")
 
 add_bare_bundle(
   bare_bundle
