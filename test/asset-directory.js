@@ -8,12 +8,21 @@ const t = require('bare-tap')
 
 const { protocol } = module
 
-t.plan(6)
+t.plan(8)
 
 t.ok(require.asset('./fixtures/assets/solo.txt').endsWith('solo.txt'))
 t.ok(require.asset('./fixtures/assets/dir').endsWith('dir'))
 t.ok(require.asset('./fixtures/assets/').endsWith('assets'))
 t.ok(require.asset('.').endsWith('test'))
+t.ok(require.asset('./fixtures/assets/dir/').endsWith('dir'))
+
+try {
+  require.asset('./fixtures/assets/solo.txt/')
+
+  t.fail('a trailing separator does not name a file')
+} catch (err) {
+  t.equal(err.code, 'ASSET_NOT_FOUND', 'a trailing separator does not name a file')
+}
 
 t.ok(protocol.listSync(pathToFileURL(__dirname)).resolved, 'a listing is resolved')
 

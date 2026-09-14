@@ -17,7 +17,7 @@ module.exports = new Module.Protocol({
   },
 
   exists(url) {
-    if (url.protocol !== 'file:') return false
+    if (url.protocol !== 'file:' || isDirectory(url)) return false
 
     try {
       return bare.exists(path.toNamespacedPath(fileURLToPath(url)))
@@ -56,9 +56,13 @@ function* list(protocol, url) {
     return
   }
 
-  if (protocol.exists(resolution)) return yield resolution
+  if (!isDirectory(url) && protocol.exists(resolution)) return yield resolution
 
   yield* listDirectory(protocol, fileURLToPath(resolution))
+}
+
+function isDirectory(url) {
+  return url.pathname[url.pathname.length - 1] === '/'
 }
 
 function* listDirectory(protocol, dirname) {
