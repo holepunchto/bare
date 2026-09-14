@@ -56,7 +56,9 @@ function* list(protocol, url) {
     return
   }
 
-  if (protocol.exists(resolution)) return yield resolution
+  const isDirectory = url.pathname[url.pathname.length - 1] === '/'
+
+  if (!isDirectory && protocol.exists(resolution)) return yield resolution
 
   yield* listDirectory(protocol, fileURLToPath(resolution))
 }
