@@ -23,6 +23,7 @@ list(APPEND tests
   argv-empty.c
   asset-directory.js
   context.c
+  context-deferred.c
   context-dynamic.c
   context-multiple-processes.c
   context-seal.c
