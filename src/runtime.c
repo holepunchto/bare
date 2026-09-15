@@ -673,7 +673,11 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   utf8_t specifier[4096];
   if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
+
+  bare_addon_detach(previous);
 
   if (node == NULL) return NULL;
 
@@ -720,10 +724,12 @@ static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
   js_value_t *argv[2];
   size_t argc = 2;
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 2);
@@ -742,7 +748,11 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *exports = argv[1];
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   exports = node->exports(env, exports);
+
+  bare_addon_detach(previous);
 
   err = js_escape_handle(env, scope, exports, &exports);
   assert(err == 0);
