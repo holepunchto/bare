@@ -34,6 +34,12 @@ int
 bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source);
 
 int
+bare_runtime_attach(bare_runtime_t *runtime, bare_process_t **previous);
+
+int
+bare_runtime_detach(bare_runtime_t *runtime, bare_process_t *previous);
+
+int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode);
 
 #endif // BARE_RUNTIME_H

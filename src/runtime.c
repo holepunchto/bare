@@ -1950,6 +1950,30 @@ bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_sou
 }
 
 int
+bare_runtime_attach(bare_runtime_t *runtime, bare_process_t **previous) {
+  switch (runtime->state) {
+  case bare_runtime_state_terminated:
+  case bare_runtime_state_exiting:
+  case bare_runtime_state_exited:
+    return -1;
+
+  default:
+    *previous = bare_addon_attach(runtime);
+
+    return 0;
+  }
+}
+
+int
+bare_runtime_detach(bare_runtime_t *runtime, bare_process_t *previous) {
+  if (bare_addon_current() != runtime->process) return -1;
+
+  bare_addon_detach(previous);
+
+  return 0;
+}
+
+int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
 
