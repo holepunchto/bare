@@ -22,6 +22,10 @@ list(APPEND tests
   addon.js
   argv-empty.c
   asset-directory.js
+  attach.c
+  attach-call.c
+  attach-nested.c
+  attach-terminated.c
   context.c
   context-deferred.c
   context-dynamic.c

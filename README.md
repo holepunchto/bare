@@ -300,6 +300,25 @@ bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
 
+### Attaching
+
+`bare_run()` attaches the process to the thread while it runs, and so does loading an addon, so native code reached through either is already attached. A call the embedder makes itself is not, so attach the process around it:
+
+```c
+bare_t *previous;
+bare_attach(bare, &previous);
+
+js_call_function(env, receiver, fn, argc, argv, &result);
+
+bare_detach(bare, previous);
+
+bare_run(bare, UV_RUN_NOWAIT);
+```
+
+Attachments nest. `bare_attach()` hands back the process that was attached before, which `bare_detach()` attaches again, so detach on the same thread and in the reverse order of attaching. Detaching out of order returns `-1` and restores nothing.
+
+Attaching does not run the loop. The call may leave work behind that only the loop will run, which is why it is run above. A process that has terminated or exited cannot be attached.
+
 ### Context
 
 Addons sometimes need a handle that only the embedder can produce, such as a `JavaVM *` on Android. As an addon is only ever passed a JavaScript environment and its exports, it has no route back to the embedder that started the process. The context registry provides that by having embedders publish opaque handles under agreed keys and addons retrieve them by key.
@@ -315,7 +334,7 @@ bare_context_set(bare, "bare.android.jvm.v1", jvm, NULL);
 bare_load(bare, filename, source, NULL);
 ```
 
-Addons retrieve with `bare_context_get()`, which takes no `bare_t *` as an addon holds none. The process is instead the one whose runtime the calling thread has entered, which is well defined for as long as an addon can be called into, including while it initialises:
+Addons retrieve with `bare_context_get()`, which takes no `bare_t *` as an addon holds none. The process is instead the one whose runtime the calling thread has entered, which is well defined for as long as an addon can be called into, including while it initialises. An embedder calling into the environment of its own accord [attaches](#attaching) the process itself:
 
 ```c
 static js_value_t *
