@@ -217,6 +217,21 @@ int
 bare_run(bare_t *bare, uv_run_mode mode);
 
 /**
+ * Run the I/O event loop without blocking and store how long the embedder may
+ * sleep before running it again in `timeout`, in milliseconds. A timeout of
+ * `-1` means that the embedder may sleep until the backend descriptor of the
+ * loop becomes readable.
+ *
+ * Use this in place of `bare_run()` when the loop is driven by a host loop
+ * that owns the thread, such as the run loop of a user interface.
+ *
+ * Returns zero once the process has exited, at which point it should be torn
+ * down rather than polled again.
+ */
+int
+bare_poll(bare_t *bare, int *timeout);
+
+/**
  * Suspend the process as soon as possible. Once the process has suspended
  * successfully, `bare_run()` will not return until another thread resumes the
  * process. It's safe to call this function from any thread.
