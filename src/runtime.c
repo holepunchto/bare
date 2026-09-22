@@ -1974,6 +1974,23 @@ bare_runtime_detach(bare_runtime_t *runtime, bare_process_t *previous) {
 }
 
 int
+bare_runtime_poll(bare_runtime_t *runtime, int *timeout) {
+  int err;
+
+  err = bare_runtime_run(runtime, UV_RUN_NOWAIT);
+  if (err <= 0) goto exited;
+
+  if (timeout) *timeout = uv_backend_timeout(runtime->loop);
+
+  return err;
+
+exited:
+  if (timeout) *timeout = 0;
+
+  return err;
+}
+
+int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
   int err;
 

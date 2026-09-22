@@ -42,4 +42,7 @@ bare_runtime_detach(bare_runtime_t *runtime, bare_process_t *previous);
 int
 bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode);
 
+int
+bare_runtime_poll(bare_runtime_t *runtime, int *timeout);
+
 #endif // BARE_RUNTIME_H

@@ -60,6 +60,7 @@ list(APPEND tests
   import-cts.cts
   import-mts.mts
   load-result.c
+  poll.c
   restart.c
   suspend-idle.js
   suspend-on-idle.js

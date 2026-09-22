@@ -300,6 +300,15 @@ bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
 
 If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
 
+An embedder whose thread belongs to a host loop, such as the run loop of a user interface, drives the loop with `bare_poll()` rather than `bare_run()`. It runs the loop without blocking and reports how long the host may sleep before calling again:
+
+```c
+int timeout;
+bare_poll(bare, &timeout);
+```
+
+A timeout of `-1` means that the host may sleep until the backend descriptor of the loop, as given by `uv_backend_fd()`, becomes readable. A host that sleeps on the timeout alone rather than on the descriptor will miss work that arrives from another thread.
+
 ### Attaching
 
 `bare_run()` attaches the process to the thread while it runs, and so does loading an addon, so native code reached through either is already attached. A call the embedder makes itself is not, so attach the process around it:

@@ -153,6 +153,11 @@ bare_run(bare_t *bare, uv_run_mode mode) {
 }
 
 int
+bare_poll(bare_t *bare, int *timeout) {
+  return bare_runtime_poll(&bare->process.runtime, timeout);
+}
+
+int
 bare_suspend(bare_t *bare, int linger) {
   return bare_runtime_suspend(&bare->process.runtime, linger);
 }
