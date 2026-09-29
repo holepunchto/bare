@@ -459,8 +459,8 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | Android  | `x64`        | >= 10                                | 1    |
 | macOS    | `arm64`      | >= 12.0                              | 1    |
 | macOS    | `x64`        | >= 12.0                              | 1    |
-| iOS      | `arm64`      | >= 14.0                              | 1    |
-| iOS      | `x64`        | >= 14.0                              | 1    | Simulator only                         |
+| iOS      | `arm64`      | >= 15.0                              | 1    |
+| iOS      | `x64`        | >= 15.0                              | 1    | Simulator only                         |
 | Windows  | `arm64`      | >= Windows 11                        | 1    |
 | Windows  | `x64`        | >= Windows 10                        | 1    |
 
