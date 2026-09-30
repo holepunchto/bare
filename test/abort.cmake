@@ -22,6 +22,8 @@ if(NOT error STREQUAL "")
   message("${error}")
 endif()
 
+message("Result: ${result}")
+
 if(result STREQUAL "0")
   message(FATAL_ERROR "Expected the test to abort, but it exited successfully")
 endif()
