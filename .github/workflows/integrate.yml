@@ -31,6 +31,7 @@ jobs:
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
+            flags: --sanitize address
           - os: ubuntu-24.04
             platform: android
             arch: x64
@@ -71,9 +72,11 @@ jobs:
           - os: windows-2022
             platform: win32
             arch: x64
+            flags: --sanitize address
           - os: windows-11-arm
             platform: win32
             arch: arm64
+            flags: --sanitize address
     runs-on: ${{ matrix.os }}
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
