@@ -86,13 +86,6 @@ jobs:
           arch: ${{ matrix.arch }}
           flags: ${{ matrix.flags }}
           tags: ${{ matrix.tags}}
-      - run: |
-          build/bin/bare.exe test/uncaught-exception-throw-in-listener.js
-          echo "Exit code: $LASTEXITCODE"
-          cmake -D program=build/bin/bare.exe -D arguments=test/uncaught-exception-throw-in-listener.js -P test/abort.cmake
-          exit 0
-        shell: pwsh
-        if: ${{ matrix.platform == 'win32' && matrix.arch == 'x64' }}
       - run: bare-make test
         env:
           ASAN_OPTIONS: detect_leaks=${{ matrix.platform == 'win32' && '0' || '1' }}

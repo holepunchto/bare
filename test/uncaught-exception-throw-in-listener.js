@@ -2,8 +2,12 @@
 // another uncaught exception without recursing, so it's reported in place of the
 // original exception and terminates the process.
 
-Bare.on('uncaughtException', () => {
-  throw new Error('from listener')
-})
+const t = require('bare-tap')
+const abort = require('./helpers/abort')
 
-throw new Error('boom')
+t.plan(2)
+
+const { aborted, stderr } = abort('uncaught-exception-throw-in-listener.js')
+
+t.ok(aborted)
+t.ok(stderr.includes('Uncaught Error: from listener'))
