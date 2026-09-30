@@ -72,6 +72,7 @@ jobs:
           - os: windows-2022
             platform: win32
             arch: x64
+            flags: --sanitize address
           - os: windows-11-arm
             platform: win32
             arch: arm64
