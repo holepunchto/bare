@@ -430,6 +430,16 @@ Bare provides a few compile options that can be configured to customize various 
 | `BARE_PREBUILDS`    | `ON`                       | Enable prebuilds for supported third-party dependencies |
 | `BARE_MEMORY_LIMIT` | `0`                        | The default memory limit of each JavaScript heap        |
 
+### Sanitizers
+
+Bare can be compiled with a sanitizer by passing the `--sanitize` flag to the `bare-make generate` command:
+
+```console
+bare-make generate --sanitize address
+```
+
+This instruments Bare but not the engine. For that, build a sanitized V8 prebuild with <https://github.com/holepunchto/chromium-prebuilds> and add `--define BARE_PREBUILDS=OFF --define GN_DIR=<src> --define GN_OUT_DIR=<out>`.
+
 ## Platform support
 
 Bare uses a tiered support system to manage expectations for the platforms that it targets. Targets may move between tiers between minor releases and as such a change in tier will not be considered a breaking change.
