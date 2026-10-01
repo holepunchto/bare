@@ -31,6 +31,7 @@ jobs:
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
+            flags: --sanitize address
           - os: ubuntu-24.04
             platform: android
             arch: x64
@@ -71,6 +72,7 @@ jobs:
           - os: windows-2022
             platform: win32
             arch: x64
+            flags: --sanitize address
           - os: windows-11-arm
             platform: win32
             arch: arm64
@@ -78,8 +80,6 @@ jobs:
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/node-base@v1
-      - uses: holepunchto/actions/setup-llvm@v1
-      - uses: holepunchto/actions/setup-nasm@v1
       - uses: holepunchto/actions/compile-prebuilds@v1
         with:
           platform: ${{ matrix.platform }}
@@ -88,5 +88,6 @@ jobs:
           tags: ${{ matrix.tags}}
       - run: bare-make test
         env:
+          ASAN_OPTIONS: detect_leaks=${{ matrix.platform == 'win32' && '0' || '1' }}
           LSAN_OPTIONS: suppressions=test/leaks.txt
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'darwin' || matrix.platform == 'win32' }}

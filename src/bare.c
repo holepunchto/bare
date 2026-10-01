@@ -113,6 +113,25 @@ bare_seal(bare_t *bare) {
 }
 
 int
+bare_attach(bare_t *bare, bare_t **previous) {
+  int err;
+
+  bare_process_t *process;
+
+  err = bare_runtime_attach(&bare->process.runtime, &process);
+  if (err < 0) return err;
+
+  *previous = (bare_t *) process;
+
+  return 0;
+}
+
+int
+bare_detach(bare_t *bare, bare_t *previous) {
+  return bare_runtime_detach(&bare->process.runtime, previous ? &previous->process : NULL);
+}
+
+int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result) {
   return bare_runtime_load(
     &bare->process.runtime,
@@ -131,6 +150,11 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
 int
 bare_run(bare_t *bare, uv_run_mode mode) {
   return bare_runtime_run(&bare->process.runtime, mode);
+}
+
+int
+bare_poll(bare_t *bare, int *timeout) {
+  return bare_runtime_poll(&bare->process.runtime, timeout);
 }
 
 int

@@ -649,7 +649,11 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   utf8_t specifier[4096];
   if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
+
+  bare_addon_detach(previous);
 
   if (node == NULL) return NULL;
 
@@ -696,10 +700,12 @@ static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
+  bare_runtime_t *runtime;
+
   js_value_t *argv[2];
   size_t argc = 2;
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
   assert(argc == 2);
@@ -718,7 +724,11 @@ bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *exports = argv[1];
 
+  bare_process_t *previous = bare_addon_attach(runtime);
+
   exports = node->exports(env, exports);
+
+  bare_addon_detach(previous);
 
   err = js_escape_handle(env, scope, exports, &exports);
   assert(err == 0);
@@ -1904,6 +1914,47 @@ bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t s
 int
 bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source) {
   return bare_runtime__load(runtime, "loadThread", filename, source, NULL);
+}
+
+int
+bare_runtime_attach(bare_runtime_t *runtime, bare_process_t **previous) {
+  switch (runtime->state) {
+  case bare_runtime_state_terminated:
+  case bare_runtime_state_exiting:
+  case bare_runtime_state_exited:
+    return -1;
+
+  default:
+    *previous = bare_addon_attach(runtime);
+
+    return 0;
+  }
+}
+
+int
+bare_runtime_detach(bare_runtime_t *runtime, bare_process_t *previous) {
+  if (bare_addon_current() != runtime->process) return -1;
+
+  bare_addon_detach(previous);
+
+  return 0;
+}
+
+int
+bare_runtime_poll(bare_runtime_t *runtime, int *timeout) {
+  int err;
+
+  err = bare_runtime_run(runtime, UV_RUN_NOWAIT);
+  if (err <= 0) goto exited;
+
+  if (timeout) *timeout = uv_backend_timeout(runtime->loop);
+
+  return err;
+
+exited:
+  if (timeout) *timeout = 0;
+
+  return err;
 }
 
 int

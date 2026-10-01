@@ -44,6 +44,7 @@
     "bare-fs": "^4.7.2",
     "bare-http1": "^4.0.0",
     "bare-module-traverse": "^2.0.0",
+    "bare-subprocess": "^6.2.0",
     "bare-tap": "^1.0.0",
     "cmake-bare": "^1.1.7",
     "cmake-bare-bundle": "^3.0.0",

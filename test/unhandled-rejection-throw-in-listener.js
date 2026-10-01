@@ -2,8 +2,12 @@
 // uncaught exception, even though the exception is still pending when the report
 // begins.
 
-Bare.on('unhandledRejection', () => {
-  throw new Error('from listener')
-})
+const t = require('bare-tap')
+const abort = require('./helpers/abort')
 
-Promise.reject(new Error('boom'))
+t.plan(2)
+
+const { aborted, stderr } = abort('unhandled-rejection-throw-in-listener.js')
+
+t.ok(aborted)
+t.ok(stderr.includes('Uncaught Error: from listener'))

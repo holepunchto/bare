@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#72de271" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#89aebb1" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -35,7 +35,7 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 159
+    CHECKOUT 185
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -134,23 +134,6 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       INTERFACE
         winmm
     )
-
-    # Our MSVC toolchain links via lld-link directly, bypassing the Clang driver
-    # that would normally append the compiler-rt builtins. Link them explicitly.
-    execute_process(
-      COMMAND "${CMAKE_C_COMPILER}"
-        --target=${CMAKE_C_COMPILER_TARGET}
-        --rtlib=compiler-rt
-        --print-libgcc-file-name
-      OUTPUT_VARIABLE compiler_rt_builtins
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    target_link_libraries(
-      v8
-      INTERFACE
-        "${compiler_rt_builtins}"
-    )
   endif()
 
   add_library(js STATIC IMPORTED GLOBAL)
@@ -181,7 +164,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#60e6881")
+fetch_package("github:holepunchto/libnapi#b4c5a66")
 
 add_bare_bundle(
   bare_bundle

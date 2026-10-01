@@ -168,6 +168,37 @@ int
 bare_context_get(const char *key, void **result);
 
 /**
+ * Attach the process to the calling thread, storing the process it was
+ * attached to before in `previous`. The attached process is the one that
+ * `bare_context_get()` resolves against and that an addon loaded while
+ * attached belongs to.
+ *
+ * `bare_run()` attaches the process while it runs, and so does loading an
+ * addon, so native code reached through either is already attached. A call
+ * the embedder makes itself is not, and needs attaching around it.
+ *
+ * Attachments nest, so pass `previous` to `bare_detach()` on the same thread
+ * and in the reverse order of attaching.
+ *
+ * Attaching does not run the loop. A call may leave work behind that only the
+ * loop will run, so run it once detached.
+ *
+ * Returns `-1` if the process has terminated or exited.
+ */
+int
+bare_attach(bare_t *bare, bare_t **previous);
+
+/**
+ * Detach the process from the calling thread and attach `previous` in its
+ * place. A `NULL` `previous` leaves the thread attached to no process.
+ *
+ * Returns `-1` if the process is not the one the thread is attached to, which
+ * is what detaching out of order looks like. Nothing is restored in that case.
+ */
+int
+bare_detach(bare_t *bare, bare_t *previous);
+
+/**
  * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk. If `source` is provided, its contents
@@ -184,6 +215,21 @@ bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t
  */
 int
 bare_run(bare_t *bare, uv_run_mode mode);
+
+/**
+ * Run the I/O event loop without blocking and store how long the embedder may
+ * sleep before running it again in `timeout`, in milliseconds. A timeout of
+ * `-1` means that the embedder may sleep until the backend descriptor of the
+ * loop becomes readable.
+ *
+ * Use this in place of `bare_run()` when the loop is driven by a host loop
+ * that owns the thread, such as the run loop of a user interface.
+ *
+ * Returns zero once the process has exited, at which point it should be torn
+ * down rather than polled again.
+ */
+int
+bare_poll(bare_t *bare, int *timeout);
 
 /**
  * Suspend the process as soon as possible. Once the process has suspended
