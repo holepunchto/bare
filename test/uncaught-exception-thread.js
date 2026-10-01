@@ -6,7 +6,7 @@ const { Thread } = Bare
 
 t.plan(1)
 
-const thread = new Thread(() => {
+const thread = new Thread('<thread>', () => {
   Bare.on('uncaughtException', (err) => {
     if (err.message !== 'boom') throw err
   })

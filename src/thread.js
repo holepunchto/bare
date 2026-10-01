@@ -3,32 +3,23 @@
 const structuredClone = require('bare-structured-clone')
 
 module.exports = exports = class Thread {
-  constructor(filename, source, opts, callback) {
-    if (typeof filename !== 'string') {
-      callback = opts
-      opts = source
-      source = filename
-      filename = '<thread>'
-    }
+  constructor(filename, source, opts) {
+    let callback = null
 
-    if (!isSource(source)) {
+    if (typeof source === 'function') {
+      callback = source
+      source = null
+    } else if (typeof opts === 'function') {
       callback = opts
       opts = source
       source = null
     }
 
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = {}
-    } else {
-      opts = opts || {}
-    }
+    opts = opts || {}
 
     let { data = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
 
-    if (source === null && isSource(opts.source)) source = opts.source
-
-    if (callback) {
+    if (callback !== null) {
       source = `(${callback.toString()})(Bare.Thread.self.data)`
     }
 
@@ -101,11 +92,6 @@ module.exports = exports = class Thread {
     }
   }
 
-  /** @deprecated */
-  static create(filename, source, opts, callback) {
-    return new Thread(filename, source, opts, callback)
-  }
-
   static get isMainThread() {
     return bare.isMainThread
   }
@@ -133,8 +119,4 @@ bare.onthread = function onthread(data) {
   const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
 
   exports.self.data = structuredClone.deserializeWithTransfer(structuredClone.decode(state))
-}
-
-function isSource(value) {
-  return typeof value === 'string' || ArrayBuffer.isView(value)
 }
