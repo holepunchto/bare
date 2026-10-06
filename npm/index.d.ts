@@ -22,7 +22,7 @@ interface BareEvents extends EventMap {
 
 interface Bare extends EventEmitter<BareEvents> {
   readonly platform: 'android' | 'darwin' | 'ios' | 'linux' | 'win32'
-  readonly arch: 'arm' | 'arm64' | 'ia32' | 'x64' | 'mips' | 'mipsel'
+  readonly arch: 'arm' | 'arm64' | 'ia32' | 'x64' | 'mips' | 'mipsel' | 'riscv64'
   /** @deprecated */
   readonly simulator: boolean
   readonly argv: string[]
