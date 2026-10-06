@@ -60,7 +60,7 @@ bare-make build
 
 Generating only has to be done once per repository checkout. After updating `bare-make` or your compiler toolchain, run `bare-make generate --no-cache` to disregard the existing build system cache.
 
-When completed, the `bare(.exe)` binary is available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(so|dylib|dll|lib)` libraries are available in the root of the `build` directory.
+When completed, the `bare(.exe)` binary is available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll|lib)` libraries are available in the root of the `build` directory.
 
 ### Linking
 
