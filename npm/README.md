@@ -1,39 +1,29 @@
 # Bare
 
-Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for writing applications in the lingua franca of modern software. Unlike Node.js, it makes embedding and cross-device support core use cases, aiming to run just as well on your phone as on your laptop. The result is a runtime ideal for networked, peer-to-peer applications that can run on a wide selection of hardware.
+Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for JavaScript applications. Unlike Node.js, it treats embedding and cross-device support as core use cases, aiming to run just as well on your phone as on your laptop.
 
 ```sh
 npm i -g bare
+bare script.js
 ```
 
-## Usage
+Run `bare` without a script to start a REPL. Scripts run as CommonJS or ESM; see [`bare-module`](https://docs.pears.com/bare/reference/bare/modules/bare-module/) for the supported formats and resolution rules.
 
-```console
-bare [flags] [filename] [...args]
+## API
 
-Evaluate a script or start a REPL session if no script is provided.
-
-Arguments:
-  [filename]              Optional. The name of a script to evaluate
-  [...args]               Additional arguments made available to the script
-
-Flags:
-  --version|-v            Print the Bare version
-  --eval|-e <script>      Evaluate an inline script
-  --print|-p <script>     Evaluate an inline script and print the result
-  --inspect               Activate the inspector
-  --inspect-port <port>   Configure the port on which the inspector will run (default: 9229)
-  --expose-gc             Expose garbage collection APIs
-  --help|-h               Show help
-```
-
-The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
-
-When imported, the module exports the global `Bare` namespace. See <https://github.com/holepunchto/bare#api> for the API documentation.
+Importing the package returns the global `Bare` namespace. TypeScript types for it are included:
 
 ```js
-const Bare = require('bare')
+const Bare = require('bare') // or: import Bare from 'bare'
 ```
+
+The API is documented on <https://docs.pears.com/bare/>:
+
+- [Runtime API](https://docs.pears.com/bare/reference/bare/runtime/): the `Bare` namespace
+- [CLI](https://docs.pears.com/bare/reference/bare/cli/): flags and the REPL
+- [Modules](https://docs.pears.com/bare/reference/modules/bare-modules/): the `bare-*` standard library
+
+Source code, build instructions, and supported platforms are on [GitHub](https://github.com/holepunchto/bare).
 
 ## Credits
 

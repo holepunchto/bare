@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for writing applications in the lingua franca of modern software. Unlike Node.js, it makes embedding and cross-device support core use cases, aiming to run just as well on your phone as on your laptop. The result is a runtime ideal for networked, peer-to-peer applications that can run on a wide selection of hardware.
+Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it provides an asynchronous, event-driven architecture for JavaScript applications. Unlike Node.js, it treats embedding and cross-device support as core use cases, aiming to run just as well on your phone as on your laptop.
 
 ```sh
 npm i -g bare
@@ -13,426 +13,75 @@ npm i -g bare
 
 ## Usage
 
-```console
-bare [flags] [filename] [...args]
-
-Evaluate a script or start a REPL session if no script is provided.
-
-Arguments:
-  [filename]              Optional. The name of a script to evaluate
-  [...args]               Additional arguments made available to the script
-
-Flags:
-  --version|-v            Print the Bare version
-  --eval|-e <script>      Evaluate an inline script
-  --print|-p <script>     Evaluate an inline script and print the result
-  --inspect               Activate the inspector
-  --inspect-port <port>   Configure the port on which the inspector will run (default: 9229)
-  --expose-gc             Expose garbage collection APIs
-  --help|-h               Show help
+```sh
+bare script.js
 ```
 
-The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
-
-## Architecture
-
-Bare is built on top of <https://github.com/holepunchto/libjs>, which provides low-level bindings to V8 in an engine independent manner, and <https://github.com/libuv/libuv>, which provides an asynchronous I/O event loop. Bare itself only adds a few missing pieces on top to support a wider ecosystem of modules:
-
-1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
-2. A native addon system supporting both statically and dynamically linked addons.
-3. Light-weight threads with synchronous joins and `SharedArrayBuffer` support.
-
-Everything else if left to userland modules to implement using these primitives, keeping the runtime itself succinct and _bare_. By abstracting over both the underlying JavaScript engine using `libjs` and platform I/O operations using `libuv`, Bare allows module authors to implement native addons that can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports.
-
-## Security
-
-Bare is designed to be embedded alongside code the embedder may not fully trust, and `Bare.Addon.seal()` is the mechanism for freezing the set of native code a process may load. What that does and does not promise is written down in [`docs/threat-model.md`](docs/threat-model.md), which embedders should read before running untrusted JavaScript.
+Run `bare` without a script to start a REPL. See the [CLI reference](https://docs.pears.com/bare/reference/bare/cli/) for all flags.
 
 ## API
 
-### `Bare`
+The API reference is on <https://docs.pears.com/bare/>:
 
-The core JavaScript API of Bare is available through the global `Bare` namespace.
+- [Runtime API](https://docs.pears.com/bare/reference/bare/runtime/): the global `Bare` namespace, including lifecycle and suspension, `Bare.Addon`, `Bare.Thread`, `Bare.IPC`, and the C embedding API
+- [CLI](https://docs.pears.com/bare/reference/bare/cli/): running scripts, the REPL, and flags
+- [Modules](https://docs.pears.com/bare/reference/modules/bare-modules/): the `bare-*` standard library
+- [Bare Kit](https://docs.pears.com/bare/reference/bare/bare-kit/): embedding Bare in iOS, Android, and React Native apps
+- [Embedder context](https://docs.pears.com/bare/reference/bare/embedder-context/): passing native handles from an embedder to addons
 
-#### `Bare.platform`
+## Architecture
 
-The identifier of the operating system for which Bare was compiled. The possible values are `android`, `darwin`, `ios`, `linux`, and `win32`.
+Bare is built on <https://github.com/holepunchto/libjs>, which provides low-level bindings to V8 in an engine-independent manner, and <https://github.com/libuv/libuv>, which provides an asynchronous I/O event loop. On top of these, Bare only adds:
 
-#### `Bare.arch`
+1. A module system supporting both CJS and ESM with bidirectional interoperability between the two.
+2. A native addon system supporting both statically and dynamically linked addons.
+3. Lightweight threads with synchronous joins and `SharedArrayBuffer` support.
 
-The identifier of the processor architecture for which Bare was compiled. The possible values are `arm`, `arm64`, `ia32`, `mips`, `mipsel`, `riscv64`, and `x64`.
+Everything else is left to userland [modules](https://docs.pears.com/bare/reference/modules/bare-modules/), keeping the runtime succinct and _bare_. Because the engine and platform I/O are abstracted by `libjs` and `libuv`, native addons can run on any JavaScript engine that implements the `libjs` ABI and any system that `libuv` supports. See [Inside Bare](https://docs.pears.com/bare/explanation/bare-runtime/) for more.
 
-#### `Bare.argv`
+## Security
 
-The command line arguments passed to the process when launched.
+Bare is designed to be embedded alongside code the embedder may not fully trust. [`Bare.Addon.seal()`](https://docs.pears.com/bare/reference/bare/runtime/#bareaddon) freezes the set of native code a process may load, and [`docs/threat-model.md`](docs/threat-model.md) states what that does and does not promise. Embedders should read it before running untrusted JavaScript.
 
-#### `Bare.pid`
+## Embedding
 
-The ID of the current process.
-
-#### `Bare.exitCode`
-
-The code that will be returned once the process exits. If the process is exited using `Bare.exit()` without specifying a code, `Bare.exitCode` is used.
-
-#### `Bare.version`
-
-The Bare version string.
-
-#### `Bare.versions`
-
-An object containing the version strings of Bare and its dependencies.
-
-#### `Bare.exit([code])`
-
-Immediately terminate the process or current thread with an exit status of `code` which defaults to `Bare.exitCode`.
-
-#### `Bare.suspend([linger])`
-
-Suspend the process and all threads. This will emit a `suspend` event signalling that all work should stop immediately. When all work has stopped and the process would otherwise exit, an `idle` event will be emitted. If the process is not resumed from an `idle` event listener, the loop will block until the process is resumed.
-
-#### `Bare.wakeup([deadline])`
-
-Wake the process and all threads during suspension. This will emit a `wakeup` event signalling that work may be performed until `deadline` is reached.
-
-#### `Bare.idle()`
-
-Immediately suspend the event loop and trigger the `idle` event.
-
-#### `Bare.resume()`
-
-Resume the process and all threads after suspension. This can be used to cancel suspension after the `suspend` event has been emitted and up until all `idle` event listeners have run.
-
-#### `Bare.on('uncaughtException', err)`
-
-Emitted when a JavaScript exception is thrown within an execution context without being caught by any exception handlers within that execution context. By default, uncaught exceptions are printed to `stderr` and the processes aborted. Adding an event listener for the `uncaughtException` event overrides the default behavior.
-
-#### `Bare.on('unhandledRejection', reason, promise)`
-
-Emitted when a JavaScript promise is rejected within an execution context without that rejection being handled within that execution context. By default, unhandled rejections are printed to `stderr` and the process aborted. Adding an event listener for the `unhandledRejection` event overrides the default behavior.
-
-#### `Bare.on('beforeExit', code)`
-
-Emitted when the loop runs out of work and before the process or current thread exits. This provides a chance to schedule additional work and keep the process from exiting. If additional work is scheduled, `beforeExit` will be emitted again once the loop runs out of work.
-
-If the process is exited explicitly, such as by calling `Bare.exit()` or as the result of an uncaught exception, the `beforeExit` event will not be emitted.
-
-#### `Bare.on('exit', code)`
-
-Emitted when the process or current thread exits. If the process is forcefully terminated from an `exit` event listener, the remaining listeners will not run.
-
-> [!CAUTION]  
-> Additional work **MUST NOT** be scheduled from an `exit` event listener.
-
-#### `Bare.on('suspend', linger)`
-
-Emitted when the process or current thread is suspended. Any in-progress or outstanding work, such as network activity or file system access, should be deferred, cancelled, or paused when the `suspend` event is emitted and no additional work should be scheduled. A `suspend` event listener may call `Bare.resume()` to cancel the suspension.
-
-#### `Bare.on('wakeup', deadline)`
-
-Emitted when the process or current thread wakes up during suspension. Once the process becomes idle, or if the process is not idle by the time `deadline` has passed, the process will suspend itself again and an `idle` event be emitted. A `wakeup` event listener may call `Bare.resume()` to resume the process.
-
-#### `Bare.on('idle')`
-
-Emitted when the process or current thread becomes idle after suspension. After all handlers have run, the event loop will block and no additional work be performed until the process is resumed. An `idle` event listener may call `Bare.resume()` to cancel the suspension.
-
-#### `Bare.on('resume')`
-
-Emitted when the process or current thread resumes after suspension. Deferred and paused work should be continued when the `resume` event is emitted and new work may again be scheduled.
-
-### Lifecycle
-
-```mermaid
-stateDiagram
-  direction LR
-  [*] --> Active
-  Active --> Suspending: Bare.suspend()
-  Active --> Terminated: Bare.exit()
-  Active --> Exiting
-  Suspending --> Active: Bare.resume()
-  Suspending --> Awake: Bare.wakeup()
-  Suspending --> Suspended: Bare.idle()
-  Suspending --> Terminated: Bare.exit()
-  Suspending --> Idle
-  Awake --> Active: Bare.resume()
-  Awake --> Suspended: Bare.idle()
-  Awake --> Terminated: Bare.exit()
-  Awake --> Idle
-  Idle --> Suspended
-  Idle --> Active: Bare.resume()
-  Idle --> Terminated: Bare.exit()
-  Suspended --> Active
-  Suspended --> Awake: Bare.wakeup()
-  Terminated --> Exiting
-  Exiting --> [*]
-```
-
-### `Bare.Addon`
-
-The `Bare.Addon` namespace provides support for loading native addons, which are typically written in C/C++ and distributed as shared libraries.
-
-> [!NOTE]  
-> This is an advanced API that users should never have to interact with directly.
-
-#### `Addon.host`
-
-The target triplet identifying the current addon host.
-
-#### `Addon.sealed`
-
-Whether addon loading has been sealed with `Addon.seal()`.
-
-#### `Addon.seal()`
-
-Seal addon loading. Once sealed, no further dynamic addons can be loaded by the current thread or any other thread of the process, now or in the future; attempting to do so throws. Statically linked addons are compiled in and remain available.
-
-This is a one-way operation that cannot be undone for the lifetime of the process. It is intended for embedders that wish to load a fixed set of trusted addons up front and then prevent any further native code from being introduced, such as when establishing a sandbox.
-
-The seal applies to the process alone. Embedders running several Bare processes within the same operating system process may seal each of them independently, and sealing one has no effect on the addons the others may load. Addons are likewise owned by the process that loaded them and are unloaded when it is torn down.
-
-Sealing also freezes the [context](#context) registry that embedders publish handles to, after which nothing further may be published to it.
-
-For what sealing guarantees, what it deliberately leaves alone, and what embedders are expected to do on top of it, see [`docs/threat-model.md`](docs/threat-model.md).
-
-#### `const addon = new Addon(url)`
-
-Load a static or dynamic native addon identified by `url`. If `url` is not a static native addon, Bare will instead look for a matching dynamic object library.
-
-#### `addon.url`
-
-The WHATWG `URL` identifier of the addon.
-
-#### `addon.exports`
-
-The exports of the addon.
-
-### `Bare.Thread`
-
-The `Bare.Thread` namespace provides support for lightweight threads. Threads are similar to workers in Node.js, but provide only minimal API surface for creating and joining threads.
-
-> [!NOTE]  
-> This is an advanced API that users should never have to interact with directly.
-
-#### `Thread.isMainThread`
-
-`true` if the current thread is the main thread.
-
-#### `Thread.self`
-
-A reference to the current thread as a `ThreadProxy` object. Will be `null` on the main thread.
-
-#### `Thread.self.data`
-
-The data that was passed to the current thread on creation. Will be `null` if no data was passed.
-
-#### `const thread = new Thread([filename[, source]][, options][, callback])`
-
-Start a new thread that will run `source`, which is a string or a `Buffer`. If `callback` is provided, its function body will be used as the source instead and invoked on the new thread with `Thread.self.data` passed as an argument.
-
-A thread is loaded through a protocol that reaches nothing, so it runs the source it was given and no more; `filename` names that source rather than locating it. Anything else the thread needs, including the modules it imports, must travel with it as `source` or `data`. To run a module graph on a thread, gather it into a <https://github.com/holepunchto/bare-bundle> first and pass the bundle as `source`, which is what <https://github.com/holepunchto/bare-thread> does.
-
-> [!IMPORTANT]  
-> A thread does not inherit the module protocol of whoever spawned it. Reading a graph off disk and handing it over is the spawner's job, so that a thread never reaches further than the code that started it.
-
-Options include:
-
-```js
-{
-  // Optional data to pass to the thread
-  data: null,
-  // Optional transfer list
-  transfer: [],
-  // Optional source encoding if `source` is a string
-  encoding: 'utf8',
-  // Optional stack size in bytes, pass 0 for default
-  stackSize: 0
-}
-```
-
-#### `thread.joined`
-
-Whether or not the thread has been joined with the current thread.
-
-#### `thread.join()`
-
-Block and wait for the thread to exit.
-
-#### `thread.suspend([linger])`
-
-Suspend the thread. Equivalent to calling `Bare.suspend()` from within the thread.
-
-#### `thread.wakeup([deadline])`
-
-Wake the thread. Equivalent to calling `Bare.wakeup()` from within the thread.
-
-#### `thread.resume()`
-
-Resume the thread. Equivalent to calling `Bare.resume()` from within the thread.
-
-#### `thread.terminate()`
-
-Terminate the thread. Equivalent to calling `Bare.exit()` from within the thread.
-
-### `Bare.IPC`
-
-The `Bare.IPC` namespace provides support for optional streaming communication between an embedder and JavaScript code. By default, its value is `null` indicating that streaming communication is not supported. If set by embedders, `Bare.IPC` is expected to be an instance of a <https://github.com/holepunchto/bare-stream> `Duplex` stream.
-
-> [!NOTE]  
-> This is an advanced API that users should never have to interact with directly.
-
-### Embedding
-
-Bare can easily be embedded using the C API defined in [`include/bare.h`](include/bare.h):
-
-```c
-#include <bare.h>
-#include <uv.h>
-
-bare_t *bare;
-bare_setup(uv_default_loop(), platform, &env /* Optional */, argc, argv, options, &bare);
-
-bare_load(bare, filename, source, &module /* Optional */);
-
-bare_run(bare, UV_RUN_DEFAULT);
-
-int exit_code;
-bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
-```
-
-If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
-
-An embedder whose thread belongs to a host loop, such as the run loop of a user interface, drives the loop with `bare_poll()` rather than `bare_run()`. It runs the loop without blocking and reports how long the host may sleep before calling again:
-
-```c
-int timeout;
-bare_poll(bare, &timeout);
-```
-
-A timeout of `-1` means that the host may sleep until the backend descriptor of the loop, as given by `uv_backend_fd()`, becomes readable. A host that sleeps on the timeout alone rather than on the descriptor will miss work that arrives from another thread.
-
-### Attaching
-
-`bare_run()` attaches the process to the thread while it runs, and so does loading an addon, so native code reached through either is already attached. A call the embedder makes itself is not, so attach the process around it:
-
-```c
-bare_t *previous;
-bare_attach(bare, &previous);
-
-js_call_function(env, receiver, fn, argc, argv, &result);
-
-bare_detach(bare, previous);
-
-bare_run(bare, UV_RUN_NOWAIT);
-```
-
-Attachments nest. `bare_attach()` hands back the process that was attached before, which `bare_detach()` attaches again, so detach on the same thread and in the reverse order of attaching. Detaching out of order returns `-1` and restores nothing.
-
-Attaching does not run the loop. The call may leave work behind that only the loop will run, which is why it is run above. A process that has terminated or exited cannot be attached.
-
-### Context
-
-Addons sometimes need a handle that only the embedder can produce, such as a `JavaVM *` on Android. As an addon is only ever passed a JavaScript environment and its exports, it has no route back to the embedder that started the process. The context registry provides that by having embedders publish opaque handles under agreed keys and addons retrieve them by key.
-
-Embedders publish with `bare_context_set()`, which takes an optional destructor that is called when the process is torn down. The destructor runs on the main thread once every thread has been joined and the JavaScript environment has been destroyed, so it is a place to release a handle rather than to run anything that needs the environment:
-
-```c
-bare_t *bare;
-bare_setup(uv_default_loop(), platform, &env, argc, argv, options, &bare);
-
-bare_context_set(bare, "bare.android.jvm.v1", jvm, NULL);
-
-bare_load(bare, filename, source, NULL);
-```
-
-Addons retrieve with `bare_context_get()`, which takes no `bare_t *` as an addon holds none. The process is instead the one whose runtime the calling thread has entered, which is well defined for as long as an addon can be called into, including while it initialises. An embedder calling into the environment of its own accord [attaches](#attaching) the process itself:
-
-```c
-static js_value_t *
-addon_exports(js_env_t *env, js_value_t *exports) {
-  void *jvm;
-
-  if (bare_context_get("bare.android.jvm.v1", &jvm) == 0) {
-    // Use the handle, or stash it on our per-environment state.
-  }
-
-  return exports;
-}
-```
-
-A missing key is an ordinary outcome rather than a fatal one, and addons are expected to degrade when the handle they wanted was not published. Being asked from the wrong thread is not, so the two are reported apart: an addon retrieving the handle from a thread of its own gets `-2` rather than a missing key it would otherwise degrade over silently and for good. Retrieve and stash the handle while the addon initialises if a thread of its own is going to need it.
-
-Stash it in the state the addon builds for the environment it was initialised with, not in a file static. A static is one slot for the whole operating system process while context is published per Bare process, so an addon that caches a handle statically and is loaded by two of them keeps whichever initialised first and runs the other on a handle that was never published to it. Nothing reports this, as each lookup on its own answers correctly.
-
-Entries last for as long as the process and are immutable once published, which is what makes it safe to hand the pointer to an addon: setting a key that is already taken fails rather than replacing it, and there is no way to withdraw one, as an addon that has been handed a pointer has no way of hearing that it went away. An embedder that needs a handle to change publishes the change under a key of its own and lets the addon go looking.
-
-Publish everything the addons of the process need before the first `bare_load()`. An addon only ever sees what was published before it was loaded, and addons are loaded when the module graph first reaches them rather than at a point the embedder can predict, so publishing any later does not merely risk being late: it is seen by some addons and not others, and by some threads and not others, depending on the shape of the graph. Nothing reports this, which is why the rule is to publish up front.
-
-The registry is scoped to the Bare process, like addons are. Embedders running several Bare processes within the same operating system process publish to each of them separately, and an addon loaded by two of them sees what each published and nothing of the other. Sealing with `bare_seal()` or `Addon.seal()` freezes the registry along with the addons, after which nothing further may be published. The seal is a single process-wide flag, so neither half can be sealed without the other.
-
-Keys are compared by their contents and are namespaced by whoever owns the handle, with the version in the key rather than in the value so that an addon needing a different contract asks for a different key. The `bare.` namespace is Bare's own and is where the handles that Bare and its addons agree on live; anyone else should pick a namespace of their own. The keys in use are listed in [`docs/context-keys.md`](docs/context-keys.md), which is also where a new one is written down.
-
-> [!NOTE]  
-> A handle is a power, and publishing one grants it to every addon in the process rather than to the one you had in mind. See [`docs/threat-model.md`](docs/threat-model.md) before publishing anything.
-
-### Suspension
-
-Bare provides a mechanism for implementing process suspension, which is needed for platforms with strict application lifecycle constraints, such as mobile platforms. When suspended, using either `bare_suspend()` from C or `Bare.suspend()` from JavaScript, a `suspend` event will be emitted on the `Bare` namespace. Then, when the loop has no work left and would otherwise exit, an `idle` event will be emitted and the loop blocked, keeping it from exiting. When the process is later resumed, using either `bare_resume()` from C or `Bare.resume()` from JavaScript, a `resume` event will be emitted and the loop unblocked, allowing it to exit when no work is left.
-
-While suspended, the loop may also be woken up for limited periods of time to perform work, using either `bare_wakeup()` from C or `Bare.wakeup()` from JavaScript, which will emit a `wakeup` event. Each wakeup has an associated deadline after which the loop will be stopped and the process suspended again, emitting another `idle` event.
+Bare is embedded using the C API in [`include/bare.h`](include/bare.h), documented in the [runtime API reference](https://docs.pears.com/bare/reference/bare/runtime/#embedding). For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>. Embedders that drive Bare from a host loop, or call into the JavaScript environment themselves, should also read [`docs/embedding.md`](docs/embedding.md).
 
 ## Building
 
-<https://github.com/holepunchto/bare-make> is used for compiling Bare. Start by installing the tool globally:
+<https://github.com/holepunchto/bare-make> is used for compiling Bare. Install it and the dependencies, then generate the build system and build:
 
 ```console
 npm i -g bare-make
-```
-
-Next, install the required build and runtime dependencies:
-
-```console
 npm i
-```
-
-Then, generate the build system:
-
-```console
 bare-make generate
-```
-
-This only has to be run once per repository checkout. When updating `bare-make` or your compiler toolchain it might also be necessary to regenerate the build system. To do so, run the command again with the `--no-cache` flag set to disregard the existing build system cache:
-
-```console
-bare-make generate --no-cache
-```
-
-With a build system generated, Bare can be compiled:
-
-```console
 bare-make build
 ```
 
-When completed, the `bare(.exe)` binary will be available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll|lib)` libraries will be available in the root of the `build` directory.
+Generating only has to be done once per repository checkout. After updating `bare-make` or your compiler toolchain, run `bare-make generate --no-cache` to disregard the existing build system cache.
+
+When completed, the `bare(.exe)` binary is available in the `build/bin` directory and the `libbare.(a|lib)` and `(lib)bare.(dylib|dll|lib)` libraries are available in the root of the `build` directory.
 
 ### Linking
 
-When linking against the static `libbare.(a|lib)` library, make sure to use whole archive linking as Bare relies on constructor functions for registering native addons. Without whole archive linking, the linker will remove the constructor functions as they aren't referenced by anything.
+When linking against the static `libbare.(a|lib)` library, use whole archive linking. Bare relies on constructor functions for registering native addons, and without whole archive linking the linker removes them as unreferenced.
 
 ### Options
 
-Bare provides a few compile options that can be configured to customize various aspects of the runtime. Compile options may be set by passing the `--define option=value` flag to the `bare-make generate` command when generating the build system.
+Compile options are set by passing `--define option=value` to `bare-make generate`.
 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
 
-| Option              | Default                    | Description                                             |
-| :------------------ | :------------------------- | :------------------------------------------------------ |
-| `BARE_ENGINE`       | `github:holepunchto/libjs` | The JavaScript engine to use                            |
-| `BARE_PREBUILDS`    | `ON`                       | Enable prebuilds for supported third-party dependencies |
-| `BARE_MEMORY_LIMIT` | `0`                        | The default memory limit of each JavaScript heap        |
+| Option              | Default                               | Description                                              |
+| :------------------ | :------------------------------------ | :------------------------------------------------------- |
+| `BARE_ENGINE`       | `github:holepunchto/libjs#<revision>` | The JavaScript engine to use, pinned in `CMakeLists.txt` |
+| `BARE_PREBUILDS`    | `ON`                                  | Enable prebuilds for supported third-party dependencies  |
+| `BARE_MEMORY_LIMIT` | `0`                                   | The default memory limit of each JavaScript heap         |
 
 ### Sanitizers
 
-Bare can be compiled with a sanitizer by passing the `--sanitize` flag to the `bare-make generate` command:
+Bare can be compiled with a sanitizer by passing the `--sanitize` flag to `bare-make generate`:
 
 ```console
 bare-make generate --sanitize address
@@ -473,69 +122,6 @@ Bare uses a tiered support system to manage expectations for the platforms that 
 | iOS      | `x64`        | >= 15.0                              | 1    | Simulator only                         |
 | Windows  | `arm64`      | >= Windows 11                        | 1    |
 | Windows  | `x64`        | >= Windows 10                        | 1    |
-
-## Modules
-
-Bare provides no standard library beyond the core JavaScript API available through the `Bare` namespace. Instead, we maintain a comprehensive collection of external modules built specifically for Bare.
-
-| Module                                                                        | Description                                                                              | Version                                                 |
-| :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :------------------------------------------------------ |
-| [bare-abort](https://github.com/holepunchto/bare-abort)                       | Cause abnormal program termination and generate a crash report                           | ![](https://img.shields.io/npm/v/bare-abort)            |
-| [bare-ansi-escapes](https://github.com/holepunchto/bare-ansi-escapes)         | Parse and produce ANSI escape sequences                                                  | ![](https://img.shields.io/npm/v/bare-ansi-escapes)     |
-| [bare-assert](https://github.com/holepunchto/bare-assert)                     | Assertion library for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-assert)           |
-| [bare-atomics](https://github.com/holepunchto/bare-atomics)                   | Native synchronization primitives for JavaScript                                         | ![](https://img.shields.io/npm/v/bare-atomics)          |
-| [bare-buffer](https://github.com/holepunchto/bare-buffer)                     | Native buffers for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-buffer)           |
-| [bare-bundle](https://github.com/holepunchto/bare-bundle)                     | Application bundle format for JavaScript, inspired by <https://github.com/electron/asar> | ![](https://img.shields.io/npm/v/bare-bundle)           |
-| [bare-channel](https://github.com/holepunchto/bare-channel)                   | Inter-thread messaging for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-channel)          |
-| [bare-console](https://github.com/holepunchto/bare-console)                   | WHATWG debugging console for JavaScript                                                  | ![](https://img.shields.io/npm/v/bare-console)          |
-| [bare-crypto](https://github.com/holepunchto/bare-crypto)                     | Cryptographic primitives for JavaScript                                                  | ![](https://img.shields.io/npm/v/bare-crypto)           |
-| [bare-daemon](https://github.com/holepunchto/bare-daemon)                     | Create and manage daemon processes in JavaScript                                         | ![](https://img.shields.io/npm/v/bare-daemon)           |
-| [bare-dgram](https://github.com/holepunchto/bare-dgram)                       | Native UDP for JavaScript                                                                | ![](https://img.shields.io/npm/v/bare-dgram)            |
-| [bare-dns](https://github.com/holepunchto/bare-dns)                           | Domain name resolution for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-dns)              |
-| [bare-encoding](https://github.com/holepunchto/bare-encoding)                 | WHATWG text encoding interfaces for JavaScript                                           | ![](https://img.shields.io/npm/v/bare-encoding)         |
-| [bare-env](https://github.com/holepunchto/bare-env)                           | Environment variable support for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-env)              |
-| [bare-events](https://github.com/holepunchto/bare-events)                     | Event emitters for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-events)           |
-| [bare-fetch](https://github.com/holepunchto/bare-fetch)                       | WHATWG Fetch implementation for Bare                                                     | ![](https://img.shields.io/npm/v/bare-fetch)            |
-| [bare-form-data](https://github.com/holepunchto/bare-form-data)               | Form data support for Bare                                                               | ![](https://img.shields.io/npm/v/bare-form-data)        |
-| [bare-format](https://github.com/holepunchto/bare-format)                     | String formatting for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-format)           |
-| [bare-fs](https://github.com/holepunchto/bare-fs)                             | Native file system for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-fs)               |
-| [bare-hrtime](https://github.com/holepunchto/bare-hrtime)                     | High-resolution timers for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-hrtime)           |
-| [bare-http1](https://github.com/holepunchto/bare-http1)                       | HTTP/1 library for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-http1)            |
-| [bare-https](https://github.com/holepunchto/bare-https)                       | HTTPS library for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-https)            |
-| [bare-inspect](https://github.com/holepunchto/bare-inspect)                   | Inspect objects as strings for debugging                                                 | ![](https://img.shields.io/npm/v/bare-inspect)          |
-| [bare-inspector](https://github.com/holepunchto/bare-inspector)               | V8 inspector support for Bare                                                            | ![](https://img.shields.io/npm/v/bare-inspector)        |
-| [bare-ipc](https://github.com/holepunchto/bare-ipc)                           | Lightweight pipe-based IPC for Bare                                                      | ![](https://img.shields.io/npm/v/bare-ipc)              |
-| [bare-logger](https://github.com/holepunchto/bare-logger)                     | Low-level logger for Bare with system log integration                                    | ![](https://img.shields.io/npm/v/bare-logger)           |
-| [bare-module](https://github.com/holepunchto/bare-module)                     | Module support for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-module)           |
-| [bare-os](https://github.com/holepunchto/bare-os)                             | Operating system utilities for JavaScript                                                | ![](https://img.shields.io/npm/v/bare-os)               |
-| [bare-pack](https://github.com/holepunchto/bare-pack)                         | Bundle packing for Bare                                                                  | ![](https://img.shields.io/npm/v/bare-pack)             |
-| [bare-path](https://github.com/holepunchto/bare-path)                         | Path manipulation library for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-path)             |
-| [bare-performance](https://github.com/holepunchto/bare-performance)           | Performance monitoring for Bare                                                          | ![](https://img.shields.io/npm/v/bare-performance)      |
-| [bare-pipe](https://github.com/holepunchto/bare-pipe)                         | Native I/O pipes for JavaScript                                                          | ![](https://img.shields.io/npm/v/bare-pipe)             |
-| [bare-queue-microtask](https://github.com/holepunchto/bare-queue-microtask)   | Microtask queuing for Bare                                                               | ![](https://img.shields.io/npm/v/bare-queue-microtask)  |
-| [bare-readline](https://github.com/holepunchto/bare-readline)                 | Line editing for interactive CLIs with command history                                   | ![](https://img.shields.io/npm/v/bare-readline)         |
-| [bare-realm](https://github.com/holepunchto/bare-realm)                       | Realm support for Bare                                                                   | ![](https://img.shields.io/npm/v/bare-realm)            |
-| [bare-repl](https://github.com/holepunchto/bare-repl)                         | Read-Evaluate-Print-Loop environment for JavaScript                                      | ![](https://img.shields.io/npm/v/bare-repl)             |
-| [bare-rpc](https://github.com/holepunchto/bare-rpc)                           | <https://github.com/holepunchto/librpc> ABI compatible RPC for Bare                      | ![](https://img.shields.io/npm/v/bare-rpc)              |
-| [bare-semver](https://github.com/holepunchto/bare-semver)                     | Minimal semantic versioning library for Bare                                             | ![](https://img.shields.io/npm/v/bare-semver)           |
-| [bare-signals](https://github.com/holepunchto/bare-signals)                   | Native signal handling for JavaScript                                                    | ![](https://img.shields.io/npm/v/bare-signals)          |
-| [bare-storage](https://github.com/holepunchto/bare-storage)                   | Minimal, cross‑platform directory locator for Bare                                       | ![](https://img.shields.io/npm/v/bare-storage)          |
-| [bare-stream](https://github.com/holepunchto/bare-stream)                     | Streaming data for JavaScript                                                            | ![](https://img.shields.io/npm/v/bare-stream)           |
-| [bare-structured-clone](https://github.com/holepunchto/bare-structured-clone) | Structured cloning algorithm for JavaScript                                              | ![](https://img.shields.io/npm/v/bare-structured-clone) |
-| [bare-subprocess](https://github.com/holepunchto/bare-subprocess)             | Native process spawning for JavaScript                                                   | ![](https://img.shields.io/npm/v/bare-subprocess)       |
-| [bare-tap](https://github.com/holepunchto/bare-tap)                           | Minimal TAP library for Bare                                                             | ![](https://img.shields.io/npm/v/bare-tap)              |
-| [bare-tcp](https://github.com/holepunchto/bare-tcp)                           | Native TCP sockets for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tcp)              |
-| [bare-thread](https://github.com/holepunchto/bare-thread)                     | Thread support for Bare                                                                  | ![](https://img.shields.io/npm/v/bare-thread)           |
-| [bare-timers](https://github.com/holepunchto/bare-timers)                     | Native timers for JavaScript                                                             | ![](https://img.shields.io/npm/v/bare-timers)           |
-| [bare-tls](https://github.com/holepunchto/bare-tls)                           | Transport Layer Security (TLS) streams for JavaScript                                    | ![](https://img.shields.io/npm/v/bare-tls)              |
-| [bare-tty](https://github.com/holepunchto/bare-tty)                           | Native TTY streams for JavaScript                                                        | ![](https://img.shields.io/npm/v/bare-tty)              |
-| [bare-type](https://github.com/holepunchto/bare-type)                         | Cross-realm type predicates for Bare                                                     | ![](https://img.shields.io/npm/v/bare-type)             |
-| [bare-unpack](https://github.com/holepunchto/bare-unpack)                     | Bundle unpacking for Bare                                                                | ![](https://img.shields.io/npm/v/bare-unpack)           |
-| [bare-url](https://github.com/holepunchto/bare-url)                           | WHATWG URL implementation for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-url)              |
-| [bare-worker](https://github.com/holepunchto/bare-worker)                     | Higher-level worker threads for JavaScript                                               | ![](https://img.shields.io/npm/v/bare-worker)           |
-| [bare-ws](https://github.com/holepunchto/bare-ws)                             | WebSocket library for JavaScript                                                         | ![](https://img.shields.io/npm/v/bare-ws)               |
-| [bare-zlib](https://github.com/holepunchto/bare-zlib)                         | Stream-based zlib bindings for JavaScript                                                | ![](https://img.shields.io/npm/v/bare-zlib)             |
-| [bare-zmq](https://github.com/holepunchto/bare-zmq)                           | Low-level ZeroMQ bindings for JavaScript                                                 | ![](https://img.shields.io/npm/v/bare-zmq)              |
 
 ## License
 

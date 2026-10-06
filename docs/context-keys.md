@@ -2,7 +2,7 @@
 
 ## What this is
 
-The list of keys in use with the context registry, so that two modules do not invent different names for the same handle. The API itself is documented in [`include/bare.h`](../include/bare.h), with an overview in the [README](../README.md#context).
+The list of keys in use with the context registry, so that two modules do not invent different names for the same handle. The API itself is declared in [`include/bare.h`](../include/bare.h), with an overview in the [embedder context reference](https://docs.pears.com/bare/reference/bare/embedder-context/).
 
 This file is the registry for the `bare.` namespace, which is Bare's own and is where the handles that Bare and its addons agree on live. If you own another namespace, keep your own list and link it from here.
 
