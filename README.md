@@ -45,7 +45,7 @@ Bare is designed to be embedded alongside code the embedder may not fully trust.
 
 ## Embedding
 
-Bare is embedded using the C API in [`include/bare.h`](include/bare.h), documented in the [runtime API reference](https://docs.pears.com/bare/reference/bare/runtime/#embedding). For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>. Embedders that drive Bare from a host loop, or call into the JavaScript environment themselves, should also read [`docs/embedding.md`](docs/embedding.md).
+Bare is embedded using the C API in [`include/bare.h`](include/bare.h), documented in the [runtime API reference](https://docs.pears.com/bare/reference/bare/runtime/#embedding). For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
 
 ## Building
 
