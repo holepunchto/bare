@@ -315,5 +315,6 @@ EXPORTS
 	uv_walk
 	uv_write
 	uv_write2
+	uv_write_nwritten
 	uv_wtf8_length_as_utf16
 	uv_wtf8_to_utf16
