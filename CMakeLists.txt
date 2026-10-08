@@ -62,20 +62,21 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         /GR-
     )
 
+    # Keyed on the runtime library of the consumer rather than its
+    # configuration, as sanitizers force the release CRT in debug builds.
+    set(debug_crt "$<STREQUAL:$<GENEX_EVAL:$<TARGET_PROPERTY:MSVC_RUNTIME_LIBRARY>>,MultiThreadedDebug>")
+
     target_link_options(
       c++
       INTERFACE
         # Propagate the C++ STL dependency to all consumers that might end up
         # with the target in their link dependencies.
-        /DEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>
+        /DEFAULTLIB:libcpmt$<${debug_crt}:d>
 
         # The imported static library always links the release version of the
-        # static CRT; explicitly tell MSVC to not link the release version for
-        # debug builds and vice versa.
-        #
-        # Keyed on Debug rather than Release so that it stays the complement of
-        # the /DEFAULTLIB above.
-        /NODEFAULTLIB:libcmt$<$<NOT:$<CONFIG:Debug>>:d>
+        # static CRT; explicitly tell MSVC to not link the release version when
+        # the debug CRT is used and vice versa.
+        /NODEFAULTLIB:libcmt$<$<NOT:${debug_crt}>:d>
     )
   else()
     target_compile_options(
