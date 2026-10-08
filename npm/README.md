@@ -6,35 +6,6 @@ Small and modular JavaScript runtime for desktop and mobile. Like Node.js, it pr
 npm i -g bare
 ```
 
-## Usage
-
-```console
-bare [flags] [filename] [...args]
-
-Evaluate a script or start a REPL session if no script is provided.
-
-Arguments:
-  [filename]              Optional. The name of a script to evaluate
-  [...args]               Additional arguments made available to the script
-
-Flags:
-  --version|-v            Print the Bare version
-  --eval|-e <script>      Evaluate an inline script
-  --print|-p <script>     Evaluate an inline script and print the result
-  --inspect               Activate the inspector
-  --inspect-port <port>   Configure the port on which the inspector will run (default: 9229)
-  --expose-gc             Expose garbage collection APIs
-  --help|-h               Show help
-```
-
-The specified `<script>` or `<filename>` is run using `Module.load()`. For more information on the module system and the supported formats, see <https://github.com/holepunchto/bare-module>.
-
-When imported, the module exports the global `Bare` namespace. See <https://github.com/holepunchto/bare#api> for the API documentation.
-
-```js
-const Bare = require('bare')
-```
-
 ## Credits
 
 The `bare` package name on npm was kindly donated by the folks at [Accosine](https://github.com/accosine).

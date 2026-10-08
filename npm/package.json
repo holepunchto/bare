@@ -18,6 +18,9 @@
     "index.d.ts",
     "bin"
   ],
+  "scripts": {
+    "prepack": "node prepack.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/bare.git"
@@ -34,6 +37,7 @@
     "bare-events": "*",
     "bare-queue-microtask": "*",
     "bare-runtime": "*",
+    "bare-stream": "*",
     "bare-structured-clone": "*",
     "bare-timers": "*",
     "bare-url": "*"
@@ -49,6 +53,9 @@
       "optional": true
     },
     "bare-queue-microtask": {
+      "optional": true
+    },
+    "bare-stream": {
       "optional": true
     },
     "bare-structured-clone": {
