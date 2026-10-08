@@ -35,6 +35,8 @@ Module.load(url, source, { protocol: restricted })
 
 Pass a referrer and it gets yours instead, so pass a protocol too when the code is untrusted.
 
+All of this assumes untrusted code cannot write to the intrinsics. Every graph in a realm shares them, so code that can write to them can watch and steer every other graph. A patched `WeakMap.prototype.set` is handed every module any graph creates, loader and all. A `then` getter on `Object.prototype` can swap the source a loader just read. A `protocol` on `Object.prototype` stands in for one a loader was never given. Run untrusted code in a realm of its own or freeze the intrinsics first, or the protocol you hand it is only a suggestion.
+
 Threads inherit nothing. A thread runs the source it was handed and no more, so spawning one is no way around the protocol you were given. To give a thread a module graph, gather it into a bundle first and hand that over.
 
 The reach of the module system is the embedder's to pick. The CLI hands on its own, which is why `bare` can read the disk.
@@ -118,7 +120,7 @@ A **No** row cannot be the basis of a bug report.
 
 Two Bare processes inside one OS process share memory and are not walled off from each other, so if you need two separate sets of powers you need two OS processes.
 
-The `Bare` namespace is frozen. It cannot be deleted, replaced or added to, and neither can `Bare.Addon` or `Bare.Thread`, so code cannot swap out what the rest of the realm reaches for. `Bare.IPC` stays writable because embedders set it.
+The `Bare` namespace is frozen. It cannot be deleted, replaced or added to, and neither can `Bare.Addon` or `Bare.Thread`, so code cannot swap out what the rest of the realm reaches for. `Bare.IPC` stays writable because embedders set it. The rest of the intrinsics are not frozen, and keeping untrusted code away from them is the embedder's job.
 
 ## What we trust
 
@@ -170,9 +172,11 @@ Bare promises that the set of addons is **frozen**, but it does not promise that
 
 **2. Mind what you hand on.** The protocol you were handed reaches the whole filesystem. Load untrusted code with one of your own, and pass it even when you pass a referrer. The same goes for anything you publish with `bare_context_set()`, which every addon in the process can read.
 
-**3. Use an OS sandbox.** The seal does nothing about memory bugs, so if you are running untrusted JavaScript a sandbox is required rather than a bonus.
+**3. Keep untrusted code away from shared intrinsics.** Run it in a realm of its own, or freeze everything reachable from `globalThis` before it runs, the way `lockdown()` from SES does. Otherwise no module or addon can defend itself. A realm of its own only helps while nothing from an unfrozen realm crosses into it, as every object and function leads back to the intrinsics of the realm that made it.
 
-**4. Seal early, and seal every process.**
+**4. Use an OS sandbox.** The seal does nothing about memory bugs, so if you are running untrusted JavaScript a sandbox is required rather than a bonus.
+
+**5. Seal early, and seal every process.**
 
 ## Things that still work after the seal
 
@@ -202,6 +206,7 @@ If you need to stop any of this, the seal will not do it for you and you will ha
 - Anything before the seal
 - Anything that needs native code or a bad addon to begin with
 - Anything crossing a **No** row
+- Anything that needs to write to shared intrinsics, which the embedder must prevent
 - Anything in the "still works after the seal" list
 - Anything in `bin/`
 - Harm from powers the embedder chose to grant
@@ -220,7 +225,7 @@ Most of it is the fourth thing on the list of what is left to worry about, memor
 
 **Asserting on what JavaScript controls.** An assertion says this cannot happen. Input can always happen. Assert on it and a bad argument aborts the process, and in a release build the assertion is gone and the failure is ignored instead, so the code runs on a value it never got. Assert on engine calls that cannot fail once the input is checked. Raise for everything else.
 
-**No type tag on a native-backed object.** Without a tag, any object can be passed as the receiver, and the binding unwraps a pointer out of something that never had one. Tag every native-backed class. Check the tag at every entry point, and check it before the unwrap.
+**No type tag on a native-backed object.** Without a tag, any object can be passed as the receiver, and the binding unwraps a pointer out of something that never had one. Tag every native-backed class. Check the tag at every entry point, after checking that the value is an object and before the unwrap. Asking anything else for a tag is fatal in the engine.
 
 **Turning three answers into two.** A check that can fail has three answers: yes, no, and could not tell. Fold the third into either of the others and you have answered without the evidence. You have also dropped an exception, and the next call trips over it. This is how an object that was never tagged passes for one that was.
 
@@ -235,6 +240,8 @@ Most of it is the fourth thing on the list of what is left to worry about, memor
 **Two call paths for one function.** A typed callback and an untyped one are two C functions behind one JavaScript function, and the caller picks which runs. Check different things in each and the weaker one is the real one. Both need the same checks in the same order, so the same call fails the same way either way. A typed callback also runs without a handle scope and cannot raise at all, so it reports back and lets the untyped path raise.
 
 **Running JavaScript while holding a raw pointer.** A pointer into a string or a backing store is good until the next thing that can run JavaScript. A getter, a proxy trap, a `toString()`, an array read, an allocation that sets off a collection: any of them can move what you hold, free it, or detach it. Read everything first and make the values afterwards, or take a copy.
+
+**Holding a buffer across the thread pool.** A reference to a typed array keeps the view alive, not its memory. Transferring, detaching or shrinking the buffer frees the data while a request on another thread is still reading or writing it. Hold the backing store until the request is done.
 
 **Reaching an attacker's object with plain property access.** `object.constructor`, `object[key]`, `Symbol.toStringTag` and `for...in` all run code the object chose. That is worst on a diagnostic path, where looking at a value is meant to cost nothing and `console` points it at anything at all. Read own property descriptors, and expect whatever you do call to throw.
 
