@@ -7,14 +7,11 @@ extern "C" {
 
 #include <js.h>
 #include <stddef.h>
+#include <uv.h>
 
 #include "bare/module.h"
 #include "bare/target.h"
 #include "bare/version.h"
-
-#ifndef BARE_PLATFORM_WASI
-
-#include <uv.h>
 
 typedef struct bare_s bare_t;
 typedef struct bare_options_s bare_options_t;
@@ -307,8 +304,6 @@ bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data);
  */
 int
 bare_on_thread(bare_t *bare, bare_thread_cb cb, void *data);
-
-#endif
 
 #ifdef __cplusplus
 }

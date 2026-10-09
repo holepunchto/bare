@@ -4,7 +4,6 @@
 #include <js.h>
 
 #include "helper.h"
-#include "target.h"
 
 #define BARE_MODULE_VERSION 0
 
@@ -94,10 +93,6 @@ struct bare_module_s {
   bare_module_register_cb exports;
 };
 
-#ifndef BARE_PLATFORM_WASI
-
-#include <uv.h>
-
 /**
  * Find a loaded addon by name, optionally suffixed with `.bare`. Addons are
  * named `<name>@<version>` and the version may be truncated at a component
@@ -117,7 +112,7 @@ struct bare_module_s {
  * the call, such as a delay load hook binding an import address table, must
  * take a reference of its own.
  */
-uv_lib_t *
+void *
 bare_module_find(const char *query);
 
 /**
@@ -145,7 +140,5 @@ bare_module_find(const char *query);
  */
 void
 bare_module_register(bare_module_t *module);
-
-#endif
 
 #endif // BARE_MODULE_H

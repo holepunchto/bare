@@ -513,7 +513,7 @@ bare_addon__matches(const char *query, size_t len, const char *name) {
   return name[len] == '\0' || name[len] == '.';
 }
 
-uv_lib_t *
+void *
 bare_module_find(const char *query) {
   uv_once(&bare_addon__guard, bare_addon__on_init);
 
