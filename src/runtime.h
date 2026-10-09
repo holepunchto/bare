@@ -31,7 +31,7 @@ int
 bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result);
 
 int
-bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source);
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, const char *mount, bare_source_t source);
 
 int
 bare_runtime_attach(bare_runtime_t *runtime, bare_process_t **previous);

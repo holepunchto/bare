@@ -11,6 +11,7 @@ const entry = path.join(__dirname, 'fixtures/thread-shared-data.js')
 const data = Buffer.from(new SharedArrayBuffer(4))
 
 const thread = new Thread('bare:/thread.bundle', bundle(entry), {
+  mount: bundle.mount,
   data: data.buffer
 })
 

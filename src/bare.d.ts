@@ -290,6 +290,13 @@ interface ThreadOptions {
    * @default 0
    */
   stackSize?: number
+
+  /**
+   * The URL to mount the thread's bundle at, defaulting to its `filename`
+   * followed by a `/`. The bundle serves only the modules under it, so
+   * `file:///` lets it serve any file.
+   */
+  mount?: URL | string
 }
 
 interface Thread {

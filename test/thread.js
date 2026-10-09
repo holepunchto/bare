@@ -9,6 +9,7 @@ t.ok(Thread.isMainThread)
 const entry = path.join(__dirname, 'fixtures/thread.js')
 
 const thread = new Thread('bare:/thread.bundle', bundle(entry), {
+  mount: bundle.mount,
   data: Buffer.from('hello world')
 })
 

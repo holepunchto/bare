@@ -246,11 +246,12 @@ bare.load = function load(filename, source) {
   })
 }
 
-bare.loadThread = function loadThread(filename, source) {
-  return Module.loadSync(toURL(filename), source ? Buffer.from(source) : null, {
-    protocol: new Module.Protocol(),
-    cache: Object.create(null)
-  })
+bare.loadThread = function loadThread(filename, source, mount) {
+  const opts = { protocol: new Module.Protocol(), cache: Object.create(null) }
+
+  if (mount !== null) opts.mount = mount
+
+  return Module.loadSync(toURL(filename), source ? Buffer.from(source) : null, opts)
 }
 
 function toURL(filename) {

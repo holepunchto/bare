@@ -136,6 +136,7 @@ struct bare_thread_s {
   uv_barrier_t ready;
 
   char *filename;
+  char *mount;
   bare_source_t source;
   bare_data_t data;
 

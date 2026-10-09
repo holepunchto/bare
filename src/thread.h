@@ -8,7 +8,7 @@
 #include "types.h"
 
 int
-bare_thread_create(bare_runtime_t *runtime, const char *filename, bare_source_t source, bare_data_t data, size_t stack_size, bare_thread_t **result);
+bare_thread_create(bare_runtime_t *runtime, const char *filename, const char *mount, bare_source_t source, bare_data_t data, size_t stack_size, bare_thread_t **result);
 
 int
 bare_thread_join(bare_runtime_t *runtime, bare_thread_t *thread);

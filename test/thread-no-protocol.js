@@ -21,6 +21,7 @@ const thread = new Thread(
     }
   }),
   {
+    mount: bundle.mount,
     data: path.join(__dirname, 'fixtures/thread.js')
   }
 )

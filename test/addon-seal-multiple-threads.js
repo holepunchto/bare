@@ -31,6 +31,7 @@ const thread = new Thread(
     }
   }),
   {
+    mount: bundle.mount,
     data: addonURL
   }
 )

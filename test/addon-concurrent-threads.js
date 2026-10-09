@@ -36,7 +36,8 @@ for (let i = 0; i < 8; i++) {
         if (constructor.exports !== 'Hello from constructor addon') {
           throw new Error('Constructor addon was not loaded')
         }
-      })
+      }),
+      { mount: bundle.mount }
     )
   )
 }
