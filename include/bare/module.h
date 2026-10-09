@@ -25,7 +25,7 @@
 
 // https://stackoverflow.com/a/2390626
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma section(".CRT$XCU", read)
 #define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
   __pragma(comment(linker, "/include:bare_register_module_" #id "_" #version "_")); \
@@ -112,7 +112,7 @@ struct bare_module_s {
  * the call, such as a delay load hook binding an import address table, must
  * take a reference of its own.
  */
-uv_lib_t *
+void *
 bare_module_find(const char *query);
 
 /**
