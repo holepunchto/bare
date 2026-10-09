@@ -216,17 +216,12 @@ target_compile_definitions(
     BARE_MEMORY_LIMIT=${BARE_MEMORY_LIMIT}
 )
 
-resolve_node_module(bare-wasm-abi wasm_abi)
-
-configure_file("${wasm_abi}/wasm.syms" include/bare/wasm.syms COPYONLY)
-
 target_include_directories(
   bare
   INTERFACE
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
   PUBLIC
     include
-    "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
 target_link_libraries(
@@ -327,7 +322,7 @@ install(TARGETS bare_static bare_shared)
 
 install(FILES include/bare.h include/node_api.h DESTINATION include)
 
-install(DIRECTORY include/bare "${CMAKE_CURRENT_BINARY_DIR}/include/bare" DESTINATION include)
+install(DIRECTORY include/bare DESTINATION include)
 
 if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
