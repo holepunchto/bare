@@ -14,7 +14,6 @@ jobs:
     name: Publish
     steps:
       - uses: holepunchto/actions/node-base@v1
-      - run: npm run prepack --workspaces
       - uses: holepunchto/actions/publish@v1
         with:
           workspaces: true
