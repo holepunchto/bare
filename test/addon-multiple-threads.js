@@ -25,7 +25,8 @@ const thread = new Thread(
     )
 
     t.equal(addon.exports, 'Hello from addon')
-  })
+  }),
+  { mount: bundle.mount }
 )
 
 thread.join()

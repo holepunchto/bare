@@ -890,16 +890,24 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
 
   bare_runtime_t *runtime;
 
-  size_t argc = 5;
-  js_value_t *argv[5];
+  size_t argc = 6;
+  js_value_t *argv[6];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
   assert(err == 0);
 
-  assert(argc == 5);
+  assert(argc == 6);
 
   utf8_t filename[4096];
   if (!bare_runtime__get_string(env, argv[1], filename, sizeof(filename))) return NULL;
+
+  utf8_t mount[4096];
+  bool has_mount;
+
+  err = js_is_string(env, argv[5], &has_mount);
+  assert(err == 0);
+
+  if (has_mount && !bare_runtime__get_string(env, argv[5], mount, sizeof(mount))) return NULL;
 
   bare_source_t source = {bare_source_none};
   bool has_source;
@@ -932,7 +940,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   bare_thread_t *thread;
-  err = bare_thread_create(runtime, (char *) filename, source, data, stack_size, &thread);
+  err = bare_thread_create(runtime, (char *) filename, has_mount ? (char *) mount : NULL, source, data, stack_size, &thread);
   if (err < 0) return NULL;
 
   err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
@@ -1851,7 +1859,7 @@ bare_runtime_exit(bare_runtime_t *runtime, int exit_code) {
 }
 
 static int
-bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filename, bare_source_t source, js_value_t **result) {
+bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filename, const char *mount, bare_source_t source, js_value_t **result) {
   int err;
 
   js_env_t *env = runtime->env;
@@ -1880,10 +1888,18 @@ bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filen
   err = js_get_global(env, &global);
   assert(err == 0);
 
-  js_value_t *args[2];
+  js_value_t *args[3];
 
   err = js_create_string_utf8(env, (utf8_t *) filename, (size_t) -1, &args[0]);
   if (err < 0) goto err;
+
+  if (mount) {
+    err = js_create_string_utf8(env, (utf8_t *) mount, (size_t) -1, &args[2]);
+    if (err < 0) goto err;
+  } else {
+    err = js_get_null(env, &args[2]);
+    assert(err == 0);
+  }
 
   switch (source.type) {
   case bare_source_none:
@@ -1906,7 +1922,7 @@ bare_runtime__load(bare_runtime_t *runtime, const char *entry, const char *filen
     break;
   }
 
-  err = js_call_function(env, global, load, 2, args, result);
+  err = js_call_function(env, global, load, 3, args, result);
 
   if (result && err == 0) {
     err = js_escape_handle(env, (js_escapable_handle_scope_t *) scope, *result, result);
@@ -1941,12 +1957,12 @@ err:
 
 int
 bare_runtime_load(bare_runtime_t *runtime, const char *filename, bare_source_t source, js_value_t **result) {
-  return bare_runtime__load(runtime, "load", filename, source, result);
+  return bare_runtime__load(runtime, "load", filename, NULL, source, result);
 }
 
 int
-bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, bare_source_t source) {
-  return bare_runtime__load(runtime, "loadThread", filename, source, NULL);
+bare_runtime_load_thread(bare_runtime_t *runtime, const char *filename, const char *mount, bare_source_t source) {
+  return bare_runtime__load(runtime, "loadThread", filename, mount, source, NULL);
 }
 
 int

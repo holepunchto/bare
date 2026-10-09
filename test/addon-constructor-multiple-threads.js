@@ -29,7 +29,8 @@ const thread = new Thread(
     )
 
     t.equal(addon.exports, 'Hello from constructor addon')
-  })
+  }),
+  { mount: bundle.mount }
 )
 
 thread.join()

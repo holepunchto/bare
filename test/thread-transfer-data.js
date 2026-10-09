@@ -11,6 +11,7 @@ const entry = path.join(__dirname, 'fixtures/thread-transfer-data.js')
 const buffer = Buffer.from('hello world')
 
 const thread = new Thread('bare:/thread.bundle', bundle(entry), {
+  mount: bundle.mount,
   data: buffer,
   transfer: [buffer.buffer]
 })

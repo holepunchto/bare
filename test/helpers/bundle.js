@@ -28,3 +28,7 @@ module.exports = function bundle(entry, callback = null) {
     return null
   }
 }
+
+// Bundles are written with absolute URLs, so they're mounted at the package
+// root for the thread to read its modules from them.
+module.exports.mount = new URL('../../', pathToFileURL(__filename))

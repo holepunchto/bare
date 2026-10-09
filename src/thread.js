@@ -1,6 +1,7 @@
 /* global bare */
 
 const structuredClone = require('bare-structured-clone')
+const URL = require('bare-url')
 
 module.exports = exports = class Thread {
   constructor(filename, source, opts, callback) {
@@ -24,9 +25,19 @@ module.exports = exports = class Thread {
       opts = opts || {}
     }
 
-    let { data = null, encoding = 'utf8', stackSize = 0, transfer = [] } = opts
+    let { data = null, encoding = 'utf8', stackSize = 0, transfer = [], mount = null } = opts
 
     if (source === null && isSource(opts.source)) source = opts.source
+
+    if (mount !== null) {
+      const url = typeof mount === 'string' ? URL.parse(mount) : mount
+
+      if (!URL.isURL(url)) {
+        throw new TypeError(`Mount must be a URL. Received type ${typeof mount} (${mount})`)
+      }
+
+      mount = url.href
+    }
 
     if (callback) {
       source = `(${callback.toString()})(Bare.Thread.self.data)`
@@ -60,7 +71,7 @@ module.exports = exports = class Thread {
       structuredClone.encode(state, serialized)
     }
 
-    bare.setupThread(this, filename, source, data, stackSize)
+    bare.setupThread(this, filename, source, data, stackSize, mount)
   }
 
   get joined() {
