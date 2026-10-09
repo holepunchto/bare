@@ -66,6 +66,17 @@ module.exports = exports = class Addon {
     bare.sealAddons()
   }
 
+  static loaded(url) {
+    switch (url.protocol) {
+      case 'file:':
+        return bare.addonLoaded(fileURLToPath(url))
+      case 'linked:':
+        return bare.addonLoaded(url.pathname)
+      default:
+        return false
+    }
+  }
+
   /** @deprecated */
   static get cache() {
     return cache

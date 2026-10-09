@@ -38,6 +38,7 @@
     "bare-timers": "^3.0.0",
     "bare-tty": "^5.0.0",
     "bare-url": "^2.0.0",
+    "bare-wasm-abi": "^0.1.0",
     "paparam": "^1.1.2"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@
 #include <js.h>
 
 #include "helper.h"
+#include "target.h"
 
 #define BARE_MODULE_VERSION 0
 
@@ -25,7 +26,7 @@
 
 // https://stackoverflow.com/a/2390626
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma section(".CRT$XCU", read)
 #define BARE_MODULE_CONSTRUCTOR_BASE(id, version) \
   __pragma(comment(linker, "/include:bare_register_module_" #id "_" #version "_")); \
@@ -93,6 +94,10 @@ struct bare_module_s {
   bare_module_register_cb exports;
 };
 
+#ifndef BARE_PLATFORM_WASI
+
+#include <uv.h>
+
 /**
  * Find a loaded addon by name, optionally suffixed with `.bare`. Addons are
  * named `<name>@<version>` and the version may be truncated at a component
@@ -140,5 +145,7 @@ bare_module_find(const char *query);
  */
 void
 bare_module_register(bare_module_t *module);
+
+#endif
 
 #endif // BARE_MODULE_H

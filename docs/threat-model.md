@@ -63,9 +63,10 @@ After the seal returns, Bare will not bring any new native code into the process
 
 Said another way, sealed JavaScript cannot get more native code than it was given through anything Bare offers.
 
-There are two things this does **not** mean:
+There are three things this does **not** mean:
 
 - New **JavaScript** can still show up. Modules keep loading and `Thread` still takes source and callbacks, which is fine, because the promise is only about native code.
+- New **WebAssembly** addons can still load. They are read through the module protocol and run by the engine, so they reach no further than JavaScript.
 - `new Addon(url)` does not always throw after the seal. If the process already owns that addon it hands it back, so anything you loaded before sealing is there for the asking, by any code in the process that knows the path. Loading an addon **is** granting what it can do, and the seal freezes that set rather than keeping it to yourself.
 
 ## The two exceptions

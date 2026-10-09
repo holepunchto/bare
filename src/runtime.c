@@ -721,6 +721,30 @@ bare_runtime__addons_sealed(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_runtime__addon_loaded(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  bare_runtime_t *runtime;
+
+  js_value_t *argv[1];
+  size_t argc = 1;
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &runtime);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  utf8_t specifier[4096];
+  if (!bare_runtime__get_string(env, argv[0], specifier, sizeof(specifier))) return NULL;
+
+  js_value_t *result;
+  err = js_get_boolean(env, bare_addon_loaded(runtime->process, (char *) specifier), &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_runtime__init_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1667,6 +1691,7 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("initAddon", bare_runtime__init_addon);
   V("sealAddons", bare_runtime__seal_addons);
   V("addonsSealed", bare_runtime__addons_sealed);
+  V("addonLoaded", bare_runtime__addon_loaded);
 
   V("terminate", bare_runtime__terminate);
   V("abort", bare_runtime__abort);
