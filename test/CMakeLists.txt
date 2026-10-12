@@ -8,6 +8,7 @@ list(APPEND tests
   addon-find-multiple-processes.c
   addon-find.c
   addon-invalid-file-url.js
+  addon-loaded.js
   addon-multiple-processes.c
   addon-multiple-threads.js
   addon-multiple.js

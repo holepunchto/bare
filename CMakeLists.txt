@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#89aebb1" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#7b4e6d5" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_ENGINE_SHARED OFF CACHE BOOL "Link the JavaScript engine as a shared library rather than embedding it")
 
@@ -167,7 +167,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#b4c5a66")
+fetch_package("github:holepunchto/libnapi#0de062d")
 
 if(BARE_ENGINE_SHARED)
   set(engine js_shared)

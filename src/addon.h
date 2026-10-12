@@ -34,6 +34,9 @@ bare_addon_seal(bare_process_t *process);
 bool
 bare_addon_sealed(bare_process_t *process);
 
+bool
+bare_addon_loaded(bare_process_t *process, const char *specifier);
+
 void
 bare_addon_teardown(bare_process_t *process);
 

@@ -23,6 +23,9 @@
 #elif defined(_WIN32)
 #define BARE_PLATFORM "win32"
 #define BARE_PLATFORM_WIN32
+#elif defined(__wasi__)
+#define BARE_PLATFORM "wasi"
+#define BARE_PLATFORM_WASI
 #else
 #error Unsupported platform
 #endif
@@ -48,6 +51,9 @@
 #elif defined(__MIPSEL__)
 #define BARE_ARCH "mipsel"
 #define BARE_ARCH_MIPSEL
+#elif defined(__wasm32__)
+#define BARE_ARCH "wasm32"
+#define BARE_ARCH_WASM32
 #else
 #error Unsupported architecture
 #endif

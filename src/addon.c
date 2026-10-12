@@ -188,6 +188,15 @@ bare_addon_get_dynamic(bare_runtime_t *runtime) {
   return result;
 }
 
+static bare_addon_t *
+bare_addon__find(bare_addon_t *list, bare_process_t *owner, const char *specifier) {
+  for (bare_addon_t *addon = list; addon; addon = addon->next) {
+    if (addon->owner == owner && strcmp(specifier, addon->specifier) == 0) return addon;
+  }
+
+  return NULL;
+}
+
 bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   int err;
@@ -196,21 +205,11 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_lock(&bare_addon__lock);
 
-  bare_addon_t *next = bare_addon__static;
-
-  while (next) {
-    bare_addon_t *addon = next;
-
-    next = addon->next;
-
-    if (strcmp(specifier, addon->specifier) == 0) {
-      uv_mutex_unlock(&bare_addon__lock);
-
-      return addon;
-    }
-  }
+  bare_addon_t *addon = bare_addon__find(bare_addon__static, NULL, specifier);
 
   uv_mutex_unlock(&bare_addon__lock);
+
+  if (addon) return addon;
 
   err = js_throw_errorf(runtime->env, NULL, "No addon registered for '%s'", specifier);
   assert(err == 0);
@@ -230,22 +229,13 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_lock(&bare_addon__lock);
 
-  bare_addon_t *next = bare_addon__dynamic;
+  bare_addon_t *addon = bare_addon__find(bare_addon__dynamic, process, specifier);
 
-  while (next) {
-    bare_addon_t *addon = next;
+  if (addon) {
+    uv_mutex_unlock(&bare_addon__lock);
+    uv_mutex_unlock(&bare_addon__loading);
 
-    next = addon->next;
-
-    // Only addons loaded by the process itself may be reused. Addons loaded by
-    // another process must be loaded again to ensure that a sealed process
-    // can't pick up addons that it never loaded.
-    if (addon->owner == process && strcmp(specifier, addon->specifier) == 0) {
-      uv_mutex_unlock(&bare_addon__lock);
-      uv_mutex_unlock(&bare_addon__loading);
-
-      return addon;
-    }
+    return addon;
   }
 
   if (process->sealed) {
@@ -359,7 +349,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   // Publish the staged addons now that their handles are known, keeping the
   // order they registered in.
-  next = bare_addon__staging;
+  addon = bare_addon__staging;
 
   uv_mutex_lock(&bare_addon__lock);
 
@@ -383,7 +373,7 @@ bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
 
   uv_mutex_unlock(&bare_addon__loading);
 
-  return next;
+  return addon;
 
 err:
   // Free anything staged by a constructor that ran before the load failed, as
@@ -438,6 +428,19 @@ bare_addon_sealed(bare_process_t *process) {
   uv_mutex_unlock(&bare_addon__lock);
 
   return sealed;
+}
+
+bool
+bare_addon_loaded(bare_process_t *process, const char *specifier) {
+  uv_once(&bare_addon__guard, bare_addon__on_init);
+
+  uv_mutex_lock(&bare_addon__lock);
+
+  bool loaded = bare_addon__find(bare_addon__dynamic, process, specifier) != NULL;
+
+  uv_mutex_unlock(&bare_addon__lock);
+
+  return loaded;
 }
 
 void
@@ -510,7 +513,7 @@ bare_addon__matches(const char *query, size_t len, const char *name) {
   return name[len] == '\0' || name[len] == '.';
 }
 
-uv_lib_t *
+void *
 bare_module_find(const char *query) {
   uv_once(&bare_addon__guard, bare_addon__on_init);
 
