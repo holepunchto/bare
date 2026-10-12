@@ -19,6 +19,8 @@ endif()
 
 set(BARE_ENGINE "github:holepunchto/libjs#7b4e6d5" CACHE STRING "The JavaScript engine to use")
 
+set(BARE_ENGINE_SHARED OFF CACHE BOOL "Link the JavaScript engine as a shared library rather than embedding it")
+
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
 set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
@@ -28,7 +30,7 @@ fetch_package("github:libuv/libuv@1.53.0")
 fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#a1ceca8")
 
-if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
+if(BARE_PREBUILDS AND NOT BARE_ENGINE_SHARED AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
 
   mirror_drive(
@@ -167,6 +169,12 @@ fetch_package("${BARE_ENGINE}")
 
 fetch_package("github:holepunchto/libnapi#0de062d")
 
+if(BARE_ENGINE_SHARED)
+  set(engine js_shared)
+else()
+  set(engine $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>)
+endif()
+
 add_bare_bundle(
   bare_bundle
   ENTRY src/bare.js
@@ -277,7 +285,7 @@ target_include_directories(
 target_link_libraries(
   bare_shared
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>
+    ${engine}
   PRIVATE
     bare
 )
@@ -311,7 +319,7 @@ target_include_directories(
 target_link_libraries(
   bare_static
   PUBLIC
-    $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>
+    ${engine}
   PRIVATE
     bare
 )
