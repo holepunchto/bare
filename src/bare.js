@@ -232,6 +232,7 @@ bare.onresume = function onresume() {
  * Register the entry functions used by `bare_exit()` and `bare_load()`.
  */
 
+const Bundle = require('bare-bundle')
 const Module = require('bare-module')
 const { startsWithWindowsDriveLetter } = require('bare-module-resolve')
 const URL = require('bare-url')
@@ -247,11 +248,41 @@ bare.load = function load(filename, source) {
 }
 
 bare.loadThread = function loadThread(filename, source, mount) {
-  const opts = { protocol: new Module.Protocol(), cache: Object.create(null) }
+  const url = toURL(filename)
+
+  let addons = []
+
+  if (source) {
+    source = Buffer.from(source)
+
+    if (url.pathname.endsWith('.bundle')) {
+      source = Bundle.from(source)
+
+      addons = source.mount(mountFor(url, mount)).addons
+    }
+  }
+
+  const opts = { protocol: threadProtocol(addons), cache: Object.create(null) }
 
   if (mount !== null) opts.mount = mount
 
-  return Module.loadSync(toURL(filename), source ? Buffer.from(source) : null, opts)
+  return Module.loadSync(url, source || null, opts)
+}
+
+function threadProtocol(addons) {
+  addons = new Set(addons)
+
+  return new Module.Protocol({
+    exists(url) {
+      return addons.has(url.href)
+    }
+  })
+}
+
+function mountFor(url, mount) {
+  const root = mount === null ? url.href : mount
+
+  return root.endsWith('/') ? root : root + '/'
 }
 
 function toURL(filename) {
