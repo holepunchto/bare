@@ -84,14 +84,14 @@ module.exports = exports = class Thread {
 
   suspend(linger = 0) {
     if (linger <= 0) linger = 0
-    else linger = linger & 0xffffffff
+    else linger = Math.min(linger, 0x7fffffff) | 0
 
     bare.suspendThread(this, linger)
   }
 
   wakeup(deadline = 0) {
     if (deadline <= 0) deadline = 0
-    else deadline = deadline & 0xffffffff
+    else deadline = Math.min(deadline, 0x7fffffff) | 0
 
     bare.wakeupThread(this, deadline)
   }
