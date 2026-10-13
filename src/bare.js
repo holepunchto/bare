@@ -82,15 +82,23 @@ class Bare extends EventEmitter {
   }
 
   suspend(linger = 0) {
+    if (linger > 0x7fffffff) {
+      throw new RangeError(`Linger must be at most 2147483647. Received ${linger}`)
+    }
+
     if (linger <= 0) linger = 0
-    else linger = Math.min(linger, 0x7fffffff) | 0
+    else linger = linger | 0
 
     bare.suspend(linger)
   }
 
   wakeup(deadline = 0) {
+    if (deadline > 0x7fffffff) {
+      throw new RangeError(`Deadline must be at most 2147483647. Received ${deadline}`)
+    }
+
     if (deadline <= 0) deadline = 0
-    else deadline = Math.min(deadline, 0x7fffffff) | 0
+    else deadline = deadline | 0
 
     bare.wakeup(deadline)
   }

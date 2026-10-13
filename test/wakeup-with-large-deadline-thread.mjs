@@ -2,7 +2,7 @@ import t from 'bare-tap'
 import bundle from './helpers/bundle.js'
 const { Thread } = Bare
 
-t.plan(2)
+t.plan(4)
 
 const shared = new Int32Array(new SharedArrayBuffer(12))
 
@@ -34,18 +34,21 @@ const thread = new Thread(
 
 Atomics.wait(shared, 0, 0)
 
-thread.suspend(2 ** 32 + 1000)
+t.throws(() => thread.suspend(2 ** 32 + 1000), RangeError, 'suspend throws instead of wrapping')
+t.throws(() => thread.wakeup(3_000_000_000), RangeError, 'wakeup throws instead of wrapping')
+
+thread.suspend(0x7fffffff)
 
 Atomics.store(shared, 0, 2)
 Atomics.notify(shared, 0)
 
 await t.sleep(500)
 
-thread.wakeup(3_000_000_000)
+thread.wakeup(0x7fffffff)
 await t.sleep(500)
 
 thread.resume()
 thread.join()
 
-t.equal(Atomics.load(shared, 1), 0x7fffffff, 'linger is clamped')
-t.equal(Atomics.load(shared, 2), 0x7fffffff, 'deadline is clamped')
+t.equal(Atomics.load(shared, 1), 0x7fffffff, 'suspend accepts the limit')
+t.equal(Atomics.load(shared, 2), 0x7fffffff, 'wakeup accepts the limit')
