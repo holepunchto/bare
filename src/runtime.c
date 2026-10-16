@@ -359,17 +359,52 @@ bare_runtime__on_suspend(bare_runtime_t *runtime, int linger) {
 }
 
 static inline void
-bare_runtime__on_wakeup_timeout(uv_timer_t *handle) {
-  bare_runtime_t *runtime = handle->data;
+bare_runtime__on_idle(bare_runtime_t *runtime) {
+  int err;
 
   if (
     runtime->state != bare_runtime_state_suspending &&
+    runtime->state != bare_runtime_state_idle &&
     runtime->state != bare_runtime_state_awake
   ) return;
 
-  runtime->state = bare_runtime_state_idle;
+  runtime->state = bare_runtime_state_suspended;
 
-  uv_stop(runtime->loop);
+  uv_ref((uv_handle_t *) &runtime->signal);
+
+  err = uv_timer_stop(&runtime->timeout);
+  assert(err == 0);
+
+  js_env_t *env = runtime->env;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *fn;
+  err = js_get_named_property(env, exports, "onidle", &fn);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_global(env, &global);
+  assert(err == 0);
+
+  err = js_call_function(env, global, fn, 0, NULL, NULL);
+  (void) err;
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  bare_runtime__invoke_callback_if_main_thread(runtime, idle);
+}
+
+static void
+bare_runtime__on_timeout(uv_timer_t *handle) {
+  bare_runtime__on_idle((bare_runtime_t *) handle->data);
 }
 
 static inline void
@@ -378,6 +413,7 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime, int deadline) {
 
   if (
     runtime->state != bare_runtime_state_suspending &&
+    runtime->state != bare_runtime_state_idle &&
     runtime->state != bare_runtime_state_suspended &&
     runtime->state != bare_runtime_state_awake
   ) return;
@@ -386,7 +422,7 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime, int deadline) {
 
   uv_unref((uv_handle_t *) &runtime->signal);
 
-  err = uv_timer_start(&runtime->timeout, bare_runtime__on_wakeup_timeout, (uint64_t) deadline, 0);
+  err = uv_timer_start(&runtime->timeout, bare_runtime__on_timeout, (uint64_t) deadline, 0);
   assert(err == 0);
 
   js_env_t *env = runtime->env;
@@ -430,50 +466,6 @@ bare_runtime__on_wakeup(bare_runtime_t *runtime, int deadline) {
   }
 
   bare_runtime__invoke_callback_if_main_thread(runtime, wakeup, deadline);
-}
-
-static inline void
-bare_runtime__on_idle(bare_runtime_t *runtime) {
-  int err;
-
-  if (
-    runtime->state != bare_runtime_state_suspending &&
-    runtime->state != bare_runtime_state_idle &&
-    runtime->state != bare_runtime_state_awake
-  ) return;
-
-  runtime->state = bare_runtime_state_suspended;
-
-  uv_ref((uv_handle_t *) &runtime->signal);
-
-  err = uv_timer_stop(&runtime->timeout);
-  assert(err == 0);
-
-  js_env_t *env = runtime->env;
-
-  js_handle_scope_t *scope;
-  err = js_open_handle_scope(env, &scope);
-  assert(err == 0);
-
-  js_value_t *exports;
-  err = js_get_reference_value(env, runtime->exports, &exports);
-  assert(err == 0);
-
-  js_value_t *fn;
-  err = js_get_named_property(env, exports, "onidle", &fn);
-  assert(err == 0);
-
-  js_value_t *global;
-  err = js_get_global(env, &global);
-  assert(err == 0);
-
-  err = js_call_function(env, global, fn, 0, NULL, NULL);
-  (void) err;
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-  bare_runtime__invoke_callback_if_main_thread(runtime, idle);
 }
 
 static inline void
@@ -881,7 +873,8 @@ bare_runtime__idle(js_env_t *env, js_callback_info_t *info) {
 
   runtime->state = bare_runtime_state_idle;
 
-  uv_stop(runtime->loop);
+  err = uv_timer_start(&runtime->timeout, bare_runtime__on_timeout, 0, 0);
+  assert(err == 0);
 
   return NULL;
 }
