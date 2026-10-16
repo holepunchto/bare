@@ -63,8 +63,10 @@ list(APPEND tests
   load-result.c
   poll.c
   restart.c
+  run-stop.c
   suspend-idle.js
   suspend-on-idle.js
+  suspend-resume-idle-on-suspend.js
   suspend-resume-on-idle.js
   suspend-resume-on-suspend.js
   suspend-resume-suspend-on-suspend.js
@@ -74,6 +76,7 @@ list(APPEND tests
   suspend-resume-with-linger.js
   suspend-resume.js
   suspend-suspend-resume-thread.mjs
+  suspend-wakeup-idle-on-suspend.js
   thread-join.js
   thread-mount.js
   thread-no-protocol.js
