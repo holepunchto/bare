@@ -77,6 +77,7 @@ list(APPEND tests
   suspend-resume.js
   suspend-suspend-resume-thread.mjs
   suspend-wakeup-idle-on-suspend.js
+  suspend-with-large-linger.js
   thread-join.js
   thread-mount.js
   thread-no-protocol.js
@@ -105,6 +106,8 @@ list(APPEND tests
   wakeup-resume.js
   wakeup-suspend-on-wakeup.js
   wakeup-suspend-resume-on-wakeup.js
+  wakeup-with-large-deadline-thread.mjs
+  wakeup-with-large-deadline.js
   wakeup-with-linger-thread.mjs
 )
 
