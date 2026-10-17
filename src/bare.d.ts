@@ -261,6 +261,7 @@ declare namespace Addon {
 
 type ThreadSource = string | Buffer
 
+/** @deprecated */
 type ThreadCallback = (data: unknown) => unknown
 
 interface ThreadOptions {
@@ -339,31 +340,34 @@ interface Thread {
  * Support for lightweight threads. Threads are similar to workers in Node.js,
  * but provide only minimal API surface for creating and joining threads.
  *
- * Start a new thread that will run `source`, which is a string or a `Buffer`.
- * If `callback` is provided, its function body will be used as the source
- * instead and invoked on the new thread with `Thread.self.data` passed as an
- * argument.
- *
- * A thread is loaded through a protocol that reaches nothing, so it runs the
- * source it was given and no more; `filename` names that source rather than
- * locating it. Anything else the thread needs, including the modules it
- * imports, must travel with it as `source` or `data`. To run a module graph on
- * a thread, gather it into a {@link https://github.com/holepunchto/bare-bundle}
- * first and pass the bundle as `source`, which is what
- * {@link https://github.com/holepunchto/bare-thread} does.
- *
- * A thread does not inherit the module protocol of whoever spawned it. Reading
- * a graph off disk and handing it over is the spawner's job, so that a thread
- * never reaches further than the code that started it.
- *
  * This is an advanced API that users should never have to interact with
  * directly.
  */
 declare class Thread {
-  constructor(callback: ThreadCallback)
-  constructor(options?: ThreadOptions, callback?: ThreadCallback)
-  constructor(filename: string, callback: ThreadCallback)
+  /**
+   * Start a new thread that will run `source`, which is a string or a `Buffer`.
+   *
+   * A thread is loaded through a protocol that reaches nothing, so it runs the
+   * source it was given and no more; `filename` names that source rather than
+   * locating it. Anything else the thread needs, including the modules it
+   * imports, must travel with it as `source` or `data`. To run a module graph
+   * on a thread, gather it into a {@link https://github.com/holepunchto/bare-bundle}
+   * first and pass the bundle as `source`, which is what
+   * {@link https://github.com/holepunchto/bare-thread} does.
+   *
+   * A thread does not inherit the module protocol of whoever spawned it.
+   * Reading a graph off disk and handing it over is the spawner's job, so that
+   * a thread never reaches further than the code that started it.
+   *
+   */
   constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
+  /** @deprecated */
+  constructor(callback: ThreadCallback)
+  /** @deprecated */
+  constructor(options?: ThreadOptions, callback?: ThreadCallback)
+  /** @deprecated */
+  constructor(filename: string, callback: ThreadCallback)
+  /** @deprecated */
   constructor(filename: string, options?: ThreadOptions, callback?: ThreadCallback)
 }
 
@@ -387,13 +391,13 @@ declare namespace Thread {
   export const self: ThreadProxy | null
 
   /** @deprecated */
+  export function create(filename: string, source: ThreadSource, options?: ThreadOptions): Thread
+  /** @deprecated */
   export function create(callback: ThreadCallback): Thread
   /** @deprecated */
   export function create(options?: ThreadOptions, callback?: ThreadCallback): Thread
   /** @deprecated */
   export function create(filename: string, callback: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(filename: string, source: ThreadSource, options?: ThreadOptions): Thread
   /** @deprecated */
   export function create(
     filename: string,
@@ -401,8 +405,6 @@ declare namespace Thread {
     callback?: ThreadCallback
   ): Thread
 }
-
-declare const Bare: Bare
 
 declare global {
   const Bare: Bare
