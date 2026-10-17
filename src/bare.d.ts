@@ -248,8 +248,6 @@ declare namespace Addon {
   export function loaded(url: URL): boolean
 }
 
-type ThreadSource = string | Buffer
-
 interface ThreadOptions {
   /**
    * Data to pass to the thread, available as `Thread.self.data`.
@@ -343,7 +341,7 @@ declare class Thread {
    * a thread never reaches further than the code that started it.
    *
    */
-  constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
+  constructor(filename: string, source: string | Buffer, options?: ThreadOptions)
 }
 
 declare namespace Thread {
