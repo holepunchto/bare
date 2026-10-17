@@ -6,13 +6,16 @@ const { Thread } = Bare
 
 t.plan(1)
 
-const thread = new Thread(() => {
-  Bare.on('uncaughtException', (err) => {
-    if (err.message !== 'boom') throw err
-  })
-
-  throw new Error('boom')
+const thread = new Thread(
+  'bare:/thread.js',
+  `\
+Bare.on('uncaughtException', (err) => {
+  if (err.message !== 'boom') throw err
 })
+
+throw new Error('boom')
+`
+)
 
 thread.join()
 
