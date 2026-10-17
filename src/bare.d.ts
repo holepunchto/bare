@@ -130,17 +130,6 @@ interface Bare extends EventEmitter<BareEvents> {
   readonly versions: { readonly [library: string]: string }
 
   /**
-   * Support for optional streaming communication between an embedder and
-   * JavaScript code. By default, its value is `null` indicating that streaming
-   * communication is not supported. If set by embedders, `Bare.IPC` is
-   * expected to be an instance of a `Duplex` stream.
-   *
-   * This is an advanced API that users should never have to interact with
-   * directly.
-   */
-  IPC: Duplex | null
-
-  /**
    * Immediately terminate the process or current thread with an exit status of
    * `code` which defaults to `Bare.exitCode`.
    */
@@ -177,6 +166,17 @@ interface Bare extends EventEmitter<BareEvents> {
 
 declare namespace Bare {
   export { Addon, Thread }
+
+  /**
+   * Support for optional streaming communication between an embedder and
+   * JavaScript code. By default, its value is `null` indicating that streaming
+   * communication is not supported. If set by embedders, `Bare.IPC` is
+   * expected to be an instance of a `Duplex` stream.
+   *
+   * This is an advanced API that users should never have to interact with
+   * directly.
+   */
+  export let IPC: Duplex | null
 }
 
 interface Addon {
