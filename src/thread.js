@@ -4,30 +4,8 @@ const structuredClone = require('bare-structured-clone')
 const URL = require('bare-url')
 
 module.exports = exports = class Thread {
-  constructor(filename, source, opts, callback) {
-    if (typeof filename !== 'string') {
-      callback = opts
-      opts = source
-      source = filename
-      filename = '<thread>'
-    }
-
-    if (!isSource(source)) {
-      callback = opts
-      opts = source
-      source = null
-    }
-
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = {}
-    } else {
-      opts = opts || {}
-    }
-
+  constructor(filename, source, opts = {}) {
     let { data = null, encoding = 'utf8', stackSize = 0, transfer = [], mount = null } = opts
-
-    if (source === null && isSource(opts.source)) source = opts.source
 
     if (mount !== null) {
       const url = typeof mount === 'string' ? URL.parse(mount) : mount
@@ -37,10 +15,6 @@ module.exports = exports = class Thread {
       }
 
       mount = url.href
-    }
-
-    if (callback) {
-      source = `(${callback.toString()})(Bare.Thread.self.data)`
     }
 
     if (typeof source === 'string') {
@@ -120,11 +94,6 @@ module.exports = exports = class Thread {
     }
   }
 
-  /** @deprecated */
-  static create(filename, source, opts, callback) {
-    return new Thread(filename, source, opts, callback)
-  }
-
   static get isMainThread() {
     return bare.isMainThread
   }
@@ -152,8 +121,4 @@ bare.onthread = function onthread(data) {
   const state = { start: 0, end: data.byteLength, buffer: Buffer.from(data) }
 
   exports.self.data = structuredClone.deserializeWithTransfer(structuredClone.decode(state))
-}
-
-function isSource(value) {
-  return typeof value === 'string' || ArrayBuffer.isView(value)
 }
