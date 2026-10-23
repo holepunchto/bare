@@ -84,7 +84,7 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
-          flags: ${{ matrix.flags }}
+          flags: --debug ${{ matrix.flags }}
           tags: ${{ matrix.tags}}
       - run: bare-make test
         env:

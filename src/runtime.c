@@ -122,7 +122,13 @@ bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char 
   fprintf(stderr, "%s %s\n", label, description);
   fflush(stderr);
 
+#ifdef _WIN32
+  // The debug runtime reports abort() in a dialog that blocks until someone
+  // dismisses it, so the process is ended on the spot instead.
+  __fastfail(FAST_FAIL_FATAL_APP_EXIT);
+#else
   abort();
+#endif
 }
 
 static void
@@ -802,7 +808,13 @@ bare_runtime__terminate(js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime__abort(js_env_t *env, js_callback_info_t *info) {
+#ifdef _WIN32
+  // The debug runtime reports abort() in a dialog that blocks until someone
+  // dismisses it, so the process is ended on the spot instead.
+  __fastfail(FAST_FAIL_FATAL_APP_EXIT);
+#else
   abort();
+#endif
 }
 
 static js_value_t *
