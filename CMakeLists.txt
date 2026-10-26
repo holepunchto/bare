@@ -241,6 +241,30 @@ target_link_libraries(
     napi
 )
 
+add_library(bare_headers INTERFACE)
+
+add_library(bare::headers ALIAS bare_headers)
+
+target_include_directories(
+  bare_headers
+  INTERFACE
+    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+if(target MATCHES "win32")
+  add_library(bare_import_library INTERFACE)
+
+  add_library(bare::import_library ALIAS bare_import_library)
+
+  target_link_libraries(
+    bare_import_library
+    INTERFACE
+      $<TARGET_LINKER_FILE:bare_shared>
+  )
+
+  add_dependencies(bare_import_library bare_shared)
+endif()
+
 link_bare_module(bare bare-buffer)
 link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
