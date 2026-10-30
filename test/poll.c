@@ -35,10 +35,10 @@ main(int argc, char *argv[]) {
 
   uv_buf_t source = uv_buf_init((char *) code, strlen(code));
 
+  uint64_t started = uv_hrtime();
+
   e = bare_load(bare, "/test.js", &source, NULL);
   assert(e == 0);
-
-  uint64_t started = uv_hrtime();
 
   int polls = 0;
 
@@ -61,8 +61,10 @@ main(int argc, char *argv[]) {
 
   uint64_t elapsed = (uv_hrtime() - started) / 1000000;
 
-  // Three intervals of 50 ms, with room to spare for a loaded machine.
-  assert(elapsed >= 150);
+  // Three intervals of 50 ms, with room to spare for a loaded machine. Timers
+  // are scheduled against the cached loop time, which may lag behind the
+  // clock, so the intervals can also complete slightly early.
+  assert(elapsed >= 100);
   assert(elapsed < 5000);
 
   // One poll per interval, give or take. Anything more means the host was
