@@ -336,10 +336,9 @@ else()
   set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.map")
 
   list(TRANSFORM exports PREPEND "    ")
-  list(TRANSFORM exports APPEND ";")
-  list(JOIN exports "\n" exports)
+  list(JOIN exports ";\n" exports)
 
-  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports}\n\n  local:\n    *;\n};\n" @ONLY)
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports};\n\n  local:\n    *;\n};\n" @ONLY)
 
   target_link_options(
     bare_exports
