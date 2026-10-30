@@ -11,6 +11,8 @@ add_executable(bare_bin
   bare.bundle.h
 )
 
+add_executable(bare::bin ALIAS bare_bin)
+
 if(WIN32)
   target_sources(bare_bin PRIVATE bare.manifest)
 endif()
@@ -28,8 +30,23 @@ target_link_libraries(
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
   PRIVATE
+    bare_exports
     rlimit_static
 )
+
+if(target MATCHES "darwin|ios")
+  target_link_options(
+    bare_bin
+    PRIVATE
+      $<$<CONFIG:Release>:-Wl,-dead_strip,-S,-x>
+  )
+elseif(target MATCHES "linux|android")
+  target_link_options(
+    bare_bin
+    PRIVATE
+      $<$<CONFIG:Release>:-Wl,--gc-sections,--strip-all>
+  )
+endif()
 
 link_bare_module(bare_bin bare-crypto)
 link_bare_module(bare_bin bare-dns)

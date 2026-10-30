@@ -279,7 +279,84 @@ link_bare_module(bare bare-type)
 link_bare_module(bare bare-type-stripper)
 link_bare_module(bare bare-url)
 
+file(READ src/exports.json exports_json)
+
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/exports.json)
+
+set(exports)
+
+string(JSON groups LENGTH "${exports_json}")
+
+math(EXPR last_group "${groups} - 1")
+
+foreach(i RANGE ${last_group})
+  string(JSON group MEMBER "${exports_json}" ${i})
+  string(JSON symbols LENGTH "${exports_json}" ${group})
+
+  math(EXPR last_symbol "${symbols} - 1")
+
+  foreach(j RANGE ${last_symbol})
+    string(JSON symbol GET "${exports_json}" ${group} ${j})
+
+    list(APPEND exports ${symbol})
+  endforeach()
+endforeach()
+
+add_library(bare_exports INTERFACE)
+
+add_library(bare::exports ALIAS bare_exports)
+
+if(target MATCHES "win32")
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.def")
+
+  list(TRANSFORM exports PREPEND "  ")
+  list(JOIN exports "\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "EXPORTS\n${exports}\n" @ONLY)
+
+  target_sources(
+    bare_exports
+    INTERFACE
+      "${exports_file}"
+  )
+elseif(target MATCHES "darwin|ios")
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.exp")
+
+  list(TRANSFORM exports PREPEND "_")
+  list(JOIN exports "\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "${exports}\n" @ONLY)
+
+  target_link_options(
+    bare_exports
+    INTERFACE
+      "-Wl,-exported_symbols_list,${exports_file}"
+  )
+else()
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.map")
+
+  list(TRANSFORM exports PREPEND "    ")
+  list(TRANSFORM exports APPEND ";")
+  list(JOIN exports "\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports}\n\n  local:\n    *;\n};\n" @ONLY)
+
+  target_link_options(
+    bare_exports
+    INTERFACE
+      "-Wl,--version-script=${exports_file}"
+  )
+endif()
+
+set_target_properties(
+  bare_exports
+  PROPERTIES
+  INTERFACE_LINK_DEPENDS "${exports_file}"
+)
+
 add_library(bare_shared SHARED)
+
+add_library(bare::shared ALIAS bare_shared)
 
 set_target_properties(
   bare_shared
@@ -290,13 +367,16 @@ set_target_properties(
 )
 
 if(target MATCHES "win32")
-  target_sources(
+  target_link_libraries(
     bare_shared
     PUBLIC
-      src/bare.def
-      src/js.def
-      src/napi.def
-      src/uv.def
+      bare_exports
+  )
+else()
+  target_link_libraries(
+    bare_shared
+    PRIVATE
+      bare_exports
   )
 endif()
 
@@ -316,6 +396,8 @@ target_link_libraries(
 
 add_library(bare_static STATIC)
 
+add_library(bare::static ALIAS bare_static)
+
 set_target_properties(
   bare_static
   PROPERTIES
@@ -324,13 +406,10 @@ set_target_properties(
 )
 
 if(target MATCHES "win32")
-  target_sources(
+  target_link_libraries(
     bare_static
     PUBLIC
-      src/bare.def
-      src/js.def
-      src/napi.def
-      src/uv.def
+      bare_exports
   )
 endif()
 
