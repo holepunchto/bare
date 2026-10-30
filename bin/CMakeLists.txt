@@ -30,20 +30,33 @@ target_link_libraries(
   PUBLIC
     $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
   PRIVATE
-    bare_exports
     rlimit_static
 )
 
 if(target MATCHES "darwin|ios")
+  target_link_libraries(
+    bare_bin
+    PRIVATE
+      bare_exports
+  )
+
   target_link_options(
     bare_bin
     PRIVATE
       $<$<CONFIG:Release>:-Wl,-dead_strip,-S,-x>
   )
 elseif(target MATCHES "linux|android")
+  set_target_properties(
+    bare_bin
+    PROPERTIES
+    ENABLE_EXPORTS OFF
+    LINK_DEPENDS "${dynamic_list_file}"
+  )
+
   target_link_options(
     bare_bin
     PRIVATE
+      "-Wl,--dynamic-list=${dynamic_list_file}"
       $<$<CONFIG:Release>:-Wl,--gc-sections,--strip-all>
   )
 endif()

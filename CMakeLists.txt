@@ -340,6 +340,10 @@ else()
 
   file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports};\n\n  local:\n    *;\n};\n" @ONLY)
 
+  set(dynamic_list_file "${CMAKE_CURRENT_BINARY_DIR}/bare.dynamic")
+
+  file(CONFIGURE OUTPUT "${dynamic_list_file}" CONTENT "{\n${exports};\n};\n" @ONLY)
+
   target_link_options(
     bare_exports
     INTERFACE
