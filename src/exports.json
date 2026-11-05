@@ -125,6 +125,7 @@
     "js_get_named_property",
     "js_get_new_target",
     "js_get_null",
+    "js_get_object_global",
     "js_get_object_type",
     "js_get_platform_identifier",
     "js_get_platform_limits",
