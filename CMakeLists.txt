@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#90cf7e7" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#bf32519" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_ENGINE_SHARED OFF CACHE BOOL "Link the JavaScript engine as a shared library rather than embedding it")
 
@@ -37,7 +37,7 @@ if(BARE_PREBUILDS AND NOT BARE_ENGINE_SHARED AND BARE_ENGINE MATCHES "github:hol
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 249
+    CHECKOUT 262
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
