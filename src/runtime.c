@@ -600,6 +600,40 @@ bare_runtime__on_signal(uv_async_t *handle) {
   }
 }
 
+static inline bool
+bare_runtime__pending_transitions(bare_runtime_t *runtime) {
+  return (
+    runtime->transitions.suspend ||
+    runtime->transitions.wakeup ||
+    runtime->transitions.resume ||
+    runtime->transitions.terminate
+  );
+}
+
+static inline bool
+bare_runtime__has_pending_transitions(bare_runtime_t *runtime) {
+  uv_mutex_lock(&runtime->lock);
+
+  bool pending = bare_runtime__pending_transitions(runtime);
+
+  uv_mutex_unlock(&runtime->lock);
+
+  return pending;
+}
+
+static inline bool
+bare_runtime__close_transitions(bare_runtime_t *runtime) {
+  uv_mutex_lock(&runtime->lock);
+
+  bool pending = bare_runtime__pending_transitions(runtime);
+
+  if (!pending) runtime->closed = true;
+
+  uv_mutex_unlock(&runtime->lock);
+
+  return !pending;
+}
+
 static js_value_t *
 bare_runtime__get_static_addons(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -1493,6 +1527,12 @@ int
 bare_runtime_suspend(bare_runtime_t *runtime, int linger) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->linger = linger;
   runtime->transitions.suspend = true;
   runtime->transitions.resuspend = true;
@@ -1506,6 +1546,12 @@ int
 bare_runtime_wakeup(bare_runtime_t *runtime, int deadline) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->deadline = deadline;
   runtime->transitions.wakeup = true;
 
@@ -1518,6 +1564,12 @@ int
 bare_runtime_resume(bare_runtime_t *runtime) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->transitions.resume = true;
   runtime->transitions.resuspend = false;
 
@@ -1529,6 +1581,12 @@ bare_runtime_resume(bare_runtime_t *runtime) {
 int
 bare_runtime_terminate(bare_runtime_t *runtime) {
   uv_mutex_lock(&runtime->lock);
+
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
 
   runtime->transitions.terminate = true;
 
@@ -1558,6 +1616,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->state = bare_runtime_state_active;
   runtime->linger = 0;
   runtime->deadline = 0;
+
+  runtime->closed = false;
 
   memset(&runtime->transitions, 0, sizeof(runtime->transitions));
 
@@ -2042,27 +2102,33 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_process_t *previous = bare_addon_attach(runtime);
 
-  do {
+  for (;;) {
     err = uv_run(runtime->loop, mode);
 
-    if (runtime->state == bare_runtime_state_terminated) goto terminated;
+    // The signal handle is unreferenced while active, so a transition sent
+    // just before the loop ran out of work is never polled for.
+    if (err == 0 && bare_runtime__has_pending_transitions(runtime)) {
+      bare_runtime__on_signal(&runtime->signal);
 
-    if (runtime->state == bare_runtime_state_idle) goto idle;
+      continue;
+    }
 
-    if (err > 0) goto done;
+    if (runtime->state == bare_runtime_state_terminated) break;
 
-    if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
-    idle:
+    if (runtime->state == bare_runtime_state_idle) {
+      bare_runtime__on_idle(runtime);
+    } else if (err > 0) {
+      goto done;
+    } else if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
       bare_runtime__on_idle(runtime);
     } else {
       bare_runtime__on_before_exit(runtime);
     }
 
-    if (runtime->state == bare_runtime_state_terminated) {
-    terminated:
-      break;
-    }
-  } while (uv_loop_alive(runtime->loop));
+    if (runtime->state == bare_runtime_state_terminated) break;
+
+    if (!uv_loop_alive(runtime->loop) && bare_runtime__close_transitions(runtime)) break;
+  }
 
   bare_runtime__on_exit(runtime);
 

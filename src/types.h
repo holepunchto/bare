@@ -51,6 +51,8 @@ struct bare_runtime_s {
     bool resume;
     bool terminate;
   } transitions;
+
+  bool closed;
 };
 
 struct bare_process_s {
