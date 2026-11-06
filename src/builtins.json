@@ -6,6 +6,7 @@
   { "addon": "bare-module" },
   { "addon": "bare-module-lexer" },
   { "addon": "bare-path" },
+  { "addon": "bare-sleep" },
   { "addon": "bare-structured-clone" },
   { "addon": "bare-system-logger" },
   { "addon": "bare-timers" },
