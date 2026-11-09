@@ -167,7 +167,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#0de062d")
+fetch_package("github:holepunchto/libnapi#1869a28")
 
 if(BARE_ENGINE_SHARED)
   set(engine js_shared)
