@@ -178,6 +178,7 @@
     "js_is_dataview",
     "js_is_date",
     "js_is_delegate",
+    "js_is_detachable_arraybuffer",
     "js_is_detached_arraybuffer",
     "js_is_error",
     "js_is_exception_pending",
