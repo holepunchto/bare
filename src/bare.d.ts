@@ -92,13 +92,22 @@ interface Bare extends EventEmitter<BareEvents> {
   /**
    * The identifier of the operating system for which Bare was compiled.
    */
-  readonly platform: 'android' | 'darwin' | 'freertos' | 'ios' | 'linux' | 'win32'
+  readonly platform: 'android' | 'darwin' | 'freertos' | 'ios' | 'linux' | 'watchos' | 'win32'
 
   /**
    * The identifier of the processor architecture for which Bare was compiled.
    */
   readonly arch:
-    'arm' | 'arm64' | 'armv8m' | 'ia32' | 'x64' | 'mips' | 'mipsel' | 'riscv32' | 'riscv64'
+    | 'arm'
+    | 'arm64'
+    | 'arm64-32'
+    | 'armv8m'
+    | 'ia32'
+    | 'x64'
+    | 'mips'
+    | 'mipsel'
+    | 'riscv32'
+    | 'riscv64'
 
   /** @deprecated */
   readonly simulator: boolean

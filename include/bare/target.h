@@ -6,6 +6,9 @@
 #if TARGET_OS_IOS
 #define BARE_PLATFORM "ios"
 #define BARE_PLATFORM_IOS
+#elif TARGET_OS_WATCH
+#define BARE_PLATFORM "watchos"
+#define BARE_PLATFORM_WATCHOS
 #elif TARGET_OS_MAC
 #define BARE_PLATFORM "darwin"
 #define BARE_PLATFORM_DARWIN
@@ -33,7 +36,10 @@
 #error Unsupported platform
 #endif
 
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if defined(__ARM64_ARCH_8_32__)
+#define BARE_ARCH "arm64-32"
+#define BARE_ARCH_ARM64_32
+#elif defined(__aarch64__) || defined(_M_ARM64)
 #define BARE_ARCH "arm64"
 #define BARE_ARCH_ARM64
 #elif defined(__ARM_ARCH_PROFILE) && __ARM_ARCH_PROFILE == 'M'
