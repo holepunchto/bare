@@ -1,6 +1,7 @@
 /* global bare */
 
 const resolve = require('bare-addon-resolve')
+const hostParser = require('bare-host-parser')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
@@ -8,7 +9,7 @@ const engines = bare.versions
 const host = bare.host
 const builtins = bare.getStaticAddons()
 
-const conditions = ['bare', 'node', 'addon', ...host.split('-')]
+const conditions = ['bare', 'node', 'addon', ...hostParser.conditions(host)]
 const extensions = ['.bare', '.node']
 const cache = Object.create(null)
 

@@ -25,6 +25,7 @@
     "bare-bundle": "^1.11.0",
     "bare-console": "^6.0.0",
     "bare-events": "^2.0.0",
+    "bare-host-parser": "^1.0.0",
     "bare-hrtime": "^2.0.0",
     "bare-inspector": "^6.0.0",
     "bare-module": "^7.0.0",
