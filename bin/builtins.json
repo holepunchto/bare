@@ -13,6 +13,7 @@
   { "addon": "bare-pipe" },
   { "addon": "bare-repl" },
   { "addon": "bare-signals" },
+  { "addon": "bare-sleep" },
   { "addon": "bare-structured-clone" },
   { "addon": "bare-system-logger" },
   { "addon": "bare-tcp" },

@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#7b4e6d5" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#79b6aa0" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_ENGINE_SHARED OFF CACHE BOOL "Link the JavaScript engine as a shared library rather than embedding it")
 
@@ -37,7 +37,7 @@ if(BARE_PREBUILDS AND NOT BARE_ENGINE_SHARED AND BARE_ENGINE MATCHES "github:hol
     SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
     DESTINATION "${prebuilds}"
     PREFIX /${target}
-    CHECKOUT 198
+    CHECKOUT 317
   )
 
   add_library(c++ STATIC IMPORTED GLOBAL)
@@ -167,7 +167,7 @@ endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#0de062d")
+fetch_package("github:holepunchto/libnapi#b6860ec")
 
 if(BARE_ENGINE_SHARED)
   set(engine js_shared)
@@ -241,6 +241,30 @@ target_link_libraries(
     napi
 )
 
+add_library(bare_headers INTERFACE)
+
+add_library(bare::headers ALIAS bare_headers)
+
+target_include_directories(
+  bare_headers
+  INTERFACE
+    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+if(target MATCHES "win32")
+  add_library(bare_import_library INTERFACE)
+
+  add_library(bare::import_library ALIAS bare_import_library)
+
+  target_link_libraries(
+    bare_import_library
+    INTERFACE
+      $<TARGET_LINKER_FILE:bare_shared>
+  )
+
+  add_dependencies(bare_import_library bare_shared)
+endif()
+
 link_bare_module(bare bare-buffer)
 link_bare_module(bare bare-hrtime)
 link_bare_module(bare bare-inspect)
@@ -248,6 +272,7 @@ link_bare_module(bare bare-logger)
 link_bare_module(bare bare-module)
 link_bare_module(bare bare-module-lexer)
 link_bare_module(bare bare-path)
+link_bare_module(bare bare-sleep)
 link_bare_module(bare bare-structured-clone)
 link_bare_module(bare bare-system-logger)
 link_bare_module(bare bare-timers)
@@ -255,7 +280,87 @@ link_bare_module(bare bare-type)
 link_bare_module(bare bare-type-stripper)
 link_bare_module(bare bare-url)
 
+file(READ src/exports.json exports_json)
+
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/exports.json)
+
+set(exports)
+
+string(JSON groups LENGTH "${exports_json}")
+
+math(EXPR last_group "${groups} - 1")
+
+foreach(i RANGE ${last_group})
+  string(JSON group MEMBER "${exports_json}" ${i})
+  string(JSON symbols LENGTH "${exports_json}" ${group})
+
+  math(EXPR last_symbol "${symbols} - 1")
+
+  foreach(j RANGE ${last_symbol})
+    string(JSON symbol GET "${exports_json}" ${group} ${j})
+
+    list(APPEND exports ${symbol})
+  endforeach()
+endforeach()
+
+add_library(bare_exports INTERFACE)
+
+add_library(bare::exports ALIAS bare_exports)
+
+if(target MATCHES "win32")
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.def")
+
+  list(TRANSFORM exports PREPEND "  ")
+  list(JOIN exports "\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "EXPORTS\n${exports}\n" @ONLY)
+
+  target_sources(
+    bare_exports
+    INTERFACE
+      "${exports_file}"
+  )
+elseif(target MATCHES "darwin|ios")
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.exp")
+
+  list(TRANSFORM exports PREPEND "_")
+  list(JOIN exports "\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "${exports}\n" @ONLY)
+
+  target_link_options(
+    bare_exports
+    INTERFACE
+      "-Wl,-exported_symbols_list,${exports_file}"
+  )
+else()
+  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.map")
+
+  list(TRANSFORM exports PREPEND "    ")
+  list(JOIN exports ";\n" exports)
+
+  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports};\n\n  local:\n    *;\n};\n" @ONLY)
+
+  set(dynamic_list_file "${CMAKE_CURRENT_BINARY_DIR}/bare.dynamic")
+
+  file(CONFIGURE OUTPUT "${dynamic_list_file}" CONTENT "{\n${exports};\n};\n" @ONLY)
+
+  target_link_options(
+    bare_exports
+    INTERFACE
+      "-Wl,--version-script=${exports_file}"
+  )
+endif()
+
+set_target_properties(
+  bare_exports
+  PROPERTIES
+  INTERFACE_LINK_DEPENDS "${exports_file}"
+)
+
 add_library(bare_shared SHARED)
+
+add_library(bare::shared ALIAS bare_shared)
 
 set_target_properties(
   bare_shared
@@ -266,13 +371,16 @@ set_target_properties(
 )
 
 if(target MATCHES "win32")
-  target_sources(
+  target_link_libraries(
     bare_shared
     PUBLIC
-      src/bare.def
-      src/js.def
-      src/napi.def
-      src/uv.def
+      bare_exports
+  )
+else()
+  target_link_libraries(
+    bare_shared
+    PRIVATE
+      bare_exports
   )
 endif()
 
@@ -292,6 +400,8 @@ target_link_libraries(
 
 add_library(bare_static STATIC)
 
+add_library(bare::static ALIAS bare_static)
+
 set_target_properties(
   bare_static
   PROPERTIES
@@ -300,13 +410,10 @@ set_target_properties(
 )
 
 if(target MATCHES "win32")
-  target_sources(
+  target_link_libraries(
     bare_static
     PUBLIC
-      src/bare.def
-      src/js.def
-      src/napi.def
-      src/uv.def
+      bare_exports
   )
 endif()
 

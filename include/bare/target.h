@@ -6,6 +6,9 @@
 #if TARGET_OS_IOS
 #define BARE_PLATFORM "ios"
 #define BARE_PLATFORM_IOS
+#elif TARGET_OS_WATCH
+#define BARE_PLATFORM "watchos"
+#define BARE_PLATFORM_WATCHOS
 #elif TARGET_OS_MAC
 #define BARE_PLATFORM "darwin"
 #define BARE_PLATFORM_DARWIN
@@ -26,13 +29,26 @@
 #elif defined(__wasi__)
 #define BARE_PLATFORM "wasi"
 #define BARE_PLATFORM_WASI
+#elif defined(__FREERTOS__)
+#define BARE_PLATFORM "freertos"
+#define BARE_PLATFORM_FREERTOS
 #else
 #error Unsupported platform
 #endif
 
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if defined(__ARM64_ARCH_8_32__)
+#define BARE_ARCH "arm64-32"
+#define BARE_ARCH_ARM64_32
+#elif defined(__aarch64__) || defined(_M_ARM64)
 #define BARE_ARCH "arm64"
 #define BARE_ARCH_ARM64
+#elif defined(__ARM_ARCH_PROFILE) && __ARM_ARCH_PROFILE == 'M'
+#if defined(__ARM_ARCH_8M_MAIN__) && defined(__ARM_PCS_VFP)
+#define BARE_ARCH "armv8m"
+#define BARE_ARCH_ARMV8M
+#else
+#error Unsupported architecture
+#endif
 #elif defined(__arm__) || defined(_M_ARM)
 #define BARE_ARCH "arm"
 #define BARE_ARCH_ARM
@@ -45,6 +61,9 @@
 #elif defined(__riscv) && __riscv_xlen == 64
 #define BARE_ARCH "riscv64"
 #define BARE_ARCH_RISCV64
+#elif defined(__riscv) && __riscv_xlen == 32
+#define BARE_ARCH "riscv32"
+#define BARE_ARCH_RISCV32
 #elif defined(__MIPSEB__)
 #define BARE_ARCH "mips"
 #define BARE_ARCH_MIPS

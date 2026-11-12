@@ -122,7 +122,63 @@ bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char 
   fprintf(stderr, "%s %s\n", label, description);
   fflush(stderr);
 
+#ifdef _WIN32
+  // The debug runtime reports abort() in a dialog that blocks until someone
+  // dismisses it, so the process is ended on the spot instead.
+  __fastfail(FAST_FAIL_FATAL_APP_EXIT);
+#else
   abort();
+#endif
+}
+
+// Reading anything from an object can run code of the realm that made it, and
+// that code is handed arguments made in the realm doing the reading. An object
+// from another realm, which may be untrusted, therefore never reaches the
+// handlers of this one, not even to describe it.
+static bool
+bare_runtime__is_foreign(js_env_t *env, bare_runtime_t *runtime, js_value_t *value) {
+  int err;
+
+  bool is_object;
+  err = js_is_object(env, value, &is_object);
+  assert(err == 0);
+
+  if (!is_object) return false;
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *expected;
+  err = js_get_object_global(env, exports, &expected);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_object_global(env, value, &global);
+  assert(err == 0);
+
+  bool equals;
+  err = js_strict_equals(env, global, expected, &equals);
+  assert(err == 0);
+
+  return !equals;
+}
+
+static js_value_t *
+bare_runtime__confine(js_env_t *env, bare_runtime_t *runtime, js_value_t *value, const char *message) {
+  int err;
+
+  if (!bare_runtime__is_foreign(env, runtime, value)) return value;
+
+  js_value_t *description;
+  err = js_create_string_utf8(env, (const utf8_t *) message, -1, &description);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_error(env, NULL, description, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static void
@@ -146,6 +202,8 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
+
+  error = bare_runtime__confine(env, runtime, error, "Uncaught exception in another realm");
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
@@ -183,6 +241,13 @@ bare_runtime__on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
+
+  reason = bare_runtime__confine(env, runtime, reason, "Unhandled rejection in another realm");
+
+  if (bare_runtime__is_foreign(env, runtime, promise)) {
+    err = js_get_undefined(env, &promise);
+    assert(err == 0);
+  }
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
@@ -594,6 +659,40 @@ bare_runtime__on_signal(uv_async_t *handle) {
   }
 }
 
+static inline bool
+bare_runtime__pending_transitions(bare_runtime_t *runtime) {
+  return (
+    runtime->transitions.suspend ||
+    runtime->transitions.wakeup ||
+    runtime->transitions.resume ||
+    runtime->transitions.terminate
+  );
+}
+
+static inline bool
+bare_runtime__has_pending_transitions(bare_runtime_t *runtime) {
+  uv_mutex_lock(&runtime->lock);
+
+  bool pending = bare_runtime__pending_transitions(runtime);
+
+  uv_mutex_unlock(&runtime->lock);
+
+  return pending;
+}
+
+static inline bool
+bare_runtime__close_transitions(bare_runtime_t *runtime) {
+  uv_mutex_lock(&runtime->lock);
+
+  bool pending = bare_runtime__pending_transitions(runtime);
+
+  if (!pending) runtime->closed = true;
+
+  uv_mutex_unlock(&runtime->lock);
+
+  return !pending;
+}
+
 static js_value_t *
 bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -778,7 +877,13 @@ bare_runtime__terminate(js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_runtime__abort(js_env_t *env, js_callback_info_t *info) {
+#ifdef _WIN32
+  // The debug runtime reports abort() in a dialog that blocks until someone
+  // dismisses it, so the process is ended on the spot instead.
+  __fastfail(FAST_FAIL_FATAL_APP_EXIT);
+#else
   abort();
+#endif
 }
 
 static js_value_t *
@@ -1457,6 +1562,12 @@ int
 bare_runtime_suspend(bare_runtime_t *runtime, int linger) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->linger = linger;
   runtime->transitions.suspend = true;
   runtime->transitions.resuspend = true;
@@ -1470,6 +1581,12 @@ int
 bare_runtime_wakeup(bare_runtime_t *runtime, int deadline) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->deadline = deadline;
   runtime->transitions.wakeup = true;
 
@@ -1482,6 +1599,12 @@ int
 bare_runtime_resume(bare_runtime_t *runtime) {
   uv_mutex_lock(&runtime->lock);
 
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
+
   runtime->transitions.resume = true;
   runtime->transitions.resuspend = false;
 
@@ -1493,6 +1616,12 @@ bare_runtime_resume(bare_runtime_t *runtime) {
 int
 bare_runtime_terminate(bare_runtime_t *runtime) {
   uv_mutex_lock(&runtime->lock);
+
+  if (runtime->closed) {
+    uv_mutex_unlock(&runtime->lock);
+
+    return 0;
+  }
 
   runtime->transitions.terminate = true;
 
@@ -1522,6 +1651,8 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   runtime->state = bare_runtime_state_active;
   runtime->linger = 0;
   runtime->deadline = 0;
+
+  runtime->closed = false;
 
   memset(&runtime->transitions, 0, sizeof(runtime->transitions));
 
@@ -1997,27 +2128,33 @@ bare_runtime_run(bare_runtime_t *runtime, uv_run_mode mode) {
 
   bare_process_t *previous = bare_addon_attach(runtime);
 
-  do {
+  for (;;) {
     err = uv_run(runtime->loop, mode);
 
-    if (runtime->state == bare_runtime_state_terminated) goto terminated;
+    // The signal handle is unreferenced while active, so a transition sent
+    // just before the loop ran out of work is never polled for.
+    if (err == 0 && bare_runtime__has_pending_transitions(runtime)) {
+      bare_runtime__on_signal(&runtime->signal);
 
-    if (runtime->state == bare_runtime_state_idle) goto idle;
+      continue;
+    }
 
-    if (err > 0) goto done;
+    if (runtime->state == bare_runtime_state_terminated) break;
 
-    if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
-    idle:
+    if (runtime->state == bare_runtime_state_idle) {
+      bare_runtime__on_idle(runtime);
+    } else if (err > 0) {
+      goto done;
+    } else if (runtime->state == bare_runtime_state_suspending || runtime->state == bare_runtime_state_awake) {
       bare_runtime__on_idle(runtime);
     } else {
       bare_runtime__on_before_exit(runtime);
     }
 
-    if (runtime->state == bare_runtime_state_terminated) {
-    terminated:
-      break;
-    }
-  } while (uv_loop_alive(runtime->loop));
+    if (runtime->state == bare_runtime_state_terminated) break;
+
+    if (!uv_loop_alive(runtime->loop) && bare_runtime__close_transitions(runtime)) break;
+  }
 
   bare_runtime__on_exit(runtime);
 

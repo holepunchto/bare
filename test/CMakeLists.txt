@@ -87,6 +87,7 @@ list(APPEND tests
   thread.js
   uncaught-exception-multiple.js
   uncaught-exception-no-listener.js
+  uncaught-exception-other-realm.js
   uncaught-exception-thread.js
   uncaught-exception-throw-in-listener.js
   uncaught-exception-throw-in-microtask.js
