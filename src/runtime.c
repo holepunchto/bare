@@ -131,6 +131,56 @@ bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char 
 #endif
 }
 
+// Reading anything from an object can run code of the realm that made it, and
+// that code is handed arguments made in the realm doing the reading. An object
+// from another realm, which may be untrusted, therefore never reaches the
+// handlers of this one, not even to describe it.
+static bool
+bare_runtime__is_foreign(js_env_t *env, bare_runtime_t *runtime, js_value_t *value) {
+  int err;
+
+  bool is_object;
+  err = js_is_object(env, value, &is_object);
+  assert(err == 0);
+
+  if (!is_object) return false;
+
+  js_value_t *exports;
+  err = js_get_reference_value(env, runtime->exports, &exports);
+  assert(err == 0);
+
+  js_value_t *expected;
+  err = js_get_object_global(env, exports, &expected);
+  assert(err == 0);
+
+  js_value_t *global;
+  err = js_get_object_global(env, value, &global);
+  assert(err == 0);
+
+  bool equals;
+  err = js_strict_equals(env, global, expected, &equals);
+  assert(err == 0);
+
+  return !equals;
+}
+
+static js_value_t *
+bare_runtime__confine(js_env_t *env, bare_runtime_t *runtime, js_value_t *value, const char *message) {
+  int err;
+
+  if (!bare_runtime__is_foreign(env, runtime, value)) return value;
+
+  js_value_t *description;
+  err = js_create_string_utf8(env, (const utf8_t *) message, -1, &description);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_error(env, NULL, description, &result);
+  assert(err == 0);
+
+  return result;
+}
+
 static void
 bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data) {
   int err;
@@ -152,6 +202,8 @@ bare_runtime__on_uncaught_exception(js_env_t *env, js_value_t *error, void *data
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
+
+  error = bare_runtime__confine(env, runtime, error, "Uncaught exception in another realm");
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
@@ -189,6 +241,13 @@ bare_runtime__on_unhandled_rejection(js_env_t *env, js_value_t *reason, js_value
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
+
+  reason = bare_runtime__confine(env, runtime, reason, "Unhandled rejection in another realm");
+
+  if (bare_runtime__is_foreign(env, runtime, promise)) {
+    err = js_get_undefined(env, &promise);
+    assert(err == 0);
+  }
 
   js_value_t *exports;
   err = js_get_reference_value(env, runtime->exports, &exports);
