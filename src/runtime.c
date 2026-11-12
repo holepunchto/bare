@@ -42,8 +42,11 @@ static const js_type_tag_t bare_runtime__addon_tag = {
   .upper = 0x6f9c53e8d7b24a11,
 };
 
-static bool
-bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *result, size_t len) {
+// Reads the string into `buffer` when it fits and into a heap allocation when it
+// doesn't, so that the stack only has to fit the common case. Release the result
+// with `bare_runtime__free_string()`.
+static utf8_t *
+bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *buffer, size_t len) {
   int err;
 
   bool is_string;
@@ -54,24 +57,30 @@ bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *result, size_
     err = js_throw_type_error(env, NULL, "Value must be a string");
     assert(err == 0);
 
-    return false;
+    return NULL;
   }
 
   size_t str_len;
   err = js_get_value_string_utf8(env, value, NULL, 0, &str_len);
   assert(err == 0);
 
-  if (str_len + 1 /* NULL */ > len) {
-    err = js_throw_error(env, uv_err_name(UV_ENAMETOOLONG), uv_strerror(UV_ENAMETOOLONG));
-    assert(err == 0);
+  utf8_t *result = buffer;
 
-    return false;
+  if (str_len + 1 /* NULL */ > len) {
+    len = str_len + 1 /* NULL */;
+
+    result = malloc(len);
   }
 
   err = js_get_value_string_utf8(env, value, result, len, NULL);
   assert(err == 0);
 
-  return true;
+  return result;
+}
+
+static void
+bare_runtime__free_string(utf8_t *string, utf8_t *buffer) {
+  if (string != buffer) free(string);
 }
 
 static bool
@@ -108,15 +117,21 @@ bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char 
 
   const char *description = "<unavailable>";
 
-  utf8_t buffer[1024];
+  utf8_t buffer[256];
 
   js_value_t *string;
   err = js_coerce_to_string(env, error, &string);
 
-  if (err == 0) {
-    err = js_get_value_string_utf8(env, string, buffer, sizeof(buffer), NULL);
+  size_t len;
+  if (err == 0) err = js_get_value_string_utf8(env, string, NULL, 0, &len);
 
-    if (err == 0) description = (char *) buffer;
+  if (err == 0) {
+    // The process is about to abort, so a heap allocation is never released.
+    utf8_t *result = len + 1 /* NULL */ > sizeof(buffer) ? malloc(len + 1 /* NULL */) : buffer;
+
+    if (result) err = js_get_value_string_utf8(env, string, result, len + 1 /* NULL */, NULL);
+
+    if (result && err == 0) description = (char *) result;
   }
 
   fprintf(stderr, "%s %s\n", label, description);
@@ -693,6 +708,18 @@ bare_runtime__close_transitions(bare_runtime_t *runtime) {
   return !pending;
 }
 
+#if !BARE_DYNAMIC_ADDONS || !BARE_FILE_SYSTEM_MODULES
+static js_value_t *
+bare_runtime__unsupported(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  err = js_throw_error(env, uv_err_name(UV_ENOSYS), uv_strerror(UV_ENOSYS));
+  assert(err == 0);
+
+  return NULL;
+}
+#endif
+
 static js_value_t *
 bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -707,10 +734,13 @@ bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  utf8_t specifier[4096];
-  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
+  utf8_t specifier_buffer[256];
+  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer, sizeof(specifier_buffer));
+  if (specifier == NULL) return NULL;
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
+
+  bare_runtime__free_string(specifier, specifier_buffer);
 
   if (node == NULL) return NULL;
 
@@ -723,6 +753,7 @@ bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+#if BARE_DYNAMIC_ADDONS
 static js_value_t *
 bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -737,14 +768,17 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  utf8_t specifier[4096];
-  if (!bare_runtime__get_string(env, argv[1], specifier, sizeof(specifier))) return NULL;
+  utf8_t specifier_buffer[256];
+  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer, sizeof(specifier_buffer));
+  if (specifier == NULL) return NULL;
 
   bare_process_t *previous = bare_addon_attach(runtime);
 
   bare_addon_t *node = bare_addon_load_dynamic(runtime, (char *) specifier);
 
   bare_addon_detach(previous);
+
+  bare_runtime__free_string(specifier, specifier_buffer);
 
   if (node == NULL) return NULL;
 
@@ -756,6 +790,7 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   return NULL;
 }
+#endif
 
 static js_value_t *
 bare_runtime__seal_addons(js_env_t *env, js_callback_info_t *info) {
@@ -801,11 +836,16 @@ bare_runtime__addon_loaded(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t specifier[4096];
-  if (!bare_runtime__get_string(env, argv[0], specifier, sizeof(specifier))) return NULL;
+  utf8_t specifier_buffer[256];
+  utf8_t *specifier = bare_runtime__get_string(env, argv[0], specifier_buffer, sizeof(specifier_buffer));
+  if (specifier == NULL) return NULL;
+
+  bool loaded = bare_addon_loaded(runtime->process, (char *) specifier);
+
+  bare_runtime__free_string(specifier, specifier_buffer);
 
   js_value_t *result;
-  err = js_get_boolean(env, bare_addon_loaded(runtime->process, (char *) specifier), &result);
+  err = js_get_boolean(env, loaded, &result);
   assert(err == 0);
 
   return result;
@@ -996,16 +1036,26 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 6);
 
-  utf8_t filename[4096];
-  if (!bare_runtime__get_string(env, argv[1], filename, sizeof(filename))) return NULL;
+  utf8_t filename_buffer[256];
+  utf8_t *filename = bare_runtime__get_string(env, argv[1], filename_buffer, sizeof(filename_buffer));
+  if (filename == NULL) return NULL;
 
-  utf8_t mount[4096];
+  utf8_t mount_buffer[256];
+  utf8_t *mount = NULL;
   bool has_mount;
 
   err = js_is_string(env, argv[5], &has_mount);
   assert(err == 0);
 
-  if (has_mount && !bare_runtime__get_string(env, argv[5], mount, sizeof(mount))) return NULL;
+  if (has_mount) {
+    mount = bare_runtime__get_string(env, argv[5], mount_buffer, sizeof(mount_buffer));
+
+    if (mount == NULL) {
+      bare_runtime__free_string(filename, filename_buffer);
+
+      return NULL;
+    }
+  }
 
   bare_source_t source = {bare_source_none};
   bool has_source;
@@ -1038,7 +1088,12 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   bare_thread_t *thread;
-  err = bare_thread_create(runtime, (char *) filename, has_mount ? (char *) mount : NULL, source, data, stack_size, &thread);
+  err = bare_thread_create(runtime, (char *) filename, (char *) mount, source, data, stack_size, &thread);
+
+  bare_runtime__free_string(filename, filename_buffer);
+
+  if (mount) bare_runtime__free_string(mount, mount_buffer);
+
   if (err < 0) return NULL;
 
   err = js_wrap(env, argv[0], (void *) thread, bare_runtime__on_thread_finalize, (void *) runtime, NULL);
@@ -1259,6 +1314,7 @@ bare_runtime__terminate_thread(js_env_t *env, js_callback_info_t *info) {
   return NULL;
 }
 
+#if BARE_FILE_SYSTEM_MODULES
 static js_value_t *
 bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -1273,11 +1329,14 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path[4096];
-  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
+  utf8_t path_buffer[256];
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  if (path == NULL) return NULL;
 
   uv_fs_t req;
   uv_fs_stat(runtime->loop, &req, (char *) path, NULL);
+
+  bare_runtime__free_string(path, path_buffer);
 
   uv_stat_t *st = req.result < 0 ? NULL : req.ptr;
 
@@ -1304,11 +1363,14 @@ bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path[4096];
-  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
+  utf8_t path_buffer[256];
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  if (path == NULL) return NULL;
 
   uv_fs_t req;
   uv_fs_realpath(runtime->loop, &req, (char *) path, NULL);
+
+  bare_runtime__free_string(path, path_buffer);
 
   err = (int) req.result;
 
@@ -1347,13 +1409,16 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path[4096];
-  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
+  utf8_t path_buffer[256];
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  if (path == NULL) return NULL;
 
   uv_loop_t *loop = runtime->loop;
 
   uv_fs_t req;
   uv_fs_open(loop, &req, (char *) path, UV_FS_O_RDONLY, 0, NULL);
+
+  bare_runtime__free_string(path, path_buffer);
 
   err = (int) req.result;
 
@@ -1439,11 +1504,14 @@ bare_runtime__list(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path[4096];
-  if (!bare_runtime__get_string(env, argv[0], path, sizeof(path))) return NULL;
+  utf8_t path_buffer[256];
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  if (path == NULL) return NULL;
 
   uv_fs_t req;
   uv_fs_scandir(runtime->loop, &req, (char *) path, 0, NULL);
+
+  bare_runtime__free_string(path, path_buffer);
 
   err = (int) req.result;
 
@@ -1504,6 +1572,7 @@ err:
 
   return NULL;
 }
+#endif
 
 static js_value_t *
 bare_runtime__require(js_env_t *env, js_callback_info_t *info) {
@@ -1778,7 +1847,11 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   }
 
   V("loadStaticAddon", bare_runtime__load_static_addon);
+#if BARE_DYNAMIC_ADDONS
   V("loadDynamicAddon", bare_runtime__load_dynamic_addon);
+#else
+  V("loadDynamicAddon", bare_runtime__unsupported);
+#endif
   V("initAddon", bare_runtime__init_addon);
   V("sealAddons", bare_runtime__seal_addons);
   V("addonsSealed", bare_runtime__addons_sealed);
@@ -1799,10 +1872,17 @@ bare_runtime_setup(uv_loop_t *loop, bare_process_t *process, bare_runtime_t *run
   V("resumeThread", bare_runtime__resume_thread);
   V("terminateThread", bare_runtime__terminate_thread);
 
+#if BARE_FILE_SYSTEM_MODULES
   V("exists", bare_runtime__exists);
   V("realpath", bare_runtime__realpath);
   V("read", bare_runtime__read);
   V("list", bare_runtime__list);
+#else
+  V("exists", bare_runtime__unsupported);
+  V("realpath", bare_runtime__unsupported);
+  V("read", bare_runtime__unsupported);
+  V("list", bare_runtime__unsupported);
+#endif
 #undef V
 
 #define V(name, bool) \

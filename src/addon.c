@@ -8,7 +8,7 @@
 #include <utf.h>
 #include <uv.h>
 
-#ifndef _WIN32
+#if BARE_DYNAMIC_ADDONS && !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 
@@ -73,7 +73,7 @@ static thread_local bare_addon_t *bare_addon__staging = NULL;
 // site and is instead tracked for as long as a runtime is entered.
 static thread_local bare_process_t *bare_addon__current = NULL;
 
-#ifndef _WIN32
+#if BARE_DYNAMIC_ADDONS && !defined(_WIN32)
 // The global symbol scope of the program, which is where the code of a
 // statically linked addon is found on platforms that have a runpath.
 static uv_lib_t bare_addon__self;
@@ -149,6 +149,7 @@ bare_addon_load_static(bare_runtime_t *runtime, const char *specifier) {
   return NULL;
 }
 
+#if BARE_DYNAMIC_ADDONS
 bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier) {
   int err;
@@ -331,6 +332,7 @@ err:
 
   return NULL;
 }
+#endif
 
 void
 bare_addon_seal(bare_process_t *process) {
@@ -424,7 +426,9 @@ bare_addon_teardown(bare_process_t *process) {
 
     unloading = addon->next;
 
+#if BARE_DYNAMIC_ADDONS
     if (addon->unloads) uv_dlclose(&addon->lib);
+#endif
 
     free(addon);
   }
@@ -530,7 +534,9 @@ bare_addon__module(bare_module_register_cb exports) {
   );
 
   lib.handle = ok ? module : GetModuleHandleW(NULL);
-#else
+
+  assert(lib.handle);
+#elif BARE_DYNAMIC_ADDONS
   // Nothing resolves symbols through this handle on platforms that have a
   // runpath, so the global scope of the program is handle enough.
   (void) exports;
@@ -538,9 +544,13 @@ bare_addon__module(bare_module_register_cb exports) {
   uv_once(&bare_addon__self_guard, bare_addon__on_self_init);
 
   lib = bare_addon__self;
-#endif
 
   assert(lib.handle);
+#else
+  // Without a dynamic loader there is nothing to resolve symbols through, so
+  // the addon is left without a handle.
+  (void) exports;
+#endif
 
   return lib;
 }

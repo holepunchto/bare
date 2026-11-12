@@ -10,8 +10,10 @@
 bare_addon_t *
 bare_addon_load_static(bare_runtime_t *runtime, const char *specifier);
 
+#if BARE_DYNAMIC_ADDONS
 bare_addon_t *
 bare_addon_load_dynamic(bare_runtime_t *runtime, const char *specifier);
+#endif
 
 bare_process_t *
 bare_addon_attach(bare_runtime_t *runtime);

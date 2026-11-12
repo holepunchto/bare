@@ -48,7 +48,7 @@ int exit_code;
 bare_teardown(bare, UV_RUN_DEFAULT, &exit_code);
 ```
 
-If `source` is `NULL`, the contents of `filename` will instead be read at runtime. For examples of how to embed Bare on mobile platforms, see <https://github.com/holepunchto/bare-android> and <https://github.com/holepunchto/bare-ios>.
+If `source` is `NULL`, the contents of `filename` will instead be read at runtime. Otherwise, `source` must stay alive until `bare_teardown()` returns, and is never written to, so it may live in read-only memory.
 
 An embedder whose thread belongs to a host loop, such as the run loop of a user interface, drives the loop with `bare_poll()` rather than `bare_run()`. It runs the loop without blocking and reports how long the host may sleep before calling again:
 
@@ -152,12 +152,14 @@ Bare provides a few compile options that can be configured to customize various 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
 
-| Option               | Default                    | Description                                                             |
-| :------------------- | :------------------------- | :---------------------------------------------------------------------- |
-| `BARE_ENGINE`        | `github:holepunchto/libjs` | The JavaScript engine to use                                            |
-| `BARE_ENGINE_SHARED` | `OFF`                      | Link the JavaScript engine as a shared library rather than embedding it |
-| `BARE_PREBUILDS`     | `ON`                       | Enable prebuilds for supported third-party dependencies                 |
-| `BARE_MEMORY_LIMIT`  | `0`                        | The default memory limit of each JavaScript heap                        |
+| Option                     | Default                    | Description                                             |
+| :------------------------- | :------------------------- | :------------------------------------------------------ |
+| `BARE_ENGINE`              | `github:holepunchto/libjs` | The JavaScript engine to use                            |
+| `BARE_PREBUILDS`           | `ON`                       | Enable prebuilds for supported third-party dependencies |
+| `BARE_MEMORY_LIMIT`        | `0`                        | The default memory limit of each JavaScript heap        |
+| `BARE_DYNAMIC_ADDONS`      | `ON`, `OFF` on FreeRTOS    | Enable loading addons dynamically at runtime            |
+| `BARE_FILE_SYSTEM_MODULES` | `ON`, `OFF` on FreeRTOS    | Enable loading modules from the file system             |
+| `BARE_CLI`                 | `ON`, `OFF` on FreeRTOS    | Build the command line interface                        |
 
 ### Sanitizers
 
