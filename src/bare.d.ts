@@ -109,9 +109,6 @@ interface Bare extends EventEmitter<BareEvents> {
     | 'riscv32'
     | 'riscv64'
 
-  /** @deprecated */
-  readonly simulator: boolean
-
   /**
    * The command line arguments passed to the process when launched.
    */
@@ -259,20 +256,7 @@ declare namespace Addon {
    * identified by `url`. Such an addon can still be loaded after sealing.
    */
   export function loaded(url: URL): boolean
-
-  /** @deprecated */
-  export const cache: { readonly [href: string]: Addon }
-
-  /** @deprecated */
-  export function load(url: URL): Addon
-  /** @deprecated */
-  export function resolve(specifier: string, parentURL?: URL): URL
 }
-
-type ThreadSource = string | Buffer
-
-/** @deprecated */
-type ThreadCallback = (data: unknown) => unknown
 
 interface ThreadOptions {
   /**
@@ -284,9 +268,6 @@ interface ThreadOptions {
    * The transfer list for `data`.
    */
   transfer?: unknown[]
-
-  /** @deprecated Pass the source after `filename` instead. */
-  source?: ThreadSource
 
   /**
    * The encoding of `source` if it is a string.
@@ -370,15 +351,7 @@ declare class Thread {
    * a thread never reaches further than the code that started it.
    *
    */
-  constructor(filename: string, source: ThreadSource, options?: ThreadOptions)
-  /** @deprecated */
-  constructor(callback: ThreadCallback)
-  /** @deprecated */
-  constructor(options?: ThreadOptions, callback?: ThreadCallback)
-  /** @deprecated */
-  constructor(filename: string, callback: ThreadCallback)
-  /** @deprecated */
-  constructor(filename: string, options?: ThreadOptions, callback?: ThreadCallback)
+  constructor(filename: string, source: string | Buffer, options?: ThreadOptions)
 }
 
 declare namespace Thread {
@@ -399,21 +372,6 @@ declare namespace Thread {
    * A reference to the current thread. Will be `null` on the main thread.
    */
   export const self: ThreadProxy | null
-
-  /** @deprecated */
-  export function create(filename: string, source: ThreadSource, options?: ThreadOptions): Thread
-  /** @deprecated */
-  export function create(callback: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(options?: ThreadOptions, callback?: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(filename: string, callback: ThreadCallback): Thread
-  /** @deprecated */
-  export function create(
-    filename: string,
-    options?: ThreadOptions,
-    callback?: ThreadCallback
-  ): Thread
 }
 
 declare global {
