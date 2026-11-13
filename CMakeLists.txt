@@ -17,20 +17,40 @@ else()
   enable_language(ASM)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#79b6aa0" CACHE STRING "The JavaScript engine to use")
+if(target MATCHES "freertos")
+  set(hosted OFF)
+else()
+  set(hosted ON)
+endif()
 
-set(BARE_ENGINE_SHARED OFF CACHE BOOL "Link the JavaScript engine as a shared library rather than embedding it")
+set(BARE_ENGINE "github:holepunchto/libjs#79b6aa0" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
 set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
 
+set(BARE_DYNAMIC_ADDONS ${hosted} CACHE BOOL "Enable loading addons dynamically at runtime")
+
+set(BARE_FILE_SYSTEM_MODULES ${hosted} CACHE BOOL "Enable loading modules from the file system")
+
+set(BARE_CLI ${hosted} CACHE BOOL "Build the command line interface")
+
+get_property(shared GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS)
+
+if(NOT shared)
+  set(LIBUV_BUILD_SHARED OFF CACHE BOOL "Build shared lib")
+endif()
+
 fetch_package("github:libuv/libuv@1.53.0")
+
+if(NOT shared)
+  add_library(uv ALIAS uv_a)
+endif()
 
 fetch_package("github:holepunchto/librlimit#6e4b390")
 fetch_package("github:holepunchto/libutf#a1ceca8")
 
-if(BARE_PREBUILDS AND NOT BARE_ENGINE_SHARED AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
+if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
 
   mirror_drive(
@@ -169,11 +189,7 @@ fetch_package("${BARE_ENGINE}")
 
 fetch_package("github:holepunchto/libnapi#b6860ec")
 
-if(BARE_ENGINE_SHARED)
-  set(engine js_shared)
-else()
-  set(engine $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>)
-endif()
+set(engine $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>)
 
 add_bare_bundle(
   bare_bundle
@@ -190,7 +206,7 @@ set_target_properties(
   bare
   PROPERTIES
   C_STANDARD 11
-  POSITION_INDEPENDENT_CODE ON
+  POSITION_INDEPENDENT_CODE ${shared}
 )
 
 target_sources(
@@ -222,6 +238,8 @@ target_compile_definitions(
   bare
   PRIVATE
     BARE_MEMORY_LIMIT=${BARE_MEMORY_LIMIT}
+    BARE_DYNAMIC_ADDONS=$<BOOL:${BARE_DYNAMIC_ADDONS}>
+    BARE_FILE_SYSTEM_MODULES=$<BOOL:${BARE_FILE_SYSTEM_MODULES}>
 )
 
 target_include_directories(
@@ -358,45 +376,47 @@ set_target_properties(
   INTERFACE_LINK_DEPENDS "${exports_file}"
 )
 
-add_library(bare_shared SHARED)
+if(shared)
+  add_library(bare_shared SHARED)
 
-add_library(bare::shared ALIAS bare_shared)
+  add_library(bare::shared ALIAS bare_shared)
 
-set_target_properties(
-  bare_shared
-  PROPERTIES
-  OUTPUT_NAME bare
-  ENABLE_EXPORTS ON
-  WINDOWS_EXPORT_ALL_SYMBOLS ON
-)
+  set_target_properties(
+    bare_shared
+    PROPERTIES
+    OUTPUT_NAME bare
+    ENABLE_EXPORTS ON
+    WINDOWS_EXPORT_ALL_SYMBOLS ON
+  )
 
-if(target MATCHES "win32")
+  if(target MATCHES "win32")
+    target_link_libraries(
+      bare_shared
+      PUBLIC
+        bare_exports
+    )
+  else()
+    target_link_libraries(
+      bare_shared
+      PRIVATE
+        bare_exports
+    )
+  endif()
+
+  target_include_directories(
+    bare_shared
+    INTERFACE
+      $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+  )
+
   target_link_libraries(
     bare_shared
     PUBLIC
-      bare_exports
-  )
-else()
-  target_link_libraries(
-    bare_shared
+      ${engine}
     PRIVATE
-      bare_exports
+      bare
   )
 endif()
-
-target_include_directories(
-  bare_shared
-  INTERFACE
-    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
-)
-
-target_link_libraries(
-  bare_shared
-  PUBLIC
-    ${engine}
-  PRIVATE
-    bare
-)
 
 add_library(bare_static STATIC)
 
@@ -431,9 +451,15 @@ target_link_libraries(
     bare
 )
 
-add_subdirectory(bin)
+if(BARE_CLI)
+  add_subdirectory(bin)
+endif()
 
-install(TARGETS bare_static bare_shared)
+install(TARGETS bare_static)
+
+if(shared)
+  install(TARGETS bare_shared)
+endif()
 
 install(FILES include/bare.h include/node_api.h DESTINATION include)
 

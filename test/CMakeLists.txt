@@ -145,6 +145,10 @@ foreach(file IN LISTS tests)
 
     set(command ${test})
   elseif(file MATCHES "\.(c|m)?[jt]s$")
+    if(NOT TARGET bare_bin)
+      continue()
+    endif()
+
     set(command bare_bin test/${file})
   endif()
 
