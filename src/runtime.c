@@ -42,11 +42,13 @@ static const js_type_tag_t bare_runtime__addon_tag = {
   .upper = 0x6f9c53e8d7b24a11,
 };
 
+typedef utf8_t bare_runtime__string_buffer_t[256];
+
 // Reads the string into `buffer` when it fits and into a heap allocation when it
 // doesn't, so that the stack only has to fit the common case. Release the result
 // with `bare_runtime__free_string()`.
 static utf8_t *
-bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *buffer, size_t len) {
+bare_runtime__get_string(js_env_t *env, js_value_t *value, bare_runtime__string_buffer_t buffer) {
   int err;
 
   bool is_string;
@@ -65,6 +67,8 @@ bare_runtime__get_string(js_env_t *env, js_value_t *value, utf8_t *buffer, size_
   assert(err == 0);
 
   utf8_t *result = buffer;
+
+  size_t len = sizeof(bare_runtime__string_buffer_t);
 
   if (str_len + 1 /* NULL */ > len) {
     len = str_len + 1 /* NULL */;
@@ -117,7 +121,7 @@ bare_runtime__abort_with_exception(js_env_t *env, js_value_t *error, const char 
 
   const char *description = "<unavailable>";
 
-  utf8_t buffer[256];
+  bare_runtime__string_buffer_t buffer;
 
   js_value_t *string;
   err = js_coerce_to_string(env, error, &string);
@@ -734,8 +738,8 @@ bare_runtime__load_static_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  utf8_t specifier_buffer[256];
-  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer, sizeof(specifier_buffer));
+  bare_runtime__string_buffer_t specifier_buffer;
+  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer);
   if (specifier == NULL) return NULL;
 
   bare_addon_t *node = bare_addon_load_static(runtime, (char *) specifier);
@@ -768,8 +772,8 @@ bare_runtime__load_dynamic_addon(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  utf8_t specifier_buffer[256];
-  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer, sizeof(specifier_buffer));
+  bare_runtime__string_buffer_t specifier_buffer;
+  utf8_t *specifier = bare_runtime__get_string(env, argv[1], specifier_buffer);
   if (specifier == NULL) return NULL;
 
   bare_process_t *previous = bare_addon_attach(runtime);
@@ -836,8 +840,8 @@ bare_runtime__addon_loaded(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t specifier_buffer[256];
-  utf8_t *specifier = bare_runtime__get_string(env, argv[0], specifier_buffer, sizeof(specifier_buffer));
+  bare_runtime__string_buffer_t specifier_buffer;
+  utf8_t *specifier = bare_runtime__get_string(env, argv[0], specifier_buffer);
   if (specifier == NULL) return NULL;
 
   bool loaded = bare_addon_loaded(runtime->process, (char *) specifier);
@@ -1036,11 +1040,11 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 6);
 
-  utf8_t filename_buffer[256];
-  utf8_t *filename = bare_runtime__get_string(env, argv[1], filename_buffer, sizeof(filename_buffer));
+  bare_runtime__string_buffer_t filename_buffer;
+  utf8_t *filename = bare_runtime__get_string(env, argv[1], filename_buffer);
   if (filename == NULL) return NULL;
 
-  utf8_t mount_buffer[256];
+  bare_runtime__string_buffer_t mount_buffer;
   utf8_t *mount = NULL;
   bool has_mount;
 
@@ -1048,7 +1052,7 @@ bare_runtime__setup_thread(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   if (has_mount) {
-    mount = bare_runtime__get_string(env, argv[5], mount_buffer, sizeof(mount_buffer));
+    mount = bare_runtime__get_string(env, argv[5], mount_buffer);
 
     if (mount == NULL) {
       bare_runtime__free_string(filename, filename_buffer);
@@ -1329,8 +1333,8 @@ bare_runtime__exists(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path_buffer[256];
-  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  bare_runtime__string_buffer_t path_buffer;
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer);
   if (path == NULL) return NULL;
 
   uv_fs_t req;
@@ -1363,8 +1367,8 @@ bare_runtime__realpath(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path_buffer[256];
-  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  bare_runtime__string_buffer_t path_buffer;
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer);
   if (path == NULL) return NULL;
 
   uv_fs_t req;
@@ -1409,8 +1413,8 @@ bare_runtime__read(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path_buffer[256];
-  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  bare_runtime__string_buffer_t path_buffer;
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer);
   if (path == NULL) return NULL;
 
   uv_loop_t *loop = runtime->loop;
@@ -1504,8 +1508,8 @@ bare_runtime__list(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  utf8_t path_buffer[256];
-  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer, sizeof(path_buffer));
+  bare_runtime__string_buffer_t path_buffer;
+  utf8_t *path = bare_runtime__get_string(env, argv[0], path_buffer);
   if (path == NULL) return NULL;
 
   uv_fs_t req;
