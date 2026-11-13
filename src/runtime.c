@@ -190,7 +190,7 @@ bare_runtime__confine(js_env_t *env, bare_runtime_t *runtime, js_value_t *value,
   if (!bare_runtime__is_foreign(env, runtime, value)) return value;
 
   js_value_t *description;
-  err = js_create_string_utf8(env, (const utf8_t *) message, -1, &description);
+  err = js_create_string_utf8(env, (const utf8_t *) message, (size_t) -1, &description);
   assert(err == 0);
 
   js_value_t *result;
