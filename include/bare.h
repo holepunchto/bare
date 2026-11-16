@@ -202,7 +202,9 @@ bare_detach(bare_t *bare, bare_t *previous);
  * Load the module identified by `filename`, which may be any of the formats
  * supported by the module system. Unless `source` is provided, the contents
  * of `filename` will be read from disk. If `source` is provided, its contents
- * must remain alive until after `bare_teardown()` has returned.
+ * must remain alive until after `bare_teardown()` has returned. They're never
+ * written to, so they may live in read-only memory, such as a `const` array or
+ * the flash of a microcontroller.
  *
  * See https://github.com/holepunchto/bare-module for more information on the
  * supported module formats.
