@@ -11,6 +11,12 @@
 #define BARE_MODULE_NAME NULL
 #endif
 
+#ifdef _WIN32
+#define BARE_MODULE_EXPORT __declspec(dllexport)
+#else
+#define BARE_MODULE_EXPORT __attribute__((visibility("default")))
+#endif
+
 #define BARE_MODULE_SYMBOL_HELPER(base, version) BARE_CONCAT(base, version)
 
 #define BARE_MODULE_SYMBOL_NAME_BASE bare_get_module_name_v
@@ -66,10 +72,10 @@
 
 #define BARE_MODULE(id, fn) \
   BARE_EXTERN_C_START \
-  const char *BARE_MODULE_SYMBOL_NAME(void) { \
+  BARE_MODULE_EXPORT const char *BARE_MODULE_SYMBOL_NAME(void) { \
     return BARE_MODULE_NAME; \
   } \
-  js_value_t *BARE_MODULE_SYMBOL_REGISTER(js_env_t *env, js_value_t *exports) { \
+  BARE_MODULE_EXPORT js_value_t *BARE_MODULE_SYMBOL_REGISTER(js_env_t *env, js_value_t *exports) { \
     return fn(env, exports); \
   } \
   BARE_EXTERN_C_END
