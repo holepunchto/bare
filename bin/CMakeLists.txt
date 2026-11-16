@@ -13,7 +13,7 @@ add_executable(bare_bin
 
 add_executable(bare::bin ALIAS bare_bin)
 
-if(WIN32)
+if(target MATCHES "win32")
   target_sources(bare_bin PRIVATE bare.manifest)
 endif()
 
