@@ -630,7 +630,7 @@ bare_module_register(bare_module_t *module) {
   }
 }
 
-void
+BARE_EXPORT void
 napi_module_register(napi_module *module) {
   assert(module->nm_version == NAPI_MODULE_VERSION);
 

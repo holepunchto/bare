@@ -45,14 +45,14 @@ struct bare_options_s {
  * Get the current Bare version. Useful for cases where embedders are
  * dynamically linking Bare.
  */
-int
+BARE_EXPORT int
 bare_version(int *major, int *minor, int *patch);
 
 /**
  * Set up the Bare process. To get a reference to the JavaScript environment of
  * the process, pass the `env` pointer.
  */
-int
+BARE_EXPORT int
 bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, const char *argv[], const bare_options_t *options, bare_t **result);
 
 /**
@@ -60,13 +60,13 @@ bare_setup(uv_loop_t *loop, js_platform_t *platform, js_env_t **env, int argc, c
  * provided. The JavaScript environment of the process must not be used after
  * this function returns.
  */
-int
+BARE_EXPORT int
 bare_teardown(bare_t *bare, uv_run_mode mode, int *exit_code);
 
 /**
  * Immediately terminate the process with an exit status of `exit_code`.
  */
-int
+BARE_EXPORT int
 bare_exit(bare_t *bare, int exit_code);
 
 /**
@@ -86,7 +86,7 @@ bare_exit(bare_t *bare, int exit_code);
  *
  * Equivalent to `Bare.Addon.seal()`.
  */
-int
+BARE_EXPORT int
 bare_seal(bare_t *bare);
 
 /**
@@ -133,7 +133,7 @@ bare_seal(bare_t *bare);
  * Returns `-1` if the key is `NULL` or already published, if the process has
  * been sealed, or if the entry couldn't be allocated.
  */
-int
+BARE_EXPORT int
 bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destroy_cb destroy);
 
 /**
@@ -164,7 +164,7 @@ bare_context_set(bare_t *bare, const char *key, void *value, bare_context_destro
  * Returns `-1` if no entry is published under the key, and `-2` if no process
  * is running on the calling thread.
  */
-int
+BARE_EXPORT int
 bare_context_get(const char *key, void **result);
 
 /**
@@ -185,7 +185,7 @@ bare_context_get(const char *key, void **result);
  *
  * Returns `-1` if the process has terminated or exited.
  */
-int
+BARE_EXPORT int
 bare_attach(bare_t *bare, bare_t **previous);
 
 /**
@@ -195,7 +195,7 @@ bare_attach(bare_t *bare, bare_t **previous);
  * Returns `-1` if the process is not the one the thread is attached to, which
  * is what detaching out of order looks like. Nothing is restored in that case.
  */
-int
+BARE_EXPORT int
 bare_detach(bare_t *bare, bare_t *previous);
 
 /**
@@ -209,13 +209,13 @@ bare_detach(bare_t *bare, bare_t *previous);
  * See https://github.com/holepunchto/bare-module for more information on the
  * supported module formats.
  */
-int
+BARE_EXPORT int
 bare_load(bare_t *bare, const char *filename, const uv_buf_t *source, js_value_t **result);
 
 /**
  * Run the I/O event loop.
  */
-int
+BARE_EXPORT int
 bare_run(bare_t *bare, uv_run_mode mode);
 
 /**
@@ -230,7 +230,7 @@ bare_run(bare_t *bare, uv_run_mode mode);
  * Returns zero once the process has exited, at which point it should be torn
  * down rather than polled again.
  */
-int
+BARE_EXPORT int
 bare_poll(bare_t *bare, int *timeout);
 
 /**
@@ -238,14 +238,14 @@ bare_poll(bare_t *bare, int *timeout);
  * successfully, `bare_run()` will not return until another thread resumes the
  * process. It's safe to call this function from any thread.
  */
-int
+BARE_EXPORT int
 bare_suspend(bare_t *bare, int linger);
 
 /**
  * Wake up the process if suspended and give it time to perform background work.
  * It's safe to call this function from any thread.
  */
-int
+BARE_EXPORT int
 bare_wakeup(bare_t *bare, int deadline);
 
 /**
@@ -253,50 +253,50 @@ bare_wakeup(bare_t *bare, int deadline);
  * being suspended the suspension will be cancelled. It's safe to call this
  * function from any thread.
  */
-int
+BARE_EXPORT int
 bare_resume(bare_t *bare);
 
 /**
  * Terminate the process as soon as possible. It's safe to call this function
  * from any thread.
  */
-int
+BARE_EXPORT int
 bare_terminate(bare_t *bare);
 
 /**
  * Equivalent to `Bare.on('beforeExit', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_before_exit(bare_t *bare, bare_before_exit_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('exit', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_exit(bare_t *bare, bare_exit_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('suspend', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_suspend(bare_t *bare, bare_suspend_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('wakeup', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_wakeup(bare_t *bare, bare_wakeup_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('idle', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_idle(bare_t *bare, bare_idle_cb cb, void *data);
 
 /**
  * Equivalent to `Bare.on('resume', cb)`.
  */
-int
+BARE_EXPORT int
 bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data);
 
 /**
@@ -304,7 +304,7 @@ bare_on_resume(bare_t *bare, bare_resume_cb cb, void *data);
  * of each thread created with the `Thread` constructor. Use this to modify the
  * environment of the thread before it runs any JavaScript.
  */
-int
+BARE_EXPORT int
 bare_on_thread(bare_t *bare, bare_thread_cb cb, void *data);
 
 #ifdef __cplusplus

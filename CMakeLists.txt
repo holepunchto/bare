@@ -6,8 +6,10 @@ find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
 find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
+find_package(cmake-prelude REQUIRED PATHS node_modules/cmake-prelude)
+find_package(cmake-test REQUIRED PATHS node_modules/cmake-test)
 
-project(bare C CXX)
+project(bare LANGUAGES C CXX VERSION 1.37.1)
 
 bare_target(target)
 
@@ -23,7 +25,7 @@ else()
   set(hosted ON)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#79b6aa0" CACHE STRING "The JavaScript engine to use")
+set(BARE_ENGINE "github:holepunchto/libjs#0609f8e" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
 
@@ -47,8 +49,8 @@ if(NOT shared)
   add_library(uv ALIAS uv_a)
 endif()
 
-fetch_package("github:holepunchto/librlimit#6e4b390")
-fetch_package("github:holepunchto/libutf#a1ceca8")
+fetch_package("github:holepunchto/librlimit#a19e5d0")
+fetch_package("github:holepunchto/libutf#b22ffb0")
 
 if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
   set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
@@ -84,20 +86,12 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
         /GR-
     )
 
-    # Keyed on the runtime library of the consumer rather than its
-    # configuration, as sanitizers force the release CRT in debug builds.
     set(debug_crt "$<STREQUAL:$<GENEX_EVAL:$<TARGET_PROPERTY:MSVC_RUNTIME_LIBRARY>>,MultiThreadedDebug>")
 
     target_link_options(
       c++
       INTERFACE
-        # Propagate the C++ STL dependency to all consumers that might end up
-        # with the target in their link dependencies.
         /DEFAULTLIB:libcpmt$<${debug_crt}:d>
-
-        # The imported static library always links the release version of the
-        # static CRT; explicitly tell MSVC to not link the release version when
-        # the debug CRT is used and vice versa.
         /NODEFAULTLIB:libcmt$<$<NOT:${debug_crt}>:d>
     )
   else()
@@ -161,6 +155,9 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
 
   add_library(js STATIC IMPORTED GLOBAL)
 
+  add_library(js::static ALIAS js)
+  add_library(js::shared ALIAS js)
+
   find_library(
     js
     NAMES js libjs
@@ -182,14 +179,20 @@ if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
       v8
   )
 
-  add_library(js_static ALIAS js)
+  add_library(js_headers INTERFACE)
+
+  add_library(js::headers ALIAS js_headers)
+
+  target_link_libraries(
+    js
+    INTERFACE
+      js_headers
+  )
 endif()
 
 fetch_package("${BARE_ENGINE}")
 
-fetch_package("github:holepunchto/libnapi#b6860ec")
-
-set(engine $<LINK_LIBRARY:WHOLE_ARCHIVE,js_static>)
+fetch_package("github:holepunchto/libnapi#81af589")
 
 add_bare_bundle(
   bare_bundle
@@ -198,29 +201,23 @@ add_bare_bundle(
   BUILTINS src/builtins.json
 )
 
-add_library(bare OBJECT)
+configure_file(include/bare/version.h.in include/bare/version.h @ONLY)
 
-harden(bare)
-
-set_target_properties(
+add_library_targets(
   bare
-  PROPERTIES
-  C_STANDARD 11
-  POSITION_INDEPENDENT_CODE ${shared}
-)
-
-target_sources(
-  bare
-  INTERFACE
+  HEADERS
     include/bare.h
+    include/node_api.h
     include/bare/helper.h
     include/bare/module.h
     include/bare/target.h
-    include/bare/version.h
-  PUBLIC
-    $<TARGET_OBJECTS:uv>
-    $<TARGET_OBJECTS:napi>
-  PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/include/bare/version.h
+  BASE_DIRS
+    include
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+  FEATURES
+    c_std_11
+  SOURCES
     src/addon.c
     src/addon.h
     src/bare.c
@@ -232,7 +229,20 @@ target_sources(
     src/thread.c
     src/thread.h
     src/types.h
+  LINK
+    js::headers
+    napi::headers
+    PRIVATE
+      $<LINK_LIBRARY:WHOLE_ARCHIVE,js::static>
+    EMBED
+      uv
+      napi
+  EXPORTS_FILE
+    src/exports.json
+  EXPORT OFF
 )
+
+harden(bare)
 
 target_compile_definitions(
   bare
@@ -243,230 +253,98 @@ target_compile_definitions(
 )
 
 target_include_directories(
-  bare
-  INTERFACE
-    $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
-  PUBLIC
-    include
-)
-
-target_link_libraries(
-  bare
-  INTERFACE
-    $<TARGET_PROPERTY:uv,INTERFACE_LINK_LIBRARIES>
-  PUBLIC
-    js
-    napi
-)
-
-add_library(bare_headers INTERFACE)
-
-add_library(bare::headers ALIAS bare_headers)
-
-target_include_directories(
   bare_headers
   INTERFACE
-    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-if(target MATCHES "win32")
-  add_library(bare_import_library INTERFACE)
+set(libraries bare_static)
 
-  add_library(bare::import_library ALIAS bare_import_library)
-
-  target_link_libraries(
-    bare_import_library
-    INTERFACE
-      $<TARGET_LINKER_FILE:bare_shared>
-  )
-
-  add_dependencies(bare_import_library bare_shared)
+if(TARGET bare_shared)
+  list(APPEND libraries bare_shared)
 endif()
 
-link_bare_module(bare bare-buffer)
-link_bare_module(bare bare-hrtime)
-link_bare_module(bare bare-inspect)
-link_bare_module(bare bare-logger)
-link_bare_module(bare bare-module)
-link_bare_module(bare bare-module-lexer)
-link_bare_module(bare bare-path)
-link_bare_module(bare bare-sleep)
-link_bare_module(bare bare-structured-clone)
-link_bare_module(bare bare-system-logger)
-link_bare_module(bare bare-timers)
-link_bare_module(bare bare-type)
-link_bare_module(bare bare-type-stripper)
-link_bare_module(bare bare-url)
-
-file(READ src/exports.json exports_json)
-
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/exports.json)
-
-set(exports)
-
-string(JSON groups LENGTH "${exports_json}")
-
-math(EXPR last_group "${groups} - 1")
-
-foreach(i RANGE ${last_group})
-  string(JSON group MEMBER "${exports_json}" ${i})
-  string(JSON symbols LENGTH "${exports_json}" ${group})
-
-  math(EXPR last_symbol "${symbols} - 1")
-
-  foreach(j RANGE ${last_symbol})
-    string(JSON symbol GET "${exports_json}" ${group} ${j})
-
-    list(APPEND exports ${symbol})
-  endforeach()
+foreach(library IN LISTS libraries)
+  link_bare_module(${library} bare-buffer)
+  link_bare_module(${library} bare-hrtime)
+  link_bare_module(${library} bare-inspect)
+  link_bare_module(${library} bare-logger)
+  link_bare_module(${library} bare-module)
+  link_bare_module(${library} bare-module-lexer)
+  link_bare_module(${library} bare-path)
+  link_bare_module(${library} bare-sleep)
+  link_bare_module(${library} bare-structured-clone)
+  link_bare_module(${library} bare-system-logger)
+  link_bare_module(${library} bare-timers)
+  link_bare_module(${library} bare-type)
+  link_bare_module(${library} bare-type-stripper)
+  link_bare_module(${library} bare-url)
 endforeach()
 
-add_library(bare_exports INTERFACE)
-
-add_library(bare::exports ALIAS bare_exports)
-
-if(target MATCHES "win32")
-  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.def")
-
-  list(TRANSFORM exports PREPEND "  ")
-  list(JOIN exports "\n" exports)
-
-  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "EXPORTS\n${exports}\n" @ONLY)
-
-  target_sources(
-    bare_exports
-    INTERFACE
-      "${exports_file}"
-  )
-elseif(target MATCHES "darwin|ios")
-  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.exp")
-
-  list(TRANSFORM exports PREPEND "_")
-  list(JOIN exports "\n" exports)
-
-  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "${exports}\n" @ONLY)
-
-  target_link_options(
-    bare_exports
-    INTERFACE
-      "-Wl,-exported_symbols_list,${exports_file}"
-  )
-else()
-  set(exports_file "${CMAKE_CURRENT_BINARY_DIR}/bare.map")
-
-  list(TRANSFORM exports PREPEND "    ")
-  list(JOIN exports ";\n" exports)
-
-  file(CONFIGURE OUTPUT "${exports_file}" CONTENT "{\n  global:\n${exports};\n\n  local:\n    *;\n};\n" @ONLY)
-
-  set(dynamic_list_file "${CMAKE_CURRENT_BINARY_DIR}/bare.dynamic")
-
-  file(CONFIGURE OUTPUT "${dynamic_list_file}" CONTENT "{\n${exports};\n};\n" @ONLY)
-
-  target_link_options(
-    bare_exports
-    INTERFACE
-      "-Wl,--version-script=${exports_file}"
-  )
-endif()
-
-set_target_properties(
-  bare_exports
-  PROPERTIES
-  INTERFACE_LINK_DEPENDS "${exports_file}"
-)
-
-if(shared)
-  add_library(bare_shared SHARED)
-
-  add_library(bare::shared ALIAS bare_shared)
-
+if(TARGET bare_shared)
   set_target_properties(
     bare_shared
     PROPERTIES
-    OUTPUT_NAME bare
     ENABLE_EXPORTS ON
-    WINDOWS_EXPORT_ALL_SYMBOLS ON
   )
 
   if(target MATCHES "win32")
+    add_library(bare_import_library INTERFACE)
+
+    add_library(bare::import_library ALIAS bare_import_library)
+
     target_link_libraries(
-      bare_shared
-      PUBLIC
-        bare_exports
+      bare_import_library
+      INTERFACE
+        $<TARGET_LINKER_FILE:bare_shared>
     )
-  else()
-    target_link_libraries(
-      bare_shared
-      PRIVATE
-        bare_exports
-    )
+
+    add_dependencies(bare_import_library bare_shared)
   endif()
-
-  target_include_directories(
-    bare_shared
-    INTERFACE
-      $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
-  )
-
-  target_link_libraries(
-    bare_shared
-    PUBLIC
-      ${engine}
-    PRIVATE
-      bare
-  )
 endif()
-
-add_library(bare_static STATIC)
-
-add_library(bare::static ALIAS bare_static)
-
-set_target_properties(
-  bare_static
-  PROPERTIES
-  OUTPUT_NAME bare
-  PREFIX lib
-)
-
-if(target MATCHES "win32")
-  target_link_libraries(
-    bare_static
-    PUBLIC
-      bare_exports
-  )
-endif()
-
-target_include_directories(
-  bare_static
-  INTERFACE
-    $<TARGET_PROPERTY:bare,INTERFACE_INCLUDE_DIRECTORIES>
-)
-
-target_link_libraries(
-  bare_static
-  PUBLIC
-    ${engine}
-  PRIVATE
-    bare
-)
 
 if(BARE_CLI)
-  add_subdirectory(bin)
+  add_bare_bundle(
+    bare_executable_bundle
+    ENTRY bin/bare.js
+    OUT bin/bare.bundle.h
+    BUILTINS bin/builtins.json
+  )
+
+  set(sources
+    bin/bare.c
+    bin/bare.bundle.h
+  )
+
+  if(target MATCHES "win32")
+    list(APPEND sources bin/bare.manifest)
+  endif()
+
+  add_executable_target(
+    bare
+    SOURCES
+      ${sources}
+    LINK
+      $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
+      rlimit::static
+    EXPORTS_FILE
+      src/exports.json
+    OUTPUT_DIRECTORY
+      bin
+    EXPORT OFF
+  )
+
+  link_bare_module(bare_executable bare-crypto)
+  link_bare_module(bare_executable bare-dns)
+  link_bare_module(bare_executable bare-inspector)
+  link_bare_module(bare_executable bare-os)
+  link_bare_module(bare_executable bare-path)
+  link_bare_module(bare_executable bare-pipe)
+  link_bare_module(bare_executable bare-repl)
+  link_bare_module(bare_executable bare-signals)
+  link_bare_module(bare_executable bare-tcp)
+  link_bare_module(bare_executable bare-tls)
+  link_bare_module(bare_executable bare-tty)
 endif()
 
-install(TARGETS bare_static)
-
-if(shared)
-  install(TARGETS bare_shared)
-endif()
-
-install(FILES include/bare.h include/node_api.h DESTINATION include)
-
-install(DIRECTORY include/bare DESTINATION include)
-
-if(PROJECT_IS_TOP_LEVEL)
-  enable_testing()
-
-  add_subdirectory(test)
-endif()
+add_test_subdirectory(test)

@@ -8,9 +8,9 @@
 // Tear down a process that has loaded an addon registering a destructor. The
 // destructor must run when the process is torn down and its addon is unloaded.
 
-// Defined here and incremented by the addon's unload destructor, which resolves
-// the symbol from the host at load time. See test/fixtures/teardown-addon.
-int bare_test_addon_unload_count = 0;
+// Published to the addon through the process context and incremented when the
+// addon is unloaded. See test/fixtures/teardown-addon.
+static int bare_test_addon_unload_count = 0;
 
 static const char *code =
   "const url = require('bare-url')\n"
@@ -48,6 +48,9 @@ main(int argc, char *argv[]) {
 
   bare_t *bare;
   e = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &bare);
+  assert(e == 0);
+
+  e = bare_context_set(bare, "bare.test.unload-count.v1", &bare_test_addon_unload_count, NULL);
   assert(e == 0);
 
   e = bare_load(bare, filename, &source, NULL);
