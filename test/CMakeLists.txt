@@ -1,9 +1,7 @@
 add_test_executables(
   addon-constructor-multiple-processes.c
   addon-find-multiple-processes.c
-  addon-find.c
   addon-multiple-processes.c
-  addon-register-after-load.c
   addon-seal-restart.c
   addon-teardown.c
   addon-teardown-multiple-processes.c
@@ -28,12 +26,12 @@ add_test_executables(
 
 # These tests resolve functions they define themselves through the library of
 # an addon that was linked into them, so the executables must export them.
-set_target_properties(
-  addon-find
-  addon-register-after-load
-  PROPERTIES
-  ENABLE_EXPORTS ON
-  WINDOWS_EXPORT_ALL_SYMBOLS ON
+add_test_executables(
+  addon-find.c
+  addon-register-after-load.c
+  EXPORTS
+  LINK
+    bare::<TYPE>
 )
 
 add_test_scripts(

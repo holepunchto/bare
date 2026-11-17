@@ -54,8 +54,8 @@
     "cmake-fetch": "^1.4.10",
     "cmake-harden": "^1.1.2",
     "cmake-napi": "^1.4.0",
-    "cmake-prelude": "^0.1.4",
-    "cmake-test": "^0.1.6",
+    "cmake-prelude": "^0.1.5",
+    "cmake-test": "^0.1.7",
     "lunte": "^1.4.0",
     "prettier": "^3.3.3",
     "prettier-config-holepunch": "^2.0.0"
