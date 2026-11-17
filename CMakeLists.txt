@@ -237,7 +237,7 @@ add_library_targets(
     EMBED
       uv
       napi
-  EXPORTS_FILE
+  EXPORTS_FROM
     src/exports.json
   EXPORT OFF
 )
@@ -258,28 +258,7 @@ target_include_directories(
     $<TARGET_PROPERTY:uv,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-set(libraries bare_static)
-
-if(TARGET bare_shared)
-  list(APPEND libraries bare_shared)
-endif()
-
-foreach(library IN LISTS libraries)
-  link_bare_module(${library} bare-buffer)
-  link_bare_module(${library} bare-hrtime)
-  link_bare_module(${library} bare-inspect)
-  link_bare_module(${library} bare-logger)
-  link_bare_module(${library} bare-module)
-  link_bare_module(${library} bare-module-lexer)
-  link_bare_module(${library} bare-path)
-  link_bare_module(${library} bare-sleep)
-  link_bare_module(${library} bare-structured-clone)
-  link_bare_module(${library} bare-system-logger)
-  link_bare_module(${library} bare-timers)
-  link_bare_module(${library} bare-type)
-  link_bare_module(${library} bare-type-stripper)
-  link_bare_module(${library} bare-url)
-endforeach()
+link_bare_modules(bare::<TYPE> FROM src/builtins.json)
 
 if(TARGET bare_shared)
   set_target_properties(
@@ -327,24 +306,14 @@ if(BARE_CLI)
     LINK
       $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
       rlimit::static
-    EXPORTS_FILE
+    EXPORTS_FROM
       src/exports.json
     OUTPUT_DIRECTORY
       bin
     EXPORT OFF
   )
 
-  link_bare_module(bare_executable bare-crypto)
-  link_bare_module(bare_executable bare-dns)
-  link_bare_module(bare_executable bare-inspector)
-  link_bare_module(bare_executable bare-os)
-  link_bare_module(bare_executable bare-path)
-  link_bare_module(bare_executable bare-pipe)
-  link_bare_module(bare_executable bare-repl)
-  link_bare_module(bare_executable bare-signals)
-  link_bare_module(bare_executable bare-tcp)
-  link_bare_module(bare_executable bare-tls)
-  link_bare_module(bare_executable bare-tty)
+  link_bare_modules(bare::executable FROM bin/builtins.json EXCLUDE_FROM src/builtins.json)
 
   # BoringSSL is compiled against the MSVC standard library while the prebuilt
   # libc++ defines some of the same symbols. Linking libc++ after BoringSSL lets
