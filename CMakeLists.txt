@@ -266,20 +266,6 @@ if(TARGET bare_shared)
     PROPERTIES
     ENABLE_EXPORTS ON
   )
-
-  if(target MATCHES "win32")
-    add_library(bare_import_library INTERFACE)
-
-    add_library(bare::import_library ALIAS bare_import_library)
-
-    target_link_libraries(
-      bare_import_library
-      INTERFACE
-        $<TARGET_LINKER_FILE:bare_shared>
-    )
-
-    add_dependencies(bare_import_library bare_shared)
-  endif()
 endif()
 
 if(BARE_CLI)
