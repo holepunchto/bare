@@ -199,6 +199,7 @@ add_bare_bundle(
   ENTRY src/bare.js
   OUT src/bare.js.h
   BUILTINS src/builtins.json
+  COMPRESSED
 )
 
 configure_file(include/bare/version.h.in include/bare/version.h @ONLY)
@@ -288,6 +289,7 @@ if(BARE_CLI)
     ENTRY bin/bare.js
     OUT bin/bare.bundle.h
     BUILTINS bin/builtins.json
+    COMPRESSED
   )
 
   set(sources
