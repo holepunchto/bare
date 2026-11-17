@@ -345,6 +345,14 @@ if(BARE_CLI)
   link_bare_module(bare_executable bare-tcp)
   link_bare_module(bare_executable bare-tls)
   link_bare_module(bare_executable bare-tty)
+
+  # BoringSSL is compiled against the MSVC standard library while the prebuilt
+  # libc++ defines some of the same symbols. Linking libc++ after BoringSSL lets
+  # the copies in BoringSSL satisfy the references, so that the conflicting
+  # objects of libc++ aren't pulled in.
+  if(TARGET c++)
+    target_link_libraries(ssl c++)
+  endif()
 endif()
 
 add_test_subdirectory(test)
