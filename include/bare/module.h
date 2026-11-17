@@ -118,7 +118,7 @@ struct bare_module_s {
  * the call, such as a delay load hook binding an import address table, must
  * take a reference of its own.
  */
-void *
+BARE_EXPORT void *
 bare_module_find(const char *query);
 
 /**
@@ -144,7 +144,7 @@ bare_module_find(const char *query);
  * addressed by the specifier it was loaded from. The module is copied and need
  * not outlive the call.
  */
-void
+BARE_EXPORT void
 bare_module_register(bare_module_t *module);
 
 #endif // BARE_MODULE_H

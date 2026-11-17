@@ -10,9 +10,9 @@
 // the first must not unload it from underneath the second; the destructor must
 // run only once the last owner is gone.
 
-// Defined here and incremented by the addon's unload destructor, which resolves
-// the symbol from the host at load time. See test/fixtures/teardown-addon.
-int bare_test_addon_unload_count = 0;
+// Published to the addon through the process context and incremented when the
+// addon is unloaded. See test/fixtures/teardown-addon.
+static int bare_test_addon_unload_count = 0;
 
 static const char *code =
   "const url = require('bare-url')\n"
@@ -67,11 +67,17 @@ main(int argc, char *argv[]) {
   e = bare_setup(uv_default_loop(), platform, NULL, argc, (const char **) argv, NULL, &x);
   assert(e == 0);
 
+  e = bare_context_set(x, "bare.test.unload-count.v1", &bare_test_addon_unload_count, NULL);
+  assert(e == 0);
+
   e = bare_load(x, first, &source, NULL);
   assert(e == 0);
 
   bare_t *y;
   e = bare_setup(&loop, platform, NULL, argc, (const char **) argv, NULL, &y);
+  assert(e == 0);
+
+  e = bare_context_set(y, "bare.test.unload-count.v1", &bare_test_addon_unload_count, NULL);
   assert(e == 0);
 
   e = bare_load(y, second, &source, NULL);

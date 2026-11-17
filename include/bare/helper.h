@@ -14,4 +14,18 @@
 #define BARE_EXTERN_C_END
 #endif
 
+#if defined(_WIN32)
+#if defined(BARE_BUILDING)
+#define BARE_EXPORT __declspec(dllexport)
+#elif defined(BARE_SHARED)
+#define BARE_EXPORT __declspec(dllimport)
+#else
+#define BARE_EXPORT
+#endif
+#elif defined(__GNUC__)
+#define BARE_EXPORT __attribute__((visibility("default")))
+#else
+#define BARE_EXPORT
+#endif
+
 #endif // BARE_HELPER_H

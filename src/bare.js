@@ -71,9 +71,9 @@ class Bare extends EventEmitter {
     bare.exitCode = code & 0xff
     bare.terminate()
 
-    noop() // Trigger a stack check
-
-    function noop() {}
+    // Termination may take effect asynchronously, so keep running JavaScript
+    // until it does.
+    while (true) {}
   }
 
   suspend(linger = 0) {

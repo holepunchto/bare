@@ -1,28 +1,11 @@
-list(APPEND tests
-  addon-concurrent-threads.js
-  addon-constructor.js
-  addon-constructor-multiple.js
+add_test_executables(
   addon-constructor-multiple-processes.c
-  addon-constructor-multiple-threads.js
-  addon-dependent.js
   addon-find-multiple-processes.c
-  addon-find.c
-  addon-invalid-file-url.js
-  addon-loaded.js
   addon-multiple-processes.c
-  addon-multiple-threads.js
-  addon-multiple.js
-  addon-register-after-load.c
-  addon-scoped.js
-  addon-seal.js
-  addon-seal-multiple-threads.js
-  addon-seal-preloaded-multiple-threads.js
   addon-seal-restart.c
   addon-teardown.c
   addon-teardown-multiple-processes.c
-  addon.js
   argv-empty.c
-  asset-directory.js
   attach.c
   attach-call.c
   attach-nested.c
@@ -33,6 +16,40 @@ list(APPEND tests
   context-multiple-processes.c
   context-seal.c
   context-thread.c
+  load-result.c
+  poll.c
+  restart.c
+  run-stop.c
+  LINK
+    bare::<TYPE>
+)
+
+# These tests resolve functions they define themselves through the library of
+# an addon that was linked into them, so the executables must export them.
+add_test_executables(
+  addon-find.c
+  addon-register-after-load.c
+  EXPORTS
+  LINK
+    bare::<TYPE>
+)
+
+add_test_scripts(
+  addon-concurrent-threads.js
+  addon-constructor.js
+  addon-constructor-multiple.js
+  addon-constructor-multiple-threads.js
+  addon-dependent.js
+  addon-invalid-file-url.js
+  addon-loaded.js
+  addon-multiple-threads.js
+  addon-multiple.js
+  addon-scoped.js
+  addon-seal.js
+  addon-seal-multiple-threads.js
+  addon-seal-preloaded-multiple-threads.js
+  addon.js
+  asset-directory.js
   exit-enqueue-immediate.js
   exit-enqueue-readfile.js
   exit-enqueue-timeout.js
@@ -60,10 +77,6 @@ list(APPEND tests
   import-mjs.mjs
   import-cts.cts
   import-mts.mts
-  load-result.c
-  poll.c
-  restart.c
-  run-stop.c
   suspend-idle.js
   suspend-on-idle.js
   suspend-resume-idle-on-suspend.js
@@ -110,65 +123,7 @@ list(APPEND tests
   wakeup-with-large-deadline-thread.mjs
   wakeup-with-large-deadline.js
   wakeup-with-linger-thread.mjs
+  RUNNER
+    bare::executable
+  OPTIONAL
 )
-
-if(WIN32)
-  list(APPEND skipped_tests
-    # The teardown addon observes being unloaded through a destructor that
-    # records it in a host symbol resolved at load time. This excludes Windows,
-    # where a prebuilt addon can only import the symbols Bare itself exports.
-    addon-teardown.c
-    addon-teardown-multiple-processes.c
-  )
-endif()
-
-foreach(file IN LISTS tests)
-  get_filename_component(name ${file} NAME_WE)
-
-  string(MAKE_C_IDENTIFIER ${name} test)
-
-  if(file MATCHES "\.c$")
-    add_executable(${test} ${file})
-
-    set_target_properties(
-      ${test}
-      PROPERTIES
-      ENABLE_EXPORTS ON
-      WINDOWS_EXPORT_ALL_SYMBOLS ON
-    )
-
-    target_link_libraries(
-      ${test}
-      PRIVATE
-        $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
-    )
-
-    set(command ${test})
-  elseif(file MATCHES "\.(c|m)?[jt]s$")
-    if(NOT TARGET bare_bin)
-      continue()
-    endif()
-
-    set(command bare_bin test/${file})
-  endif()
-
-  add_test(
-    NAME ${file}
-    COMMAND ${command}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  )
-
-  set_tests_properties(
-    ${file}
-    PROPERTIES
-    TIMEOUT 30
-  )
-
-  if(${file} IN_LIST skipped_tests)
-    set_tests_properties(
-      ${file}
-      PROPERTIES
-      DISABLED ON
-    )
-  endif()
-endforeach()
