@@ -26,6 +26,16 @@ add_test_executables(
     bare::<TYPE>
 )
 
+# These tests resolve functions they define themselves through the library of
+# an addon that was linked into them, so the executables must export them.
+set_target_properties(
+  addon-find
+  addon-register-after-load
+  PROPERTIES
+  ENABLE_EXPORTS ON
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
+)
+
 add_test_scripts(
   addon-concurrent-threads.js
   addon-constructor.js
