@@ -261,14 +261,6 @@ target_include_directories(
 
 link_bare_modules(bare::<TYPE> FROM src/builtins.json)
 
-if(TARGET bare_shared)
-  set_target_properties(
-    bare_shared
-    PROPERTIES
-    ENABLE_EXPORTS ON
-  )
-endif()
-
 if(BARE_CLI)
   add_bare_bundle(
     bare_executable_bundle
