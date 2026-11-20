@@ -14,6 +14,8 @@ jobs:
     name: Publish
     steps:
       - uses: holepunchto/actions/node-base@v1
+        with:
+          clean-install: true
       - uses: holepunchto/actions/run-npm-script@v1
         with:
           script: prepack
