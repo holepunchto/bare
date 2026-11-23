@@ -304,4 +304,24 @@ if(BARE_CLI)
   endif()
 endif()
 
+if(target MATCHES "win32")
+  foreach(image IN ITEMS bare_shared bare_executable)
+    if(TARGET ${image})
+      target_link_libraries(
+        ${image}
+        PRIVATE
+          delayimp
+      )
+
+      target_link_options(
+        ${image}
+        PRIVATE
+          /DELAYLOAD:user32.dll
+          /DELAYLOAD:shell32.dll
+          /DELAYLOAD:ole32.dll
+      )
+    endif()
+  endforeach()
+endif()
+
 add_test_subdirectory(test)
