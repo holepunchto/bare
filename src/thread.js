@@ -5,6 +5,10 @@ const URL = require('bare-url')
 
 module.exports = exports = class Thread {
   constructor(filename, source, opts = {}) {
+    if (typeof filename === 'string' && filename.includes('\0')) {
+      throw new TypeError('Filename must not contain null bytes')
+    }
+
     let { data = null, encoding = 'utf8', stackSize = 0, transfer = [], mount = null } = opts
 
     if (mount !== null) {

@@ -44,6 +44,11 @@ static const js_type_tag_t bare_runtime__addon_tag = {
 
 typedef utf8_t bare_runtime__string_buffer_t[256];
 
+static void
+bare_runtime__free_string(utf8_t *string, utf8_t *buffer) {
+  if (string != buffer) free(string);
+}
+
 // Reads the string into `buffer` when it fits and into a heap allocation when it
 // doesn't, so that the stack only has to fit the common case. Release the result
 // with `bare_runtime__free_string()`.
@@ -79,12 +84,16 @@ bare_runtime__get_string(js_env_t *env, js_value_t *value, bare_runtime__string_
   err = js_get_value_string_utf8(env, value, result, len, NULL);
   assert(err == 0);
 
-  return result;
-}
+  if (strlen((char *) result) != str_len) {
+    bare_runtime__free_string(result, buffer);
 
-static void
-bare_runtime__free_string(utf8_t *string, utf8_t *buffer) {
-  if (string != buffer) free(string);
+    err = js_throw_type_error(env, NULL, "Value must not contain null bytes");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return result;
 }
 
 static bool

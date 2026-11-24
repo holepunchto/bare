@@ -93,6 +93,7 @@ add_test_scripts(
   suspend-with-large-linger.js
   thread-join.js
   thread-mount.js
+  thread-null-bytes.js
   thread-no-protocol.js
   thread-shared-data.js
   thread-source.js
