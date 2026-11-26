@@ -9,8 +9,6 @@ t.plan(2)
 
 const temp = path.join(os.tmpdir(), 'bare-addon-long-path')
 
-// Loaded addons can't be removed on Windows, so clean up after earlier runs
-// instead of on exit.
 fs.rmSync(temp, { recursive: true, force: true })
 
 // Exceeds the 260 character MAX_PATH limit on Windows.
