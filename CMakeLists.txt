@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 4.0)
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-harden REQUIRED PATHS node_modules/cmake-harden)
 find_package(cmake-bare-bundle REQUIRED PATHS node_modules/cmake-bare-bundle)
-find_package(cmake-drive REQUIRED PATHS node_modules/cmake-drive)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 find_package(cmake-prelude REQUIRED PATHS node_modules/cmake-prelude)
@@ -25,9 +24,7 @@ else()
   set(hosted ON)
 endif()
 
-set(BARE_ENGINE "github:holepunchto/libjs#0609f8e" CACHE STRING "The JavaScript engine to use")
-
-set(BARE_PREBUILDS ON CACHE BOOL "Enable prebuilds for supported third-party dependencies")
+set(BARE_ENGINE "github:holepunchto/libjs#905a61a" CACHE STRING "The JavaScript engine to use")
 
 set(BARE_MEMORY_LIMIT 0 CACHE STRING "The default memory limit of each JavaScript heap")
 
@@ -52,147 +49,12 @@ endif()
 fetch_package("github:holepunchto/librlimit#a19e5d0")
 fetch_package("github:holepunchto/libutf#b22ffb0")
 
-if(BARE_PREBUILDS AND BARE_ENGINE MATCHES "github:holepunchto/libjs(#|@|$)")
-  set(prebuilds "${CMAKE_CURRENT_BINARY_DIR}")
+fetch_package(${BARE_ENGINE})
 
-  mirror_drive(
-    SOURCE krmguqnh75rud4iieqgmzyqoza415cbu68payoww65ii9fzt5n4o
-    DESTINATION "${prebuilds}"
-    PREFIX /${target}
-    CHECKOUT 317
-  )
+fetch_package("github:holepunchto/libnapi#ce2686a")
 
-  add_library(c++ STATIC IMPORTED GLOBAL)
-
-  find_library(
-    c++
-    NAMES c++ libc++
-    PATHS "${prebuilds}/${target}"
-    REQUIRED
-    NO_DEFAULT_PATH
-    NO_CMAKE_FIND_ROOT_PATH
-  )
-
-  set_target_properties(
-    c++
-    PROPERTIES
-    IMPORTED_LOCATION ${c++}
-  )
-
-  if(target MATCHES "win32")
-    target_compile_options(
-      c++
-      INTERFACE
-        /GR-
-    )
-
-    set(debug_crt "$<STREQUAL:$<GENEX_EVAL:$<TARGET_PROPERTY:MSVC_RUNTIME_LIBRARY>>,MultiThreadedDebug>")
-
-    target_link_options(
-      c++
-      INTERFACE
-        /DEFAULTLIB:libcpmt$<${debug_crt}:d>
-        /NODEFAULTLIB:libcmt$<$<NOT:${debug_crt}>:d>
-    )
-  else()
-    target_compile_options(
-      c++
-      INTERFACE
-        -fno-rtti
-    )
-  endif()
-
-  add_library(v8 STATIC IMPORTED GLOBAL)
-
-  find_library(
-    v8
-    NAMES v8 libv8
-    PATHS "${prebuilds}/${target}"
-    REQUIRED
-    NO_DEFAULT_PATH
-    NO_CMAKE_FIND_ROOT_PATH
-  )
-
-  set_target_properties(
-    v8
-    PROPERTIES
-    IMPORTED_LOCATION ${v8}
-  )
-
-  target_link_libraries(
-    v8
-    INTERFACE
-      c++
-  )
-
-  if(target MATCHES "linux")
-    target_link_libraries(
-      v8
-      INTERFACE
-        m
-    )
-  elseif(target MATCHES "android")
-    find_library(log log)
-
-    target_link_libraries(
-      v8
-      INTERFACE
-        ${log}
-    )
-  elseif(target MATCHES "darwin|ios")
-    target_link_libraries(
-      v8
-      INTERFACE
-        "-framework CoreFoundation"
-    )
-  elseif(target MATCHES "win32")
-    target_link_libraries(
-      v8
-      INTERFACE
-        winmm
-    )
-  endif()
-
-  add_library(js STATIC IMPORTED GLOBAL)
-
-  add_library(js::static ALIAS js)
-  add_library(js::shared ALIAS js)
-
-  find_library(
-    js
-    NAMES js libjs
-    PATHS "${prebuilds}/${target}"
-    REQUIRED
-    NO_DEFAULT_PATH
-    NO_CMAKE_FIND_ROOT_PATH
-  )
-
-  set_target_properties(
-    js
-    PROPERTIES
-    IMPORTED_LOCATION ${js}
-  )
-
-  target_link_libraries(
-    js
-    INTERFACE
-      v8
-  )
-
-  add_library(js_headers INTERFACE)
-
-  add_library(js::headers ALIAS js_headers)
-
-  target_link_libraries(
-    js
-    INTERFACE
-      js_headers
-  )
-endif()
-
-fetch_package("${BARE_ENGINE}")
-
-fetch_package("github:holepunchto/libnapi#81af589")
+get_target_property(js_exports js::exports INTERFACE_EXPORTED_SYMBOLS)
+get_target_property(napi_exports napi::exports INTERFACE_EXPORTED_SYMBOLS)
 
 add_bare_bundle(
   bare_bundle
@@ -212,10 +74,10 @@ add_library_targets(
     include/bare/helper.h
     include/bare/module.h
     include/bare/target.h
-    ${CMAKE_CURRENT_BINARY_DIR}/include/bare/version.h
+    "${CMAKE_CURRENT_BINARY_DIR}/include/bare/version.h"
   BASE_DIRS
     include
-    ${CMAKE_CURRENT_BINARY_DIR}/include
+    "${CMAKE_CURRENT_BINARY_DIR}/include"
   FEATURES
     c_std_11
   SOURCES
@@ -234,10 +96,13 @@ add_library_targets(
     js::headers
     napi::headers
     PRIVATE
-      $<LINK_LIBRARY:WHOLE_ARCHIVE,js::static>
+      js::static
+      napi::static
     EMBED
       uv
-      napi
+  EXPORTS
+    ${js_exports}
+    ${napi_exports}
   EXPORTS_FROM
     src/exports.json
   EXPORT OFF
@@ -286,6 +151,9 @@ if(BARE_CLI)
     LINK
       $<LINK_LIBRARY:WHOLE_ARCHIVE,bare_static>
       rlimit::static
+    EXPORTS
+      ${js_exports}
+      ${napi_exports}
     EXPORTS_FROM
       src/exports.json
     OUTPUT_DIRECTORY
@@ -294,14 +162,6 @@ if(BARE_CLI)
   )
 
   link_bare_modules(bare::executable FROM bin/builtins.json EXCLUDE_FROM src/builtins.json)
-
-  # BoringSSL is compiled against the MSVC standard library while the prebuilt
-  # libc++ defines some of the same symbols. Linking libc++ after BoringSSL lets
-  # the copies in BoringSSL satisfy the references, so that the conflicting
-  # objects of libc++ aren't pulled in.
-  if(TARGET c++)
-    target_link_libraries(ssl c++)
-  endif()
 endif()
 
 if(target MATCHES "win32")

@@ -152,14 +152,21 @@ Bare provides a few compile options that can be configured to customize various 
 > [!WARNING]  
 > The compile options are not covered by semantic versioning and are subject to change without warning.
 
-| Option                     | Default                    | Description                                             |
-| :------------------------- | :------------------------- | :------------------------------------------------------ |
-| `BARE_ENGINE`              | `github:holepunchto/libjs` | The JavaScript engine to use                            |
-| `BARE_PREBUILDS`           | `ON`                       | Enable prebuilds for supported third-party dependencies |
-| `BARE_MEMORY_LIMIT`        | `0`                        | The default memory limit of each JavaScript heap        |
-| `BARE_DYNAMIC_ADDONS`      | `ON`, `OFF` on FreeRTOS    | Enable loading addons dynamically at runtime            |
-| `BARE_FILE_SYSTEM_MODULES` | `ON`, `OFF` on FreeRTOS    | Enable loading modules from the file system             |
-| `BARE_CLI`                 | `ON`, `OFF` on FreeRTOS    | Build the command line interface                        |
+| Option                     | Default                    | Description                                      |
+| :------------------------- | :------------------------- | :----------------------------------------------- |
+| `BARE_ENGINE`              | `github:holepunchto/libjs` | The JavaScript engine to use                     |
+| `BARE_MEMORY_LIMIT`        | `0`                        | The default memory limit of each JavaScript heap |
+| `BARE_DYNAMIC_ADDONS`      | `ON`, `OFF` on FreeRTOS    | Enable loading addons dynamically at runtime     |
+| `BARE_FILE_SYSTEM_MODULES` | `ON`, `OFF` on FreeRTOS    | Enable loading modules from the file system      |
+| `BARE_CLI`                 | `ON`, `OFF` on FreeRTOS    | Build the command line interface                 |
+
+### Engine
+
+By default, Bare is compiled with <https://github.com/holepunchto/libjs>, which embeds V8. When generating the build system, libjs downloads static V8 and libc++ prebuilds from <https://github.com/holepunchto/chromium-prebuilds> for the target, which are available for the tier 1 targets listed under [Platform support](#platform-support). To use your own build of V8 instead, such as a debug build or one for a target without prebuilds, make one with <https://github.com/holepunchto/chromium-prebuilds> and point the build system to your Chromium checkout and its GN output directory:
+
+```console
+bare-make generate --define GN_DIR=<chromium>/src --define GN_OUT_DIR=<chromium>/src/<out>
+```
 
 ### Sanitizers
 
@@ -169,7 +176,7 @@ Bare can be compiled with a sanitizer by passing the `--sanitize` flag to the `b
 bare-make generate --sanitize address
 ```
 
-This instruments Bare but not the engine. For that, build a sanitized V8 prebuild with <https://github.com/holepunchto/chromium-prebuilds> and add `--define BARE_PREBUILDS=OFF --define GN_DIR=<src> --define GN_OUT_DIR=<out>`.
+This instruments Bare but not the engine. For that, make a sanitized build of V8 and use it as described in [Engine](#engine).
 
 ## Platform support
 
