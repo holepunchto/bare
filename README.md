@@ -162,7 +162,7 @@ Bare provides a few compile options that can be configured to customize various 
 
 ### Engine
 
-By default, Bare is compiled with <https://github.com/holepunchto/libjs>, which embeds V8. When generating the build system, libjs downloads static V8 and libc++ prebuilds from <https://github.com/holepunchto/chromium-prebuilds> for the target, which are available for the tier 1 targets listed under [Platform support](#platform-support). To use your own build of V8 instead, such as a debug build or one for a target without prebuilds, make one with <https://github.com/holepunchto/chromium-prebuilds> and point the build system to your Chromium checkout and its GN output directory:
+By default, Bare is compiled with <https://github.com/holepunchto/libjs>, which embeds V8. When generating the build system, `libjs` downloads static V8 and `libc++` prebuilds from <https://github.com/holepunchto/chromium-prebuilds> for the target, which are available for the tier 1 targets listed under [Platform support](#platform-support). To use your own build of V8 instead, such as a debug build or one for a target without prebuilds, make one with <https://github.com/holepunchto/chromium-prebuilds> and point the build system to your Chromium checkout and its GN output directory:
 
 ```console
 bare-make generate --define GN_DIR=<chromium>/src --define GN_OUT_DIR=<chromium>/src/<out>
