@@ -42,6 +42,7 @@ add_test_scripts(
   addon-dependent.js
   addon-invalid-file-url.js
   addon-loaded.js
+  addon-long-path.js
   addon-multiple-threads.js
   addon-multiple.js
   addon-scoped.js

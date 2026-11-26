@@ -1,5 +1,6 @@
 /* global bare */
 
+const path = require('bare-path')
 const { fileURLToPath } = require('bare-url')
 const { AddonError } = require('./errors')
 
@@ -18,10 +19,10 @@ module.exports = exports = class Addon {
 
     const loader = protocol === 'builtin:' ? bare.loadStaticAddon : bare.loadDynamicAddon
 
-    const path = protocol === 'file:' ? fileURLToPath(url) : url.pathname
+    const filename = protocol === 'file:' ? toPath(url) : url.pathname
 
     try {
-      loader(this, path)
+      loader(this, filename)
     } catch (err) {
       throw AddonError.CANNOT_LOAD(`Cannot load addon '${url.href}'`, url, err)
     }
@@ -62,11 +63,15 @@ module.exports = exports = class Addon {
   static loaded(url) {
     switch (url.protocol) {
       case 'file:':
-        return bare.addonLoaded(fileURLToPath(url))
+        return bare.addonLoaded(toPath(url))
       case 'linked:':
         return bare.addonLoaded(url.pathname)
       default:
         return false
     }
   }
+}
+
+function toPath(url) {
+  return path.toNamespacedPath(fileURLToPath(url))
 }
