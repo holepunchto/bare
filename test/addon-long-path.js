@@ -7,9 +7,11 @@ const { Addon } = Bare
 
 t.plan(2)
 
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'bare-'))
+const temp = path.join(os.tmpdir(), 'bare-addon-long-path')
 
-Bare.once('exit', () => fs.rmSync(temp, { recursive: true }))
+// Loaded addons can't be removed on Windows, so clean up after earlier runs
+// instead of on exit.
+fs.rmSync(temp, { recursive: true, force: true })
 
 // Exceeds the 260 character MAX_PATH limit on Windows.
 const dirname = path.join(temp, 'a'.repeat(100), 'b'.repeat(100), 'c'.repeat(100))
