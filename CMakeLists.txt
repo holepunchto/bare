@@ -8,7 +8,7 @@ find_package(cmake-napi REQUIRED PATHS node_modules/cmake-napi)
 find_package(cmake-prelude REQUIRED PATHS node_modules/cmake-prelude)
 find_package(cmake-test REQUIRED PATHS node_modules/cmake-test)
 
-project(bare LANGUAGES C CXX VERSION 1.38.0)
+project(bare LANGUAGES C CXX VERSION 1.39.0)
 
 bare_target(target)
 
